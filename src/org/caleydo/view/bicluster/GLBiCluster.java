@@ -148,6 +148,16 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 
 		Float value = Z.getRaw(0, 0);
 
+		//samples
+		// Perspective sample = new Perspective(table_x, table_x.getDimensionIDType());
+		// PerspectiveInitializationData init = new PerspectiveInitializationData();
+		// init.setData(indices);
+		// sample.init(init);
+		// table_x.getTable().registerDimensionPerspective(dimensionPerspective)
+		// table_x.getTablePerspective(recordPerspectiveID, dimensionPerspectiveID);
+
+
+
 
 
 		// TODO: IMPLEMENT GL2 STUFF

@@ -55,6 +55,12 @@ public class RcpGLBiClusterView extends ARcpGLViewPart {
 	}
 
 	@Override
+	public void addToolBarContent() {
+		super.addToolBarContent();
+		// toolBarManager.add(action)
+	}
+
+	@Override
 	public void createDefaultSerializedView() {
 		serializedView = new SerializedBiClusterView();
 	}
