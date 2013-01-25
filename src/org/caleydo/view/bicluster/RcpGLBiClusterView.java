@@ -54,6 +54,7 @@ public class RcpGLBiClusterView extends ARcpGLViewPart {
 		createPartControlGL();
 	}
 
+
 	@Override
 	public void addToolBarContent() {
 		super.addToolBarContent();

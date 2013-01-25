@@ -61,4 +61,12 @@
          </view>
       </perspectiveExtension>
    </extension>
+   <extension
+         point="org.caleydo.view.ViewCategory">
+      <ViewCategory
+            isDataView="false"
+            isReleaseView="false"
+            viewID="org.caleydo.view.bicluster">
+      </ViewCategory>
+   </extension>
 </plugin>

@@ -20,18 +20,23 @@
 package org.caleydo.view.bicluster;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.media.opengl.GL2;
 
-import org.caleydo.core.data.collection.table.Table;
-import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
-import org.caleydo.core.data.datadomain.DataDomainManager;
 import org.caleydo.core.data.datadomain.DataSupportDefinitions;
 import org.caleydo.core.data.datadomain.IDataSupportDefinition;
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.event.EventListenerManager;
+import org.caleydo.core.event.EventListenerManagers;
+import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.serialize.ASerializedView;
 import org.caleydo.core.view.IMultiTablePerspectiveBasedView;
+import org.caleydo.core.view.listener.AddTablePerspectivesEvent;
+import org.caleydo.core.view.listener.AddTablePerspectivesListener;
+import org.caleydo.core.view.listener.RemoveTablePerspectiveEvent;
+import org.caleydo.core.view.listener.RemoveTablePerspectiveListener;
 import org.caleydo.core.view.opengl.camera.ViewFrustum;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.canvas.ATableBasedView;
@@ -57,15 +62,15 @@ import org.eclipse.swt.widgets.Composite;
  */
 
 public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedView {
+	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
+	public static final String VIEW_NAME = "BiCluster Visualization";
 
-
-	public static String VIEW_TYPE = "org.caleydo.view.bicluster";
-
-	public static String VIEW_NAME = "BiCluster Visualization";
-
-	private BiClusterRenderStyle renderStyle;
+	private final EventListenerManager listeners = EventListenerManagers.wrap(this);
 
 	private List<TablePerspective> perspectives = new ArrayList<>();
+	private TablePerspective X; // gene x sample
+	private TablePerspective L; // gene x bicluster
+	private TablePerspective Z; // sample x bicluster
 
 	/**
 	 * Constructor.
@@ -83,9 +88,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	@Override
 	public void init(GL2 gl) {
 		displayListIndex = gl.glGenLists(1);
-		renderStyle = new BiClusterRenderStyle(viewFrustum);
-
-		super.renderStyle = renderStyle;
+		super.renderStyle = new BiClusterRenderStyle(viewFrustum);
 		detailLevel = EDetailLevel.HIGH;
 	}
 
@@ -126,27 +129,58 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		display(gl);
 	}
 
-	public ATableBasedDataDomain getDataDomainByName(String name) {
-		for (ATableBasedDataDomain d : DataDomainManager.get().getDataDomainsByType(ATableBasedDataDomain.class)) {
-			if (d.getLabel().equals(name))
-				return d;
+	@Override
+	public boolean isDataView() {
+		return true;
+	}
+
+	/**
+	 * determines which of the given {@link TablePerspective} is L and Z, given the known X table
+	 *
+	 * @param a
+	 * @param b
+	 */
+	private void findLZ(TablePerspective a, TablePerspective b) {
+		// row: gene, row: gene
+		if (a.getDataDomain().getRecordIDCategory().equals(this.X.getDataDomain().getRecordIDCategory())) {
+			this.L = a;
+			this.Z = b;
+		} else {
+			this.L = b;
+			this.Z = a;
 		}
-		return null;
+	}
+
+	/**
+	 * infers the X,L,Z tables from the dimension and record ID categories, as L and Z has the same Dimension ID
+	 * Category, the remaining one will be X
+	 */
+	private void findXLZ() {
+		TablePerspective a = perspectives.get(0);
+		TablePerspective b = perspectives.get(1);
+		TablePerspective c = perspectives.get(2);
+
+		IDCategory a_d = a.getDataDomain().getDimensionIDCategory();
+		IDCategory b_d = b.getDataDomain().getDimensionIDCategory();
+		IDCategory c_d = c.getDataDomain().getDimensionIDCategory();
+
+		if (a_d.equals(b_d)) {
+			this.X = c;
+			findLZ(a, b);
+		} else if (a_d.equals(c_d)) {
+			this.X = b;
+			findLZ(a, c);
+		} else {
+			this.X = a;
+			findLZ(b, c);
+		}
 	}
 
 	@Override
 	public void display(GL2 gl) {
-
-		ATableBasedDataDomain table_x = getDataDomainByName("ws1_X");
-		Table X = table_x.getTable();
-
-		ATableBasedDataDomain table_l = getDataDomainByName("ws1_L");
-		Table L = table_l.getTable();
-
-		ATableBasedDataDomain table_z = getDataDomainByName("ws1_Z");
-		Table Z = table_z.getTable();
-
-		Float value = Z.getRaw(0, 0);
+		if (Z != null) {
+			Float value = Z.getDataDomain().getTable().getRaw(0, 0);
+		}
 
 		//samples
 		// Perspective sample = new Perspective(table_x, table_x.getDimensionIDType());
@@ -155,9 +189,6 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		// sample.init(init);
 		// table_x.getTable().registerDimensionPerspective(dimensionPerspective)
 		// table_x.getTablePerspective(recordPerspectiveID, dimensionPerspectiveID);
-
-
-
 
 
 		// TODO: IMPLEMENT GL2 STUFF
@@ -195,13 +226,15 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	@Override
 	public void registerEventListeners() {
 		super.registerEventListeners();
-
+		listeners.register(this);
+		listeners.register(AddTablePerspectivesEvent.class, new AddTablePerspectivesListener().setHandler(this));
+		listeners.register(RemoveTablePerspectiveEvent.class, new RemoveTablePerspectiveListener().setHandler(this));
 	}
 
 	@Override
 	public void unregisterEventListeners() {
 		super.unregisterEventListeners();
-
+		listeners.unregisterAll();
 	}
 
 	@Override
@@ -218,11 +251,15 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	@Override
 	public void addTablePerspective(TablePerspective newTablePerspective) {
 		this.perspectives.add(newTablePerspective);
+		if (perspectives.size() == 3)
+			findXLZ();
 	}
 
 	@Override
 	public void addTablePerspectives(List<TablePerspective> newTablePerspectives) {
 		this.perspectives.addAll(newTablePerspectives);
+		if (perspectives.size() == 3)
+			findXLZ();
 	}
 
 	@Override
@@ -232,8 +269,13 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 
 	@Override
 	public void removeTablePerspective(int tablePerspectiveID) {
-		// TODO Auto-generated method stub
-
+		for (Iterator<TablePerspective> it = perspectives.iterator(); it.hasNext();) {
+			if (it.next().getID() == tablePerspectiveID)
+				it.remove();
+		}
+		if (this.perspectives.size() < 3) {
+			this.X = this.L = this.Z = null;
+		}
 	}
 
 }
