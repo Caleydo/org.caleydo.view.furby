@@ -71,6 +71,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	private TablePerspective X; // gene x sample
 	private TablePerspective L; // gene x bicluster
 	private TablePerspective Z; // sample x bicluster
+	private BiClusterRenderStyle renderStyle;
 
 	/**
 	 * Constructor.
@@ -88,7 +89,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	@Override
 	public void init(GL2 gl) {
 		displayListIndex = gl.glGenLists(1);
-		super.renderStyle = new BiClusterRenderStyle(viewFrustum);
+		this.renderStyle = new BiClusterRenderStyle(viewFrustum);
 		detailLevel = EDetailLevel.HIGH;
 	}
 
