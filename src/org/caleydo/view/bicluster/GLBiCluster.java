@@ -214,7 +214,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 
 	@Override
 	public ASerializedView getSerializableRepresentation() {
-		SerializedBiClusterView serializedForm = new SerializedBiClusterView();
+		SerializedBiClusterView serializedForm = new SerializedBiClusterView(this);
 		serializedForm.setViewID(this.getID());
 		return serializedForm;
 	}

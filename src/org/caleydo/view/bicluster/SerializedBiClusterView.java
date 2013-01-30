@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import org.caleydo.core.serialize.ASerializedMultiTablePerspectiveBasedView;
+import org.caleydo.core.view.IMultiTablePerspectiveBasedView;
 
 /**
  * Serialized <INSERT VIEW NAME> view.
@@ -39,8 +40,17 @@ public class SerializedBiClusterView extends ASerializedMultiTablePerspectiveBas
 	public SerializedBiClusterView() {
 	}
 
+	public SerializedBiClusterView(IMultiTablePerspectiveBasedView view) {
+		super(view);
+	}
+
 	@Override
 	public String getViewType() {
 		return GLBiCluster.VIEW_TYPE;
+	}
+
+	@Override
+	public String getViewClassType() {
+		return GLBiCluster.class.getName();
 	}
 }
