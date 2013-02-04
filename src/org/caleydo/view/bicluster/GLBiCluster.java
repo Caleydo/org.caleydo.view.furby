@@ -30,7 +30,9 @@ import org.caleydo.core.data.datadomain.IDataSupportDefinition;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager;
 import org.caleydo.core.event.EventListenerManagers;
+import org.caleydo.core.event.view.TablePerspectivesChangedEvent;
 import org.caleydo.core.id.IDCategory;
+import org.caleydo.core.manager.GeneralManager;
 import org.caleydo.core.serialize.ASerializedView;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.view.IMultiTablePerspectiveBasedView;
@@ -249,6 +251,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		this.perspectives.add(newTablePerspective);
 		if (root != null && perspectives.size() == 3)
 			findXLZ();
+		fireTablePerspectiveChanged();
 	}
 
 	@Override
@@ -256,6 +259,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		this.perspectives.addAll(newTablePerspectives);
 		if (root != null && perspectives.size() == 3)
 			findXLZ();
+		fireTablePerspectiveChanged();
 	}
 
 	@Override
@@ -272,6 +276,11 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		if (root != null && this.perspectives.size() < 3) {
 			root.setData(null, null, null);
 		}
+		fireTablePerspectiveChanged();
+	}
+
+	private void fireTablePerspectiveChanged() {
+		GeneralManager.get().getEventPublisher().triggerEvent(new TablePerspectivesChangedEvent(this).from(this));
 	}
 
 }
