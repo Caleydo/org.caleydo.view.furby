@@ -32,6 +32,7 @@ import org.caleydo.core.event.EventListenerManager;
 import org.caleydo.core.event.EventListenerManagers;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.serialize.ASerializedView;
+import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.view.IMultiTablePerspectiveBasedView;
 import org.caleydo.core.view.listener.AddTablePerspectivesEvent;
 import org.caleydo.core.view.listener.AddTablePerspectivesListener;
@@ -69,9 +70,6 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	private final EventListenerManager listeners = EventListenerManagers.wrap(this);
 
 	private List<TablePerspective> perspectives = new ArrayList<>();
-	private TablePerspective X; // gene x sample
-	private TablePerspective L; // gene x bicluster
-	private TablePerspective Z; // sample x bicluster
 	private BiClusterRenderStyle renderStyle;
 
 	private LayoutManager layoutManager;
@@ -98,6 +96,8 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		root = new GLBiClusterElement(this);
 		layoutManager.setBaseElementLayout(root);
 
+		if (this.perspectives.size() == 3)
+			findXLZ();
 
 		detailLevel = EDetailLevel.HIGH;
 
@@ -159,14 +159,12 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	 * @param a
 	 * @param b
 	 */
-	private void findLZ(TablePerspective a, TablePerspective b) {
+	private Pair<TablePerspective, TablePerspective> findLZ(TablePerspective x, TablePerspective a, TablePerspective b) {
 		// row: gene, row: gene
-		if (a.getDataDomain().getRecordIDCategory().equals(this.X.getDataDomain().getRecordIDCategory())) {
-			this.L = a;
-			this.Z = b;
+		if (a.getDataDomain().getRecordIDCategory().equals(x.getDataDomain().getRecordIDCategory())) {
+			return Pair.make(a, b);
 		} else {
-			this.L = b;
-			this.Z = a;
+			return Pair.make(b, a);
 		}
 	}
 
@@ -183,18 +181,24 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		IDCategory b_d = b.getDataDomain().getDimensionIDCategory();
 		IDCategory c_d = c.getDataDomain().getDimensionIDCategory();
 
+		TablePerspective x;
+		TablePerspective l;
+		TablePerspective z;
+		Pair<TablePerspective, TablePerspective> lz;
 		if (a_d.equals(b_d)) {
-			this.X = c;
-			findLZ(a, b);
+			x = c;
+			lz = findLZ(x, a, b);
 		} else if (a_d.equals(c_d)) {
-			this.X = b;
-			findLZ(a, c);
+			x = b;
+			lz = findLZ(x, a, c);
 		} else {
-			this.X = a;
-			findLZ(b, c);
+			x = a;
+			lz = findLZ(x, b, c);
 		}
+		l = lz.getFirst();
+		z = lz.getSecond();
 
-		root.setData(X, L, Z);
+		root.setData(x, l, z);
 		layoutManager.updateLayout();
 	}
 
@@ -243,14 +247,14 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	@Override
 	public void addTablePerspective(TablePerspective newTablePerspective) {
 		this.perspectives.add(newTablePerspective);
-		if (perspectives.size() == 3)
+		if (root != null && perspectives.size() == 3)
 			findXLZ();
 	}
 
 	@Override
 	public void addTablePerspectives(List<TablePerspective> newTablePerspectives) {
 		this.perspectives.addAll(newTablePerspectives);
-		if (perspectives.size() == 3)
+		if (root != null && perspectives.size() == 3)
 			findXLZ();
 	}
 
@@ -265,8 +269,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 			if (it.next().getID() == tablePerspectiveID)
 				it.remove();
 		}
-		if (this.perspectives.size() < 3) {
-			this.X = this.L = this.Z = null;
+		if (root != null && this.perspectives.size() < 3) {
 			root.setData(null, null, null);
 		}
 	}

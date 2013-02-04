@@ -60,6 +60,7 @@ public class GLBiClusterElement extends ALayoutContainer {
 	}
 
 	private void initData() {
+		// current three clusters in a row with x, l and z
 		ClusterElement elem = new ClusterElement(view, x);
 		this.add(elem);
 
