@@ -42,10 +42,11 @@ import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.canvas.ATableBasedView;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
 import org.caleydo.core.view.opengl.canvas.IGLCanvas;
+import org.caleydo.core.view.opengl.canvas.remote.IGLRemoteRenderingView;
+import org.caleydo.core.view.opengl.layout.LayoutManager;
 import org.caleydo.core.view.opengl.mouse.GLMouseListener;
-import org.caleydo.core.view.opengl.picking.Pick;
-import org.caleydo.core.view.opengl.picking.PickingMode;
-import org.caleydo.core.view.opengl.picking.PickingType;
+import org.caleydo.core.view.opengl.util.texture.TextureManager;
+import org.caleydo.view.bicluster.elem.GLBiClusterElement;
 import org.caleydo.view.bicluster.renderstyle.BiClusterRenderStyle;
 import org.eclipse.swt.widgets.Composite;
 
@@ -61,7 +62,7 @@ import org.eclipse.swt.widgets.Composite;
  * @author Marc Streit
  */
 
-public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedView {
+public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedView, IGLRemoteRenderingView {
 	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
 	public static final String VIEW_NAME = "BiCluster Visualization";
 
@@ -73,6 +74,9 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	private TablePerspective Z; // sample x bicluster
 	private BiClusterRenderStyle renderStyle;
 
+	private LayoutManager layoutManager;
+	private GLBiClusterElement root;
+
 	/**
 	 * Constructor.
 	 *
@@ -82,15 +86,22 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	 */
 	public GLBiCluster(IGLCanvas glCanvas, Composite parentComposite,
 			ViewFrustum viewFrustum) {
-
 		super(glCanvas, parentComposite, viewFrustum, VIEW_TYPE, VIEW_NAME);
+		this.textureManager = new TextureManager(Activator.getResourceLoader());
 	}
 
 	@Override
 	public void init(GL2 gl) {
-		displayListIndex = gl.glGenLists(1);
 		this.renderStyle = new BiClusterRenderStyle(viewFrustum);
+
+		layoutManager = new LayoutManager(viewFrustum, pixelGLConverter);
+		root = new GLBiClusterElement(this);
+		layoutManager.setBaseElementLayout(root);
+
+
 		detailLevel = EDetailLevel.HIGH;
+
+		layoutManager.updateLayout();
 	}
 
 	@Override
@@ -129,6 +140,13 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	public void displayRemote(GL2 gl) {
 		display(gl);
 	}
+
+	@Override
+	public List<AGLView> getRemoteRenderedViews() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 	@Override
 	public boolean isDataView() {
@@ -175,41 +193,15 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 			this.X = a;
 			findLZ(b, c);
 		}
+
+		root.setData(X, L, Z);
+		layoutManager.updateLayout();
 	}
 
 	@Override
 	public void display(GL2 gl) {
-		if (Z != null) {
-			Float value = Z.getDataDomain().getTable().getRaw(0, 0);
-		}
-
-		//samples
-		// Perspective sample = new Perspective(table_x, table_x.getDimensionIDType());
-		// PerspectiveInitializationData init = new PerspectiveInitializationData();
-		// init.setData(indices);
-		// sample.init(init);
-		// table_x.getTable().registerDimensionPerspective(dimensionPerspective)
-		// table_x.getTablePerspective(recordPerspectiveID, dimensionPerspectiveID);
-
-
-		// TODO: IMPLEMENT GL2 STUFF
-
-		gl.glBegin(GL2.GL_QUADS);
-		gl.glColor3f(0, 1, 0);
-		gl.glVertex3f(0, 0, 0);
-		gl.glVertex3f(0, 1, 0);
-		gl.glVertex3f(1, 1, 0);
-		gl.glVertex3f(1, 0, 0);
-		gl.glEnd();
-
 		checkForHits(gl);
-	}
-
-	@Override
-	protected void handlePickingEvents(PickingType pickingType, PickingMode pickingMode,
-			int externalID, Pick pick) {
-
-		// TODO: Implement picking processing here!
+		layoutManager.render(gl);
 	}
 
 	@Override
@@ -240,8 +232,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 
 	@Override
 	protected void destroyViewSpecificContent(GL2 gl) {
-		// TODO Auto-generated method stub
-
+		root.destroy(gl);
 	}
 
 	@Override
@@ -276,6 +267,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		}
 		if (this.perspectives.size() < 3) {
 			this.X = this.L = this.Z = null;
+			root.setData(null, null, null);
 		}
 	}
 
