@@ -19,6 +19,9 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.layout.ALayoutContainer;
@@ -27,14 +30,13 @@ import org.caleydo.core.view.opengl.layout.RowLayout;
 
 /**
  * @author Samuel Gratzl
- *
+ * @author Michael Gillhofer
  */
 public class GLBiClusterElement extends ALayoutContainer {
 
 	private final AGLView view;
-	private TablePerspective x;
-	private TablePerspective l;
-	private TablePerspective z;
+	private List<TablePerspective> perspectives;
+	
 
 	public GLBiClusterElement(AGLView view) {
 		super(new RowLayout());
@@ -47,33 +49,29 @@ public class GLBiClusterElement extends ALayoutContainer {
 
 	}
 
-	public void setData(TablePerspective x, TablePerspective l, TablePerspective z) {
-		this.x = x;
-		this.l = l;
-		this.z = z;
-		if (this.x == null) {
+
+	public void setData(List<TablePerspective> list) {
+		if (list != null) {
+			perspectives = new ArrayList<>();
+			for (TablePerspective p : list) {
+				if (p != null) 	perspectives.add(p);
+			}
 			this.clear();
-		} else {
+			initData();
+		}  else {
 			this.clear();
 			initData();
 		}
 	}
 
 	private void initData() {
-		// current three clusters in a row with x, l and z
-		ClusterElement elem = new ClusterElement(view, x);
-		this.add(elem);
+		
+		for (TablePerspective p: perspectives) {
+			this.add(new ClusterElement(view, p));
+			this.add(ElementLayouts.createXSpacer(5));
+		}
+		
 
-		this.add(ElementLayouts.createXSpacer(20));
-
-		elem = new ClusterElement(view, l);
-		this.add(elem);
-
-		this.add(ElementLayouts.createXSpacer(20));
-
-		elem = new ClusterElement(view, z);
-		this.add(elem);
 	}
 
 }
-
