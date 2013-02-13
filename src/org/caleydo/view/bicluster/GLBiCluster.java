@@ -20,10 +20,13 @@
 package org.caleydo.view.bicluster;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.media.opengl.GL2;
 
@@ -65,21 +68,19 @@ import org.eclipse.swt.widgets.Composite;
  * Sample GL2 view.
  * </p>
  * <p>
- * This Template is derived from {@link ATableBasedView}, but if the view does
- * not use a table, changing that to {@link AGLView} is necessary.
+ * This Template is derived from {@link ATableBasedView}, but if the view does not use a table, changing that to
+ * {@link AGLView} is necessary.
  * </p>
- * 
+ *
  * @author Marc Streit
  * @author Michael Gillhofer
  */
 
-public class GLBiCluster extends AGLView implements
-		IMultiTablePerspectiveBasedView, IGLRemoteRenderingView {
+public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedView, IGLRemoteRenderingView {
 	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
 	public static final String VIEW_NAME = "BiCluster Visualization";
 
-	private final EventListenerManager listeners = EventListenerManagers
-			.wrap(this);
+	private final EventListenerManager listeners = EventListenerManagers.wrap(this);
 
 	private List<TablePerspective> perspectives = new ArrayList<>();
 	private BiClusterRenderStyle renderStyle;
@@ -89,13 +90,12 @@ public class GLBiCluster extends AGLView implements
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param glCanvas
 	 * @param viewLabel
 	 * @param viewFrustum
 	 */
-	public GLBiCluster(IGLCanvas glCanvas, Composite parentComposite,
-			ViewFrustum viewFrustum) {
+	public GLBiCluster(IGLCanvas glCanvas, Composite parentComposite, ViewFrustum viewFrustum) {
 		super(glCanvas, parentComposite, viewFrustum, VIEW_TYPE, VIEW_NAME);
 		this.textureManager = new TextureManager(Activator.getResourceLoader());
 	}
@@ -123,18 +123,15 @@ public class GLBiCluster extends AGLView implements
 	}
 
 	@Override
-	public void initRemote(final GL2 gl, final AGLView glParentView,
-			final GLMouseListener glMouseListener) {
+	public void initRemote(final GL2 gl, final AGLView glParentView, final GLMouseListener glMouseListener) {
 
 		// Register keyboard listener to GL2 canvas
-		glParentView.getParentComposite().getDisplay()
-				.asyncExec(new Runnable() {
-					@Override
-					public void run() {
-						glParentView.getParentComposite().addKeyListener(
-								glKeyListener);
-					}
-				});
+		glParentView.getParentComposite().getDisplay().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				glParentView.getParentComposite().addKeyListener(glKeyListener);
+			}
+		});
 
 		this.glMouseListener = glMouseListener;
 
@@ -168,17 +165,14 @@ public class GLBiCluster extends AGLView implements
 	}
 
 	/**
-	 * determines which of the given {@link TablePerspective} is L and Z, given
-	 * the known X table
-	 * 
+	 * determines which of the given {@link TablePerspective} is L and Z, given the known X table
+	 *
 	 * @param a
 	 * @param b
 	 */
-	private Pair<TablePerspective, TablePerspective> findLZ(TablePerspective x,
-			TablePerspective a, TablePerspective b) {
+	private Pair<TablePerspective, TablePerspective> findLZ(TablePerspective x, TablePerspective a, TablePerspective b) {
 		// row: gene, row: gene
-		if (a.getDataDomain().getRecordIDCategory()
-				.equals(x.getDataDomain().getRecordIDCategory())) {
+		if (a.getDataDomain().getRecordIDCategory().equals(x.getDataDomain().getRecordIDCategory())) {
 			return Pair.make(a, b);
 		} else {
 			return Pair.make(b, a);
@@ -186,8 +180,8 @@ public class GLBiCluster extends AGLView implements
 	}
 
 	/**
-	 * infers the X,L,Z tables from the dimension and record ID categories, as L
-	 * and Z has the same Dimension ID Category, the remaining one will be X
+	 * infers the X,L,Z tables from the dimension and record ID categories, as L and Z has the same Dimension ID
+	 * Category, the remaining one will be X
 	 */
 	private void findXLZ() {
 
@@ -222,10 +216,9 @@ public class GLBiCluster extends AGLView implements
 		layoutManager.updateLayout();
 	}
 
-	private void createBiClusterPerspectives(TablePerspective x,
-			TablePerspective l, TablePerspective z) {
+	private void createBiClusterPerspectives(TablePerspective x, TablePerspective l, TablePerspective z) {
 		float sampleThreshold = 0.3f;
-		float geneThreshold = 0.2f;
+		float geneThreshold = 0.1f;
 		ATableBasedDataDomain xdd = x.getDataDomain();
 		Table xtable = xdd.getTable();
 		IDType xdimtype = xdd.getDimensionIDType();
@@ -235,66 +228,81 @@ public class GLBiCluster extends AGLView implements
 		Table L = l.getDataDomain().getTable();
 		Table Z = z.getDataDomain().getTable();
 		int bcCountData = L.getColumnIDList().size(); // Nr of BCs in L & Z
-		int bcCountActual = 0; // Nr of BCs to display
 
-		// Indices for Genes and Tables of a specific BiCluster.
-		Map<Integer, ArrayList<Integer>> bcDimIndices = new HashMap<>();
-		Map<Integer, ArrayList<Integer>> bcRecIndices = new HashMap<>();
+		// Tables indices for Genes and Tables of a specific BiCluster.
+		Map<Integer, Set<Pair<Integer, Float>>> bcDimIndices = new HashMap<>();
+		Map<Integer, Set<Pair<Integer, Float>>> bcRecIndices = new HashMap<>();
 		for (int bcNr = 0; bcNr < bcCountData; bcNr++) {
-			// Scanning samples
-			ArrayList<Integer> recList = new ArrayList<Integer>();
-			for (int recNr = 0; recNr < L.getRowIDList().size(); recNr++) {
-				if ((float) L.getRaw(bcNr, recNr) > geneThreshold) {
-					recList.add(recNr);
-				}
-			}
+			Set<Pair<Integer, Float>> recList = scanProbTable(geneThreshold, L, bcNr);
+			Set<Pair<Integer, Float>> dimList = scanProbTable(sampleThreshold, Z, bcNr);
 
-			// Scanning genes
-			ArrayList<Integer> dimList = new ArrayList<Integer>();
-			for (int sampleNr = 0; sampleNr < Z.getRowIDList().size(); sampleNr++) {
-				if ((float) Z.getRaw(bcNr, sampleNr) > sampleThreshold) {
-					dimList.add(sampleNr);
-				}
-			}
+			// only add and visualize the cluster if there are rows
+			// and columns to show is present
 
-			// only add the cluster if data is present
 			if (recList.size() > 0 && dimList.size() > 0) {
 				bcRecIndices.put(bcNr, recList);
 				bcDimIndices.put(bcNr, dimList);
-				bcCountActual++;
 			}
 
 		}
 
-		//Debug output
-//		for (Integer i: bcDimIndices.keySet()) {
-//			System.out.println("Cluster: " + i);
-//			System.out.println("  Dim: " + bcDimIndices.get(i));
-//			System.out.println("  Rec: " + bcRecIndices.get(i));
-//		}
+		perspectives = new ArrayList<TablePerspective>(); // clear perspectives
 
-		perspectives = new ArrayList<TablePerspective>(); //clear perspectives
-		
-		//actually create the cluster perspectives
-		for (Integer i: bcDimIndices.keySet()) {
-			System.out.println(i);
-			Perspective dim = new Perspective(xdd, xdimtype);
-			Perspective rec = new Perspective(xdd, xrectype);
-			PerspectiveInitializationData dim_init = new PerspectiveInitializationData();
-			PerspectiveInitializationData rec_init = new PerspectiveInitializationData();
-			dim_init.setData(bcDimIndices.get(i));
-			rec_init.setData(bcRecIndices.get(i));
-			dim.init(dim_init);
-			rec.init(rec_init);
-			xtable.registerDimensionPerspective(dim, false);
-			xtable.registerRecordPerspective(rec, false);
-			String dimKey = dim.getPerspectiveID();
-			String recKey = rec.getPerspectiveID();
-			TablePerspective custom = xdd.getTablePerspective(recKey, dimKey,
-					false);
-			perspectives.add(custom);
+		// actually create the cluster perspectives
+		for (Integer i : bcDimIndices.keySet()) {
+			addBiClusterTablePerspective(xdd, xtable, xdimtype, xrectype, bcDimIndices, bcRecIndices, i);
 		}
 
+	}
+
+
+	private void addBiClusterTablePerspective(ATableBasedDataDomain xdataDomain, Table xtable, IDType xdimtype,
+			IDType xrectype, Map<Integer, Set<Pair<Integer, Float>>> bcDimIndices,
+			Map<Integer, Set<Pair<Integer, Float>>> bcRecIndices, Integer i) {
+		Perspective dim = new Perspective(xdataDomain, xdimtype);
+		Perspective rec = new Perspective(xdataDomain, xrectype);
+		PerspectiveInitializationData dim_init = new PerspectiveInitializationData();
+		PerspectiveInitializationData rec_init = new PerspectiveInitializationData();
+		ArrayList<Integer> dimIndices = new ArrayList<>(bcDimIndices.size());
+		for (Pair<Integer, Float> p : bcDimIndices.get(i)) {
+			dimIndices.add(p.getFirst());
+		}
+		dim_init.setData(dimIndices);
+		ArrayList<Integer> recIndices = new ArrayList<>(bcDimIndices.size());
+		for (Pair<Integer, Float> p : bcRecIndices.get(i)) {
+			recIndices.add(p.getFirst());
+		}
+		rec_init.setData(recIndices);
+		dim.init(dim_init);
+		rec.init(rec_init);
+		xtable.registerDimensionPerspective(dim, false);
+		xtable.registerRecordPerspective(rec, false);
+		String dimKey = dim.getPerspectiveID();
+		String recKey = rec.getPerspectiveID();
+		TablePerspective custom = xdataDomain.getTablePerspective(recKey, dimKey, false);
+		perspectives.add(custom);
+	}
+
+
+	private Set<Pair<Integer, Float>> scanProbTable(float threshold, Table L, int bcNr) {
+		Set<Pair<Integer, Float>> indicesList = new TreeSet<Pair<Integer, Float>>(
+				new Comparator<Pair<Integer, Float>>() {
+
+					@Override
+					public int compare(Pair<Integer, Float> o1, Pair<Integer, Float> o2) {
+						return o1.getSecond().compareTo(o2.getSecond());
+					}
+
+				});
+		for (int nr = 0; nr < L.getRowIDList().size(); nr++) {
+			float p = (float) L.getRaw(bcNr, nr);
+			Pair<Integer, Float> pair; // Value paired with corresponding probability
+			if (p > threshold) {
+				pair = new Pair<>(nr, p);
+				indicesList.add(pair);
+			}
+		}
+		return indicesList;
 	}
 
 	@Override
@@ -305,8 +313,7 @@ public class GLBiCluster extends AGLView implements
 
 	@Override
 	public ASerializedView getSerializableRepresentation() {
-		SerializedBiClusterView serializedForm = new SerializedBiClusterView(
-				this);
+		SerializedBiClusterView serializedForm = new SerializedBiClusterView(this);
 		serializedForm.setViewID(this.getID());
 		return serializedForm;
 	}
@@ -320,10 +327,8 @@ public class GLBiCluster extends AGLView implements
 	public void registerEventListeners() {
 		super.registerEventListeners();
 		listeners.register(this);
-		listeners.register(AddTablePerspectivesEvent.class,
-				new AddTablePerspectivesListener().setHandler(this));
-		listeners.register(RemoveTablePerspectiveEvent.class,
-				new RemoveTablePerspectiveListener().setHandler(this));
+		listeners.register(AddTablePerspectivesEvent.class, new AddTablePerspectivesListener().setHandler(this));
+		listeners.register(RemoveTablePerspectiveEvent.class, new RemoveTablePerspectiveListener().setHandler(this));
 	}
 
 	@Override
@@ -367,8 +372,7 @@ public class GLBiCluster extends AGLView implements
 
 	@Override
 	public void removeTablePerspective(int tablePerspectiveID) {
-		for (Iterator<TablePerspective> it = perspectives.iterator(); it
-				.hasNext();) {
+		for (Iterator<TablePerspective> it = perspectives.iterator(); it.hasNext();) {
 			if (it.next().getID() == tablePerspectiveID)
 				it.remove();
 		}
@@ -379,11 +383,7 @@ public class GLBiCluster extends AGLView implements
 	}
 
 	private void fireTablePerspectiveChanged() {
-		GeneralManager
-				.get()
-				.getEventPublisher()
-				.triggerEvent(
-						new TablePerspectivesChangedEvent(this).from(this));
+		GeneralManager.get().getEventPublisher().triggerEvent(new TablePerspectivesChangedEvent(this).from(this));
 	}
 
 }
