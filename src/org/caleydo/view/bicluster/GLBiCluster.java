@@ -314,7 +314,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 
 		findXLZ();
 
-		detailLevel = EDetailLevel.HIGH;
+		// detailLevel = EDetailLevel.HIGH;
 		layoutManager.setBaseElementLayout(root);
 		layoutManager.updateLayout();
 	}

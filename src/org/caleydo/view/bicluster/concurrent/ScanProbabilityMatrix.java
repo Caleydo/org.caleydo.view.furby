@@ -56,11 +56,11 @@ public class ScanProbabilityMatrix implements Callable<ArrayList<Integer>> {
 
 				});
 		for (int nr = 0; nr < table.getRowIDList().size(); nr++) {
+			Pair<Integer, Float> pair;
 			float p;
 			synchronized (table) {
 				p = (float) table.getRaw(bcNr, nr);
 			}
-			Pair<Integer, Float> pair;
 			if (p > threshold) {
 				pair = new Pair<>(nr, p);
 				indicesList.add(pair);

@@ -52,37 +52,38 @@ public class Toolbar extends ControlContribution {
 		composite.setLayout(layout);
 
 		final Label sampleLabel = new Label(composite, SWT.HORIZONTAL);
-		sampleLabel.setText("Sample Threshold: 2");
-		sampleLabel.setLayoutData(new RowData(150, 20));
+		sampleLabel.setText("Sample Threshold");
+		sampleLabel.setLayoutData(new RowData(100, 20));
 
 
 		final Spinner sampleThrSpinner = new Spinner(composite, SWT.HORIZONTAL);
-		sampleThrSpinner.setValues(200, 0, 300, 1, 5, 1);
-		sampleThrSpinner.setLayoutData(new RowData(130, 20));
+		sampleThrSpinner.setValues(200, 0, 300, 2, 5, 1);
+		// sampleThrSpinner.setLayoutData(new RowData(40, 20));
 		sampleThrSpinner.setEnabled(true);
 
 		final Label geneLabel = new Label(composite, SWT.HORIZONTAL);
-		geneLabel.setText("Gene Threshold: 0.1");
-		geneLabel.setLayoutData(new RowData(150, 20));
+		geneLabel.setText("       Gene Threshold");
+		geneLabel.setLayoutData(new RowData(105, 20));
 
 		final Spinner geneThrSpinner = new Spinner(composite, SWT.HORIZONTAL);
-		geneThrSpinner.setValues(10, -100, 200, 1, 1, 1);
-		geneThrSpinner.setLayoutData(new RowData(150, 20));
+		geneThrSpinner.setValues(10, -100, 200, 2, 1, 1);
+		// geneThrSpinner.setLayoutData(new RowData(40, 20));
 		geneThrSpinner.setEnabled(true);
 
 		final Button update = new Button(composite, SWT.HORIZONTAL);
 		geneThrSpinner.setLayoutData(new RowData(70, 20));
 		update.setText("Update cluster");
+		update.setEnabled(true);
 
 
 		Listener thresholdUpdateListener = new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				float samplTh = sampleThrSpinner.getSelection();
-				float geneTh = geneThrSpinner.getSelection();
-				sampleLabel.setText("Sample Threshold: " + samplTh / 100);
-				geneLabel.setText("Gene Threshold: " + geneTh / 100);
-				// update.setText("Update thresholds: S:" + samplTh / 100 + " G:" + geneTh / 100);
+				// float samplTh = sampleThrSpinner.getSelection();
+				// float geneTh = geneThrSpinner.getSelection();
+				// sampleLabel.setText("Sample Threshold: " + samplTh / 100);
+				// geneLabel.setText("Gene Threshold: " + geneTh / 100);
+				// // update.setText("Update thresholds: S:" + samplTh / 100 + " G:" + geneTh / 100);
 			}
 
 		};
