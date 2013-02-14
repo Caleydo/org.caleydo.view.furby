@@ -23,6 +23,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 import org.caleydo.core.view.ARcpGLViewPart;
+import org.caleydo.view.bicluster.view.Toolbar;
 import org.eclipse.swt.widgets.Composite;
 
 /**
@@ -31,6 +32,7 @@ import org.eclipse.swt.widgets.Composite;
  * @author <INSERT_YOUR_NAME>
  */
 public class RcpGLBiClusterView extends ARcpGLViewPart {
+
 
 	/**
 	 * Constructor.
@@ -57,8 +59,8 @@ public class RcpGLBiClusterView extends ARcpGLViewPart {
 
 	@Override
 	public void addToolBarContent() {
-		super.addToolBarContent();
-		// toolBarManager.add(action)
+		toolBarManager.add(new Toolbar());
+		toolBarManager.update(true);
 	}
 
 	@Override

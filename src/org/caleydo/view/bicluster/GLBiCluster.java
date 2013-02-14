@@ -20,28 +20,18 @@
 package org.caleydo.view.bicluster;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 import javax.media.opengl.GL2;
 
-import org.caleydo.core.data.collection.table.Table;
-import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.datadomain.DataSupportDefinitions;
 import org.caleydo.core.data.datadomain.IDataSupportDefinition;
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.data.perspective.variable.Perspective;
-import org.caleydo.core.data.perspective.variable.PerspectiveInitializationData;
 import org.caleydo.core.event.EventListenerManager;
 import org.caleydo.core.event.EventListenerManagers;
 import org.caleydo.core.event.view.TablePerspectivesChangedEvent;
 import org.caleydo.core.id.IDCategory;
-import org.caleydo.core.id.IDType;
 import org.caleydo.core.manager.GeneralManager;
 import org.caleydo.core.serialize.ASerializedView;
 import org.caleydo.core.util.collection.Pair;
@@ -60,6 +50,8 @@ import org.caleydo.core.view.opengl.layout.LayoutManager;
 import org.caleydo.core.view.opengl.mouse.GLMouseListener;
 import org.caleydo.core.view.opengl.util.texture.TextureManager;
 import org.caleydo.view.bicluster.elem.GLBiClusterElement;
+import org.caleydo.view.bicluster.event.ToolbarEvent;
+import org.caleydo.view.bicluster.listener.ToolbarListener;
 import org.caleydo.view.bicluster.renderstyle.BiClusterRenderStyle;
 import org.eclipse.swt.widgets.Composite;
 
@@ -87,6 +79,13 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 
 	private LayoutManager layoutManager;
 	private GLBiClusterElement root;
+	private Model model;
+
+	ToolbarListener toolbarListener;
+
+	TablePerspective x;
+	TablePerspective l;
+	TablePerspective z;
 
 	/**
 	 * Constructor.
@@ -94,10 +93,16 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	 * @param glCanvas
 	 * @param viewLabel
 	 * @param viewFrustum
+	 *
 	 */
 	public GLBiCluster(IGLCanvas glCanvas, Composite parentComposite, ViewFrustum viewFrustum) {
 		super(glCanvas, parentComposite, viewFrustum, VIEW_TYPE, VIEW_NAME);
 		this.textureManager = new TextureManager(Activator.getResourceLoader());
+		this.model = Model.getModel();
+
+		toolbarListener = new ToolbarListener();
+		toolbarListener.setHandler(this);
+		eventPublisher.addListener(ToolbarEvent.class, toolbarListener);
 	}
 
 	@Override
@@ -193,9 +198,6 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		IDCategory b_d = b.getDataDomain().getDimensionIDCategory();
 		IDCategory c_d = c.getDataDomain().getDimensionIDCategory();
 
-		TablePerspective x;
-		TablePerspective l;
-		TablePerspective z;
 		Pair<TablePerspective, TablePerspective> lz;
 		if (a_d.equals(b_d)) {
 			x = c;
@@ -210,99 +212,10 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		l = lz.getFirst();
 		z = lz.getSecond();
 
-		createBiClusterPerspectives(x, l, z);
+		perspectives = model.createBiClusterPerspectives(x, l, z);
 
 		root.setData(perspectives);
 		layoutManager.updateLayout();
-	}
-
-	private void createBiClusterPerspectives(TablePerspective x, TablePerspective l, TablePerspective z) {
-		float sampleThreshold = 0.3f;
-		float geneThreshold = 0.1f;
-		ATableBasedDataDomain xdd = x.getDataDomain();
-		Table xtable = xdd.getTable();
-		IDType xdimtype = xdd.getDimensionIDType();
-		IDType xrectype = xdd.getRecordIDType();
-
-		Table X = x.getDataDomain().getTable();
-		Table L = l.getDataDomain().getTable();
-		Table Z = z.getDataDomain().getTable();
-		int bcCountData = L.getColumnIDList().size(); // Nr of BCs in L & Z
-
-		// Tables indices for Genes and Tables of a specific BiCluster.
-		Map<Integer, Set<Pair<Integer, Float>>> bcDimIndices = new HashMap<>();
-		Map<Integer, Set<Pair<Integer, Float>>> bcRecIndices = new HashMap<>();
-		for (int bcNr = 0; bcNr < bcCountData; bcNr++) {
-			Set<Pair<Integer, Float>> recList = scanProbTable(geneThreshold, L, bcNr);
-			Set<Pair<Integer, Float>> dimList = scanProbTable(sampleThreshold, Z, bcNr);
-
-			// only add and visualize the cluster if there are rows
-			// and columns to show is present
-
-			if (recList.size() > 0 && dimList.size() > 0) {
-				bcRecIndices.put(bcNr, recList);
-				bcDimIndices.put(bcNr, dimList);
-			}
-
-		}
-
-		perspectives = new ArrayList<TablePerspective>(); // clear perspectives
-
-		// actually create the cluster perspectives
-		for (Integer i : bcDimIndices.keySet()) {
-			addBiClusterTablePerspective(xdd, xtable, xdimtype, xrectype, bcDimIndices, bcRecIndices, i);
-		}
-
-	}
-
-
-	private void addBiClusterTablePerspective(ATableBasedDataDomain xdataDomain, Table xtable, IDType xdimtype,
-			IDType xrectype, Map<Integer, Set<Pair<Integer, Float>>> bcDimIndices,
-			Map<Integer, Set<Pair<Integer, Float>>> bcRecIndices, Integer i) {
-		Perspective dim = new Perspective(xdataDomain, xdimtype);
-		Perspective rec = new Perspective(xdataDomain, xrectype);
-		PerspectiveInitializationData dim_init = new PerspectiveInitializationData();
-		PerspectiveInitializationData rec_init = new PerspectiveInitializationData();
-		ArrayList<Integer> dimIndices = new ArrayList<>(bcDimIndices.size());
-		for (Pair<Integer, Float> p : bcDimIndices.get(i)) {
-			dimIndices.add(p.getFirst());
-		}
-		dim_init.setData(dimIndices);
-		ArrayList<Integer> recIndices = new ArrayList<>(bcDimIndices.size());
-		for (Pair<Integer, Float> p : bcRecIndices.get(i)) {
-			recIndices.add(p.getFirst());
-		}
-		rec_init.setData(recIndices);
-		dim.init(dim_init);
-		rec.init(rec_init);
-		xtable.registerDimensionPerspective(dim, false);
-		xtable.registerRecordPerspective(rec, false);
-		String dimKey = dim.getPerspectiveID();
-		String recKey = rec.getPerspectiveID();
-		TablePerspective custom = xdataDomain.getTablePerspective(recKey, dimKey, false);
-		perspectives.add(custom);
-	}
-
-
-	private Set<Pair<Integer, Float>> scanProbTable(float threshold, Table L, int bcNr) {
-		Set<Pair<Integer, Float>> indicesList = new TreeSet<Pair<Integer, Float>>(
-				new Comparator<Pair<Integer, Float>>() {
-
-					@Override
-					public int compare(Pair<Integer, Float> o1, Pair<Integer, Float> o2) {
-						return o1.getSecond().compareTo(o2.getSecond());
-					}
-
-				});
-		for (int nr = 0; nr < L.getRowIDList().size(); nr++) {
-			float p = (float) L.getRaw(bcNr, nr);
-			Pair<Integer, Float> pair; // Value paired with corresponding probability
-			if (p > threshold) {
-				pair = new Pair<>(nr, p);
-				indicesList.add(pair);
-			}
-		}
-		return indicesList;
 	}
 
 	@Override
@@ -384,6 +297,26 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 
 	private void fireTablePerspectiveChanged() {
 		GeneralManager.get().getEventPublisher().triggerEvent(new TablePerspectivesChangedEvent(this).from(this));
+	}
+
+	/**
+	 * @param geneThreshold
+	 * @param sampleThreshold
+	 */
+	public void handleUpdate(float sampleThreshold, float geneThreshold) {
+		model.setGeneThreshold(geneThreshold);
+		model.setSampleThreshold(sampleThreshold);
+		root = new GLBiClusterElement(this);
+		perspectives = new ArrayList<TablePerspective>();
+		perspectives.add(l);
+		perspectives.add(x);
+		perspectives.add(z);
+
+		findXLZ();
+
+		detailLevel = EDetailLevel.HIGH;
+		layoutManager.setBaseElementLayout(root);
+		layoutManager.updateLayout();
 	}
 
 }
