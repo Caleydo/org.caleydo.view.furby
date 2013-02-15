@@ -64,8 +64,8 @@ import org.eclipse.swt.widgets.Composite;
  * {@link AGLView} is necessary.
  * </p>
  *
- * @author Marc Streit
  * @author Michael Gillhofer
+ * @author Marc Streit
  */
 
 public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedView, IGLRemoteRenderingView {
@@ -213,7 +213,6 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		z = lz.getSecond();
 
 		perspectives = model.createBiClusterPerspectives(x, l, z);
-
 		root.setData(perspectives);
 		layoutManager.updateLayout();
 	}
@@ -306,17 +305,19 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	public void handleUpdate(float sampleThreshold, float geneThreshold) {
 		model.setGeneThreshold(geneThreshold);
 		model.setSampleThreshold(sampleThreshold);
-		root = new GLBiClusterElement(this);
-		perspectives = new ArrayList<TablePerspective>();
-		perspectives.add(l);
-		perspectives.add(x);
-		perspectives.add(z);
-
-		findXLZ();
-
-		// detailLevel = EDetailLevel.HIGH;
-		layoutManager.setBaseElementLayout(root);
-		layoutManager.updateLayout();
+		if (perspectives.size() >= 3 || (x != null && l != null && z != null)) {
+			root = new GLBiClusterElement(this);
+			perspectives = new ArrayList<TablePerspective>();
+			perspectives.add(l);
+			perspectives.add(x);
+			perspectives.add(z);
+			long time = System.currentTimeMillis();
+			findXLZ();
+			System.out.println("Updated in: " + (System.currentTimeMillis() - time) / 1000. + "s");
+			// detailLevel = EDetailLevel.HIGH;
+			layoutManager.setBaseElementLayout(root);
+			layoutManager.updateLayout();
+		}
 	}
 
 }

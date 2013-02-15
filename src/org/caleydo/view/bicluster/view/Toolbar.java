@@ -25,13 +25,12 @@ import org.eclipse.jface.action.ControlContribution;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Slider;
 
 /**
  * @author Michael Gillhofer
@@ -43,7 +42,6 @@ public class Toolbar extends ControlContribution {
 		super("Trend Highlight Mode");
 	}
 
-
 	@Override
 	protected Control createControl(Composite parent) {
 
@@ -52,54 +50,38 @@ public class Toolbar extends ControlContribution {
 		composite.setLayout(layout);
 
 		final Label sampleLabel = new Label(composite, SWT.HORIZONTAL);
-		sampleLabel.setText("Sample Threshold");
-		sampleLabel.setLayoutData(new RowData(100, 20));
+		sampleLabel.setLayoutData(new RowData(200, 20));
 
-
-		final Spinner sampleThrSpinner = new Spinner(composite, SWT.HORIZONTAL);
+		final Slider sampleThrSpinner = new Slider(composite, SWT.HORIZONTAL);
 		sampleThrSpinner.setValues(200, 0, 300, 2, 5, 1);
-		// sampleThrSpinner.setLayoutData(new RowData(40, 20));
+		sampleThrSpinner.setLayoutData(new RowData(150, 20));
 		sampleThrSpinner.setEnabled(true);
 
 		final Label geneLabel = new Label(composite, SWT.HORIZONTAL);
-		geneLabel.setText("       Gene Threshold");
-		geneLabel.setLayoutData(new RowData(105, 20));
+		geneLabel.setLayoutData(new RowData(205, 20));
 
-		final Spinner geneThrSpinner = new Spinner(composite, SWT.HORIZONTAL);
-		geneThrSpinner.setValues(10, -100, 200, 2, 1, 1);
-		// geneThrSpinner.setLayoutData(new RowData(40, 20));
+		final Slider geneThrSpinner = new Slider(composite, SWT.HORIZONTAL);
+		geneThrSpinner.setValues(10, -100, 100, 2, 1, 1);
+		geneThrSpinner.setLayoutData(new RowData(200, 20));
 		geneThrSpinner.setEnabled(true);
 
-		final Button update = new Button(composite, SWT.HORIZONTAL);
-		geneThrSpinner.setLayoutData(new RowData(70, 20));
-		update.setText("Update cluster");
-		update.setEnabled(true);
-
+		sampleLabel.setText("Sample Threshold: 2");
+		geneLabel.setText("       Gene Threshold: 0.1");
 
 		Listener thresholdUpdateListener = new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				// float samplTh = sampleThrSpinner.getSelection();
-				// float geneTh = geneThrSpinner.getSelection();
-				// sampleLabel.setText("Sample Threshold: " + samplTh / 100);
-				// geneLabel.setText("Gene Threshold: " + geneTh / 100);
-				// // update.setText("Update thresholds: S:" + samplTh / 100 + " G:" + geneTh / 100);
+				float samplTh = sampleThrSpinner.getSelection();
+				float geneTh = geneThrSpinner.getSelection();
+				sampleLabel.setText("Sample Threshold: " + samplTh / 100);
+				geneLabel.setText("      Gene Threshold: " + geneTh / 100);
+				// update.setText("Update thresholds: S:" + samplTh / 100 + " G:" + geneTh / 100);
+				GeneralManager.get().getEventPublisher().triggerEvent(new ToolbarEvent(samplTh / 100, geneTh / 100));
 			}
 
 		};
 		sampleThrSpinner.addListener(SWT.Selection, thresholdUpdateListener);
 		geneThrSpinner.addListener(SWT.Selection, thresholdUpdateListener);
-		update.setEnabled(true);
-		update.addListener(SWT.MouseUp, new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				float samplTh = sampleThrSpinner.getSelection();
-				float recTh = geneThrSpinner.getSelection();
-				GeneralManager.get().getEventPublisher().triggerEvent(new ToolbarEvent(samplTh / 100, recTh / 100));
-			}
-
-		});
 
 		return composite;
 	}

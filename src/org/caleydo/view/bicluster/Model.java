@@ -69,7 +69,7 @@ public class Model {
 	}
 
 	private Model() {
-		this.executorService = Executors.newCachedThreadPool();
+		this.executorService = Executors.newFixedThreadPool(4);
 	}
 
 	@SuppressWarnings("null")
@@ -97,7 +97,6 @@ public class Model {
 
 			bcRecScanFut.put(bcNr, recList);
 			bcDimScanFut.put(bcNr, dimList);
-
 		}
 
 

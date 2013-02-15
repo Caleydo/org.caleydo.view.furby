@@ -38,7 +38,6 @@ public class ScanProbabilityMatrix implements Callable<ArrayList<Integer>> {
 	private Table table;
 	private int bcNr;
 
-
 	public ScanProbabilityMatrix(float threshold, Table t, int bcNr) {
 		this.threshold = threshold;
 		this.table = t;
@@ -55,12 +54,13 @@ public class ScanProbabilityMatrix implements Callable<ArrayList<Integer>> {
 					}
 
 				});
-		for (int nr = 0; nr < table.getRowIDList().size(); nr++) {
+		long fulltime = 0;
+		int tablesize = table.getRowIDList().size();
+		for (int nr = 0; nr < tablesize; nr++) {
 			Pair<Integer, Float> pair;
 			float p;
-			synchronized (table) {
-				p = (float) table.getRaw(bcNr, nr);
-			}
+			p = (float) table.getRaw(bcNr, nr);
+
 			if (p > threshold) {
 				pair = new Pair<>(nr, p);
 				indicesList.add(pair);
@@ -70,6 +70,7 @@ public class ScanProbabilityMatrix implements Callable<ArrayList<Integer>> {
 		for (Pair<Integer, Float> p : indicesList) {
 			indices.add(p.getFirst());
 		}
+		// System.out.println("BC Nr. " + this.bcNr + ": " + fulltime / 1000. + "s");
 		return indices;
 	}
 
