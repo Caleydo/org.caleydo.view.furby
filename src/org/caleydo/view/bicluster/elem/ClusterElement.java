@@ -27,8 +27,8 @@ import java.util.Set;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.view.ViewManager;
 import org.caleydo.core.view.opengl.canvas.AGLView;
-import org.caleydo.core.view.opengl.layout.ElementLayout;
 import org.caleydo.core.view.opengl.layout.util.multiform.MultiFormRenderer;
+import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
 import org.caleydo.view.bicluster.GLBiCluster;
 
 /**
@@ -37,7 +37,7 @@ import org.caleydo.view.bicluster.GLBiCluster;
  * @author Samuel Gratzl
  *
  */
-public class ClusterElement extends ElementLayout {
+public class ClusterElement extends GLElementAdapter {
 	private static final String CLUSTER_EMBEDDING_ID = "org.caleydo.view.bicluster.cluster";
 
 	private TablePerspective data;
@@ -45,14 +45,13 @@ public class ClusterElement extends ElementLayout {
 	private MultiFormRenderer multiFormRenderer;
 
 	public ClusterElement(AGLView view, TablePerspective data) {
+		super(view);
 		this.view = view;
 		this.data = data;
 		init();
 	}
 
 	private void init() {
-		this.setGrabX(true);
-		this.setGrabY(true);
 
 		// find all registered embedded views that support the actual rendering
 		Set<String> remoteRenderedViewIDs = ViewManager.get().getRemotePlugInViewIDs(GLBiCluster.VIEW_TYPE,
@@ -64,10 +63,9 @@ public class ClusterElement extends ElementLayout {
 		this.multiFormRenderer = new MultiFormRenderer(view, true);
 		List<TablePerspective> tablePerspectives = Collections.singletonList(data);
 
-		int localRendererID = -1;
 		for (String viewID : remoteRenderedViewIDs) {
-			localRendererID = multiFormRenderer.addPluginVisualization(viewID, GLBiCluster.VIEW_TYPE,
-					CLUSTER_EMBEDDING_ID, tablePerspectives, null);
+			multiFormRenderer.addPluginVisualization(viewID, GLBiCluster.VIEW_TYPE, CLUSTER_EMBEDDING_ID,
+					tablePerspectives, null);
 		}
 		multiFormRenderer.setActive(multiFormRenderer.getDefaultRendererID());
 		this.setRenderer(multiFormRenderer);

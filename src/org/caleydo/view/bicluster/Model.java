@@ -72,7 +72,6 @@ public class Model {
 		this.executorService = Executors.newFixedThreadPool(4);
 	}
 
-	@SuppressWarnings("null")
 	protected List<TablePerspective> createBiClusterPerspectives(TablePerspective x, TablePerspective l,
 			TablePerspective z) {
 		System.out.println("Erstelle Cluster mit SampleTH: " + sampleThreshold);
@@ -87,12 +86,12 @@ public class Model {
 		int bcCountData = L.getColumnIDList().size(); // Nr of BCs in L & Z
 
 		// Tables indices for Genes and Tables of a specific BiCluster.
-		Map<Integer, Future<ArrayList<Integer>>> bcDimScanFut = new HashMap<>();
-		Map<Integer, Future<ArrayList<Integer>>> bcRecScanFut = new HashMap<>();
+		Map<Integer, Future<List<Integer>>> bcDimScanFut = new HashMap<>();
+		Map<Integer, Future<List<Integer>>> bcRecScanFut = new HashMap<>();
 		for (int bcNr = 0; bcNr < bcCountData; bcNr++) {
-			Future<ArrayList<Integer>> recList = executorService.submit(new ScanProbabilityMatrix(geneThreshold, L,
+			Future<List<Integer>> recList = executorService.submit(new ScanProbabilityMatrix(geneThreshold, L,
 					bcNr));
-			Future<ArrayList<Integer>> dimList = executorService.submit(new ScanProbabilityMatrix(sampleThreshold, Z,
+			Future<List<Integer>> dimList = executorService.submit(new ScanProbabilityMatrix(sampleThreshold, Z,
 					bcNr));
 
 			bcRecScanFut.put(bcNr, recList);
@@ -104,8 +103,8 @@ public class Model {
 
 		// actually create the cluster perspectives
 		for (Integer i : bcDimScanFut.keySet()) {
-			ArrayList<Integer> recIndices = null;
-			ArrayList<Integer> dimIndices = null;
+			List<Integer> recIndices = null;
+			List<Integer> dimIndices = null;
 			try {
 				dimIndices = bcDimScanFut.get(i).get();
 				recIndices = bcRecScanFut.get(i).get();
@@ -121,7 +120,7 @@ public class Model {
 	}
 
 	private void addBiClusterTablePerspective(ATableBasedDataDomain xdataDomain, Table xtable, IDType xdimtype,
-			IDType xrectype, ArrayList<Integer> bcDimIndices, ArrayList<Integer> bcRecIndices,
+			IDType xrectype, List<Integer> bcDimIndices, List<Integer> bcRecIndices,
 			List<TablePerspective> perspectives) {
 		Perspective dim = new Perspective(xdataDomain, xdimtype);
 		Perspective rec = new Perspective(xdataDomain, xrectype);

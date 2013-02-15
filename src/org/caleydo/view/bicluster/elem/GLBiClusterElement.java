@@ -19,59 +19,50 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.view.opengl.canvas.AGLView;
-import org.caleydo.core.view.opengl.layout.ALayoutContainer;
-import org.caleydo.core.view.opengl.layout.ElementLayouts;
-import org.caleydo.core.view.opengl.layout.RowLayout;
+import org.caleydo.core.view.opengl.layout2.GLElementContainer;
+import org.caleydo.core.view.opengl.layout2.IGLElementContext;
+import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 
 /**
  * @author Samuel Gratzl
  * @author Michael Gillhofer
  */
-public class GLBiClusterElement extends ALayoutContainer {
+public class GLBiClusterElement extends GLElementContainer implements IGLLayout {
 
 	private final AGLView view;
-	private List<TablePerspective> perspectives;
-	
+
 
 	public GLBiClusterElement(AGLView view) {
-		super(new RowLayout());
 		this.view = view;
 
-		init();
-	}
-
-	private void init() {
+		setLayout(GLLayouts.flowHorizontal(5));
 
 	}
 
+	@Override
+	protected void init(IGLElementContext context) {
+		// TODO Auto-generated method stub
+		super.init(context);
+	}
+
+	@Override
+	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
+
+	}
 
 	public void setData(List<TablePerspective> list) {
+		this.clear();
 		if (list != null) {
-			perspectives = new ArrayList<>();
+			System.out.println(list.size());
 			for (TablePerspective p : list) {
-				if (p != null) 	perspectives.add(p);
+				this.add(new ClusterElement(view, p));
 			}
-			this.clear();
-			initData();
-		}  else {
-			this.clear();
-			initData();
 		}
 	}
-
-	private void initData() {
-		
-		for (TablePerspective p: perspectives) {
-			this.add(new ClusterElement(view, p));
-			this.add(ElementLayouts.createXSpacer(5));
-		}
-		
-
-	}
-
 }

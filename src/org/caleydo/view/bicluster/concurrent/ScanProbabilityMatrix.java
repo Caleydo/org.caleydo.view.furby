@@ -20,8 +20,8 @@
 package org.caleydo.view.bicluster.concurrent;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Set;
+import java.util.List;
+import java.util.NavigableSet;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
@@ -32,7 +32,7 @@ import org.caleydo.core.util.collection.Pair;
  * @author user
  *
  */
-public class ScanProbabilityMatrix implements Callable<ArrayList<Integer>> {
+public class ScanProbabilityMatrix implements Callable<List<Integer>> {
 
 	private float threshold;
 	private Table table;
@@ -44,18 +44,9 @@ public class ScanProbabilityMatrix implements Callable<ArrayList<Integer>> {
 		this.bcNr = bcNr;
 	}
 
-	private ArrayList<Integer> scanProbTable() {
-		Set<Pair<Integer, Float>> indicesList = new TreeSet<Pair<Integer, Float>>(
-				new Comparator<Pair<Integer, Float>>() {
-
-					@Override
-					public int compare(Pair<Integer, Float> o1, Pair<Integer, Float> o2) {
-						return o1.getSecond().compareTo(o2.getSecond());
-					}
-
-				});
-		long fulltime = 0;
-		int tablesize = table.getRowIDList().size();
+	private List<Integer> scanProbTable() {
+		NavigableSet<Pair<Integer, Float>> indicesList = new TreeSet<Pair<Integer, Float>>(Pair.<Float> compareSecond());
+		final int tablesize = table.depth(); // table.getRowIDList().size();
 		for (int nr = 0; nr < tablesize; nr++) {
 			Pair<Integer, Float> pair;
 			float p;
@@ -66,7 +57,7 @@ public class ScanProbabilityMatrix implements Callable<ArrayList<Integer>> {
 				indicesList.add(pair);
 			}
 		}
-		ArrayList<Integer> indices = new ArrayList<>(indicesList.size());
+		List<Integer> indices = new ArrayList<>(indicesList.size());
 		for (Pair<Integer, Float> p : indicesList) {
 			indices.add(p.getFirst());
 		}
@@ -80,7 +71,7 @@ public class ScanProbabilityMatrix implements Callable<ArrayList<Integer>> {
 	 * @see java.util.concurrent.Callable#call()
 	 */
 	@Override
-	public ArrayList<Integer> call() throws Exception {
+	public List<Integer> call() throws Exception {
 		return scanProbTable();
 
 	}

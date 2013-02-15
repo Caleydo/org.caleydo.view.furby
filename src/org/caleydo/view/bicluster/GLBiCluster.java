@@ -28,8 +28,7 @@ import javax.media.opengl.GL2;
 import org.caleydo.core.data.datadomain.DataSupportDefinitions;
 import org.caleydo.core.data.datadomain.IDataSupportDefinition;
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.event.EventListenerManager;
-import org.caleydo.core.event.EventListenerManagers;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.view.TablePerspectivesChangedEvent;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.manager.GeneralManager;
@@ -46,13 +45,11 @@ import org.caleydo.core.view.opengl.canvas.ATableBasedView;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
 import org.caleydo.core.view.opengl.canvas.IGLCanvas;
 import org.caleydo.core.view.opengl.canvas.remote.IGLRemoteRenderingView;
-import org.caleydo.core.view.opengl.layout.LayoutManager;
-import org.caleydo.core.view.opengl.mouse.GLMouseListener;
+import org.caleydo.core.view.opengl.layout2.AGLElementGLView;
+import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.util.texture.TextureManager;
 import org.caleydo.view.bicluster.elem.GLBiClusterElement;
 import org.caleydo.view.bicluster.event.ToolbarEvent;
-import org.caleydo.view.bicluster.listener.ToolbarListener;
-import org.caleydo.view.bicluster.renderstyle.BiClusterRenderStyle;
 import org.eclipse.swt.widgets.Composite;
 
 /**
@@ -68,24 +65,17 @@ import org.eclipse.swt.widgets.Composite;
  * @author Marc Streit
  */
 
-public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedView, IGLRemoteRenderingView {
+public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspectiveBasedView, IGLRemoteRenderingView {
 	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
 	public static final String VIEW_NAME = "BiCluster Visualization";
 
-	private final EventListenerManager listeners = EventListenerManagers.wrap(this);
+	private final List<TablePerspective> perspectives = new ArrayList<>();
 
-	private List<TablePerspective> perspectives = new ArrayList<>();
-	private BiClusterRenderStyle renderStyle;
-
-	private LayoutManager layoutManager;
-	private GLBiClusterElement root;
 	private Model model;
 
-	ToolbarListener toolbarListener;
-
-	TablePerspective x;
-	TablePerspective l;
-	TablePerspective z;
+	private TablePerspective x;
+	private TablePerspective l;
+	private TablePerspective z;
 
 	/**
 	 * Constructor.
@@ -99,63 +89,17 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		super(glCanvas, parentComposite, viewFrustum, VIEW_TYPE, VIEW_NAME);
 		this.textureManager = new TextureManager(Activator.getResourceLoader());
 		this.model = Model.getModel();
-
-		toolbarListener = new ToolbarListener();
-		toolbarListener.setHandler(this);
-		eventPublisher.addListener(ToolbarEvent.class, toolbarListener);
 	}
 
 	@Override
 	public void init(GL2 gl) {
-		this.renderStyle = new BiClusterRenderStyle(viewFrustum);
-
-		layoutManager = new LayoutManager(viewFrustum, pixelGLConverter);
-		root = new GLBiClusterElement(this);
-		layoutManager.setBaseElementLayout(root);
+		super.init(gl);
 
 		if (this.perspectives.size() >= 3) {
 			findXLZ();
 		}
 
 		detailLevel = EDetailLevel.HIGH;
-
-		layoutManager.updateLayout();
-	}
-
-	@Override
-	public void initLocal(GL2 gl) {
-		init(gl);
-	}
-
-	@Override
-	public void initRemote(final GL2 gl, final AGLView glParentView, final GLMouseListener glMouseListener) {
-
-		// Register keyboard listener to GL2 canvas
-		glParentView.getParentComposite().getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				glParentView.getParentComposite().addKeyListener(glKeyListener);
-			}
-		});
-
-		this.glMouseListener = glMouseListener;
-
-		init(gl);
-	}
-
-	@Override
-	public void displayLocal(GL2 gl) {
-		pickingManager.handlePicking(this, gl);
-		display(gl);
-		if (busyState != EBusyState.OFF) {
-			renderBusyMode(gl);
-		}
-
-	}
-
-	@Override
-	public void displayRemote(GL2 gl) {
-		display(gl);
 	}
 
 	@Override
@@ -212,15 +156,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		l = lz.getFirst();
 		z = lz.getSecond();
 
-		perspectives = model.createBiClusterPerspectives(x, l, z);
-		root.setData(perspectives);
-		layoutManager.updateLayout();
-	}
-
-	@Override
-	public void display(GL2 gl) {
-		checkForHits(gl);
-		layoutManager.render(gl);
+		getRoot().setData(model.createBiClusterPerspectives(x, l, z));
 	}
 
 	@Override
@@ -238,20 +174,9 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	@Override
 	public void registerEventListeners() {
 		super.registerEventListeners();
-		listeners.register(this);
-		listeners.register(AddTablePerspectivesEvent.class, new AddTablePerspectivesListener().setHandler(this));
-		listeners.register(RemoveTablePerspectiveEvent.class, new RemoveTablePerspectiveListener().setHandler(this));
-	}
-
-	@Override
-	public void unregisterEventListeners() {
-		super.unregisterEventListeners();
-		listeners.unregisterAll();
-	}
-
-	@Override
-	protected void destroyViewSpecificContent(GL2 gl) {
-		root.destroy(gl);
+		eventListeners.register(AddTablePerspectivesEvent.class, new AddTablePerspectivesListener().setHandler(this));
+		eventListeners.register(RemoveTablePerspectiveEvent.class,
+				new RemoveTablePerspectiveListener().setHandler(this));
 	}
 
 	@Override
@@ -264,7 +189,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		if (this.perspectives.contains(newTablePerspective))
 			return;
 		this.perspectives.add(newTablePerspective);
-		if (root != null && perspectives.size() == 3)
+		if (getRoot() != null && perspectives.size() == 3)
 			findXLZ();
 		fireTablePerspectiveChanged();
 	}
@@ -272,7 +197,7 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	@Override
 	public void addTablePerspectives(List<TablePerspective> newTablePerspectives) {
 		this.perspectives.addAll(newTablePerspectives);
-		if (root != null && perspectives.size() == 3)
+		if (getRoot() != null && perspectives.size() == 3)
 			findXLZ();
 		fireTablePerspectiveChanged();
 	}
@@ -283,13 +208,23 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 	}
 
 	@Override
+	protected GLBiClusterElement getRoot() {
+		return (GLBiClusterElement) super.getRoot();
+	}
+
+	@Override
+	protected GLElement createRoot() {
+		return new GLBiClusterElement(this);
+	}
+
+	@Override
 	public void removeTablePerspective(int tablePerspectiveID) {
 		for (Iterator<TablePerspective> it = perspectives.iterator(); it.hasNext();) {
 			if (it.next().getID() == tablePerspectiveID)
 				it.remove();
 		}
-		if (root != null && this.perspectives.size() < 3) {
-			root.setData(null);
+		if (getRoot() != null && this.perspectives.size() < 3) {
+			getRoot().setData(null);
 		}
 		fireTablePerspectiveChanged();
 	}
@@ -298,26 +233,15 @@ public class GLBiCluster extends AGLView implements IMultiTablePerspectiveBasedV
 		GeneralManager.get().getEventPublisher().triggerEvent(new TablePerspectivesChangedEvent(this).from(this));
 	}
 
-	/**
-	 * @param geneThreshold
-	 * @param sampleThreshold
-	 */
-	public void handleUpdate(float sampleThreshold, float geneThreshold) {
-		model.setGeneThreshold(geneThreshold);
-		model.setSampleThreshold(sampleThreshold);
-		if (perspectives.size() >= 3 || (x != null && l != null && z != null)) {
-			root = new GLBiClusterElement(this);
-			perspectives = new ArrayList<TablePerspective>();
-			perspectives.add(l);
-			perspectives.add(x);
-			perspectives.add(z);
+	@ListenTo
+	private void handleUpdate(ToolbarEvent event) {
+		model.setGeneThreshold(event.getGeneThreshold());
+		model.setSampleThreshold(event.getSampleThreshold());
+		if (perspectives.size() >= 3) {
 			long time = System.currentTimeMillis();
 			findXLZ();
 			System.out.println("Updated in: " + (System.currentTimeMillis() - time) / 1000. + "s");
 			// detailLevel = EDetailLevel.HIGH;
-			layoutManager.setBaseElementLayout(root);
-			layoutManager.updateLayout();
 		}
 	}
-
 }
