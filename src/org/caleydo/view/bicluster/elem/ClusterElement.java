@@ -69,7 +69,7 @@ public class ClusterElement extends GLElementAdapter {
 		case DRAGGED:
 			isDragged = true;
 			java.awt.Point p = pick.getPickedPoint();
-			setLocation(pick.getPickedPoint().x - getSize().x()/2, pick.getPickedPoint().y -getSize().y()/2);
+			setLocation(pick.getPickedPoint().x - getSize().x() / 2, pick.getPickedPoint().y - getSize().y() / 2);
 			// System.out.println("dragged: " + p.x + "/" + p.y);
 			break;
 		case MOUSE_OUT:

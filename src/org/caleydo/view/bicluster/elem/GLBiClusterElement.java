@@ -93,9 +93,9 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		}
 	}
 
-	float repulsion = 0.005f;
-	float attraction = 0.1f;
-	float damping = 0.2f;
+	float repulsion = 0.01f;
+	float attraction = 0.012f;
+	float damping = 0.6f;
 
 	/**
 	 * @param children2
@@ -217,9 +217,13 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 				double yPos = pos.y();
 				xPos = xPos * (w - 300) + 100;
 				yPos = yPos * (h - 300) + 100;
-				v.setLocation((float) xPos, (float) yPos);
+				setLocation(v, xPos, yPos);
 			}
 		}
+	}
+
+	private void setLocation(ClusterElement v, double xPos, double yPos) {
+		v.setLocation((float) xPos, (float) yPos);
 	}
 
 	private void initLayout(List<ClusterElement> children, float w, float h) {
