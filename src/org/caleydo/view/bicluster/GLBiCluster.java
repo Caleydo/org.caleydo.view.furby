@@ -21,9 +21,11 @@ package org.caleydo.view.bicluster;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,6 +36,7 @@ import javax.media.opengl.GL2;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.datadomain.DataSupportDefinitions;
+import org.caleydo.core.data.datadomain.IDataDomain;
 import org.caleydo.core.data.datadomain.IDataSupportDefinition;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.perspective.variable.Perspective;
@@ -331,6 +334,15 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 	@Override
 	public List<TablePerspective> getTablePerspectives() {
 		return perspectives;
+	}
+
+	@Override
+	public Set<IDataDomain> getDataDomains() {
+		Set<IDataDomain> dataDomains = new HashSet<IDataDomain>();
+		for (TablePerspective tablePerspective : perspectives) {
+			dataDomains.add(tablePerspective.getDataDomain());
+		}
+		return dataDomains;
 	}
 
 	@Override
