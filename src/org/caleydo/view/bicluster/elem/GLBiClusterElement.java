@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.view.opengl.canvas.AGLView;
@@ -80,6 +81,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children_doNotUse, float w, float h) {
+		// System.out.println("do layout called");
 		if (!isInitLayoutDone) {
 			initLayout(children, w, h);
 			isInitLayoutDone = true;
@@ -91,9 +93,9 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		}
 	}
 
-	float repulsion = 1000f;
-	float attraction = 0.0025f;
-	float damping = 0.90f;
+	float repulsion = 0.005f;
+	float attraction = 0.1f;
+	float damping = 0.2f;
 
 	/**
 	 * @param children2
@@ -102,23 +104,51 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 	 */
 	private void forceDirectedLayout(List<ClusterElement> children, float w, float h) {
 
-		Map<ClusterElement, Vec2f> tmpPositions = new HashMap<>();
+		// scale down child locations to [0,1]
+		Map<ClusterElement, Vec2d> tmpPositions = new HashMap<>();
+		double xMax = 0, yMax = 0, xMin = 1000, yMin = 1000;
+		for (ClusterElement v : children) // set tmp positions
+		{
+			float xPos = v.getLocation().x();
+			float yPos = v.getLocation().y();
+			if (xPos < xMin)
+				xMin = xPos;
+			if (xPos > xMax)
+				xMax = xPos;
+			if (yPos < yMin)
+				yMin = yPos;
+			if (yPos > yMax)
+				yMax = yPos;
+		}
+		Vec2d d;
+		Vec2d min = new Vec2d(-xMin, -yMin);
+		Vec2d max = new Vec2d(xMax, yMax);
+		max.add(min);
+		for (ClusterElement v : children) {
+			Vec2f posf = v.getLocation();
+			Vec2d pos = new Vec2d(posf.x(), posf.y());
+			pos.add(min);
+			double posX = pos.x() / max.x();
+			double posY = pos.y() / max.y();
+			tmpPositions.put(v, new Vec2d(posX, posY));
+		}
+
+		// layout begin
 		for (ClusterElement v : children) {// loop through vertices
-			v.setForce(new Vec2f(0, 0));
+			v.setForce(new Vec2d(0, 0));
 			for (ClusterElement u : children) // loop through other vertices
 			{
 				if (u == v)
 					continue;
 				// squared distance between "u" and "v" in 2D space
-				Vec2f dist = v.getLocation().minus(u.getLocation());
-				float rsq = dist.x() * dist.x() + dist.y() * dist.y();
-				// counting the repulsion between two vertices
-				float forcex = 0, forcey = 0;
+				Vec2d dist = tmpPositions.get(v).minus(tmpPositions.get(u));
+				double rsq = dist.lengthSquared(); // counting the repulsion between two vertices
+				double forcex = 0, forcey = 0;
 				forcex = v.getForce().x() + repulsion * dist.x() / rsq;
 				forcey = v.getForce().y() + repulsion * dist.y() / rsq;
-				v.setForce(new Vec2f(forcex, forcey));
+				v.setForce(new Vec2d(forcex, forcey));
 			}
-			for (int i = 0; i < clusterOverlap.length; i++) // loop through edges
+			for (int i = 0; i < clusterOverlap.length; i++) // loop through overlap
 			{
 				for (int j = 0; j < clusterOverlap[i].length; j++) {
 					if (i == j)
@@ -131,57 +161,64 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 						continue;
 					ClusterElement u = children.get(j);
 					// counting the attraction
-					Vec2f dist = u.getLocation().minus(v.getLocation());
+					Vec2d dist = tmpPositions.get(u).minus(tmpPositions.get(v));
 					float forcex = 0, forcey = 0;
-					forcex += v.getForce().x() + attraction * dist.x() * xOverlap.size();
-					forcey += v.getForce().y() + attraction * dist.y() * yOverlap.size();
-					v.setForce(new Vec2f(forcex, forcey));
+					double overlapSizeX = Math.log1p(xOverlap.size());
+					double overlapSizeY = Math.log1p(xOverlap.size());
+					forcex += v.getForce().x() + attraction * dist.x() * overlapSizeX;
+					forcey += v.getForce().y() + attraction * dist.y() * overlapSizeY;
+					v.setForce(new Vec2d(forcex, forcey));
 				}
 			}
 			// counting the damped velocity
-			Vec2f velocity = v.getVelocity();
-			Vec2f force = v.getForce();
-			Vec2f sum = velocity.plus(force);
-			v.setVelocity(new Vec2f(sum.x() * damping, sum.y() * damping));
-		}
-		float xMax = 0, yMax = 0, xMin = 0, yMin = 0;
-		for (ClusterElement v : children) // set tmp positions
-		{
-			if (!v.isDragged()) {
-				Vec2f velocity = v.getVelocity();
-				Vec2f position = v.getLocation();
-				Vec2f newPos = velocity.plus(position);
-
-				tmpPositions.put(v, newPos);
-				float xPos = newPos.x();
-				float yPos = newPos.y();
-				if (xPos < xMin)
-					xMin = xPos;
-				if (xPos > xMax)
-					xMax = xPos;
-				if (yPos < yMin)
-					yMin = yPos;
-				if (yPos > yMax)
-					yMax = yPos;
-				v.setLocation(xPos, yPos);
-			}
+			Vec2d velocity = v.getVelocity();
+			Vec2d force = v.getForce();
+			Vec2d sum = velocity.plus(force);
+			v.setVelocity(new Vec2d(sum.x() * damping, sum.y() * damping));
 		}
 
-		Vec2f min = new Vec2f(-xMin, -yMin);
-		Vec2f max = new Vec2f(xMax, yMax);
+		// after moving the childs, a further scaling to [0,1] is needed
+		xMax = 0; yMax = 0; xMin = 1000; yMin = 1000;
+		for (ClusterElement v : children) { // set tmp positions
+			Vec2d velocity = v.getVelocity();
+			Vec2d position = tmpPositions.get(v);
+			Vec2d newPos = velocity.plus(position);
+			double xPos = newPos.x();
+			double yPos = newPos.y();
+			if (xPos < xMin)
+				xMin = xPos;
+			if (xPos > xMax)
+				xMax = xPos;
+			if (yPos < yMin)
+				yMin = yPos;
+			if (yPos > yMax)
+				yMax = yPos;
+			tmpPositions.remove(v);
+			tmpPositions.put(v, newPos);
+		}
+
+		min = new Vec2d(-xMin, -yMin);
+		max = new Vec2d(xMax, yMax);
 		max.add(min);
-		for (ClusterElement v : tmpPositions.keySet()) {
-			Vec2f pos = tmpPositions.get(v);
+		for (ClusterElement v : children) {
+			Vec2d pos = tmpPositions.get(v);
 			pos.add(min);
+			double posX = pos.x() / max.x();
+			double posY = pos.y() / max.y();
+			tmpPositions.put(v, new Vec2d(posX, posY));
 		}
-		for (ClusterElement v : tmpPositions.keySet()) {
-			Vec2f pos = tmpPositions.get(v);
-			float xPos = pos.x();
-			float yPos = pos.y();
-			xPos = xPos * (w - 200) / max.x() - v.getSize().x() / 2;
-			yPos = yPos * (h - 200) / max.y() - v.getSize().y() / 2 + 100;
-			v.setLocation(xPos, yPos);
 
+		// finally upscaling to w and h
+		for (ClusterElement v : children) {
+
+			if (!v.isDragged()) {
+				Vec2d pos = tmpPositions.get(v);
+				double xPos = pos.x();
+				double yPos = pos.y();
+				xPos = xPos * (w - 300) + 100;
+				yPos = yPos * (h - 300) + 100;
+				v.setLocation((float) xPos, (float) yPos);
+			}
 		}
 	}
 
@@ -196,9 +233,9 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		int rows = ((int) Math.sqrt(children.size())) + 1;
 		int count = 0;
 		for (ClusterElement child : children) {
-			// Random r = new Random();
-			// child.setLocation(r.nextInt((int) (w - 200)), r.nextInt((int) (h - 200)));
-			child.setLocation(200 + (count % rows) * 240, 200 + count / rows * 240);
+			Random r = new Random();
+			child.setLocation(r.nextInt((int) (w - 200)), r.nextInt((int) (h - 200)));
+			// child.setLocation(200 + (count % rows) * 240, 200 + count / rows * 240);
 			count++;
 		}
 	}

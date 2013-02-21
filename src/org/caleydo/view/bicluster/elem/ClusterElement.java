@@ -19,8 +19,6 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import gleem.linalg.Vec2f;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,8 +45,8 @@ public class ClusterElement extends GLElementAdapter {
 	private TablePerspective data;
 	private final AGLView view;
 	private MultiFormRenderer multiFormRenderer;
-	private Vec2f force = new Vec2f(200, 200);
-	private Vec2f velocity = new Vec2f(0, 0);
+	private Vec2d force = new Vec2d(200, 200);
+	private Vec2d velocity = new Vec2d(0, 0);
 	private boolean isDragged = false;
 
 	public ClusterElement(AGLView view, TablePerspective data) {
@@ -131,7 +129,7 @@ public class ClusterElement extends GLElementAdapter {
 	/**
 	 * @return the force, see {@link #force}
 	 */
-	public Vec2f getForce() {
+	public Vec2d getForce() {
 		return force;
 	}
 
@@ -139,14 +137,14 @@ public class ClusterElement extends GLElementAdapter {
 	 * @param force
 	 *            setter, see {@link force}
 	 */
-	public void setForce(Vec2f force) {
+	public void setForce(Vec2d force) {
 		this.force = force;
 	}
 
 	/**
 	 * @return the velocity, see {@link #velocity}
 	 */
-	public Vec2f getVelocity() {
+	public Vec2d getVelocity() {
 		return velocity;
 	}
 
@@ -154,7 +152,7 @@ public class ClusterElement extends GLElementAdapter {
 	 * @param velocity
 	 *            setter, see {@link velocity}
 	 */
-	public void setVelocity(Vec2f velocity) {
+	public void setVelocity(Vec2d velocity) {
 		this.velocity = velocity;
 	}
 
