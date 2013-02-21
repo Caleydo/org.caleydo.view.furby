@@ -31,6 +31,8 @@ import org.caleydo.core.view.ViewManager;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.layout.util.multiform.MultiFormRenderer;
 import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
+import org.caleydo.core.view.opengl.picking.IPickingListener;
+import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.GLBiCluster;
 
 /**
@@ -47,14 +49,64 @@ public class ClusterElement extends GLElementAdapter {
 	private MultiFormRenderer multiFormRenderer;
 	private Vec2f force = new Vec2f(200, 200);
 	private Vec2f velocity = new Vec2f(0, 0);
+	private boolean isDragged = false;
 
 	public ClusterElement(AGLView view, TablePerspective data) {
 		super(view);
 		this.view = view;
 		this.data = data;
 		init();
+		this.setVisibility(EVisibility.PICKABLE);
+		this.onPick(new IPickingListener() {
+
+			@Override
+			public void pick(Pick pick) {
+				onPicked(pick);
+			}
+		});
 	}
 
+	protected void onPicked(Pick pick) {
+		switch (pick.getPickingMode()) {
+		case DRAGGED:
+			isDragged = true;
+			java.awt.Point p = pick.getPickedPoint();
+			setLocation(pick.getPickedPoint().x - getSize().x()/2, pick.getPickedPoint().y -getSize().y()/2);
+			// System.out.println("dragged: " + p.x + "/" + p.y);
+			break;
+		case MOUSE_OUT:
+			isDragged = false;
+			break;
+		case MOUSE_RELEASED:
+			isDragged = false;
+		default:
+			break;
+		}
+
+		// switch (pick.getPickingMode()) {
+		// case CLICKED:
+		// draged = true;
+		// break;
+		// case DRAGGED:
+		// System.out.println("now dragged");
+		// break;
+		// case MOUSE_OUT:
+		// draged = false;
+		// break;
+		// case MOUSE_OVER:
+		// // onMouseOver(pick);
+		// break;
+		// case MOUSE_MOVED:
+		// if (draged)
+		// setLocation(pick.getPickedPoint().x, pick.getPickedPoint().y);
+		// break;
+		// case MOUSE_RELEASED:
+		// draged = false;
+		// default:
+		// break;
+		// }
+
+	}
 
 	private void init() {
 
@@ -84,7 +136,8 @@ public class ClusterElement extends GLElementAdapter {
 	}
 
 	/**
-	 * @param force setter, see {@link force}
+	 * @param force
+	 *            setter, see {@link force}
 	 */
 	public void setForce(Vec2f force) {
 		this.force = force;
@@ -104,5 +157,12 @@ public class ClusterElement extends GLElementAdapter {
 	public void setVelocity(Vec2f velocity) {
 		this.velocity = velocity;
 	}
-}
 
+	/**
+	 * @return the isDraged, see {@link #isDragged}
+	 */
+	public boolean isDragged() {
+		return isDragged;
+	}
+
+}
