@@ -63,11 +63,10 @@ import org.caleydo.core.view.opengl.layout2.AGLElementGLView;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.util.texture.TextureManager;
 import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
+import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.elem.GLBiClusterElement;
 import org.caleydo.view.bicluster.event.ToolbarEvent;
 import org.eclipse.swt.widgets.Composite;
-
-import com.google.common.base.Stopwatch;
 
 /**
  * <p>
@@ -88,13 +87,10 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 
 	private TablePerspective x, l, z;
 
-	private ExecutorService executorService = Executors.newFixedThreadPool(4);;
+	private ExecutorService executorService = Executors.newFixedThreadPool(4);
 
 	private float sampleThreshold = 2f;
 	private float geneThreshold = 0.1f;
-
-	private List<List<Integer>> biClusterDimIndices, biClusterRecIndices;
-	private Object[][][] clusterOverlap; // contains List<Integer> ; unchecked
 
 	private final List<TablePerspective> perspectives = new ArrayList<>();
 
@@ -118,68 +114,73 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 		super.init(gl);
 		if (this.perspectives.size() >= 3) {
 			findXLZ();
-
-			initializeClusters();
+			getRoot().setData(initTablePerspectives());
+			createBiClusterPerspectives(x, l, z);
 		}
 		detailLevel = EDetailLevel.HIGH;
-	}
-
-	private void initializeClusters() {
-		biClusterDimIndices = new ArrayList<List<Integer>>();
-		biClusterRecIndices = new ArrayList<List<Integer>>();
-		List<TablePerspective> perspectives = createBiClusterPerspectives(x, l, z);
-		calculateOverlap();
-		getRoot().setData(perspectives);
-		glBiClusterElement.setOverlap(clusterOverlap);
 	}
 
 	/**
 	 *
 	 */
-	@SuppressWarnings("unchecked")
-	private void calculateOverlap() {
-		Stopwatch p = new Stopwatch();
-		p.start();
-		clusterOverlap = new Object[biClusterDimIndices.size()][biClusterRecIndices.size()][2];
-		int d = 0;
-		int r = 0;
-		for (List<Integer> dimA : biClusterDimIndices) {
-			r = 0;
-			for (List<Integer> dimB : biClusterDimIndices) {
-				clusterOverlap[d][r][0] = new ArrayList<Integer>(dimA);
-				((List<Integer>) clusterOverlap[d][r][0]).retainAll(dimB);
-				// if (((List<Integer>) clusterOverlap[d][r][0]).size() == 0)
-				// clusterOverlap[d][r][0] = null;
-				r++;
-			}
-			d++;
+	private List<TablePerspective> initTablePerspectives() {
+		int bcCountData = l.getDataDomain().getTable().getColumnIDList().size(); // Nr of BCs in L & Z
+		ATableBasedDataDomain xDataDomain = x.getDataDomain();
+		Table xtable = xDataDomain.getTable();
+		IDType xdimtype = xDataDomain.getDimensionIDType();
+		IDType xrectype = xDataDomain.getRecordIDType();
+		List<TablePerspective> persp = new ArrayList<>();
+		for (Integer i = 0; i < bcCountData; i++) {
+			Perspective dim = new Perspective(xDataDomain, xdimtype);
+			Perspective rec = new Perspective(xDataDomain, xrectype);
+			PerspectiveInitializationData dim_init = new PerspectiveInitializationData();
+			PerspectiveInitializationData rec_init = new PerspectiveInitializationData();
+			dim_init.setData(new ArrayList<Integer>());
+			rec_init.setData(new ArrayList<Integer>());
+			dim.init(dim_init);
+			rec.init(rec_init);
+			xtable.registerDimensionPerspective(dim, false);
+			xtable.registerRecordPerspective(rec, false);
+			String dimKey = dim.getPerspectiveID();
+			String recKey = rec.getPerspectiveID();
+			TablePerspective custom = xDataDomain.getTablePerspective(recKey, dimKey, false);
+			custom.setLabel(i.toString());
+			persp.add(custom);
 		}
-		d = 0;
-		r = 0;
-		for (List<Integer> recA : biClusterRecIndices) {
-			r = 0;
-			for (List<Integer> recB : biClusterRecIndices) {
-				clusterOverlap[d][r][1] = new ArrayList<Integer>(recA);
-				((List<Integer>) clusterOverlap[d][r][1]).retainAll(recB);
-				// if (((List<Integer>) clusterOverlap[d][r][1]).size() == 0)
-				// clusterOverlap[d][r][1] = null;
-				r++;
-			}
-			d++;
-		}
-
-		System.out.println("Sets berechnet in: " + p);
+		return persp;
 	}
 
-	@Override
-	public List<AGLView> getRemoteRenderedViews() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	protected void createBiClusterPerspectives(TablePerspective x, TablePerspective l, TablePerspective z) {
+		System.out.println("Erstelle Cluster mit SampleTH: " + sampleThreshold);
+		System.out.println("                     RecordTH: " + geneThreshold);
 
-	@Override
-	public boolean isDataView() {
-		return true;
+		Table L = l.getDataDomain().getTable();
+		Table Z = z.getDataDomain().getTable();
+		int bcCountData = L.getColumnIDList().size(); // Nr of BCs in L & Z
+
+		// Tables indices for Genes and Tables of a specific BiCluster.
+		Map<Integer, Future<List<Integer>>> bcDimScanFut = new HashMap<>();
+		Map<Integer, Future<List<Integer>>> bcRecScanFut = new HashMap<>();
+		for (int bcNr = 0; bcNr < bcCountData; bcNr++) {
+			Future<List<Integer>> recList = executorService.submit(new ScanProbabilityMatrix(geneThreshold, L, bcNr));
+			Future<List<Integer>> dimList = executorService.submit(new ScanProbabilityMatrix(sampleThreshold, Z, bcNr));
+
+			bcRecScanFut.put(bcNr, recList);
+			bcDimScanFut.put(bcNr, dimList);
+		}
+
+		// actually alter the cluster perspectives
+		for (Integer i : bcDimScanFut.keySet()) {
+			try {
+				List<Integer> dimIndices = bcDimScanFut.get(i).get();
+				List<Integer> recIndices = bcRecScanFut.get(i).get();
+				ClusterElement el = (ClusterElement) getRoot().get(i);
+				el.setIndices(dimIndices, recIndices);
+			} catch (InterruptedException | ExecutionException | NullPointerException e) {
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 	/**
@@ -223,69 +224,15 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 		z = lz.getSecond();
 	}
 
-	protected List<TablePerspective> createBiClusterPerspectives(TablePerspective x, TablePerspective l,
-			TablePerspective z) {
-		System.out.println("Erstelle Cluster mit SampleTH: " + sampleThreshold);
-		System.out.println("                     RecordTH: " + geneThreshold);
-		ATableBasedDataDomain xdd = x.getDataDomain();
-		Table xtable = xdd.getTable();
-		IDType xdimtype = xdd.getDimensionIDType();
-		IDType xrectype = xdd.getRecordIDType();
-
-		Table L = l.getDataDomain().getTable();
-		Table Z = z.getDataDomain().getTable();
-		int bcCountData = L.getColumnIDList().size(); // Nr of BCs in L & Z
-
-		// Tables indices for Genes and Tables of a specific BiCluster.
-		Map<Integer, Future<List<Integer>>> bcDimScanFut = new HashMap<>();
-		Map<Integer, Future<List<Integer>>> bcRecScanFut = new HashMap<>();
-		for (int bcNr = 0; bcNr < bcCountData; bcNr++) {
-			Future<List<Integer>> recList = executorService.submit(new ScanProbabilityMatrix(geneThreshold, L, bcNr));
-			Future<List<Integer>> dimList = executorService.submit(new ScanProbabilityMatrix(sampleThreshold, Z, bcNr));
-
-			bcRecScanFut.put(bcNr, recList);
-			bcDimScanFut.put(bcNr, dimList);
-		}
-
-		List<TablePerspective> perspectives = new ArrayList<TablePerspective>();
-
-		// actually create the cluster perspectives
-		for (Integer i : bcDimScanFut.keySet()) {
-			List<Integer> recIndices = null;
-			List<Integer> dimIndices = null;
-			try {
-				dimIndices = bcDimScanFut.get(i).get();
-				recIndices = bcRecScanFut.get(i).get();
-				if (dimIndices.size() > 0 && recIndices.size() > 0) {
-					addBiClusterTablePerspective(xdd, xtable, xdimtype, xrectype, dimIndices, recIndices, perspectives);
-					biClusterDimIndices.add(dimIndices);
-					biClusterRecIndices.add(recIndices);
-				}
-			} catch (InterruptedException | ExecutionException | NullPointerException e) {
-
-				e.printStackTrace();
-			}
-		}
-		return perspectives;
+	@Override
+	public List<AGLView> getRemoteRenderedViews() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
-	private void addBiClusterTablePerspective(ATableBasedDataDomain xdataDomain, Table xtable, IDType xdimtype,
-			IDType xrectype, List<Integer> bcDimIndices, List<Integer> bcRecIndices, List<TablePerspective> perspectives) {
-
-		Perspective dim = new Perspective(xdataDomain, xdimtype);
-		Perspective rec = new Perspective(xdataDomain, xrectype);
-		PerspectiveInitializationData dim_init = new PerspectiveInitializationData();
-		PerspectiveInitializationData rec_init = new PerspectiveInitializationData();
-		dim_init.setData(bcDimIndices);
-		rec_init.setData(bcRecIndices);
-		dim.init(dim_init);
-		rec.init(rec_init);
-		xtable.registerDimensionPerspective(dim, false);
-		xtable.registerRecordPerspective(rec, false);
-		String dimKey = dim.getPerspectiveID();
-		String recKey = rec.getPerspectiveID();
-		TablePerspective custom = xdataDomain.getTablePerspective(recKey, dimKey, false);
-		perspectives.add(custom);
+	@Override
+	public boolean isDataView() {
+		return true;
 	}
 
 	@Override
@@ -318,16 +265,22 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 		if (this.perspectives.contains(newTablePerspective))
 			return;
 		this.perspectives.add(newTablePerspective);
-		if (getRoot() != null && perspectives.size() == 3)
+		if (getRoot() != null && perspectives.size() == 3) {
 			findXLZ();
+			getRoot().setData(initTablePerspectives());
+			createBiClusterPerspectives(x, l, z);
+		}
 		fireTablePerspectiveChanged();
 	}
 
 	@Override
 	public void addTablePerspectives(List<TablePerspective> newTablePerspectives) {
 		this.perspectives.addAll(newTablePerspectives);
-		if (getRoot() != null && perspectives.size() == 3)
+		if (getRoot() != null && perspectives.size() == 3) {
 			findXLZ();
+			getRoot().setData(initTablePerspectives());
+			createBiClusterPerspectives(x, l, z);
+		}
 		fireTablePerspectiveChanged();
 	}
 
@@ -377,7 +330,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 		geneThreshold = event.getGeneThreshold();
 		sampleThreshold = event.getSampleThreshold();
 		if (x != null && l != null && z != null) {
-			initializeClusters();
+			createBiClusterPerspectives(x, l, z);
 		}
 
 	}
