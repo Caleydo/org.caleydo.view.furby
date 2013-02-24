@@ -78,6 +78,11 @@ public class ClusterElement extends GLElementAdapter {
 		return yOverlap.get(jElement);
 	}
 
+	int overallOverlapSize;
+
+	public int getOverallOverlapSize() {
+		return overallOverlapSize;
+	}
 
 	public ClusterElement(AGLView view, TablePerspective data, GLBiClusterElement root) {
 		super(view);
@@ -112,13 +117,9 @@ public class ClusterElement extends GLElementAdapter {
 			repaintPick();
 			// System.out.println("dragged: " + p.x + "/" + p.y);
 			break;
-		case MOUSE_OUT:
-			isDragged = false;
-			break;
 		case MOUSE_RELEASED:
-			isDragged = false;
 		default:
-			break;
+			isDragged = false;
 		}
 
 		// switch (pick.getPickingMode()) {
@@ -247,16 +248,19 @@ public class ClusterElement extends GLElementAdapter {
 		yOverlap = new HashMap<>();
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
 		List<Integer> myRecIndizes = getRecordVirtualArray().getIDs();
+		overallOverlapSize = 0;
 		for (GLElement element : allClusters) {
 			ClusterElement e = (ClusterElement) element;
 			List<Integer> eIndizes = new ArrayList<Integer>(myDimIndizes);
 
 			eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
 			xOverlap.put(element, eIndizes);
+			overallOverlapSize += eIndizes.size();
 
 			eIndizes = new ArrayList<Integer>(myRecIndizes);
 			eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
 			yOverlap.put(element, eIndizes);
+			overallOverlapSize += eIndizes.size();
 
 		}
 	}

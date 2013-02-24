@@ -96,6 +96,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 
 	GLBiClusterElement glBiClusterElement;
 
+
 	/**
 	 * Constructor.
 	 *
