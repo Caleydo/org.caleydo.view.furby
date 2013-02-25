@@ -177,6 +177,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 				List<Integer> recIndices = bcRecScanFut.get(i).get();
 				ClusterElement el = (ClusterElement) getRoot().get(i);
 				el.setIndices(dimIndices, recIndices);
+				// el.setPerspectiveLabel(dimensionName, recordName)
 			} catch (InterruptedException | ExecutionException | NullPointerException e) {
 				e.printStackTrace();
 			}
