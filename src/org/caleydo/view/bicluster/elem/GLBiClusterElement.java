@@ -91,7 +91,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-		if (!isInitLayoutDone) {
+		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
 			dampingTimer.schedule(timerTask, 500, (long) timerInterval);

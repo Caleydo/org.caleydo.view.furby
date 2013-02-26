@@ -19,6 +19,7 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import static org.caleydo.core.event.EventListenerManager.triggerEvent;
 import gleem.linalg.Vec2f;
 
 import java.util.ArrayList;
@@ -30,12 +31,14 @@ import java.util.Set;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
+import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
+import org.caleydo.core.data.virtualarray.events.RecordVAUpdateEvent;
 import org.caleydo.core.event.view.TablePerspectivesChangedEvent;
-import org.caleydo.core.manager.GeneralManager;
 import org.caleydo.core.view.ViewManager;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.layout.util.multiform.MultiFormRenderer;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
@@ -99,7 +102,7 @@ public class ClusterElement extends GLElementAdapter {
 			}
 		});
 
-		layoutElement.setSize(200, 200);
+		GLElementAccessor.asLayoutElement(this).setSize(200, 200);
 		setVisibility(EVisibility.PICKABLE);
 
 	}
@@ -253,8 +256,12 @@ public class ClusterElement extends GLElementAdapter {
 	}
 
 	private void fireTablePerspectiveChanged() {
-		GeneralManager.get().getEventPublisher().triggerEvent(new TablePerspectivesChangedEvent(view).from(view));
-		relayout();
+		triggerEvent(new TablePerspectivesChangedEvent(view).from(view));
+		triggerEvent(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data.getRecordPerspective()
+				.getPerspectiveID(), this));
+		triggerEvent(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
+				.getDimensionPerspective().getPerspectiveID(), this));
+
 		repaintAll();
 	}
 
@@ -301,7 +308,7 @@ public class ClusterElement extends GLElementAdapter {
 	 * @return
 	 */
 	protected IGLLayoutElement getIGLayoutElement() {
-		return layoutElement;
+		return GLElementAccessor.asLayoutElement(this);
 	}
 
 
