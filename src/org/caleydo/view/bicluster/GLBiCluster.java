@@ -95,6 +95,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 	private final List<TablePerspective> perspectives = new ArrayList<>();
 
 	GLBiClusterElement glBiClusterElement;
+	private boolean setXElements = false;
 
 
 	/**
@@ -176,13 +177,13 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 				List<Integer> dimIndices = bcDimScanFut.get(i).get();
 				List<Integer> recIndices = bcRecScanFut.get(i).get();
 				ClusterElement el = (ClusterElement) getRoot().get(i);
-				el.setIndices(dimIndices, recIndices);
+				el.setIndices(dimIndices, recIndices, setXElements);
 				// el.setPerspectiveLabel(dimensionName, recordName)
 			} catch (InterruptedException | ExecutionException | NullPointerException e) {
 				e.printStackTrace();
 			}
 		}
-
+		glBiClusterElement.resetDamping();
 	}
 
 	/**

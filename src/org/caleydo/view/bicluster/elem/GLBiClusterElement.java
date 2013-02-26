@@ -50,6 +50,22 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 	float repulsion = 0.6f;
 	float attractionFactor = 0.02f;
 
+	public Integer fixedElementsCount = 15;
+
+	/**
+	 * @return the fixedElementsCount, see {@link #fixedElementsCount}
+	 */
+	public Integer getFixedElementsCount() {
+		return fixedElementsCount;
+	}
+
+	/**
+	 * @param fixedElementsCount setter, see {@link fixedElementsCount}
+	 */
+	public void setFixedElementsCount(Integer fixedElementsCount) {
+		this.fixedElementsCount = fixedElementsCount;
+	}
+
 	public GLBiClusterElement(AGLView view) {
 		this.view = view;
 		setLayout(this);
@@ -69,8 +85,6 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 				this.add(el);
 			}
 		}
-		this.isInitLayoutDone = false;
-
 	}
 
 	private boolean isInitLayoutDone = false;
@@ -80,18 +94,12 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		if (!isInitLayoutDone) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
-			dampingTimer.schedule(new TimerTask() { // periodic tasks for stabilizing layout after 5seconds.
-
-						@Override
-						public void run() {
-							setDamping();
-
-						}
-					}, 500, (long) timerInterval);
+			dampingTimer.schedule(timerTask, 500, (long) timerInterval);
 		} else {
 			forceDirectedLayout(children, w, h);
 
 		}
+		relayout();
 	}
 
 	double damping = 1f;
@@ -101,6 +109,16 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 	public void resetDamping() {
 		damping = 1.f;
 	}
+
+	TimerTask timerTask = new TimerTask() { // periodic tasks for stabilizing layout after layoutStabilisationTime
+											// seconds.
+
+		@Override
+		public void run() {
+			setDamping();
+
+		}
+	};
 
 	protected void setDamping() {
 		double amount = (1. / (layoutStabilisationTime / timerInterval));
@@ -116,6 +134,8 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 
 	// contains positions of the childs in [0,1] x [0,1] space
 	Map<ClusterElement, Vec2d> virtualPositions = new HashMap<>();
+
+
 
 	/**
 	 * @param children2
@@ -258,7 +278,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		yPos = yPos * (h - 300) + 100;
 		if (xPos > w || xPos < 0 || yPos > h || yPos < 0)
 			System.out.println(xPos + "/" + yPos);
-		v.setLocation((float) xPos, (float) yPos);
+		v.getIGLayoutElement().setLocation((float) xPos, (float) yPos);
 	}
 
 	private void initialLayout(List<? extends IGLLayoutElement> children, float w, float h) {

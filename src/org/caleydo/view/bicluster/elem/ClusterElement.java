@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
@@ -38,6 +37,7 @@ import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.layout.util.multiform.MultiFormRenderer;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.GLBiCluster;
@@ -46,7 +46,7 @@ import org.caleydo.view.bicluster.GLBiCluster;
  * e.g. a class for representing a cluster
  *
  * @author Samuel Gratzl
- *
+ * @author Michael Gillhofer
  */
 public class ClusterElement extends GLElementAdapter {
 	private static final String CLUSTER_EMBEDDING_ID = "org.caleydo.view.bicluster.cluster";
@@ -63,11 +63,6 @@ public class ClusterElement extends GLElementAdapter {
 	private Map<GLElement, List<Integer>> xOverlap = new HashMap<>();
 	private Map<GLElement, List<Integer>> yOverlap = new HashMap<>();
 
-	/**
-	 * @return the xOverlap, see {@link #xOverlap}
-	 */
-
-	Timer t = new Timer();
 
 	public ClusterElement(AGLView view, TablePerspective data, GLBiClusterElement root) {
 
@@ -104,11 +99,10 @@ public class ClusterElement extends GLElementAdapter {
 			}
 		});
 
-		setSize(200, 200);
+		layoutElement.setSize(200, 200);
 		setVisibility(EVisibility.PICKABLE);
 
 	}
-
 
 	private Vec2f pickLocation;
 
@@ -124,9 +118,7 @@ public class ClusterElement extends GLElementAdapter {
 			int diffX = start.x - now.x;
 			int diffY = start.y - now.y;
 			setLocation(pickLocation.x() - diffX, pickLocation.y() - diffY);
-			// repaintAll();
-			repaintPick();
-			// System.out.println("dragged: " + p.x + "/" + p.y);
+			relayoutParent();
 			break;
 		default:
 			isDragged = false;
@@ -160,25 +152,34 @@ public class ClusterElement extends GLElementAdapter {
 	/**
 	 * @param dimIndices
 	 * @param recIndices
+	 * @param setXElements
 	 */
-	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices) {
+	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements) {
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
 			setVisibility(EVisibility.PICKABLE);
 			VirtualArray dimArray = getDimensionVirtualArray();
 			VirtualArray recArray = getRecordVirtualArray();
 			dimArray.clear();
-			for (Integer i : dimIndices)
+			int count = 0;
+			for (Integer i : dimIndices) {
+				if (setXElements && root.getFixedElementsCount() <= count)
+					break;
 				dimArray.append(i);
+				count++;
+			}
+			count = 0;
 			recArray.clear();
-			for (Integer i : recIndices)
+			for (Integer i : recIndices) {
+				if (setXElements && root.getFixedElementsCount() <= count)
+					break;
 				recArray.append(i);
+				count++;
+			}
 			calculateOverlap();
 			isVisible = true;
-			// System.out.println("Drawn wurde auf true gesetzt");
 		} else {
-			setVisibility(EVisibility.HIDDEN);
+			setVisibility(EVisibility.NONE);
 			isVisible = false;
-			// System.out.println("Drawn wurde auf false gesetzt");
 		}
 		fireTablePerspectiveChanged();
 	}
@@ -295,5 +296,13 @@ public class ClusterElement extends GLElementAdapter {
 	public int getOverallOverlapSize() {
 		return overallOverlapSize;
 	}
+
+	/**
+	 * @return
+	 */
+	protected IGLLayoutElement getIGLayoutElement() {
+		return layoutElement;
+	}
+
 
 }

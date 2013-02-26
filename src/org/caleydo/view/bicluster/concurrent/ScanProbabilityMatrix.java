@@ -21,7 +21,7 @@ package org.caleydo.view.bicluster.concurrent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NavigableSet;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
@@ -45,7 +45,7 @@ public class ScanProbabilityMatrix implements Callable<List<Integer>> {
 	}
 
 	private List<Integer> scanProbTable() {
-		NavigableSet<Pair<Integer, Float>> indicesList = new TreeSet<Pair<Integer, Float>>(Pair.<Float> compareSecond());
+		Set<Pair<Integer, Float>> indicesList = new TreeSet<Pair<Integer, Float>>(Pair.<Float> compareSecond());
 		final int tablesize = table.depth(); // table.getRowIDList().size();
 		for (int nr = 0; nr < tablesize; nr++) {
 			Pair<Integer, Float> pair;
