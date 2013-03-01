@@ -19,7 +19,6 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import static org.caleydo.core.event.EventListenerManager.triggerEvent;
 import gleem.linalg.Vec2f;
 
 import java.util.ArrayList;
@@ -33,6 +32,7 @@ import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
 import org.caleydo.core.data.virtualarray.events.RecordVAUpdateEvent;
+import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.event.view.TablePerspectivesChangedEvent;
 import org.caleydo.core.view.ViewManager;
 import org.caleydo.core.view.opengl.canvas.AGLView;
@@ -256,11 +256,11 @@ public class ClusterElement extends GLElementAdapter {
 	}
 
 	private void fireTablePerspectiveChanged() {
-		triggerEvent(new TablePerspectivesChangedEvent(view).from(view));
-		triggerEvent(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data.getRecordPerspective()
-				.getPerspectiveID(), this));
-		triggerEvent(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
-				.getDimensionPerspective().getPerspectiveID(), this));
+		EventPublisher.publishEvent(new TablePerspectivesChangedEvent(view).from(view));
+		EventPublisher.publishEvent(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data.getRecordPerspective()
+		.getPerspectiveID(), this));
+		EventPublisher.publishEvent(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
+		.getDimensionPerspective().getPerspectiveID(), this));
 
 		repaintAll();
 	}
