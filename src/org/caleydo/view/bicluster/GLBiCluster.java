@@ -97,7 +97,6 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 	GLBiClusterElement glBiClusterElement;
 	private boolean setXElements = false;
 
-
 	/**
 	 * Constructor.
 	 *
@@ -313,9 +312,9 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 	}
 
 	@Override
-	public void removeTablePerspective(int tablePerspectiveID) {
+	public void removeTablePerspective(TablePerspective tablePerspective) {
 		for (Iterator<TablePerspective> it = perspectives.iterator(); it.hasNext();) {
-			if (it.next().getID() == tablePerspectiveID)
+			if (it.next() == tablePerspective)
 				it.remove();
 		}
 		if (getRoot() != null && this.perspectives.size() < 3) {
