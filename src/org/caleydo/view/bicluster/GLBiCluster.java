@@ -95,7 +95,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 	private final List<TablePerspective> perspectives = new ArrayList<>();
 
 	GLBiClusterElement glBiClusterElement;
-	private boolean setXElements = false;
+	private boolean setXElements = true;
 
 	/**
 	 * Constructor.
@@ -116,6 +116,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 		if (this.perspectives.size() >= 3) {
 			findXLZ();
 			getRoot().setData(initTablePerspectives());
+			createBiClusterPerspectives(x, l, z);
 			createBiClusterPerspectives(x, l, z);
 		}
 		detailLevel = EDetailLevel.HIGH;
@@ -331,7 +332,8 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 	private void handleUpdate(ToolbarEvent event) {
 		geneThreshold = event.getGeneThreshold();
 		sampleThreshold = event.getSampleThreshold();
-		if (x != null && l != null && z != null) {
+		if ((x != null && l != null && z != null) || setXElements != event.isFixedClusterCount()) {
+			setXElements = event.isFixedClusterCount();
 			createBiClusterPerspectives(x, l, z);
 		}
 

@@ -25,6 +25,7 @@ import org.eclipse.jface.action.ControlContribution;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
@@ -49,11 +50,19 @@ public class Toolbar extends ControlContribution {
 		RowLayout layout = new RowLayout();
 		composite.setLayout(layout);
 
+		// final Label fixedClusterLabel = new Label(composite, SWT.HORIZONTAL);
+		// fixedClusterLabel.setLayoutData(new RowData(100, 20));
+		// fixedClusterLabel.setText("Show only 15 Cluster");
+
+		final Button fixedClusterButton = new Button(composite, SWT.CHECK);
+		fixedClusterButton.setText("Show only 15 Elements");
+		fixedClusterButton.setSelection(true);
+
 		final Label sampleLabel = new Label(composite, SWT.HORIZONTAL);
 		sampleLabel.setLayoutData(new RowData(200, 20));
 
 		final Slider sampleThrSpinner = new Slider(composite, SWT.HORIZONTAL);
-		sampleThrSpinner.setValues(150, 0, 300, 2, 5, 1);
+		sampleThrSpinner.setValues(200, 0, 300, 2, 5, 1);
 		sampleThrSpinner.setLayoutData(new RowData(150, 20));
 		sampleThrSpinner.setEnabled(true);
 
@@ -61,26 +70,29 @@ public class Toolbar extends ControlContribution {
 		geneLabel.setLayoutData(new RowData(205, 20));
 
 		final Slider geneThrSpinner = new Slider(composite, SWT.HORIZONTAL);
-		geneThrSpinner.setValues(11, 0, 100, 2, 1, 1);
+		geneThrSpinner.setValues(10, 0, 100, 2, 1, 1);
 		geneThrSpinner.setLayoutData(new RowData(200, 20));
 		geneThrSpinner.setEnabled(true);
 
 		sampleLabel.setText("Sample Threshold: " + sampleThrSpinner.getSelection() / 100.f);
 		geneLabel.setText("       Gene Threshold: " + geneThrSpinner.getSelection() / 100.f);
 
-		Listener thresholdUpdateListener = new Listener() {
+		Listener updateListener = new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				float samplTh = sampleThrSpinner.getSelection() / 100.f;
 				float geneTh = geneThrSpinner.getSelection() / 100.f;
 				sampleLabel.setText("Sample Threshold: " + samplTh);
 				geneLabel.setText("      Gene Threshold: " + geneTh);
-				GeneralManager.get().getEventPublisher().triggerEvent(new ToolbarEvent(geneTh, samplTh));
+				GeneralManager.get().getEventPublisher()
+						.triggerEvent(new ToolbarEvent(geneTh, samplTh, fixedClusterButton.getSelection()));
+
 			}
 
 		};
-		sampleThrSpinner.addListener(SWT.Selection, thresholdUpdateListener);
-		geneThrSpinner.addListener(SWT.Selection, thresholdUpdateListener);
+		sampleThrSpinner.addListener(SWT.Selection, updateListener);
+		geneThrSpinner.addListener(SWT.Selection, updateListener);
+		fixedClusterButton.addListener(SWT.Selection, updateListener);
 
 		return composite;
 	}

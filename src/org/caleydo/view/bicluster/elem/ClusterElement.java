@@ -40,6 +40,7 @@ import org.caleydo.core.view.opengl.layout.util.multiform.MultiFormRenderer;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
+import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
@@ -58,14 +59,17 @@ public class ClusterElement extends GLElementAdapter {
 	private GLBiClusterElement root;
 	private final AGLView view;
 	private MultiFormRenderer multiFormRenderer;
-	private Vec2d force = new Vec2d(0, 0);
+	private Vec2d attForce = new Vec2d(0, 0);
+	private Vec2d repForce = new Vec2d(0, 0);
 	private Vec2d velocity = new Vec2d(0, 0);
 	private boolean isDragged = false;
 	private boolean isVisible;
 
-	private Map<GLElement, List<Integer>> xOverlap = new HashMap<>();
-	private Map<GLElement, List<Integer>> yOverlap = new HashMap<>();
+	private Map<GLElement, List<Integer>> xOverlap;
+	private Map<GLElement, List<Integer>> yOverlap;
 
+	private int id;
+	private static int number;
 
 	public ClusterElement(AGLView view, TablePerspective data, GLBiClusterElement root) {
 
@@ -73,7 +77,15 @@ public class ClusterElement extends GLElementAdapter {
 		this.view = view;
 		this.data = data;
 		this.root = root;
+		id = number++;
 		init();
+	}
+
+	/**
+	 * @return the id, see {@link #id}
+	 */
+	public int getId() {
+		return id;
 	}
 
 	private void init() {
@@ -102,7 +114,7 @@ public class ClusterElement extends GLElementAdapter {
 			}
 		});
 
-		GLElementAccessor.asLayoutElement(this).setSize(200, 200);
+		GLElementAccessor.asLayoutElement(this).setSize(150, 150);
 		setVisibility(EVisibility.PICKABLE);
 
 	}
@@ -185,6 +197,8 @@ public class ClusterElement extends GLElementAdapter {
 			isVisible = false;
 		}
 		fireTablePerspectiveChanged();
+		view.resetView();
+		setSize(200, 200);
 	}
 
 	/**
@@ -214,19 +228,49 @@ public class ClusterElement extends GLElementAdapter {
 		}
 	}
 
-	/**
-	 * @return the force, see {@link #force}
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.caleydo.core.view.opengl.layout2.GLElementAdapter#renderImpl(org.caleydo.core.view.opengl.layout2.GLGraphics,
+	 * float, float)
 	 */
-	public Vec2d getForce() {
-		return force;
+	@Override
+	protected void renderImpl(GLGraphics g, float w, float h) {
+		super.renderImpl(g, w, h);
+		// if (this.isVisible)
+		// g.fillRect(getBounds().w(), getBounds().x(), w, h);
+
+	}
+
+	/**
+	 * @return the force, see {@link #attForce}
+	 */
+	public Vec2d getAttForce() {
+		return attForce;
 	}
 
 	/**
 	 * @param force
 	 *            setter, see {@link force}
 	 */
-	public void setForce(Vec2d force) {
-		this.force = force;
+	public void setAttForce(Vec2d force) {
+		this.attForce = force;
+	}
+
+	/**
+	 * @param force
+	 *            setter, see {@link force}
+	 */
+	public void setRepForce(Vec2d force) {
+		this.repForce = force;
+	}
+
+	/**
+	 * @return the force, see {@link #attForce}
+	 */
+	public Vec2d getRepForce() {
+		return repForce;
 	}
 
 	/**
@@ -257,10 +301,10 @@ public class ClusterElement extends GLElementAdapter {
 
 	private void fireTablePerspectiveChanged() {
 		EventPublisher.publishEvent(new TablePerspectivesChangedEvent(view).from(view));
-		EventPublisher.publishEvent(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data.getRecordPerspective()
-		.getPerspectiveID(), this));
+		EventPublisher.publishEvent(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
+				.getRecordPerspective().getPerspectiveID(), this));
 		EventPublisher.publishEvent(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
-		.getDimensionPerspective().getPerspectiveID(), this));
+				.getDimensionPerspective().getPerspectiveID(), this));
 
 		repaintAll();
 	}
@@ -310,6 +354,5 @@ public class ClusterElement extends GLElementAdapter {
 	protected IGLLayoutElement getIGLayoutElement() {
 		return GLElementAccessor.asLayoutElement(this);
 	}
-
 
 }

@@ -39,7 +39,16 @@ public class ToolbarEvent extends AEvent {
 
 	float geneThreshold;
 	float sampleThreshold;
+	boolean fixedClusterCount;
 
+
+
+	/**
+	 * @return the fixedClusterCount, see {@link #fixedClusterCount}
+	 */
+	public boolean isFixedClusterCount() {
+		return fixedClusterCount;
+	}
 
 	/**
 	 * @return the geneThreshold, see {@link #geneThreshold}
@@ -55,9 +64,10 @@ public class ToolbarEvent extends AEvent {
 		return sampleThreshold;
 	}
 
-	public ToolbarEvent(float geneThreshold, float sampleThreshold) {
+	public ToolbarEvent(float geneThreshold, float sampleThreshold, boolean fixedClusterSelection) {
 		this.geneThreshold = geneThreshold;
 		this.sampleThreshold = sampleThreshold;
+		this.fixedClusterCount = fixedClusterSelection;
 	}
 
 
