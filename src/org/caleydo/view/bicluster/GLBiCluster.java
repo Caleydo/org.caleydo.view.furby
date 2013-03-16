@@ -81,6 +81,11 @@ import org.eclipse.swt.widgets.Composite;
  * @author Marc Streit
  */
 
+// TODO Fix Band start and End positions.
+// TODO Framerate drop when bands are displayed
+// TODO Fix Drag and Drop on specific clusters
+// TODO Irrational layouting in some cases
+
 public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspectiveBasedView, IGLRemoteRenderingView {
 	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
 	public static final String VIEW_NAME = "BiCluster Visualization";
@@ -118,6 +123,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 			getRoot().setData(initTablePerspectives());
 			createBiClusterPerspectives(x, l, z);
 			createBiClusterPerspectives(x, l, z);
+			setClusterSizes();
 		}
 		detailLevel = EDetailLevel.HIGH;
 	}
@@ -336,6 +342,40 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 			setXElements = event.isFixedClusterCount();
 			createBiClusterPerspectives(x, l, z);
 		}
+		setClusterSizes();
 
 	}
+
+	int maxDimClusterElements = 0;
+	int maxRecClusterElements = 0;
+	int maxClusterRecSize = 150;
+	int maxClusterDimSize = 150;
+
+	/**
+	 *
+	 */
+	private void setClusterSizes() {
+		int maxDimClusterElements = 0;
+		int maxRecClusterElements = 0;
+		for (GLElement iGL : glBiClusterElement) {
+			ClusterElement i = (ClusterElement) iGL;
+			if (!i.isVisible())
+				continue;
+			if (maxDimClusterElements < i.getNumberOfDimElements()) {
+				maxDimClusterElements = i.getNumberOfDimElements();
+			}
+			if (maxRecClusterElements < i.getNumberOfRecElements()) {
+				maxRecClusterElements = i.getNumberOfRecElements();
+			}
+		}
+
+		for (GLElement iGL : glBiClusterElement) {
+			ClusterElement i = (ClusterElement) iGL;
+			int recSize = (i.getNumberOfRecElements() * maxClusterRecSize) / maxRecClusterElements;
+			int dimSize = (i.getNumberOfDimElements() * maxClusterDimSize) / maxDimClusterElements;
+			i.setSize(recSize, dimSize);
+		}
+
+	}
+
 }

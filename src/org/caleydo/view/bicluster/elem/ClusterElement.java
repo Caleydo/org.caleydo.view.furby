@@ -40,7 +40,6 @@ import org.caleydo.core.view.opengl.layout.util.multiform.MultiFormRenderer;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
-import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
@@ -88,6 +87,7 @@ public class ClusterElement extends GLElementAdapter {
 		return id;
 	}
 
+
 	private void init() {
 
 		// find all registered embedded views that support the actual rendering
@@ -114,7 +114,7 @@ public class ClusterElement extends GLElementAdapter {
 			}
 		});
 
-		GLElementAccessor.asLayoutElement(this).setSize(150, 150);
+		GLElementAccessor.asLayoutElement(this).setSize(200, 200);
 		setVisibility(EVisibility.PICKABLE);
 
 	}
@@ -170,6 +170,7 @@ public class ClusterElement extends GLElementAdapter {
 	 * @param setXElements
 	 */
 	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements) {
+
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
 			setVisibility(EVisibility.PICKABLE);
 			VirtualArray dimArray = getDimensionVirtualArray();
@@ -198,8 +199,11 @@ public class ClusterElement extends GLElementAdapter {
 		}
 		fireTablePerspectiveChanged();
 		view.resetView();
-		setSize(200, 200);
+		// setSize(200, 200);
 	}
+
+
+
 
 	/**
 	 *
@@ -209,7 +213,9 @@ public class ClusterElement extends GLElementAdapter {
 		yOverlap = new HashMap<>();
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
 		List<Integer> myRecIndizes = getRecordVirtualArray().getIDs();
-		overallOverlapSize = 0;
+		// overallOverlapSize = 0;
+		xOverlapSize = 0;
+		yOverlapSize = 0;
 		for (GLElement element : root.asList()) {
 			if (element == this)
 				continue;
@@ -218,30 +224,17 @@ public class ClusterElement extends GLElementAdapter {
 
 			eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
 			xOverlap.put(element, eIndizes);
-			overallOverlapSize += eIndizes.size();
+			xOverlapSize += eIndizes.size();
 
 			eIndizes = new ArrayList<Integer>(myRecIndizes);
 			eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
 			yOverlap.put(element, eIndizes);
-			overallOverlapSize += eIndizes.size();
+			yOverlapSize += eIndizes.size();
 
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.caleydo.core.view.opengl.layout2.GLElementAdapter#renderImpl(org.caleydo.core.view.opengl.layout2.GLGraphics,
-	 * float, float)
-	 */
-	@Override
-	protected void renderImpl(GLGraphics g, float w, float h) {
-		super.renderImpl(g, w, h);
-		// if (this.isVisible)
-		// g.fillRect(getBounds().w(), getBounds().x(), w, h);
 
-	}
 
 	/**
 	 * @return the force, see {@link #attForce}
@@ -317,6 +310,14 @@ public class ClusterElement extends GLElementAdapter {
 		return data.getRecordPerspective().getVirtualArray();
 	}
 
+	public int getNumberOfDimElements() {
+		return getDimensionVirtualArray().size();
+	}
+
+	public int getNumberOfRecElements() {
+		return getRecordVirtualArray().size();
+	}
+
 	/**
 	 * @return the isDraged, see {@link #isDragged}
 	 */
@@ -342,10 +343,16 @@ public class ClusterElement extends GLElementAdapter {
 		return yOverlap.get(jElement);
 	}
 
-	int overallOverlapSize;
+	// int overallOverlapSize;
+	int xOverlapSize;
+	int yOverlapSize;
 
-	public int getOverallOverlapSize() {
-		return overallOverlapSize;
+	public int getXOverlapSize() {
+		return xOverlapSize;
+	}
+
+	public int getYOverlapSize() {
+		return yOverlapSize;
 	}
 
 	/**

@@ -36,6 +36,7 @@ import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
+import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
@@ -53,8 +54,8 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 	// float layoutStabilisationTime = 50000; // After X Milliseconds the layout is fixed until a cluster is moved
 	// // (resetDamping()
 	// is called)
-	float repulsion = 0.03f;
-	float attractionFactor = 5f;
+	float repulsion = 0.05f;
+	float attractionFactor = 1f;
 	// double aD = 0.3;
 
 	public Integer fixedElementsCount = 15;
@@ -99,6 +100,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
+
 		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
@@ -155,20 +157,30 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		double xMax = 0, yMax = 0, xMin = 3000, yMin = 3000;
 
 		// calculate the attraction based on the size of all overlaps
-		int overallOverlapSize = 0;
+		// int overallOverlapSize = 0;
+		int xOverlapSize = 0, yOverlapSize = 0;
 		for (IGLLayoutElement iGLE : children) {
 			GLElement vGL = iGLE.asElement();
 			ClusterElement v = (ClusterElement) vGL;
-			overallOverlapSize += v.getOverallOverlapSize();
+			xOverlapSize += v.getXOverlapSize();
+			yOverlapSize += v.getYOverlapSize();
 		}
 		// System.out.println(overallOverlapSize);
-		double attraction = attractionFactor / overallOverlapSize;
+		// double attraction = attractionFactor / (xOverlapSize + yOverlapSize);
+		double attractionX = 1;
+
+		attractionX = attractionFactor / (xOverlapSize + yOverlapSize);
+		double attractionY = 1;
+
+		attractionY = attractionFactor / (yOverlapSize + xOverlapSize);
 
 		// layout begin
 		for (IGLLayoutElement iGLE : children) { // Loop through Vertices
 			GLElement vGL = iGLE.asElement();
 			ClusterElement i = (ClusterElement) vGL;
-			// if (i.getId() == 7) {
+			// if (i.getId() == 4) {
+			// System.out.println("haltepunkt");
+			// }
 			i.setRepForce(new Vec2d(0, 0));
 			i.setAttForce(new Vec2d(0, 0));
 			// repulsion
@@ -181,9 +193,10 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 				// calculate the repulsion between two vertices
 				Vec2d distVec = virtualPositions.get(i).minus(virtualPositions.get(j));
 				double rsq = distVec.lengthSquared();
-				double forcex = 0, forcey = 0;
-				forcex = i.getRepForce().x() + repulsion * distVec.x() / rsq;
-				forcey = i.getRepForce().y() + repulsion * distVec.y() / rsq;
+				double forcex = repulsion * distVec.x() / rsq;
+				double forcey = repulsion * distVec.y() / rsq;
+				forcex += i.getRepForce().x();
+				forcey += i.getRepForce().y();
 				i.setRepForce(new Vec2d(forcex, forcey));
 			}
 			// attraction force calculation
@@ -197,17 +210,19 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 				if (xOverlap.size() == 0 && yOverlap.size() == 0)
 					continue;
 				int overlapSizeX = xOverlap.size();
-				int overlapSizeY = xOverlap.size();
+				int overlapSizeY = yOverlap.size();
 				Vec2d distVec = virtualPositions.get(j).minus(virtualPositions.get(i));
 				double dist = distVec.length/* Squared */();
+				// int isXNeg = distVec.x() < 0 ? -1 : 1;
+				// int isYNeg = distVec.y() < 0 ? -1 : 1;
 				// dist = dist * distVec.length();
 				// double distanceFactor = Math.log(dist / aD);
 				// dist = Math.log((dist / aD));
-				double forcex = i.getAttForce().x();
-				double forcey = i.getAttForce().y();
+				double forcex = attractionX * distVec.x() * (overlapSizeX + overlapSizeY) / dist; // * isXNeg;
+				double forcey = attractionY * distVec.y() * (overlapSizeY + overlapSizeX) / dist; // * isYNeg;
 				// counting the attraction
-				forcex += attraction * dist * (overlapSizeX);
-				forcey += attraction * dist * (overlapSizeY);
+				forcex = i.getAttForce().x() + forcex;
+				forcey = i.getAttForce().y() + forcey;
 				i.setAttForce(new Vec2d(forcex, forcey));
 
 			}
@@ -287,6 +302,26 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		v.getIGLayoutElement().setLocation((float) xPos, (float) yPos);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.caleydo.core.view.opengl.layout2.GLElementContainer#renderImpl(org.caleydo.core.view.opengl.layout2.GLGraphics
+	 * , float, float)
+	 */
+	@Override
+	protected void renderImpl(GLGraphics g, float w, float h) {
+		for (GLElement iGLL : this) {
+			ClusterElement i = (ClusterElement) iGLL;
+			if (!i.isVisible())
+				continue;
+			g.fillRect(i.getLocation().x(), i.getLocation().y(), i.getSize().x(), i.getSize().y());
+			// System.out.println(i.getLocation() + " " + i.getSize());
+			g.drawText(new Integer(i.getId()).toString(), i.getLocation().x(), i.getLocation().y() - 15, 12, 12);
+		}
+		// super.renderImpl(g, w, h);
+	}
+
 	private void initialLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (GLElement child : asList()) {
 			Random r = new Random();
@@ -322,13 +357,13 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 					bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight, color, .5f);
 				}
 				points = new ArrayList<>();
-				// if (yOverlapSize > 0) {
-				// points.add(pair(start.getLocation().x(), start.getLocation().y(), start.getLocation().x(), start
-				// .getLocation().y() + yScaleFactor * yOverlapSize));
-				// points.add(pair(end.getLocation().x(), end.getLocation().y() - yScaleFactor * yOverlapSize, end
-				// .getLocation().x(), end.getLocation().y()));
-				// bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight, color, .5f);
-				// }
+				if (yOverlapSize > 0) {
+					points.add(pair(start.getLocation().x(), start.getLocation().y(), start.getLocation().x(), start
+							.getLocation().y() + yScaleFactor * yOverlapSize));
+					points.add(pair(end.getLocation().x(), end.getLocation().y() - yScaleFactor * yOverlapSize, end
+							.getLocation().x(), end.getLocation().y()));
+					bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight, color, .5f);
+				}
 			}
 			i++;
 		}
