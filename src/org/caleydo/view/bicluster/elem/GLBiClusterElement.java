@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.media.opengl.GLContext;
 
@@ -42,6 +44,8 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 
+import com.google.common.base.Stopwatch;
+
 /**
  * @author Samuel Gratzl
  * @author Michael Gillhofer
@@ -51,10 +55,10 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 	private final AGLView view;
 	private ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
 
-	// float layoutStabilisationTime = 50000; // After X Milliseconds the layout is fixed until a cluster is moved
-	// // (resetDamping()
-	// is called)
-	float repulsion = 0.05f;
+	float layoutStabilisationTime = 300; // After X Milliseconds the layout is fixed until a cluster is moved
+	// resetDamping(); is called)
+
+	float repulsion = 0.04f;
 	float attractionFactor = 1f;
 	// double aD = 0.3;
 
@@ -97,6 +101,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 	}
 
 	private boolean isInitLayoutDone = false;
+	Stopwatch stopwatch = new Stopwatch();
 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
@@ -104,41 +109,46 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
-			// dampingTimer.schedule(timerTask, 500, (long) timerInterval);
+			dampingTimer.schedule(timerTask, 500, (long) timerInterval);
 		} else {
-			forceDirectedLayout(children, w, h);
-			bandLayout(children, w, h);
+			long millis = System.currentTimeMillis();
+			while (System.currentTimeMillis() - millis < 45) {
+				forceDirectedLayout(children, w, h);
+			}
+			if (damping <= 0.0)
+				bandLayout(children, w, h);
 
 		}
 		relayout();
 	}
 
 	double damping = 1f;
+
 	double timerInterval = 100; // ms
 
-	// Timer dampingTimer = new Timer();
+	Timer dampingTimer = new Timer();
 
 	public void resetDamping() {
 		damping = 1.f;
 	}
 
-	// TimerTask timerTask = new TimerTask() { // periodic tasks for stabilizing layout after layoutStabilisationTime
-	// // seconds.
-	//
-	// @Override
-	// public void run() {
-	// // setDamping();
-	//
-	// }
-	//
-	// protected void setDamping() {
-	// double amount = (1. / (layoutStabilisationTime / timerInterval));
-	// if (damping >= amount)
-	// damping -= amount;
-	// else
-	// damping = 0;
-	// }
-	// };
+	TimerTask timerTask = new TimerTask() { // periodic tasks for stabilizing layout after layoutStabilisationTime
+		// seconds.
+
+		@Override
+		public void run() {
+			setDamping();
+
+		}
+
+		protected void setDamping() {
+			double amount = (1. / (layoutStabilisationTime / timerInterval));
+			if (damping >= amount)
+				damping -= amount;
+			else
+				damping = 0;
+		}
+	};
 
 	/**
 	 *
@@ -193,6 +203,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 				// calculate the repulsion between two vertices
 				Vec2d distVec = virtualPositions.get(i).minus(virtualPositions.get(j));
 				double rsq = distVec.lengthSquared();
+				// rsq = rsq * rsq;
 				double forcex = repulsion * distVec.x() / rsq;
 				double forcey = repulsion * distVec.y() / rsq;
 				forcex += i.getRepForce().x();
@@ -338,7 +349,8 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 	 */
 	private void bandLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		boolean highlight = false;
-		float[] color = Colors.BLUE.getRGBA();
+		float[] colorY = Colors.BLUE.getRGBA();
+		float[] colorX = Colors.GREEN.getRGBA();
 		bandRenderer.init(GLContext.getCurrentGL().getGL2());
 		int i = 0;
 		int xScaleFactor = 10;
@@ -350,19 +362,19 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 				List<Pair<Point2D, Point2D>> points = new ArrayList<>();
 				ClusterElement startEl = (ClusterElement) start.asElement();
 				ClusterElement endEl = (ClusterElement) end.asElement();
+				// if (startEl.getId() == 6 && endEl.getId() == 7) {
+				// System.out.println("Degbugpoint");
+				// }
 				int xOverlapSize = startEl.getxOverlap(endEl).size();
 				int yOverlapSize = startEl.getyOverlap(endEl).size();
 				if (xOverlapSize > 0) {
-					addPointsToBand(xScaleFactor, start, end, points, xOverlapSize);
-					bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight, color, .5f);
+					addDimPointsToBand(xScaleFactor, start, end, points, xOverlapSize);
+					bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight, colorY, .5f);
 				}
 				points = new ArrayList<>();
 				if (yOverlapSize > 0) {
-					points.add(pair(start.getLocation().x(), start.getLocation().y(), start.getLocation().x(), start
-							.getLocation().y() + yScaleFactor * yOverlapSize));
-					points.add(pair(end.getLocation().x(), end.getLocation().y() - yScaleFactor * yOverlapSize, end
-							.getLocation().x(), end.getLocation().y()));
-					bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight, color, .5f);
+					addRecPointsToBand(yScaleFactor, start, end, points, yOverlapSize);
+					bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight, colorX, .5f);
 				}
 			}
 			i++;
@@ -372,15 +384,15 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 
 	}
 
-	private void addPointsToBand(int xF, IGLLayoutElement first, IGLLayoutElement second,
+	private void addDimPointsToBand(int xF, IGLLayoutElement first, IGLLayoutElement second,
 			List<Pair<Point2D, Point2D>> points, int xOS) {
 		Vec2f fLoc = first.getLocation();
 		Vec2f sLoc = second.getLocation();
 		Vec2f fSize = first.getSetSize();
 		Vec2f sSize = second.getSetSize();
-		if (fLoc.x() < sLoc.x()) {
+		if (fLoc.y() < sLoc.y()) {
 			// first on top
-			if (fLoc.x() + fSize.x() < sLoc.x()) {
+			if (fLoc.y() + fSize.y() < sLoc.y()) {
 				// second far at the bottom
 				points.add(pair(fLoc.x(), fLoc.y() + fSize.y(), fLoc.x() + xF * xOS, fLoc.y() + fSize.y()));
 				points.add(pair(sLoc.x(), sLoc.y(), sLoc.x() + xF * xOS, sLoc.y()));
@@ -394,7 +406,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 
 		} else {
 			// second on top
-			if (sLoc.x() + sSize.x() < fLoc.x()) {
+			if (sLoc.y() + sSize.y() < fLoc.y()) {
 				// second far at the top
 				points.add(pair(sLoc.x(), sLoc.y() + sSize.y(), sLoc.x() + xF * xOS, sLoc.y() + sSize.y()));
 				points.add(pair(fLoc.x(), fLoc.y(), fLoc.x() + xF * xOS, fLoc.y()));
@@ -403,6 +415,41 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 						first.getLocation().y()));
 				points.add(pair(second.getLocation().x(), second.getLocation().y(),
 						second.getLocation().x() + xF * xOS, second.getLocation().y()));
+			}
+		}
+	}
+
+	private void addRecPointsToBand(int yF, IGLLayoutElement first, IGLLayoutElement second,
+			List<Pair<Point2D, Point2D>> points, int yOS) {
+		Vec2f fLoc = first.getLocation();
+		Vec2f sLoc = second.getLocation();
+		Vec2f fSize = first.getSetSize();
+		Vec2f sSize = second.getSetSize();
+		if (fLoc.x() < sLoc.x()) {
+			// second right
+			if (fLoc.x() + fSize.x() < sLoc.x()) {
+				// second far at right
+				points.add(pair(fLoc.x() + fSize.x(), fLoc.y(), fLoc.x() + fSize.x(), fLoc.y() + yF * yOS));
+				points.add(pair(sLoc.x(), sLoc.y(), sLoc.x(), sLoc.y() + yF * yOS));
+			} else {
+				// second in between
+				points.add(pair(first.getLocation().x(), first.getLocation().y(), first.getLocation().x(), first
+						.getLocation().y() + yF * yOS));
+				points.add(pair(second.getLocation().x(), second.getLocation().y() - yF * yOS,
+						second.getLocation().x(), second.getLocation().y()));
+			}
+
+		} else {
+			// second left
+			if (sLoc.x() + sSize.x() < fLoc.x()) {
+				// second far at left
+				points.add(pair(sLoc.x() + sSize.x(), sLoc.y(), sLoc.x() + sSize.x(), sLoc.y() + yF * yOS));
+				points.add(pair(fLoc.x(), fLoc.y(), fLoc.x(), fLoc.y() + yF * yOS));
+			} else {
+				points.add(pair(first.getLocation().x(), first.getLocation().y(), first.getLocation().x() + yF * yOS,
+						first.getLocation().y()));
+				points.add(pair(second.getLocation().x(), second.getLocation().y(),
+						second.getLocation().x() + yF * yOS, second.getLocation().y()));
 			}
 		}
 	}

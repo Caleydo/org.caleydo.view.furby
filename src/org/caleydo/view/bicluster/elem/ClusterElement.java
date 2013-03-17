@@ -76,8 +76,19 @@ public class ClusterElement extends GLElementAdapter {
 		this.view = view;
 		this.data = data;
 		this.root = root;
-		id = number++;
+		id = ++number;
 		init();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#finalize()
+	 */
+	@Override
+	protected void finalize() throws Throwable {
+		number--;
+		super.finalize();
 	}
 
 	/**
