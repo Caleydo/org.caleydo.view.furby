@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.caleydo.core.util.collection.Pair;
-import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.canvas.AGLView;
+import org.caleydo.core.view.opengl.layout.util.multiform.MultiFormRenderer;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
@@ -37,6 +37,9 @@ import org.caleydo.core.view.opengl.layout2.GLGraphics;
  *
  */
 public class BandElement extends GLElementAdapter {
+
+	private static final String CLUSTER_EMBEDDING_ID = "org.caleydo.view.bicluster.cluster";
+	private MultiFormRenderer multiFormRenderer;
 
 	/**
 	 * @param view
@@ -50,6 +53,29 @@ public class BandElement extends GLElementAdapter {
 		this.overlap = overlap;
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
+		init();
+	}
+
+	private void init() {
+
+		// // find all registered embedded views that support the actual rendering
+		// Set<String> remoteRenderedViewIDs = ViewManager.get().getRemotePlugInViewIDs(GLBiCluster.VIEW_TYPE,
+		// CLUSTER_EMBEDDING_ID);
+		//
+		// List<String> viewIDs = new ArrayList<>(remoteRenderedViewIDs);
+		// Collections.sort(viewIDs);
+		//
+		this.multiFormRenderer = new MultiFormRenderer(view, true);
+
+		// for (String viewID : remoteRenderedViewIDs) {
+		// multiFormRenderer.addPluginVisualization(viewID, GLBiCluster.VIEW_TYPE, CLUSTER_EMBEDDING_ID, null, null);
+		// }
+		multiFormRenderer.setActive(multiFormRenderer.getDefaultRendererID());
+		this.setRenderer(multiFormRenderer);
+
+		// GLElementAccessor.asLayoutElement(this).setSize(200, 200);
+		setVisibility(EVisibility.PICKABLE);
+
 	}
 
 	/**
@@ -80,6 +106,7 @@ public class BandElement extends GLElementAdapter {
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		// TODO Auto-generated method stub
 		super.renderImpl(g, w, h);
+		System.out.println("jihhaa");
 	}
 
 	/**
@@ -99,7 +126,6 @@ public class BandElement extends GLElementAdapter {
 
 	public void updatePosition() {
 		if (dimBand) {
-			float[] colorX = Colors.GREEN.getRGBA();
 			double startDimBandScaleFactor = first.getSize().x() / (double) first.getNumberOfDimElements();
 			double endDimBandScaleFactor = second.getSize().x() / (double) second.getNumberOfDimElements();
 			int xOverlapSize = first.getxOverlap(second).size();
@@ -107,7 +133,6 @@ public class BandElement extends GLElementAdapter {
 				points = addDimPointsToBand(xOverlapSize, startDimBandScaleFactor, endDimBandScaleFactor);
 			}
 		} else {
-			float[] colorY = Colors.BLUE.getRGBA();
 			double endRecBandScaleFactor = second.getSize().y() / (double) second.getNumberOfRecElements();
 			double startRecBandScaleFactor = first.getSize().y() / (double) first.getNumberOfRecElements();
 			int yOverlapSize = first.getyOverlap(second).size();
@@ -115,8 +140,8 @@ public class BandElement extends GLElementAdapter {
 				points = addRecPointsToBand(yOverlapSize, startRecBandScaleFactor,
 						endRecBandScaleFactor);
 			}
-
 		}
+		repaint();
 
 		// bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), point, highlight, colorY, .5f);
 
@@ -129,6 +154,8 @@ public class BandElement extends GLElementAdapter {
 		Vec2f fSize = first.getSize();
 		Vec2f sSize = second.getSize();
 		List<Pair<Point2D, Point2D>> points = new ArrayList<>();
+		setLocation(1, 1);
+		setSize(2, 2);
 		if (fLoc.y() < sLoc.y()) {
 			// first on top
 			if (fLoc.y() + fSize.y() < sLoc.y()) {

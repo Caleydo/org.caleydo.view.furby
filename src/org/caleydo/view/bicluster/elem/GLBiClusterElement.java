@@ -214,8 +214,8 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 					continue;
 				// squared distance between "u" and "v" in 2D space
 				// calculate the repulsion between two vertices
-				// Vec2d distVec = getDistance(i, j, w, h);
-				Vec2d distVec = virtualPositions.get(i).minus(virtualPositions.get(j));
+				Vec2d distVec = getDistance(i, j, w, h);
+				// Vec2d distVec = virtualPositions.get(i).minus(virtualPositions.get(j));
 				double rsq = distVec.lengthSquared();
 				// rsq = rsq * rsq;
 				double forcex = repulsion * distVec.x() / rsq;
@@ -236,8 +236,8 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 					continue;
 				int overlapSizeX = xOverlap.size();
 				int overlapSizeY = yOverlap.size();
-				Vec2d distVec = virtualPositions.get(j).minus(virtualPositions.get(i));
-				// Vec2d distVec = getDistance(i, j, w, h);
+				// Vec2d distVec = virtualPositions.get(j).minus(virtualPositions.get(i));
+				Vec2d distVec = getDistance(j, i, w, h);
 				double dist = distVec.length/* Squared */();
 				// int isXNeg = distVec.x() < 0 ? -1 : 1;
 				// int isYNeg = distVec.y() < 0 ? -1 : 1;
@@ -328,36 +328,8 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 
 		Vec2d iMiddle = new Vec2d(iLoc.x() + iSize.x() / 2., iLoc.y() + iSize.y() / 2.);
 		Vec2d jMiddle = new Vec2d(jLoc.x() + jSize.x() / 2., jLoc.y() + jSize.y() / 2.);
-		Vec2d dist = jMiddle.minus(iMiddle);
-		dist.setX(dist.x() / w);
-		dist.setY(dist.y() / h);
-		return dist;
-		// Vec2f[] iPoints = new Vec2f[4];
-		// Vec2f[] jPoints = new Vec2f[4];
-		// iPoints[0] = iLoc;
-		// jPoints[0] = jLoc;
-		// iPoints[1] = new Vec2f(iLoc.x() + iSize.x(), iLoc.y());
-		// jPoints[1] = new Vec2f(jLoc.x() + jSize.x(), jLoc.y());
-		// iPoints[2] = new Vec2f(iLoc.x(), iLoc.y() + iSize.y());
-		// jPoints[2] = new Vec2f(jLoc.x(), jLoc.y() + jSize.y());
-		// iPoints[3] = iLoc.plus(iSize);
-		// jPoints[3] = jLoc.plus(jSize);
-		// double smallestDist = 100000;
-		// Vec2f distVec = new Vec2f(0.f, 0.f);
-		// for (Vec2f u : iPoints) {
-		// for (Vec2f v : jPoints) {
-		// Vec2f vec = u.minus(v);
-		// double dist = u.minus(v).length();
-		// if (smallestDist > dist) {
-		// smallestDist = dist;
-		// distVec = vec;
-		// }
-		// }
-		// }
-		// if (distVec == null) {
-		// System.out.println("");
-		// }
-		// return new Vec2d(distVec.x() / w, distVec.y() / h);
+		Vec2d dist = iMiddle.minus(jMiddle);
+		return new Vec2d(dist.x() / w, dist.y() / h);
 	}
 
 	private void setLocation(ClusterElement v, double xPos, double yPos, float w, float h) {

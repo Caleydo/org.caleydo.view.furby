@@ -115,7 +115,7 @@ public class ClusterElement extends GLElementAdapter {
 			}
 		});
 
-		GLElementAccessor.asLayoutElement(this).setSize(200, 200);
+		// GLElementAccessor.asLayoutElement(this).setSize(200, 200);
 		setVisibility(EVisibility.PICKABLE);
 
 	}
