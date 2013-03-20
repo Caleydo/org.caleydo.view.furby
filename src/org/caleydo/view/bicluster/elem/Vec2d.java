@@ -19,9 +19,11 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import gleem.linalg.Vec2f;
+
 
 /**
- * @author Michael Gillhofer; mostly copied from vec2f
+ * @author Michael Gillhofer; mostly copied from {@link Vec2f}
  */
 public class Vec2d {
 	private double x;
@@ -37,6 +39,14 @@ public class Vec2d {
 
 	public Vec2d(double x, double y) {
 		set(x, y);
+	}
+
+	/**
+	 * @param iSizef
+	 */
+	public Vec2d(Vec2f iSizef) {
+		this.x = iSizef.x();
+		this.y = iSizef.y();
 	}
 
 	public Vec2d copy() {

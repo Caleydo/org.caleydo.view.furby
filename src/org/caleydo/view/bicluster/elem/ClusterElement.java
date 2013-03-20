@@ -34,12 +34,14 @@ import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
 import org.caleydo.core.data.virtualarray.events.RecordVAUpdateEvent;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.event.view.TablePerspectivesChangedEvent;
+import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.ViewManager;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.layout.util.multiform.MultiFormRenderer;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
+import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
@@ -67,7 +69,7 @@ public class ClusterElement extends GLElementAdapter {
 	private Map<GLElement, List<Integer>> xOverlap;
 	private Map<GLElement, List<Integer>> yOverlap;
 
-	private int id;
+	private String id;
 	private static int number;
 
 	public ClusterElement(AGLView view, TablePerspective data, GLBiClusterElement root) {
@@ -76,28 +78,16 @@ public class ClusterElement extends GLElementAdapter {
 		this.view = view;
 		this.data = data;
 		this.root = root;
-		id = ++number;
 		init();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#finalize()
-	 */
-	@Override
-	protected void finalize() throws Throwable {
-		number--;
-		super.finalize();
-	}
 
 	/**
 	 * @return the id, see {@link #id}
 	 */
-	public int getId() {
+	public String getId() {
 		return id;
 	}
-
 
 	private void init() {
 
@@ -130,13 +120,48 @@ public class ClusterElement extends GLElementAdapter {
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.caleydo.core.view.opengl.layout2.GLElementAdapter#renderPickImpl(org.caleydo.core.view.opengl.layout2.GLGraphics
+	 * , float, float)
+	 */
+	@Override
+	protected void renderPickImpl(GLGraphics g, float w, float h) {
+		// TODO Auto-generated method stub
+		// super.renderPickImpl(g, w, h);
+		g.color(Colors.BLACK);
+		g.fillRect(0, 0, w, h);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.caleydo.core.view.opengl.layout2.GLElementAdapter#renderImpl(org.caleydo.core.view.opengl.layout2.GLGraphics,
+	 * float, float)
+	 */
+	@Override
+	protected void renderImpl(GLGraphics g, float w, float h) {
+		// TODO Auto-generated method stub
+		// super.renderImpl(g, w, h);
+		// if (isDragged) {
+			g.color(Colors.RED);
+			g.fillRect(0, 0, w, h);
+			g.color(Colors.BLACK);
+		// }
+	}
+
 	private Vec2f pickLocation;
 
 	protected void onPicked(Pick pick) {
 		switch (pick.getPickingMode()) {
 		case DRAGGED:
-			if (isDragged == false)
+			if (isDragged == false) {
 				pickLocation = getLocation();
+				root.setDragedLayoutElement(this);
+			}
 			root.resetDamping();
 			isDragged = true;
 			java.awt.Point now = pick.getPickedPoint();
@@ -145,9 +170,11 @@ public class ClusterElement extends GLElementAdapter {
 			int diffY = start.y - now.y;
 			setLocation(pickLocation.x() - diffX, pickLocation.y() - diffY);
 			relayoutParent();
+			repaintPick();
 			break;
 		default:
 			isDragged = false;
+			root.setDragedLayoutElement(null);
 		}
 
 		// switch (pick.getPickingMode()) {
@@ -179,11 +206,13 @@ public class ClusterElement extends GLElementAdapter {
 	 * @param dimIndices
 	 * @param recIndices
 	 * @param setXElements
+	 * @param string
 	 */
-	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements) {
-
+	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements, String string) {
+		this.id = string;
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
 			setVisibility(EVisibility.PICKABLE);
+			isVisible = true;
 			VirtualArray dimArray = getDimensionVirtualArray();
 			VirtualArray recArray = getRecordVirtualArray();
 			dimArray.clear();
@@ -203,7 +232,6 @@ public class ClusterElement extends GLElementAdapter {
 				count++;
 			}
 			calculateOverlap();
-			isVisible = true;
 		} else {
 			setVisibility(EVisibility.NONE);
 			isVisible = false;
@@ -212,9 +240,6 @@ public class ClusterElement extends GLElementAdapter {
 		view.resetView();
 		// setSize(200, 200);
 	}
-
-
-
 
 	/**
 	 *
@@ -244,8 +269,6 @@ public class ClusterElement extends GLElementAdapter {
 
 		}
 	}
-
-
 
 	/**
 	 * @return the force, see {@link #attForce}

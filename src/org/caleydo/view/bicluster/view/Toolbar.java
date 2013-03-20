@@ -56,13 +56,13 @@ public class Toolbar extends ControlContribution {
 
 		final Button fixedClusterButton = new Button(composite, SWT.CHECK);
 		fixedClusterButton.setText("Show only 15 Elements");
-		fixedClusterButton.setSelection(true);
+		fixedClusterButton.setSelection(false);
 
 		final Label sampleLabel = new Label(composite, SWT.HORIZONTAL);
 		sampleLabel.setLayoutData(new RowData(200, 20));
 
 		final Slider sampleThrSpinner = new Slider(composite, SWT.HORIZONTAL);
-		sampleThrSpinner.setValues(200, 0, 300, 2, 5, 1);
+		sampleThrSpinner.setValues(350, 0, 500, 2, 5, 1);
 		sampleThrSpinner.setLayoutData(new RowData(150, 20));
 		sampleThrSpinner.setEnabled(true);
 
@@ -70,7 +70,7 @@ public class Toolbar extends ControlContribution {
 		geneLabel.setLayoutData(new RowData(205, 20));
 
 		final Slider geneThrSpinner = new Slider(composite, SWT.HORIZONTAL);
-		geneThrSpinner.setValues(8, 0, 15, 2, 1, 1);
+		geneThrSpinner.setValues(7, 0, 30, 2, 1, 1);
 		geneThrSpinner.setLayoutData(new RowData(200, 20));
 		geneThrSpinner.setEnabled(true);
 

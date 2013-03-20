@@ -52,7 +52,7 @@ public class ScanProbabilityMatrix implements Callable<List<Integer>> {
 			float p;
 			p = (float) table.getRaw(bcNr, nr);
 
-			if (p > threshold) {
+			if (Math.abs(p) > threshold) {
 				pair = new Pair<>(nr, p);
 				indicesList.add(pair);
 			}
