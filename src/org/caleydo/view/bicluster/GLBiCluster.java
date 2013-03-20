@@ -192,6 +192,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 			}
 		}
 		glBiClusterElement.resetDamping();
+		glBiClusterElement.createBands();
 	}
 
 	/**

@@ -19,11 +19,16 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import gleem.linalg.Vec2f;
+
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.caleydo.core.util.collection.Pair;
+import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.canvas.AGLView;
+import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 
@@ -36,11 +41,22 @@ public class BandElement extends GLElementAdapter {
 	/**
 	 * @param view
 	 */
-	public BandElement(AGLView view, GLBiClusterElement root, boolean dimBand) {
+	public BandElement(AGLView view, GLBiClusterElement root, boolean dimBand, List<Integer> overlap, GLElement first,
+			GLElement second) {
 		super(view);
 		this.view = view;
 		this.root = root;
 		this.dimBand = dimBand;
+		this.overlap = overlap;
+		this.first = (ClusterElement) first;
+		this.second = (ClusterElement) second;
+	}
+
+	/**
+	 * @return the dimBand, see {@link #dimBand}
+	 */
+	public boolean isDimBand() {
+		return dimBand;
 	}
 
 	private GLBiClusterElement root;
@@ -49,12 +65,13 @@ public class BandElement extends GLElementAdapter {
 	private ClusterElement first;
 	private ClusterElement second;
 	private boolean dimBand;
+	private List<Integer> overlap;
 
 	private List<Pair<Point2D, Point2D>> points;
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.caleydo.core.view.opengl.layout2.GLElementAdapter#renderImpl(org.caleydo.core.view.opengl.layout2.GLGraphics,
 	 * float, float)
@@ -63,6 +80,129 @@ public class BandElement extends GLElementAdapter {
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		// TODO Auto-generated method stub
 		super.renderImpl(g, w, h);
+	}
+
+	/**
+	 * @return the points, see {@link #points}
+	 */
+	public List<Pair<Point2D, Point2D>> getPoints() {
+		return points;
+	}
+
+	/**
+	 * @param points
+	 *            setter, see {@link points}
+	 */
+	public void setPoints(List<Pair<Point2D, Point2D>> points) {
+		this.points = points;
+	}
+
+	public void updatePosition() {
+		if (dimBand) {
+			float[] colorX = Colors.GREEN.getRGBA();
+			double startDimBandScaleFactor = first.getSize().x() / (double) first.getNumberOfDimElements();
+			double endDimBandScaleFactor = second.getSize().x() / (double) second.getNumberOfDimElements();
+			int xOverlapSize = first.getxOverlap(second).size();
+			if (xOverlapSize > 0) {
+				points = addDimPointsToBand(xOverlapSize, startDimBandScaleFactor, endDimBandScaleFactor);
+			}
+		} else {
+			float[] colorY = Colors.BLUE.getRGBA();
+			double endRecBandScaleFactor = second.getSize().y() / (double) second.getNumberOfRecElements();
+			double startRecBandScaleFactor = first.getSize().y() / (double) first.getNumberOfRecElements();
+			int yOverlapSize = first.getyOverlap(second).size();
+			if (yOverlapSize > 0) {
+				points = addRecPointsToBand(yOverlapSize, startRecBandScaleFactor,
+						endRecBandScaleFactor);
+			}
+
+		}
+
+		// bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), point, highlight, colorY, .5f);
+
+	}
+
+	private List<Pair<Point2D, Point2D>> addDimPointsToBand(int xOS, double firDimScaFac, double secDimScFac) {
+
+		Vec2f fLoc = first.getLocation();
+		Vec2f sLoc = second.getLocation();
+		Vec2f fSize = first.getSize();
+		Vec2f sSize = second.getSize();
+		List<Pair<Point2D, Point2D>> points = new ArrayList<>();
+		if (fLoc.y() < sLoc.y()) {
+			// first on top
+			if (fLoc.y() + fSize.y() < sLoc.y()) {
+				// second far at the bottom
+				points.add(pair(fLoc.x(), fLoc.y() + fSize.y(), (float) (fLoc.x() + firDimScaFac * xOS), fLoc.y()
+						+ fSize.y()));
+				points.add(pair(sLoc.x(), sLoc.y(), (float) (sLoc.x() + secDimScFac * xOS), sLoc.y()));
+			} else {
+				// second in between
+				points.add(pair(first.getLocation().x(), first.getLocation().y(),
+						(float) (first.getLocation().x() + firDimScaFac * xOS), first.getLocation().y()));
+				points.add(pair(second.getLocation().x(), second.getLocation().y(),
+						(float) (second.getLocation().x() + secDimScFac * xOS), second.getLocation().y()));
+			}
+
+		} else {
+			// second on top
+			if (sLoc.y() + sSize.y() < fLoc.y()) {
+				// second far at the top
+				points.add(pair(sLoc.x(), sLoc.y() + sSize.y(), (float) (sLoc.x() + secDimScFac * xOS), sLoc.y()
+						+ sSize.y()));
+				points.add(pair(fLoc.x(), fLoc.y(), (float) (fLoc.x() + firDimScaFac * xOS), fLoc.y()));
+			} else {
+				points.add(pair(first.getLocation().x(), first.getLocation().y(),
+						(float) (first.getLocation().x() + firDimScaFac * xOS), first.getLocation().y()));
+				points.add(pair(second.getLocation().x(), second.getLocation().y(),
+						(float) (second.getLocation().x() + secDimScFac * xOS), second.getLocation().y()));
+			}
+		}
+		return points;
+	}
+
+	private List<Pair<Point2D, Point2D>> addRecPointsToBand(int yOS, double firRecScaFac, double secRecScaFac) {
+		Vec2f fLoc = first.getLocation();
+		Vec2f sLoc = second.getLocation();
+		Vec2f fSize = first.getSize();
+		Vec2f sSize = second.getSize();
+		List<Pair<Point2D, Point2D>> points = new ArrayList<>();
+		if (fLoc.x() < sLoc.x()) {
+			// second right
+			if (fLoc.x() + fSize.x() < sLoc.x()) {
+				// second far at right
+				points.add(pair(fLoc.x() + fSize.x(), fLoc.y(), fLoc.x() + fSize.x(), (float) (fLoc.y() + firRecScaFac
+						* yOS)));
+				points.add(pair(sLoc.x(), sLoc.y(), sLoc.x(), (float) (sLoc.y() + secRecScaFac * yOS)));
+			} else {
+				// second in between
+				points.add(pair(first.getLocation().x(), first.getLocation().y(), first.getLocation().x(),
+						(float) (first.getLocation().y() + firRecScaFac * yOS)));
+				points.add(pair(second.getLocation().x(), (float) (second.getLocation().y() - secRecScaFac * yOS),
+						second.getLocation().x(), second.getLocation().y()));
+			}
+
+		} else {
+			// second left
+			if (sLoc.x() + sSize.x() < fLoc.x()) {
+				// second far at left
+				points.add(pair(sLoc.x() + sSize.x(), sLoc.y(), sLoc.x() + sSize.x(), (float) (sLoc.y() + secRecScaFac
+						* yOS)));
+				points.add(pair(fLoc.x(), fLoc.y(), fLoc.x(), (float) (fLoc.y() + firRecScaFac * yOS)));
+			} else {
+				points.add(pair(first.getLocation().x(), first.getLocation().y(),
+						(float) (first.getLocation().x() + firRecScaFac * yOS), first.getLocation().y()));
+				points.add(pair(second.getLocation().x(), second.getLocation().y(),
+						(float) (second.getLocation().x() + secRecScaFac * yOS), second.getLocation().y()));
+			}
+		}
+		return points;
+	}
+
+	private Pair<Point2D, Point2D> pair(float x1, float y1, float x2, float y2) {
+		Point2D _1 = new Point2D.Float(x1, y1);
+		Point2D _2 = new Point2D.Float(x2, y2);
+		return Pair.make(_1, _2);
 	}
 
 }

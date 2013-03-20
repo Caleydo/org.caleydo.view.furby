@@ -21,7 +21,6 @@ package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
 
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +31,6 @@ import java.util.TimerTask;
 import javax.media.opengl.GLContext;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -53,6 +51,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 
 	private final AGLView view;
 	private ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
+	private List<BandElement> bands;
 
 	float layoutStabilisationTime = 3000; // After X Milliseconds the layout is fixed until a cluster is moved
 	// resetDamping(); is called)
@@ -117,7 +116,6 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 				dragElement(w, h);
 			}
 			bandLayout(children, w, h);
-			// if (damping <= 0.0)
 		}
 		relayout();
 	}
@@ -152,7 +150,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 
 		@Override
 		public void run() {
-			setDamping();
+			// setDamping();
 
 		}
 
@@ -390,6 +388,19 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 			g.drawText(i.getId(), i.getLocation().x(), i.getLocation().y() - 15, 70, 12);
 		}
 		// super.renderImpl(g, w, h);
+
+		boolean highlight = false;
+		float[] colorY = Colors.BLUE.getRGBA();
+		float[] colorX = Colors.GREEN.getRGBA();
+		bandRenderer.init(GLContext.getCurrentGL().getGL2());
+		for (BandElement b : bands) {
+			if (b.isDimBand())
+				bandRenderer
+						.renderComplexBand(GLContext.getCurrentGL().getGL2(), b.getPoints(), highlight, colorY, .5f);
+			else
+				bandRenderer
+						.renderComplexBand(GLContext.getCurrentGL().getGL2(), b.getPoints(), highlight, colorX, .5f);
+		}
 	}
 
 	private void initialLayout(List<? extends IGLLayoutElement> children, float w, float h) {
@@ -411,149 +422,9 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 	 * @param h
 	 */
 	private void bandLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-		boolean highlight = false;
-		float[] colorY = Colors.BLUE.getRGBA();
-		float[] colorX = Colors.GREEN.getRGBA();
-		double startDimBandScaleFactor = 1, startRecBandScaleFactor = 1;
-		double endDimBandScaleFactor = 1, endRecBandScaleFactor = 1;
-		bandRenderer.init(GLContext.getCurrentGL().getGL2());
-		int i = 0;
-		for (IGLLayoutElement start : children) {
-			ClusterElement startEl = (ClusterElement) start.asElement();
-			startDimBandScaleFactor = startEl.getSize().x() / (double) startEl.getNumberOfDimElements();
-			startRecBandScaleFactor = startEl.getSize().y() / (double) startEl.getNumberOfRecElements();
-			// System.out.println(startEl.getId());
-			for (IGLLayoutElement end : children.subList(i, children.size())) {
-				if (start == end)
-					continue;
-
-				ClusterElement endEl = (ClusterElement) end.asElement();
-				endDimBandScaleFactor = endEl.getSize().x() / endEl.getNumberOfDimElements();
-				endRecBandScaleFactor = endEl.getSize().y() / endEl.getNumberOfRecElements();
-				// if (startEl.getId() == 2 || endEl.getId() == 7) {
-				// System.out.println("Degbugpoint");
-				// System.out.println("Start");
-				// System.out.println("Size x: " + startEl.getSize().x() + " y: " + startEl.getSize().y());
-				// System.out.println("Elements x: " + startEl.getNumberOfDimElements() + " y: "
-				// + startEl.getSize().y());
-				// System.out.println("Factor x: " + startDimBandScaleFactor + " y: " + startRecBandScaleFactor);
-				// System.out.println("End");
-				// System.out.println("Size x: " + endEl.getSize().x() + " y: " + endEl.getSize().y());
-				// System.out.println("Elements x: " + endEl.getNumberOfDimElements() + " y: " + endEl.getSize().y());
-				// System.out.println("Factor x: " + endDimBandScaleFactor + " y: " + endRecBandScaleFactor);
-				// }
-
-				int xOverlapSize = startEl.getxOverlap(endEl).size();
-				int yOverlapSize = startEl.getyOverlap(endEl).size();
-				if (xOverlapSize > 0) {
-					if (xOverlapSize > startEl.getNumberOfDimElements()
-							|| xOverlapSize > endEl.getNumberOfDimElements())
-						System.out.println("Das kann nicht sein");
-					List<Pair<Point2D, Point2D>> point = addDimPointsToBand(start, end, xOverlapSize,
-							startDimBandScaleFactor, endDimBandScaleFactor);
-					bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), point, highlight, colorY, .5f);
-				}
-
-				if (yOverlapSize > 0) {
-					if (yOverlapSize > startEl.getNumberOfRecElements()
-							|| yOverlapSize > endEl.getNumberOfRecElements())
-						System.out.println("Das kann nicht sein");
-					List<Pair<Point2D, Point2D>> point = addRecPointsToBand(start, end, yOverlapSize,
-							startRecBandScaleFactor, endRecBandScaleFactor);
-					bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), point, highlight, colorX, .5f);
-				}
-			}
-			i++;
+		for (BandElement b : bands) {
+			b.updatePosition();
 		}
-		// resetDamping();
-		// System.out.println("band rendering done");
-
-	}
-
-	private List<Pair<Point2D, Point2D>> addDimPointsToBand(IGLLayoutElement first, IGLLayoutElement second, int xOS,
-			double firDimScaFac, double secDimScFac) {
-
-
-		Vec2f fLoc = first.getLocation();
-		Vec2f sLoc = second.getLocation();
-		Vec2f fSize = first.getSetSize();
-		Vec2f sSize = second.getSetSize();
-		List<Pair<Point2D, Point2D>> points = new ArrayList<>();
-		if (fLoc.y() < sLoc.y()) {
-			// first on top
-			if (fLoc.y() + fSize.y() < sLoc.y()) {
-				// second far at the bottom
-				points.add(pair(fLoc.x(), fLoc.y() + fSize.y(), (float) (fLoc.x() + firDimScaFac * xOS), fLoc.y()
-						+ fSize.y()));
-				points.add(pair(sLoc.x(), sLoc.y(), (float) (sLoc.x() + secDimScFac * xOS), sLoc.y()));
-			} else {
-				// second in between
-				points.add(pair(first.getLocation().x(), first.getLocation().y(),
-						(float) (first.getLocation().x() + firDimScaFac * xOS), first.getLocation().y()));
-				points.add(pair(second.getLocation().x(), second.getLocation().y(),
-						(float) (second.getLocation().x() + secDimScFac * xOS), second.getLocation().y()));
-			}
-
-		} else {
-			// second on top
-			if (sLoc.y() + sSize.y() < fLoc.y()) {
-				// second far at the top
-				points.add(pair(sLoc.x(), sLoc.y() + sSize.y(), (float) (sLoc.x() + secDimScFac * xOS), sLoc.y()
-						+ sSize.y()));
-				points.add(pair(fLoc.x(), fLoc.y(), (float) (fLoc.x() + firDimScaFac * xOS), fLoc.y()));
-			} else {
-				points.add(pair(first.getLocation().x(), first.getLocation().y(),
-						(float) (first.getLocation().x() + firDimScaFac * xOS), first.getLocation().y()));
-				points.add(pair(second.getLocation().x(), second.getLocation().y(),
-						(float) (second.getLocation().x() + secDimScFac * xOS), second.getLocation().y()));
-			}
-		}
-		return points;
-	}
-
-	private List<Pair<Point2D, Point2D>> addRecPointsToBand(IGLLayoutElement first, IGLLayoutElement second, int yOS,
-			double firRecScaFac, double secRecScaFac) {
-		Vec2f fLoc = first.getLocation();
-		Vec2f sLoc = second.getLocation();
-		Vec2f fSize = first.getSetSize();
-		Vec2f sSize = second.getSetSize();
-		List<Pair<Point2D, Point2D>> points = new ArrayList<>();
-		if (fLoc.x() < sLoc.x()) {
-			// second right
-			if (fLoc.x() + fSize.x() < sLoc.x()) {
-				// second far at right
-				points.add(pair(fLoc.x() + fSize.x(), fLoc.y(), fLoc.x() + fSize.x(), (float) (fLoc.y() + firRecScaFac
-						* yOS)));
-				points.add(pair(sLoc.x(), sLoc.y(), sLoc.x(), (float) (sLoc.y() + secRecScaFac * yOS)));
-			} else {
-				// second in between
-				points.add(pair(first.getLocation().x(), first.getLocation().y(), first.getLocation().x(),
-						(float) (first.getLocation().y() + firRecScaFac * yOS)));
-				points.add(pair(second.getLocation().x(), (float) (second.getLocation().y() - secRecScaFac * yOS),
-						second.getLocation().x(), second.getLocation().y()));
-			}
-
-		} else {
-			// second left
-			if (sLoc.x() + sSize.x() < fLoc.x()) {
-				// second far at left
-				points.add(pair(sLoc.x() + sSize.x(), sLoc.y(), sLoc.x() + sSize.x(), (float) (sLoc.y() + secRecScaFac
-						* yOS)));
-				points.add(pair(fLoc.x(), fLoc.y(), fLoc.x(), (float) (fLoc.y() + firRecScaFac * yOS)));
-			} else {
-				points.add(pair(first.getLocation().x(), first.getLocation().y(),
-						(float) (first.getLocation().x() + firRecScaFac * yOS), first.getLocation().y()));
-				points.add(pair(second.getLocation().x(), second.getLocation().y(),
-						(float) (second.getLocation().x() + secRecScaFac * yOS), second.getLocation().y()));
-			}
-		}
-		return points;
-	}
-
-	private Pair<Point2D, Point2D> pair(float x1, float y1, float x2, float y2) {
-		Point2D _1 = new Point2D.Float(x1, y1);
-		Point2D _2 = new Point2D.Float(x2, y2);
-		return Pair.make(_1, _2);
 	}
 
 	/**
@@ -569,6 +440,37 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 	 */
 	public void setDragedLayoutElement(ClusterElement element) {
 		this.dragedElement = element;
+	}
+
+	/**
+	 *
+	 */
+	public void createBands() {
+		int i = 0;
+		bands = new ArrayList<>();
+		for (GLElement start : this) {
+			ClusterElement startEl = (ClusterElement) start;
+			// System.out.println(startEl.getId());
+			if (!startEl.isVisible())
+				continue;
+			for (GLElement end : asList().subList(i, asList().size())) {
+				if (start == end)
+					continue;
+				ClusterElement endEl = (ClusterElement) end;
+				if (!endEl.isVisible())
+					continue;
+				List<Integer> overlap = startEl.getxOverlap(endEl);
+				if (overlap.size() > 0) {
+					bands.add(new BandElement(view, this, true, overlap, start, end));
+				}
+				overlap = startEl.getyOverlap(endEl);
+				if (overlap.size() > 0) {
+					bands.add(new BandElement(view, this, false, overlap, start, end));
+				}
+			}
+			i++;
+		}
+
 	}
 
 }
