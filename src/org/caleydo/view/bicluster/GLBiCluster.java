@@ -64,7 +64,7 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.util.texture.TextureManager;
 import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.elem.ClusterElement;
-import org.caleydo.view.bicluster.elem.GLBiClusterElement;
+import org.caleydo.view.bicluster.elem.GLRootElement;
 import org.caleydo.view.bicluster.event.ToolbarEvent;
 import org.eclipse.swt.widgets.Composite;
 
@@ -99,7 +99,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 
 	private final List<TablePerspective> perspectives = new ArrayList<>();
 
-	GLBiClusterElement glBiClusterElement;
+	GLRootElement rootElement;
 	private boolean setXElements = true;
 
 	/**
@@ -123,7 +123,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 			getRoot().setData(initTablePerspectives());
 			createBiClusterPerspectives(x, l, z);
 			createBiClusterPerspectives(x, l, z);
-			setClusterSizes();
+			rootElement.setClusterSizes();
 		}
 		detailLevel = EDetailLevel.HIGH;
 	}
@@ -183,7 +183,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 			try {
 				List<Integer> dimIndices = bcDimScanFut.get(i).get();
 				List<Integer> recIndices = bcRecScanFut.get(i).get();
-				ClusterElement el = (ClusterElement) getRoot().get(i);
+				ClusterElement el = (ClusterElement) getRoot().getClusters().get(i);
 
 				el.setIndices(dimIndices, recIndices, setXElements, l.getDataDomain().getDimensionLabel(i));
 				// el.setPerspectiveLabel(dimensionName, recordName)
@@ -191,8 +191,8 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 				e.printStackTrace();
 			}
 		}
-		glBiClusterElement.resetDamping();
-		glBiClusterElement.createBands();
+		rootElement.resetDamping();
+		rootElement.createBands();
 	}
 
 	/**
@@ -311,14 +311,14 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 	}
 
 	@Override
-	protected GLBiClusterElement getRoot() {
-		return (GLBiClusterElement) super.getRoot();
+	protected GLRootElement getRoot() {
+		return (GLRootElement) super.getRoot();
 	}
 
 	@Override
 	protected GLElement createRoot() {
-		glBiClusterElement = new GLBiClusterElement(this);
-		return glBiClusterElement;
+		rootElement = new GLRootElement(this);
+		return rootElement;
 	}
 
 	@Override
@@ -345,39 +345,10 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 			setXElements = event.isFixedClusterCount();
 			createBiClusterPerspectives(x, l, z);
 		}
-		setClusterSizes();
+		rootElement.setClusterSizes();
 
 	}
 
-	int maxDimClusterElements = 0;
-	int maxRecClusterElements = 0;
-	int maxClusterRecSize = 150;
-	int maxClusterDimSize = 150;
 
-	/**
-	 *
-	 */
-	private void setClusterSizes() {
-		double maxDimClusterElements = 1;
-		double maxRecClusterElements = 1;
-		for (GLElement iGL : glBiClusterElement) {
-			ClusterElement i = (ClusterElement) iGL;
-			if (!i.isVisible())
-				continue;
-			if (maxDimClusterElements < i.getNumberOfDimElements()) {
-				maxDimClusterElements = i.getNumberOfDimElements();
-			}
-			if (maxRecClusterElements < i.getNumberOfRecElements()) {
-				maxRecClusterElements = i.getNumberOfRecElements();
-			}
-		}
-		for (GLElement iGL : glBiClusterElement) {
-			ClusterElement i = (ClusterElement) iGL;
-			int recSize = (int) ((i.getNumberOfRecElements() * (maxClusterRecSize) / maxRecClusterElements));
-			int dimSize = (int) ((i.getNumberOfDimElements() * (maxClusterDimSize) / maxDimClusterElements));
-			i.setSize(dimSize, recSize);
-		}
-
-	}
 
 }

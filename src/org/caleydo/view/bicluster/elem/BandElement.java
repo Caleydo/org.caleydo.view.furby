@@ -25,67 +25,43 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.media.opengl.GLContext;
+
 import org.caleydo.core.util.collection.Pair;
+import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.canvas.AGLView;
-import org.caleydo.core.view.opengl.layout.util.multiform.MultiFormRenderer;
 import org.caleydo.core.view.opengl.layout2.GLElement;
-import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 
 /**
  * @author user
  *
  */
-public class BandElement extends GLElementAdapter {
+public class BandElement extends GLElement {
 
-	private static final String CLUSTER_EMBEDDING_ID = "org.caleydo.view.bicluster.cluster";
-	private MultiFormRenderer multiFormRenderer;
+
+	static float[] colorY = Colors.BLUE.getRGBA();
+	static float[] colorX = Colors.GREEN.getRGBA();
+	private ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
 
 	/**
 	 * @param view
 	 */
-	public BandElement(AGLView view, GLBiClusterElement root, boolean dimBand, List<Integer> overlap, GLElement first,
+	public BandElement(AGLView view, AllBandsElement bands, boolean dimBand, List<Integer> overlap, GLElement first,
 			GLElement second) {
-		super(view);
 		this.view = view;
-		this.root = root;
+		this.root = bands;
 		this.dimBand = dimBand;
 		this.overlap = overlap;
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
-		init();
-	}
-
-	private void init() {
-
-		// // find all registered embedded views that support the actual rendering
-		// Set<String> remoteRenderedViewIDs = ViewManager.get().getRemotePlugInViewIDs(GLBiCluster.VIEW_TYPE,
-		// CLUSTER_EMBEDDING_ID);
-		//
-		// List<String> viewIDs = new ArrayList<>(remoteRenderedViewIDs);
-		// Collections.sort(viewIDs);
-		//
-		this.multiFormRenderer = new MultiFormRenderer(view, true);
-
-		// for (String viewID : remoteRenderedViewIDs) {
-		// multiFormRenderer.addPluginVisualization(viewID, GLBiCluster.VIEW_TYPE, CLUSTER_EMBEDDING_ID, null, null);
-		// }
-		multiFormRenderer.setActive(multiFormRenderer.getDefaultRendererID());
-		this.setRenderer(multiFormRenderer);
-
-		// GLElementAccessor.asLayoutElement(this).setSize(200, 200);
-		setVisibility(EVisibility.PICKABLE);
+		bandRenderer.init(GLContext.getCurrentGL().getGL2());
 
 	}
 
-	/**
-	 * @return the dimBand, see {@link #dimBand}
-	 */
-	public boolean isDimBand() {
-		return dimBand;
-	}
 
-	private GLBiClusterElement root;
+	private AllBandsElement root;
 	private final AGLView view;
 
 	private ClusterElement first;
@@ -104,25 +80,15 @@ public class BandElement extends GLElementAdapter {
 	 */
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		// TODO Auto-generated method stub
-		super.renderImpl(g, w, h);
-		System.out.println("jihhaa");
+		boolean highlight = false;
+		float[] color = dimBand ? colorY : colorX;
+		// System.out.println(dimBand);
+		bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight, color, .5f);
+
+		// super.renderImpl(g, w, h);
+		// System.out.println(first.getId() + "/" + second.getId());
 	}
 
-	/**
-	 * @return the points, see {@link #points}
-	 */
-	public List<Pair<Point2D, Point2D>> getPoints() {
-		return points;
-	}
-
-	/**
-	 * @param points
-	 *            setter, see {@link points}
-	 */
-	public void setPoints(List<Pair<Point2D, Point2D>> points) {
-		this.points = points;
-	}
 
 	public void updatePosition() {
 		if (dimBand) {
@@ -137,8 +103,7 @@ public class BandElement extends GLElementAdapter {
 			double startRecBandScaleFactor = first.getSize().y() / (double) first.getNumberOfRecElements();
 			int yOverlapSize = first.getyOverlap(second).size();
 			if (yOverlapSize > 0) {
-				points = addRecPointsToBand(yOverlapSize, startRecBandScaleFactor,
-						endRecBandScaleFactor);
+				points = addRecPointsToBand(yOverlapSize, startRecBandScaleFactor, endRecBandScaleFactor);
 			}
 		}
 		repaint();
@@ -231,5 +196,7 @@ public class BandElement extends GLElementAdapter {
 		Point2D _2 = new Point2D.Float(x2, y2);
 		return Pair.make(_1, _2);
 	}
+
+
 
 }

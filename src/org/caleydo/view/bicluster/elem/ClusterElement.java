@@ -57,7 +57,7 @@ public class ClusterElement extends GLElementAdapter {
 	private static final String CLUSTER_EMBEDDING_ID = "org.caleydo.view.bicluster.cluster";
 
 	private TablePerspective data;
-	private GLBiClusterElement root;
+	private AllClustersElement root;
 	private final AGLView view;
 	private MultiFormRenderer multiFormRenderer;
 	private Vec2d attForce = new Vec2d(0, 0);
@@ -72,7 +72,7 @@ public class ClusterElement extends GLElementAdapter {
 	private String id;
 	private static int number;
 
-	public ClusterElement(AGLView view, TablePerspective data, GLBiClusterElement root) {
+	public ClusterElement(AGLView view, TablePerspective data, AllClustersElement root) {
 
 		super(view);
 		this.view = view;

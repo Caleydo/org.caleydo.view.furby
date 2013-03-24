@@ -21,17 +21,13 @@ package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.media.opengl.GLContext;
-
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
@@ -39,7 +35,6 @@ import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
-import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 
 import com.google.common.base.Stopwatch;
 
@@ -47,11 +42,10 @@ import com.google.common.base.Stopwatch;
  * @author Samuel Gratzl
  * @author Michael Gillhofer
  */
-public class GLBiClusterElement extends GLElementContainer implements IGLLayout {
+public class AllClustersElement extends GLElementContainer implements IGLLayout {
 
 	private final AGLView view;
-	private ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
-	private List<BandElement> bands;
+
 
 	float layoutStabilisationTime = 3000; // After X Milliseconds the layout is fixed until a cluster is moved
 	// resetDamping(); is called)
@@ -77,7 +71,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		this.fixedElementsCount = fixedElementsCount;
 	}
 
-	public GLBiClusterElement(AGLView view) {
+	public AllClustersElement(AGLView view) {
 		this.view = view;
 		setLayout(this);
 	}
@@ -108,14 +102,12 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
-			dampingTimer.schedule(timerTask, 500, (long) timerInterval);
 		} else {
 			if (dragedElement == null) {
 				forceDirectedLayout(children, w, h);
 			} else {
 				dragElement(w, h);
 			}
-			bandLayout(children, w, h);
 		}
 		relayout();
 	}
@@ -214,8 +206,8 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 					continue;
 				// squared distance between "u" and "v" in 2D space
 				// calculate the repulsion between two vertices
-				Vec2d distVec = getDistance(i, j, w, h);
-				// Vec2d distVec = virtualPositions.get(i).minus(virtualPositions.get(j));
+				// Vec2d distVec = getDistance(i, j, w, h);
+				Vec2d distVec = virtualPositions.get(i).minus(virtualPositions.get(j));
 				double rsq = distVec.lengthSquared();
 				// rsq = rsq * rsq;
 				double forcex = repulsion * distVec.x() / rsq;
@@ -236,8 +228,8 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 					continue;
 				int overlapSizeX = xOverlap.size();
 				int overlapSizeY = yOverlap.size();
-				// Vec2d distVec = virtualPositions.get(j).minus(virtualPositions.get(i));
-				Vec2d distVec = getDistance(j, i, w, h);
+				Vec2d distVec = virtualPositions.get(j).minus(virtualPositions.get(i));
+				// Vec2d distVec = getDistance(j, i, w, h);
 				double dist = distVec.length/* Squared */();
 				// int isXNeg = distVec.x() < 0 ? -1 : 1;
 				// int isYNeg = distVec.y() < 0 ? -1 : 1;
@@ -361,18 +353,7 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		}
 		// super.renderImpl(g, w, h);
 
-		boolean highlight = false;
-		float[] colorY = Colors.BLUE.getRGBA();
-		float[] colorX = Colors.GREEN.getRGBA();
-		bandRenderer.init(GLContext.getCurrentGL().getGL2());
-		for (BandElement b : bands) {
-			if (b.isDimBand())
-				bandRenderer
-						.renderComplexBand(GLContext.getCurrentGL().getGL2(), b.getPoints(), highlight, colorY, .5f);
-			else
-				bandRenderer
-						.renderComplexBand(GLContext.getCurrentGL().getGL2(), b.getPoints(), highlight, colorX, .5f);
-		}
+
 	}
 
 	private void initialLayout(List<? extends IGLLayoutElement> children, float w, float h) {
@@ -388,16 +369,6 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		}
 	}
 
-	/**
-	 * @param children
-	 * @param w
-	 * @param h
-	 */
-	private void bandLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-		for (BandElement b : bands) {
-			b.updatePosition();
-		}
-	}
 
 	/**
 	 * @return the fixLayout, see {@link #fixLayout}
@@ -414,35 +385,6 @@ public class GLBiClusterElement extends GLElementContainer implements IGLLayout 
 		this.dragedElement = element;
 	}
 
-	/**
-	 *
-	 */
-	public void createBands() {
-		int i = 0;
-		bands = new ArrayList<>();
-		for (GLElement start : this) {
-			ClusterElement startEl = (ClusterElement) start;
-			// System.out.println(startEl.getId());
-			if (!startEl.isVisible())
-				continue;
-			for (GLElement end : asList().subList(i, asList().size())) {
-				if (start == end)
-					continue;
-				ClusterElement endEl = (ClusterElement) end;
-				if (!endEl.isVisible())
-					continue;
-				List<Integer> overlap = startEl.getxOverlap(endEl);
-				if (overlap.size() > 0) {
-					bands.add(new BandElement(view, this, true, overlap, start, end));
-				}
-				overlap = startEl.getyOverlap(endEl);
-				if (overlap.size() > 0) {
-					bands.add(new BandElement(view, this, false, overlap, start, end));
-				}
-			}
-			i++;
-		}
 
-	}
 
 }
