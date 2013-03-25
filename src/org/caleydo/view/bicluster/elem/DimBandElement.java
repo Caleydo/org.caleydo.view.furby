@@ -28,8 +28,6 @@ import java.util.List;
 import javax.media.opengl.GLContext;
 
 import org.caleydo.core.data.selection.EventBasedSelectionManager;
-import org.caleydo.core.id.IDCategory;
-import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -42,25 +40,15 @@ import org.caleydo.core.view.opengl.picking.Pick;
  */
 public class DimBandElement extends BandElement {
 
-
 	private static float[] color = Colors.BLUE.getRGBA();
-
 
 	/**
 	 * @param view
 	 */
 	public DimBandElement(GLElement first, GLElement second) {
-		super(first, second);
-		IDCategory idCategory = ((ClusterElement) first).getDimensionIDCategory();
-		IDType mappingIDType = idCategory.getPrimaryMappingType();
-		selectionManager = new EventBasedSelectionManager(this, mappingIDType);
-		overlap = ((ClusterElement) first).getDimOverlap(second);
-		idType = ((ClusterElement) first).getDimensionIDType();
-		selectionType = selectionManager.getSelectionType();
-
+		super(first, second, ((ClusterElement) first).getDimensionIDCategory(), ((ClusterElement) first)
+				.getDimOverlap(second), ((ClusterElement) first).getDimensionIDType());
 	}
-
-
 
 	/*
 	 * (non-Javadoc)

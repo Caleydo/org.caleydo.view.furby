@@ -28,8 +28,6 @@ import java.util.List;
 import javax.media.opengl.GLContext;
 
 import org.caleydo.core.data.selection.EventBasedSelectionManager;
-import org.caleydo.core.id.IDCategory;
-import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -42,26 +40,16 @@ import org.caleydo.core.view.opengl.picking.Pick;
  */
 public class RecBandElement extends BandElement {
 
-
 	private float[] color = Colors.GREEN.getRGBA();
-
-
-
 
 	/**
 	 * @param view
 	 */
 	public RecBandElement(GLElement first, GLElement second) {
-		super(first, second);
-		IDCategory idCategory = ((ClusterElement) first).getRecordIDCategory();
-		IDType mappingIDType = idCategory.getPrimaryMappingType();
-		selectionManager = new EventBasedSelectionManager(this, mappingIDType);
-		overlap = ((ClusterElement) first).getRecOverlap(second);
-		idType = ((ClusterElement) first).getRecordIDType();
-		selectionType = selectionManager.getSelectionType();
+		super(first, second, ((ClusterElement) first).getRecordIDCategory(), ((ClusterElement) first)
+				.getRecOverlap(second), ((ClusterElement) first).getRecordIDType());
+
 	}
-
-
 
 	/*
 	 * (non-Javadoc)
@@ -102,7 +90,6 @@ public class RecBandElement extends BandElement {
 		super.onClicked(pick);
 	}
 
-
 	@Override
 	public void updatePosition() {
 		double endRecBandScaleFactor = second.getSize().y() / (double) second.getNumberOfRecElements();
@@ -116,7 +103,6 @@ public class RecBandElement extends BandElement {
 		// bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), point, highlight, colorY, .5f);
 
 	}
-
 
 	private List<Pair<Point2D, Point2D>> addRecPointsToBand(int yOS, double firRecScaFac, double secRecScaFac) {
 		Vec2f fLoc = first.getLocation();

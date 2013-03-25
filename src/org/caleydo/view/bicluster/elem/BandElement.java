@@ -68,12 +68,20 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 
 
 	/**
+	 * @param idType
+	 * @param list
+	 * @param idCategory2
 	 *
 	 */
-	public BandElement(GLElement first, GLElement second) {
+	protected BandElement(GLElement first, GLElement second, IDCategory idCategory, List<Integer> list, IDType idType) {
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
-		dataDomainID = ((ClusterElement) first).getDataDomainID();
+		this.overlap = list;
+		this.idType = idType;
+		this.dataDomainID = ((ClusterElement) first).getDataDomainID();
+		IDType mappingIDType = idCategory.getPrimaryMappingType();
+		this.selectionManager = new EventBasedSelectionManager(this, mappingIDType);
+		this.selectionType = selectionManager.getSelectionType();
 
 	}
 
@@ -82,7 +90,7 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 			return;
 		for (Integer id : overlap) {
 			if (highlight)
-				selectionManager.addToType(selectionType, idType, id);
+				selectionManager.addToType(selectionType, id);
 			else
 				selectionManager.removeFromType(selectionType, id);
 		}
