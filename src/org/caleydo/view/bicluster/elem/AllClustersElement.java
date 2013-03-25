@@ -36,6 +36,8 @@ import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 
+import util.Vec2d;
+
 import com.google.common.base.Stopwatch;
 
 /**

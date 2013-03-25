@@ -88,13 +88,13 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				ClusterElement endEl = (ClusterElement) end;
 				if (!endEl.isVisible())
 					continue;
-				List<Integer> overlap = startEl.getxOverlap(endEl);
+				List<Integer> overlap = startEl.getyOverlap(endEl);
 				if (overlap.size() > 0) {
-					bands.add(new BandElement(view, bands, true, overlap, start, end));
+					bands.add(new RecBandElement(start, end));
 				}
-				overlap = startEl.getyOverlap(endEl);
+				overlap = startEl.getxOverlap(endEl);
 				if (overlap.size() > 0) {
-					bands.add(new BandElement(view, bands, false, overlap, start, end));
+					bands.add(new DimBandElement(start, end));
 				}
 			}
 			i++;
@@ -155,7 +155,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		bands.setSize(w, h);
 		bands.setLocation(0, 0);
 		clusters.setSize(w, h);
-		bands.setLocation(0, 0);
+		clusters.setLocation(0, 0);
 
 	}
 

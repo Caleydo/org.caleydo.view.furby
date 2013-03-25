@@ -50,6 +50,8 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout {
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (GLElement b : this) {
 			((BandElement) b).updatePosition();
+			b.setSize(w, h);
+			b.setLocation(0, 0);
 		}
 		relayout();
 		// System.out.println("nächster run");
