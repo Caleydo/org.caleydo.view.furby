@@ -32,6 +32,11 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
  */
 public class AllBandsElement extends GLElementContainer implements IGLLayout {
 
+	List<Integer> recordSelectionIndices;
+	List<Integer> dimensionSelectionIndeces;
+
+	BandElement recordSelection;
+	BandElement dimensionSelection;
 
 	/**
 	 * @param view
@@ -39,6 +44,20 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout {
 	public AllBandsElement() {
 
 		setLayout(this);
+	}
+
+	public void setRecordSelection(BandElement b) {
+		if (recordSelection != null) {
+			recordSelection.deselect();
+		}
+		recordSelection = b;
+	}
+
+	public void setDimensionSelection(BandElement b) {
+		if (dimensionSelection != null) {
+			dimensionSelection.deselect();
+		}
+		dimensionSelection = b;
 	}
 
 	/*
@@ -56,6 +75,7 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout {
 		relayout();
 		// System.out.println("nächster run");
 	}
+
 
 }
 

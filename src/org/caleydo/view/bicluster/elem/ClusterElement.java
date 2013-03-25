@@ -254,11 +254,11 @@ public class ClusterElement extends GLElementAdapter {
 				recArray.append(i);
 				count++;
 			}
-			calculateOverlap();
 		} else {
 			setVisibility(EVisibility.NONE);
 			isVisible = false;
 		}
+		calculateOverlap();
 		fireTablePerspectiveChanged();
 		view.resetView();
 		// setSize(200, 200);

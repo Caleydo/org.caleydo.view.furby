@@ -74,32 +74,19 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	 *
 	 */
 	public void createBands() {
-		if (bands.size() > 0)
-			bands.clear();
+		if (bands.size() == 0) {
+
 		int i = 1;
 		for (GLElement start : clusters) {
-			ClusterElement startEl = (ClusterElement) start;
-			// System.out.println(startEl.getId());
-			if (!startEl.isVisible())
-				continue;
 			for (GLElement end : clusters.asList().subList(i, clusters.asList().size())) {
 				if (start == end)
 					continue;
-				ClusterElement endEl = (ClusterElement) end;
-				if (!endEl.isVisible())
-					continue;
-				List<Integer> overlap = startEl.getRecOverlap(endEl);
-				if (overlap.size() > 0) {
-					bands.add(new RecBandElement(start, end));
-				}
-				overlap = startEl.getDimOverlap(endEl);
-				if (overlap.size() > 0) {
-					bands.add(new DimBandElement(start, end));
-				}
+					bands.add(new RecBandElement(start, end, bands));
+					bands.add(new DimBandElement(start, end, bands));
 			}
 			i++;
 		}
-
+		}
 	}
 
 	int maxDimClusterElements = 0;
@@ -158,6 +145,5 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		clusters.setLocation(0, 0);
 
 	}
-
 
 }

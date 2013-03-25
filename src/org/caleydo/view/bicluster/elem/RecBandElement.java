@@ -45,9 +45,9 @@ public class RecBandElement extends BandElement {
 	/**
 	 * @param view
 	 */
-	public RecBandElement(GLElement first, GLElement second) {
+	public RecBandElement(GLElement first, GLElement second, AllBandsElement root) {
 		super(first, second, ((ClusterElement) first).getRecordIDCategory(), ((ClusterElement) first)
-				.getRecOverlap(second), ((ClusterElement) first).getRecordIDType());
+				.getRecOverlap(second), ((ClusterElement) first).getRecordIDType(), root);
 
 	}
 
@@ -60,9 +60,9 @@ public class RecBandElement extends BandElement {
 	 */
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		// color = highlight ? Colors.RED.getRGBA() : color;
-		bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight,
-				highlight ? Colors.RED.getRGBA() : color, .5f);
+		if (visible)
+			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight,
+					highlight ? Colors.RED.getRGBA() : color, .5f);
 
 	}
 
@@ -75,7 +75,8 @@ public class RecBandElement extends BandElement {
 	 */
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
-		bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, false, color, .5f);
+		if (visible)
+			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, false, color, .5f);
 	}
 
 	/*
@@ -86,18 +87,23 @@ public class RecBandElement extends BandElement {
 	@Override
 	protected void onClicked(Pick pick) {
 		highlight = !highlight;
+		if (highlight)
+			root.setRecordSelection(this);
 		selectElements();
 		super.onClicked(pick);
 	}
 
 	@Override
 	public void updatePosition() {
-		double endRecBandScaleFactor = second.getSize().y() / (double) second.getNumberOfRecElements();
-		double startRecBandScaleFactor = first.getSize().y() / (double) first.getNumberOfRecElements();
-		int yOverlapSize = first.getRecOverlap(second).size();
-		if (yOverlapSize > 0) {
-			points = addRecPointsToBand(yOverlapSize, startRecBandScaleFactor, endRecBandScaleFactor);
-		}
+		overlap = first.getRecOverlap(second);
+		int overlapSize = overlap.size();
+		if (overlapSize > 0 && first.isVisible() && second.isVisible()) {
+			visible = true;
+			double endRecBandScaleFactor = second.getSize().y() / (double) second.getNumberOfRecElements();
+			double startRecBandScaleFactor = first.getSize().y() / (double) first.getNumberOfRecElements();
+			points = addRecPointsToBand(overlapSize, startRecBandScaleFactor, endRecBandScaleFactor);
+		} else
+			visible = false;
 		repaintAll();
 
 		// bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), point, highlight, colorY, .5f);

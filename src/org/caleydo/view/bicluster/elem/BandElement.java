@@ -56,12 +56,14 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	protected boolean highlight = false;
 	protected ClusterElement first;
 	protected ClusterElement second;
-	protected Iterable<Integer> overlap;
+	protected List<Integer> overlap;
 	protected IDType idType;
 	protected String dataDomainID;
 	protected SelectionType selectionType;
 	protected IDCategory idCategory;
 	protected EventBasedSelectionManager selectionManager;
+	protected boolean visible = false;
+	protected AllBandsElement root;
 
 	protected List<Pair<Point2D, Point2D>> points;
 
@@ -70,10 +72,12 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	/**
 	 * @param idType
 	 * @param list
+	 * @param root
 	 * @param idCategory2
 	 *
 	 */
-	protected BandElement(GLElement first, GLElement second, IDCategory idCategory, List<Integer> list, IDType idType) {
+	protected BandElement(GLElement first, GLElement second, IDCategory idCategory, List<Integer> list, IDType idType,
+			AllBandsElement root) {
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
 		this.overlap = list;
@@ -82,6 +86,7 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 		IDType mappingIDType = idCategory.getPrimaryMappingType();
 		this.selectionManager = new EventBasedSelectionManager(this, mappingIDType);
 		this.selectionType = selectionManager.getSelectionType();
+		this.root = root;
 
 	}
 
@@ -100,6 +105,12 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 		event.setSelectionDelta(delta);
 		event.setEventSpace(dataDomainID);
 		eventPublisher.triggerEvent(event);
+	}
+
+	public void deselect() {
+		highlight = false;
+		selectElements();
+		repaint();
 	}
 
 	public abstract void updatePosition();

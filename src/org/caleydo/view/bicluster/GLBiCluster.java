@@ -123,6 +123,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 			getRoot().setData(initTablePerspectives());
 			createBiClusterPerspectives(x, l, z);
 			createBiClusterPerspectives(x, l, z);
+			rootElement.createBands();
 			rootElement.setClusterSizes();
 		}
 		detailLevel = EDetailLevel.HIGH;
@@ -192,7 +193,6 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 			}
 		}
 		rootElement.resetDamping();
-		rootElement.createBands();
 	}
 
 	/**

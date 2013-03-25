@@ -45,9 +45,9 @@ public class DimBandElement extends BandElement {
 	/**
 	 * @param view
 	 */
-	public DimBandElement(GLElement first, GLElement second) {
+	public DimBandElement(GLElement first, GLElement second, AllBandsElement root) {
 		super(first, second, ((ClusterElement) first).getDimensionIDCategory(), ((ClusterElement) first)
-				.getDimOverlap(second), ((ClusterElement) first).getDimensionIDType());
+				.getDimOverlap(second), ((ClusterElement) first).getDimensionIDType(), root);
 	}
 
 	/*
@@ -59,9 +59,9 @@ public class DimBandElement extends BandElement {
 	 */
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-
-		bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight,
-				highlight ? Colors.RED.getRGBA() : color, .5f);
+		if (visible)
+			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight,
+					highlight ? Colors.RED.getRGBA() : color, .5f);
 
 		// super.renderImpl(g, w, h);
 		// System.out.println(first.getId() + "/" + second.getId());
@@ -76,26 +76,30 @@ public class DimBandElement extends BandElement {
 	 */
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
-
-		bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, false, color, .5f);
+		if (visible)
+			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, false, color, .5f);
 	}
 
 	@Override
 	protected void onClicked(Pick pick) {
 		highlight = !highlight;
+		if (highlight)
+			root.setDimensionSelection(this);
 		selectElements();
 		super.onClicked(pick);
 	}
 
 	@Override
 	public void updatePosition() {
-
-		double startDimBandScaleFactor = first.getSize().x() / (double) first.getNumberOfDimElements();
-		double endDimBandScaleFactor = second.getSize().x() / (double) second.getNumberOfDimElements();
-		int xOverlapSize = first.getDimOverlap(second).size();
-		if (xOverlapSize > 0) {
-			points = addDimPointsToBand(xOverlapSize, startDimBandScaleFactor, endDimBandScaleFactor);
-		}
+		overlap = first.getDimOverlap(second);
+		int overlapSize = overlap.size();
+		if (overlapSize > 0 && first.isVisible() && second.isVisible()) {
+			visible = true;
+			double endDimBandScaleFactor = second.getSize().x() / (double) second.getNumberOfDimElements();
+			double startDimBandScaleFactor = first.getSize().x() / (double) first.getNumberOfDimElements();
+			points = addDimPointsToBand(overlapSize, startDimBandScaleFactor, endDimBandScaleFactor);
+		} else
+			visible = false;
 		repaintAll();
 
 	}
