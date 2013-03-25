@@ -46,8 +46,8 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.GLBiCluster;
+import org.caleydo.view.bicluster.util.Vec2d;
 
-import util.Vec2d;
 
 /**
  * e.g. a class for representing a cluster

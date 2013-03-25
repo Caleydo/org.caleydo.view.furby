@@ -1,4 +1,4 @@
-package util;
+package org.caleydo.view.bicluster.util;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;

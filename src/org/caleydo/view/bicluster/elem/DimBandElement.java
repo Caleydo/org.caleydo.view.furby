@@ -31,15 +31,17 @@ import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.PickableGLElement;
+import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 
 /**
  * @author Michael Gillhofer
  *
  */
-public class DimBandElement extends GLElement implements BandElement {
+public class DimBandElement extends PickableGLElement implements BandElement {
 
-	private static float[] blue = Colors.BLUE.getRGBA();
+	private static float[] color = Colors.BLUE.getRGBA();
 	private static ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
 
 	{
@@ -54,10 +56,9 @@ public class DimBandElement extends GLElement implements BandElement {
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
 
-
 	}
 
-
+	boolean highlight = false;
 	private ClusterElement first;
 	private ClusterElement second;
 
@@ -73,11 +74,36 @@ public class DimBandElement extends GLElement implements BandElement {
 	 */
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		boolean highlight = false;
-		bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight, blue, .5f);
+
+		bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, highlight,
+				highlight ? Colors.RED.getRGBA() : color, .5f);
 
 		// super.renderImpl(g, w, h);
 		// System.out.println(first.getId() + "/" + second.getId());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.caleydo.core.view.opengl.layout2.GLElement#renderPickImpl(org.caleydo.core.view.opengl.layout2.GLGraphics,
+	 * float, float)
+	 */
+	@Override
+	protected void renderPickImpl(GLGraphics g, float w, float h) {
+
+		bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, false, color, .5f);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see org.caleydo.core.view.opengl.layout2.PickableGLElement#onClicked(org.caleydo.core.view.opengl.picking.Pick)
+	 */
+	@Override
+	protected void onClicked(Pick pick) {
+		highlight = !highlight;
+		super.onClicked(pick);
 	}
 
 	@Override
