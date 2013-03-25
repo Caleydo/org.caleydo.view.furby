@@ -76,7 +76,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	public void createBands() {
 		if (bands.size() > 0)
 			bands.clear();
-		int i = 0;
+		int i = 1;
 		for (GLElement start : clusters) {
 			ClusterElement startEl = (ClusterElement) start;
 			// System.out.println(startEl.getId());
@@ -88,11 +88,11 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				ClusterElement endEl = (ClusterElement) end;
 				if (!endEl.isVisible())
 					continue;
-				List<Integer> overlap = startEl.getyOverlap(endEl);
+				List<Integer> overlap = startEl.getRecOverlap(endEl);
 				if (overlap.size() > 0) {
 					bands.add(new RecBandElement(start, end));
 				}
-				overlap = startEl.getxOverlap(endEl);
+				overlap = startEl.getDimOverlap(endEl);
 				if (overlap.size() > 0) {
 					bands.add(new DimBandElement(start, end));
 				}

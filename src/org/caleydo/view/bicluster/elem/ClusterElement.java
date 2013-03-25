@@ -34,6 +34,8 @@ import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
 import org.caleydo.core.data.virtualarray.events.RecordVAUpdateEvent;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.event.view.TablePerspectivesChangedEvent;
+import org.caleydo.core.id.IDCategory;
+import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.ViewManager;
 import org.caleydo.core.view.opengl.canvas.AGLView;
@@ -72,7 +74,7 @@ public class ClusterElement extends GLElementAdapter {
 	private Map<GLElement, List<Integer>> yOverlap;
 
 	private String id;
-	private static int number;
+
 
 	public ClusterElement(AGLView view, TablePerspective data, AllClustersElement root) {
 
@@ -83,6 +85,25 @@ public class ClusterElement extends GLElementAdapter {
 		init();
 	}
 
+	public IDCategory getRecordIDCategory() {
+		return data.getDataDomain().getRecordIDCategory();
+	}
+
+	public IDCategory getDimensionIDCategory() {
+		return data.getDataDomain().getDimensionIDCategory();
+	}
+
+	public IDType getDimensionIDType() {
+		return getDimensionVirtualArray().getIdType();
+	}
+
+	public IDType getRecordIDType() {
+		return getRecordVirtualArray().getIdType();
+	}
+
+	public String getDataDomainID() {
+		return data.getDataDomain().getDataDomainID();
+	}
 
 	/**
 	 * @return the id, see {@link #id}
@@ -149,9 +170,9 @@ public class ClusterElement extends GLElementAdapter {
 		// TODO Auto-generated method stub
 		// super.renderImpl(g, w, h);
 		// if (isDragged) {
-			g.color(Colors.RED);
-			g.fillRect(0, 0, w, h);
-			g.color(Colors.BLACK);
+		// g.color(Colors.RED);
+		// g.fillRect(0, 0, w, h);
+		// g.color(Colors.BLACK);
 		// }
 	}
 
@@ -368,14 +389,14 @@ public class ClusterElement extends GLElementAdapter {
 		return isVisible;
 	}
 
-	public List<Integer> getxOverlap(GLElement jElement) {
+	public List<Integer> getDimOverlap(GLElement jElement) {
 		return xOverlap.get(jElement);
 	}
 
 	/**
 	 * @return the yOverlap, see {@link #yOverlap}
 	 */
-	public List<Integer> getyOverlap(GLElement jElement) {
+	public List<Integer> getRecOverlap(GLElement jElement) {
 		return yOverlap.get(jElement);
 	}
 

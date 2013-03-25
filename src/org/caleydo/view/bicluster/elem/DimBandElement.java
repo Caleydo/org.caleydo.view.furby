@@ -27,43 +27,40 @@ import java.util.List;
 
 import javax.media.opengl.GLContext;
 
+import org.caleydo.core.data.selection.EventBasedSelectionManager;
+import org.caleydo.core.id.IDCategory;
+import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
-import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.picking.Pick;
-import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 
 /**
  * @author Michael Gillhofer
  *
  */
-public class DimBandElement extends PickableGLElement implements BandElement {
+public class DimBandElement extends BandElement {
+
 
 	private static float[] color = Colors.BLUE.getRGBA();
-	private static ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
 
-	{
-		bandRenderer.init(GLContext.getCurrentGL().getGL2());
-	}
 
 	/**
 	 * @param view
 	 */
 	public DimBandElement(GLElement first, GLElement second) {
-
-		this.first = (ClusterElement) first;
-		this.second = (ClusterElement) second;
+		super(first, second);
+		IDCategory idCategory = ((ClusterElement) first).getDimensionIDCategory();
+		IDType mappingIDType = idCategory.getPrimaryMappingType();
+		selectionManager = new EventBasedSelectionManager(this, mappingIDType);
+		overlap = ((ClusterElement) first).getDimOverlap(second);
+		idType = ((ClusterElement) first).getDimensionIDType();
+		selectionType = selectionManager.getSelectionType();
 
 	}
 
-	boolean highlight = false;
-	private ClusterElement first;
-	private ClusterElement second;
 
-
-	private List<Pair<Point2D, Point2D>> points;
 
 	/*
 	 * (non-Javadoc)
@@ -95,14 +92,10 @@ public class DimBandElement extends PickableGLElement implements BandElement {
 		bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), points, false, color, .5f);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.caleydo.core.view.opengl.layout2.PickableGLElement#onClicked(org.caleydo.core.view.opengl.picking.Pick)
-	 */
 	@Override
 	protected void onClicked(Pick pick) {
 		highlight = !highlight;
+		selectElements();
 		super.onClicked(pick);
 	}
 
@@ -111,7 +104,7 @@ public class DimBandElement extends PickableGLElement implements BandElement {
 
 		double startDimBandScaleFactor = first.getSize().x() / (double) first.getNumberOfDimElements();
 		double endDimBandScaleFactor = second.getSize().x() / (double) second.getNumberOfDimElements();
-		int xOverlapSize = first.getxOverlap(second).size();
+		int xOverlapSize = first.getDimOverlap(second).size();
 		if (xOverlapSize > 0) {
 			points = addDimPointsToBand(xOverlapSize, startDimBandScaleFactor, endDimBandScaleFactor);
 		}
@@ -163,6 +156,19 @@ public class DimBandElement extends PickableGLElement implements BandElement {
 		Point2D _1 = new Point2D.Float(x1, y1);
 		Point2D _2 = new Point2D.Float(x2, y2);
 		return Pair.make(_1, _2);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.caleydo.core.data.selection.IEventBasedSelectionManagerUser#notifyOfSelectionChange(org.caleydo.core.data
+	 * .selection.EventBasedSelectionManager)
+	 */
+	@Override
+	public void notifyOfSelectionChange(EventBasedSelectionManager selectionManager) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

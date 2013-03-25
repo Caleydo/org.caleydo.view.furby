@@ -27,42 +27,41 @@ import java.util.List;
 
 import javax.media.opengl.GLContext;
 
+import org.caleydo.core.data.selection.EventBasedSelectionManager;
+import org.caleydo.core.id.IDCategory;
+import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
-import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.picking.Pick;
-import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 
 /**
  * @author Michael Gillhofer
  *
  */
-public class RecBandElement extends PickableGLElement implements BandElement {
+public class RecBandElement extends BandElement {
 
 
 	private float[] color = Colors.GREEN.getRGBA();
-	private static ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
 
-	{
-		bandRenderer.init(GLContext.getCurrentGL().getGL2());
-	}
+
+
 
 	/**
 	 * @param view
 	 */
 	public RecBandElement(GLElement first, GLElement second) {
-		this.first = (ClusterElement) first;
-		this.second = (ClusterElement) second;
+		super(first, second);
+		IDCategory idCategory = ((ClusterElement) first).getRecordIDCategory();
+		IDType mappingIDType = idCategory.getPrimaryMappingType();
+		selectionManager = new EventBasedSelectionManager(this, mappingIDType);
+		overlap = ((ClusterElement) first).getRecOverlap(second);
+		idType = ((ClusterElement) first).getRecordIDType();
+		selectionType = selectionManager.getSelectionType();
 	}
 
-	boolean highlight = false;
-	private ClusterElement first;
-	private ClusterElement second;
 
-
-	private List<Pair<Point2D, Point2D>> points;
 
 	/*
 	 * (non-Javadoc)
@@ -99,14 +98,16 @@ public class RecBandElement extends PickableGLElement implements BandElement {
 	@Override
 	protected void onClicked(Pick pick) {
 		highlight = !highlight;
+		selectElements();
 		super.onClicked(pick);
 	}
+
 
 	@Override
 	public void updatePosition() {
 		double endRecBandScaleFactor = second.getSize().y() / (double) second.getNumberOfRecElements();
 		double startRecBandScaleFactor = first.getSize().y() / (double) first.getNumberOfRecElements();
-		int yOverlapSize = first.getyOverlap(second).size();
+		int yOverlapSize = first.getRecOverlap(second).size();
 		if (yOverlapSize > 0) {
 			points = addRecPointsToBand(yOverlapSize, startRecBandScaleFactor, endRecBandScaleFactor);
 		}
@@ -159,6 +160,19 @@ public class RecBandElement extends PickableGLElement implements BandElement {
 		Point2D _1 = new Point2D.Float(x1, y1);
 		Point2D _2 = new Point2D.Float(x2, y2);
 		return Pair.make(_1, _2);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.caleydo.core.data.selection.IEventBasedSelectionManagerUser#notifyOfSelectionChange(org.caleydo.core.data
+	 * .selection.EventBasedSelectionManager)
+	 */
+	@Override
+	public void notifyOfSelectionChange(EventBasedSelectionManager selectionManager) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

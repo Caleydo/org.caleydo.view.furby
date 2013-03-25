@@ -37,7 +37,6 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.util.Vec2d;
 
-
 import com.google.common.base.Stopwatch;
 
 /**
@@ -224,8 +223,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				ClusterElement j = (ClusterElement) jElement;
 				if (i == j)
 					continue;
-				List<Integer> xOverlap = i.getxOverlap(j);
-				List<Integer> yOverlap = i.getyOverlap(j);
+				List<Integer> xOverlap = i.getDimOverlap(j);
+				List<Integer> yOverlap = i.getRecOverlap(j);
 				if (xOverlap.size() == 0 && yOverlap.size() == 0)
 					continue;
 				int overlapSizeX = xOverlap.size();
