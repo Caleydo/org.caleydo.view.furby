@@ -62,7 +62,7 @@ public class Toolbar extends ControlContribution {
 		sampleLabel.setLayoutData(new RowData(200, 20));
 
 		final Slider sampleThrSpinner = new Slider(composite, SWT.HORIZONTAL);
-		sampleThrSpinner.setValues(350, 0, 500, 2, 5, 1);
+		sampleThrSpinner.setValues(450, 0, 500, 2, 5, 1);
 		sampleThrSpinner.setLayoutData(new RowData(150, 20));
 		sampleThrSpinner.setEnabled(true);
 
@@ -70,7 +70,7 @@ public class Toolbar extends ControlContribution {
 		geneLabel.setLayoutData(new RowData(205, 20));
 
 		final Slider geneThrSpinner = new Slider(composite, SWT.HORIZONTAL);
-		geneThrSpinner.setValues(7, 0, 30, 2, 1, 1);
+		geneThrSpinner.setValues(8, 0, 30, 2, 1, 1);
 		geneThrSpinner.setLayoutData(new RowData(200, 20));
 		geneThrSpinner.setEnabled(true);
 

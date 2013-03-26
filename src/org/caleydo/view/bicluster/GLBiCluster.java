@@ -94,13 +94,13 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 
 	private ExecutorService executorService = Executors.newFixedThreadPool(4);
 
-	private float sampleThreshold = 3.5f;
-	private float geneThreshold = 0.07f;
+	private float sampleThreshold = 4.5f;
+	private float geneThreshold = 0.08f;
 
 	private final List<TablePerspective> perspectives = new ArrayList<>();
 
 	GLRootElement rootElement;
-	private boolean setXElements = true;
+	private boolean setXElements = false;
 
 	/**
 	 * Constructor.
