@@ -32,32 +32,39 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
  */
 public class AllBandsElement extends GLElementContainer implements IGLLayout {
 
-	List<Integer> recordSelectionIndices;
-	List<Integer> dimensionSelectionIndeces;
-
-	BandElement recordSelection;
-	BandElement dimensionSelection;
+	BandElement selection;
 
 	/**
 	 * @param view
 	 */
 	public AllBandsElement() {
-
 		setLayout(this);
 	}
 
 	public void setRecordSelection(BandElement b) {
-		if (recordSelection != null) {
-			recordSelection.deselect();
+		if (selection != null) {
+			selection.deselect();
+			for (GLElement i : this) {
+				((BandElement) i).updatePosition();
+			}
 		}
-		recordSelection = b;
+		selection = b;
+		for (GLElement i : this) {
+			((BandElement) i).highlightOverlapWith(b);
+		}
 	}
 
 	public void setDimensionSelection(BandElement b) {
-		if (dimensionSelection != null) {
-			dimensionSelection.deselect();
+		if (selection != null) {
+			selection.deselect();
+			for (GLElement i : this) {
+				((BandElement) i).updatePosition();
+			}
 		}
-		dimensionSelection = b;
+		selection = b;
+		for (GLElement i : this) {
+			((BandElement) i).highlightOverlapWith(b);
+		}
 	}
 
 	/*
@@ -74,6 +81,14 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout {
 		}
 		relayout();
 		// System.out.println("nächster run");
+	}
+
+	public void updateSelection() {
+		for (GLElement i : this) {
+			((BandElement) i).highlightOverlapWith(selection);
+			if (i == selection)
+				((BandElement) i).selectElements();
+		}
 	}
 
 

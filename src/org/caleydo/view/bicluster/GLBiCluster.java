@@ -192,6 +192,7 @@ public class GLBiCluster extends AGLElementGLView implements IMultiTablePerspect
 				e.printStackTrace();
 			}
 		}
+		rootElement.createBands();
 		rootElement.resetDamping();
 	}
 

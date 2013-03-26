@@ -20,6 +20,7 @@
 package org.caleydo.view.bicluster.elem;
 
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.media.opengl.GLContext;
@@ -57,6 +58,15 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	protected ClusterElement first;
 	protected ClusterElement second;
 	protected List<Integer> overlap;
+	protected List<Integer> highlightOverlap;
+
+	/**
+	 * @return the overlap, see {@link #overlap}
+	 */
+	public List<Integer> getOverlap() {
+		return overlap;
+	}
+
 	protected IDType idType;
 	protected String dataDomainID;
 	protected SelectionType selectionType;
@@ -65,7 +75,8 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	protected boolean visible = false;
 	protected AllBandsElement root;
 
-	protected List<Pair<Point2D, Point2D>> points;
+	protected List<Pair<Point2D, Point2D>> bandPoints;
+	protected List<Pair<Point2D, Point2D>> highlightPoints;
 
 
 
@@ -87,17 +98,19 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 		this.selectionManager = new EventBasedSelectionManager(this, mappingIDType);
 		this.selectionType = selectionManager.getSelectionType();
 		this.root = root;
+		highlightPoints = new ArrayList<>();
+		highlightOverlap = new ArrayList<>();
 
 	}
 
 	public void selectElements() {
 		if (selectionManager == null)
 			return;
+		selectionManager.clearSelection(selectionType);
 		for (Integer id : overlap) {
 			if (highlight)
 				selectionManager.addToType(selectionType, id);
-			else
-				selectionManager.removeFromType(selectionType, id);
+
 		}
 		SelectionUpdateEvent event = new SelectionUpdateEvent();
 		event.setSender(this);
@@ -109,9 +122,15 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 
 	public void deselect() {
 		highlight = false;
+		highlightOverlap = new ArrayList<>();
 		selectElements();
 		repaint();
 	}
 
 	public abstract void updatePosition();
+
+	/**
+	 * @param b
+	 */
+	public abstract void highlightOverlapWith(BandElement b);
 }

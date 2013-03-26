@@ -75,18 +75,18 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	 */
 	public void createBands() {
 		if (bands.size() == 0) {
-
-		int i = 1;
-		for (GLElement start : clusters) {
-			for (GLElement end : clusters.asList().subList(i, clusters.asList().size())) {
-				if (start == end)
-					continue;
+			int i = 1;
+			for (GLElement start : clusters) {
+				for (GLElement end : clusters.asList().subList(i, clusters.asList().size())) {
+					if (start == end)
+						continue;
 					bands.add(new RecBandElement(start, end, bands));
 					bands.add(new DimBandElement(start, end, bands));
+				}
+				i++;
 			}
-			i++;
 		}
-		}
+		bands.updateSelection();
 	}
 
 	int maxDimClusterElements = 0;
