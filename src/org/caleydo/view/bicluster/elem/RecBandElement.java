@@ -127,8 +127,8 @@ public class RecBandElement extends BandElement {
 		highlightPoints = new ArrayList<>();
 		int os = overlap.size();
 		int hOS = highlightOverlap.size();
-		if (first.getId().contains("22"))
-			System.out.println("here");
+		// if (first.getId().contains("22"))
+		// System.out.println("here");
 		if (fLoc.x() < sLoc.x()) {
 			// second right
 			if (fLoc.x() + fSize.x() < sLoc.x()) {
