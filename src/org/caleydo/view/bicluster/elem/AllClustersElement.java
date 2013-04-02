@@ -28,7 +28,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
@@ -44,10 +43,6 @@ import com.google.common.base.Stopwatch;
  * @author Michael Gillhofer
  */
 public class AllClustersElement extends GLElementContainer implements IGLLayout {
-
-	private final AGLView view;
-
-
 	float layoutStabilisationTime = 3000; // After X Milliseconds the layout is fixed until a cluster is moved
 	// resetDamping(); is called)
 
@@ -72,8 +67,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		this.fixedElementsCount = fixedElementsCount;
 	}
 
-	public AllClustersElement(AGLView view) {
-		this.view = view;
+	public AllClustersElement() {
 		setLayout(this);
 	}
 
@@ -87,7 +81,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(view, p, this);
+				final ClusterElement el = new ClusterElement(p, this);
 				this.add(el);
 			}
 		}
@@ -335,26 +329,17 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.caleydo.core.view.opengl.layout2.GLElementContainer#renderImpl(org.caleydo.core.view.opengl.layout2.GLGraphics
-	 * , float, float)
-	 */
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		for (GLElement iGLL : this) {
-			ClusterElement i = (ClusterElement) iGLL;
-			if (!i.isVisible())
-				continue;
-			g.fillRect(i.getLocation().x(), i.getLocation().y(), i.getSize().x(), i.getSize().y());
-			// System.out.println(i.getLocation() + " " + i.getSize());
-			g.drawText(i.getId(), i.getLocation().x(), i.getLocation().y() - 15, 70, 12);
-		}
-		// super.renderImpl(g, w, h);
-
-
+		// for (GLElement iGLL : this) {
+		// ClusterElement i = (ClusterElement) iGLL;
+		// if (!i.isVisible())
+		// continue;
+		// g.fillRect(i.getLocation().x(), i.getLocation().y(), i.getSize().x(), i.getSize().y());
+		// // System.out.println(i.getLocation() + " " + i.getSize());
+		// g.drawText(i.getId(), i.getLocation().x(), i.getLocation().y() - 15, 70, 12);
+		// }
+		super.renderImpl(g, w, h);
 	}
 
 	private void initialLayout(List<? extends IGLLayoutElement> children, float w, float h) {

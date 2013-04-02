@@ -22,33 +22,28 @@ package org.caleydo.view.bicluster.elem;
 import gleem.linalg.Vec2f;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
 import org.caleydo.core.data.virtualarray.events.RecordVAUpdateEvent;
 import org.caleydo.core.event.EventPublisher;
-import org.caleydo.core.event.view.TablePerspectivesChangedEvent;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.color.Colors;
-import org.caleydo.core.view.ViewManager;
-import org.caleydo.core.view.opengl.canvas.AGLView;
-import org.caleydo.core.view.opengl.layout.util.multiform.MultiFormRenderer;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
-import org.caleydo.core.view.opengl.layout2.GLElementAdapter;
+import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
-import org.caleydo.view.bicluster.GLBiCluster;
 import org.caleydo.view.bicluster.util.Vec2d;
+import org.caleydo.view.heatmap.v2.HeatMapElement;
 
 
 /**
@@ -57,18 +52,13 @@ import org.caleydo.view.bicluster.util.Vec2d;
  * @author Samuel Gratzl
  * @author Michael Gillhofer
  */
-public class ClusterElement extends GLElementAdapter {
-	private static final String CLUSTER_EMBEDDING_ID = "org.caleydo.view.bicluster.cluster";
-
-	private TablePerspective data;
-	private AllClustersElement root;
-	private final AGLView view;
-	private MultiFormRenderer multiFormRenderer;
+public class ClusterElement extends GLElementContainer {
+	private final TablePerspective data;
+	private final AllClustersElement root;
 	private Vec2d attForce = new Vec2d(0, 0);
 	private Vec2d repForce = new Vec2d(0, 0);
 	private Vec2d velocity = new Vec2d(0, 0);
 	private boolean isDragged = false;
-	private boolean isVisible;
 
 	private Map<GLElement, List<Integer>> xOverlap;
 	private Map<GLElement, List<Integer>> yOverlap;
@@ -76,13 +66,21 @@ public class ClusterElement extends GLElementAdapter {
 	private String id;
 
 
-	public ClusterElement(AGLView view, TablePerspective data, AllClustersElement root) {
-
-		super(view);
-		this.view = view;
+	public ClusterElement(TablePerspective data, AllClustersElement root) {
+		super(GLLayouts.LAYERS);
 		this.data = data;
 		this.root = root;
-		init();
+
+		this.add(new HeatMapElement(data));
+
+		setVisibility(EVisibility.PICKABLE);
+		this.onPick(new IPickingListener() {
+
+			@Override
+			public void pick(Pick pick) {
+				onPicked(pick);
+			}
+		});
 	}
 
 	public IDCategory getRecordIDCategory() {
@@ -112,68 +110,15 @@ public class ClusterElement extends GLElementAdapter {
 		return id;
 	}
 
-	private void init() {
-
-		// find all registered embedded views that support the actual rendering
-		Set<String> remoteRenderedViewIDs = ViewManager.get().getRemotePlugInViewIDs(GLBiCluster.VIEW_TYPE,
-				CLUSTER_EMBEDDING_ID);
-
-		List<String> viewIDs = new ArrayList<>(remoteRenderedViewIDs);
-		Collections.sort(viewIDs);
-
-		this.multiFormRenderer = new MultiFormRenderer(view, true);
-		List<TablePerspective> tablePerspectives = Collections.singletonList(data);
-
-		for (String viewID : remoteRenderedViewIDs) {
-			multiFormRenderer.addPluginVisualization(viewID, GLBiCluster.VIEW_TYPE, CLUSTER_EMBEDDING_ID,
-					tablePerspectives, null);
-		}
-		multiFormRenderer.setActive(multiFormRenderer.getDefaultRendererID());
-		this.setRenderer(multiFormRenderer);
-		this.onPick(new IPickingListener() {
-
-			@Override
-			public void pick(Pick pick) {
-				onPicked(pick);
-			}
-		});
-
-		// GLElementAccessor.asLayoutElement(this).setSize(200, 200);
-		setVisibility(EVisibility.PICKABLE);
-
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.caleydo.core.view.opengl.layout2.GLElementAdapter#renderPickImpl(org.caleydo.core.view.opengl.layout2.GLGraphics
-	 * , float, float)
-	 */
-	@Override
-	protected void renderPickImpl(GLGraphics g, float w, float h) {
-		// TODO Auto-generated method stub
-		// super.renderPickImpl(g, w, h);
-		g.color(Colors.BLACK);
-		g.fillRect(0, 0, w, h);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.caleydo.core.view.opengl.layout2.GLElementAdapter#renderImpl(org.caleydo.core.view.opengl.layout2.GLGraphics,
-	 * float, float)
-	 */
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		// TODO Auto-generated method stub
-		// super.renderImpl(g, w, h);
-		// if (isDragged) {
-		// g.color(Colors.RED);
-		// g.fillRect(0, 0, w, h);
-		// g.color(Colors.BLACK);
-		// }
+		super.renderImpl(g, w, h);
+		if (isDragged) {
+			g.color(Colors.RED);
+			g.fillRect(0, 0, w, h);
+			g.color(Colors.BLACK);
+		}
+		g.drawText(getId(), 0, -15, 70, 12);
 	}
 
 	private Vec2f pickLocation;
@@ -235,7 +180,6 @@ public class ClusterElement extends GLElementAdapter {
 		this.id = string;
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
 			setVisibility(EVisibility.PICKABLE);
-			isVisible = true;
 			VirtualArray dimArray = getDimensionVirtualArray();
 			VirtualArray recArray = getRecordVirtualArray();
 			dimArray.clear();
@@ -256,11 +200,9 @@ public class ClusterElement extends GLElementAdapter {
 			}
 		} else {
 			setVisibility(EVisibility.NONE);
-			isVisible = false;
 		}
 		calculateOverlap();
 		fireTablePerspectiveChanged();
-		view.resetView();
 		// setSize(200, 200);
 	}
 
@@ -350,11 +292,10 @@ public class ClusterElement extends GLElementAdapter {
 	}
 
 	private void fireTablePerspectiveChanged() {
-		EventPublisher.publishEvent(new TablePerspectivesChangedEvent(view).from(view));
-		EventPublisher.publishEvent(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
-				.getRecordPerspective().getPerspectiveID(), this));
-		EventPublisher.publishEvent(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
-				.getDimensionPerspective().getPerspectiveID(), this));
+		EventPublisher.trigger(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
+		.getRecordPerspective().getPerspectiveID(), this));
+		EventPublisher.trigger(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
+		.getDimensionPerspective().getPerspectiveID(), this));
 
 		repaintAll();
 	}
@@ -386,7 +327,7 @@ public class ClusterElement extends GLElementAdapter {
 	 * @return the isDrawn, see {@link #isVisible}
 	 */
 	public boolean isVisible() {
-		return isVisible;
+		return getVisibility().doRender();
 	}
 
 	public List<Integer> getDimOverlap(GLElement jElement) {

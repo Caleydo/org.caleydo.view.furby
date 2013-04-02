@@ -22,7 +22,6 @@ package org.caleydo.view.bicluster.elem;
 import java.util.List;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
@@ -34,18 +33,15 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
  *
  */
 public class GLRootElement extends GLElementContainer implements IGLLayout {
-
-	private final AGLView view;
 	private AllBandsElement bands;
 	private AllClustersElement clusters;
 
 	/**
 	 *
 	 */
-	public GLRootElement(AGLView view) {
-		this.view = view;
+	public GLRootElement() {
 		bands = new AllBandsElement();
-		clusters = new AllClustersElement(view);
+		clusters = new AllClustersElement();
 		this.add(bands);
 		this.add(clusters);
 		setLayout(this);
@@ -64,7 +60,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(view, p, clusters);
+				final ClusterElement el = new ClusterElement(p, clusters);
 				clusters.add(el);
 			}
 		}
