@@ -54,6 +54,12 @@ public class Toolbar extends ControlContribution {
 		// fixedClusterLabel.setLayoutData(new RowData(100, 20));
 		// fixedClusterLabel.setText("Show only 15 Cluster");
 
+		createToolBar(composite);
+
+		return composite;
+	}
+
+	public static void createToolBar(Composite composite) {
 		final Button fixedClusterButton = new Button(composite, SWT.CHECK);
 		fixedClusterButton.setText("Show only 15 Elements");
 		fixedClusterButton.setSelection(false);
@@ -93,8 +99,6 @@ public class Toolbar extends ControlContribution {
 		sampleThrSpinner.addListener(SWT.Selection, updateListener);
 		geneThrSpinner.addListener(SWT.Selection, updateListener);
 		fixedClusterButton.addListener(SWT.Selection, updateListener);
-
-		return composite;
 	}
 
 }
