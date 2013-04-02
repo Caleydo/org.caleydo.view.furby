@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
@@ -38,12 +39,15 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.util.Vec2d;
+import org.caleydo.view.heatmap.v2.BasicBlockRenderer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
+import org.caleydo.view.heatmap.v2.IBlockRenderer;
 
 
 /**
@@ -52,7 +56,7 @@ import org.caleydo.view.heatmap.v2.HeatMapElement;
  * @author Samuel Gratzl
  * @author Michael Gillhofer
  */
-public class ClusterElement extends GLElementContainer {
+public class ClusterElement extends GLElementContainer implements IBlockRenderer {
 	private final TablePerspective data;
 	private final AllClustersElement root;
 	private Vec2d attForce = new Vec2d(0, 0);
@@ -71,7 +75,7 @@ public class ClusterElement extends GLElementContainer {
 		this.data = data;
 		this.root = root;
 
-		this.add(new HeatMapElement(data));
+		this.add(new HeatMapElement(data, this));
 
 		setVisibility(EVisibility.PICKABLE);
 		this.onPick(new IPickingListener() {
@@ -81,6 +85,13 @@ public class ClusterElement extends GLElementContainer {
 				onPicked(pick);
 			}
 		});
+	}
+
+	@Override
+	public void render(GLGraphics g, int recordID, int dimensionID, ATableBasedDataDomain dataDomain, Rect bounds,
+			boolean deSelected) {
+		// TODO custom implementation with alpha values or something like that
+		BasicBlockRenderer.INSTANCE.render(g, recordID, dimensionID, dataDomain, bounds, deSelected);
 	}
 
 	public IDCategory getRecordIDCategory() {
@@ -124,6 +135,8 @@ public class ClusterElement extends GLElementContainer {
 	private Vec2f pickLocation;
 
 	protected void onPicked(Pick pick) {
+		// TODO: if we hover a block -> don't move it
+		// TODO: a toolbar on hover like in stratomex would be nice, that pops up, when the mouse is over the element
 		switch (pick.getPickingMode()) {
 		case DRAGGED:
 			if (isDragged == false) {
@@ -132,6 +145,7 @@ public class ClusterElement extends GLElementContainer {
 			}
 			root.resetDamping();
 			isDragged = true;
+			// as you know have the better picking listener:
 			java.awt.Point now = pick.getPickedPoint();
 			java.awt.Point start = pick.getDragStartPoint();
 			int diffX = start.x - now.x;
