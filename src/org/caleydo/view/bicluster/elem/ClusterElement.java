@@ -34,20 +34,21 @@ import org.caleydo.core.data.virtualarray.events.RecordVAUpdateEvent;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
+import org.caleydo.core.util.color.Color;
 import org.caleydo.core.util.color.Colors;
+import org.caleydo.core.view.opengl.canvas.EDetailLevel;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
-import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.util.Vec2d;
-import org.caleydo.view.heatmap.v2.BasicBlockRenderer;
+import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
-import org.caleydo.view.heatmap.v2.IBlockRenderer;
+import org.caleydo.view.heatmap.v2.IBlockColorer;
 
 /**
  * e.g. a class for representing a cluster
@@ -55,7 +56,7 @@ import org.caleydo.view.heatmap.v2.IBlockRenderer;
  * @author Samuel Gratzl
  * @author Michael Gillhofer
  */
-public class ClusterElement extends GLElementContainer implements IBlockRenderer {
+public class ClusterElement extends GLElementContainer implements IBlockColorer {
 	private final TablePerspective data;
 	private final AllClustersElement root;
 	private Vec2d attForce = new Vec2d(0, 0);
@@ -74,7 +75,7 @@ public class ClusterElement extends GLElementContainer implements IBlockRenderer
 		this.data = data;
 		this.root = root;
 
-		this.add(new HeatMapElement(data, this));
+		this.add(new HeatMapElement(data, this, EDetailLevel.HIGH));
 
 		setVisibility(EVisibility.PICKABLE);
 		this.onPick(new IPickingListener() {
@@ -87,10 +88,9 @@ public class ClusterElement extends GLElementContainer implements IBlockRenderer
 	}
 
 	@Override
-	public void render(GLGraphics g, int recordID, int dimensionID, ATableBasedDataDomain dataDomain, Rect bounds,
-			boolean deSelected) {
+	public Color apply(int recordID, int dimensionID, ATableBasedDataDomain dataDomain, boolean deSelected) {
 		// TODO custom implementation with alpha values or something like that
-		BasicBlockRenderer.INSTANCE.render(g, recordID, dimensionID, dataDomain, bounds, deSelected);
+		return BasicBlockColorer.INSTANCE.apply(recordID, dimensionID, dataDomain, deSelected);
 	}
 
 	public IDCategory getRecordIDCategory() {
