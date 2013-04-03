@@ -104,6 +104,9 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				dragElement(w, h);
 			}
 		}
+		for (IGLLayoutElement child : children) {
+			child.setSize(child.getSetWidth(), child.getSetHeight());
+		}
 		relayout();
 	}
 
