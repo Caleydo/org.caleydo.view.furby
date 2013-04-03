@@ -49,7 +49,6 @@ import org.caleydo.view.heatmap.v2.BasicBlockRenderer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.IBlockRenderer;
 
-
 /**
  * e.g. a class for representing a cluster
  *
@@ -63,12 +62,12 @@ public class ClusterElement extends GLElementContainer implements IBlockRenderer
 	private Vec2d repForce = new Vec2d(0, 0);
 	private Vec2d velocity = new Vec2d(0, 0);
 	private boolean isDragged = false;
+	private boolean isHoovered = false;
 
 	private Map<GLElement, List<Integer>> xOverlap;
 	private Map<GLElement, List<Integer>> yOverlap;
 
 	private String id;
-
 
 	public ClusterElement(TablePerspective data, AllClustersElement root) {
 		super(GLLayouts.LAYERS);
@@ -157,6 +156,12 @@ public class ClusterElement extends GLElementContainer implements IBlockRenderer
 		case MOUSE_RELEASED:
 			pick.setDoDragging(false);
 			break;
+		case MOUSE_OVER:
+			if (!pick.isAnyDragging())
+				isHoovered = true;
+			break;
+		case MOUSE_OUT:
+			isHoovered = false;
 		default:
 			isDragged = false;
 			root.setDragedLayoutElement(null);
@@ -264,6 +269,8 @@ public class ClusterElement extends GLElementContainer implements IBlockRenderer
 	 *            setter, see {@link force}
 	 */
 	public void setAttForce(Vec2d force) {
+		if (isHoovered)
+			return;
 		this.attForce = force;
 	}
 
@@ -272,6 +279,8 @@ public class ClusterElement extends GLElementContainer implements IBlockRenderer
 	 *            setter, see {@link force}
 	 */
 	public void setRepForce(Vec2d force) {
+		if (isHoovered)
+			return;
 		this.repForce = force;
 	}
 
@@ -310,9 +319,9 @@ public class ClusterElement extends GLElementContainer implements IBlockRenderer
 
 	private void fireTablePerspectiveChanged() {
 		EventPublisher.trigger(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
-		.getRecordPerspective().getPerspectiveID(), this));
+				.getRecordPerspective().getPerspectiveID(), this));
 		EventPublisher.trigger(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
-		.getDimensionPerspective().getPerspectiveID(), this));
+				.getDimensionPerspective().getPerspectiveID(), this));
 
 		repaintAll();
 	}

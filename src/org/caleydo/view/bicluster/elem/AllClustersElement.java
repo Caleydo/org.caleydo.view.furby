@@ -244,7 +244,6 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			}
 
 		}
-
 		for (IGLLayoutElement iGLL : children) {
 			ClusterElement i = (ClusterElement) iGLL.asElement();
 			Vec2d force = i.getAttForce().plus(i.getRepForce());
@@ -357,7 +356,6 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			i++;
 		}
 	}
-
 
 	/**
 	 * @return the fixLayout, see {@link #fixLayout}
