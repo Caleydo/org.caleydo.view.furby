@@ -41,7 +41,7 @@ import org.caleydo.core.view.opengl.picking.Pick;
  */
 public class DimBandElement extends BandElement {
 
-	private static float[] color = Colors.BLUE.getRGBA();
+	private static float[] color = Colors.NEUTRAL_GREY.getRGBA();
 
 	/**
 	 * @param view

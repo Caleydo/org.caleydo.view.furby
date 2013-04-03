@@ -112,33 +112,51 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 			rootElement.setClusterSizes();
 		}
 	}
+
 	private List<TablePerspective> initTablePerspectives() {
 
-		int bcCountData = l.getDataDomain().getTable().getColumnIDList().size(); // Nr of BCs in L & Z
-		ATableBasedDataDomain xDataDomain = x.getDataDomain();
-		Table xtable = xDataDomain.getTable();
-		IDType xdimtype = xDataDomain.getDimensionIDType();
-		IDType xrectype = xDataDomain.getRecordIDType();
 		List<TablePerspective> persp = new ArrayList<>();
-		for (Integer i = 0; i < bcCountData; i++) {
-			Perspective dim = new Perspective(xDataDomain, xdimtype);
-			Perspective rec = new Perspective(xDataDomain, xrectype);
-			PerspectiveInitializationData dim_init = new PerspectiveInitializationData();
-			PerspectiveInitializationData rec_init = new PerspectiveInitializationData();
-			dim_init.setData(new ArrayList<Integer>());
-			rec_init.setData(new ArrayList<Integer>());
-			dim.init(dim_init);
-			rec.init(rec_init);
-			xtable.registerDimensionPerspective(dim, false);
-			xtable.registerRecordPerspective(rec, false);
-			String dimKey = dim.getPerspectiveID();
-			String recKey = rec.getPerspectiveID();
-			TablePerspective custom = xDataDomain.getTablePerspective(recKey, dimKey, false);
-			custom.setLabel(l.getDataDomain().getDimensionLabel(i));
-			persp.add(custom);
+		if (x.getDataDomain().getAllTablePerspectives().size() == 1) {
+			int bcCountData = l.getDataDomain().getTable().getColumnIDList().size(); // Nr of BCs in L & Z
+			ATableBasedDataDomain xDataDomain = x.getDataDomain();
+			Table xtable = xDataDomain.getTable();
+			IDType xdimtype = xDataDomain.getDimensionIDType();
+			IDType xrectype = xDataDomain.getRecordIDType();
+			for (Integer i = 0; i < bcCountData; i++) {
+				Perspective dim = new Perspective(xDataDomain, xdimtype);
+				Perspective rec = new Perspective(xDataDomain, xrectype);
+				PerspectiveInitializationData dim_init = new PerspectiveInitializationData();
+				PerspectiveInitializationData rec_init = new PerspectiveInitializationData();
+				dim_init.setData(new ArrayList<Integer>());
+				rec_init.setData(new ArrayList<Integer>());
+				dim.init(dim_init);
+				rec.init(rec_init);
+				xtable.registerDimensionPerspective(dim, false);
+				xtable.registerRecordPerspective(rec, false);
+				String dimKey = dim.getPerspectiveID();
+				String recKey = rec.getPerspectiveID();
+				TablePerspective custom = xDataDomain.getTablePerspective(recKey, dimKey, false);
+				custom.setLabel(l.getDataDomain().getDimensionLabel(i));
+				persp.add(custom);
+			}
+		} else {
+			int i = 0;
+			int bcCount = l.getDataDomain().getTable().getColumnIDList().size();
+			for (i = 0; i < bcCount; i++) {
+				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i));
+			}
+			System.out.println(biClusterLabels);
+			for (TablePerspective p : x.getDataDomain().getAllTablePerspectives()) {
+				System.out.println(p.getLabel());
+				if (biClusterLabels.contains(p.getLabel())) {
+					persp.add(p);
+				}
+			}
 		}
 		return persp;
 	}
+
+	private List<String> biClusterLabels = new ArrayList<>();
 
 	protected void createBiClusterPerspectives(TablePerspective x, TablePerspective l, TablePerspective z) {
 		System.out.println("Erstelle Cluster mit SampleTH: " + sampleThreshold);
@@ -166,6 +184,7 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 				List<Integer> recIndices = bcRecScanFut.get(i).get();
 				ClusterElement el = (ClusterElement) rootElement.getClusters().get(i);
 
+				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i));
 				el.setIndices(dimIndices, recIndices, setXElements, l.getDataDomain().getDimensionLabel(i));
 				// el.setPerspectiveLabel(dimensionName, recordName)
 			} catch (InterruptedException | ExecutionException | NullPointerException e) {
@@ -255,7 +274,7 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 		}
 	}
 
-	@ListenTo(sendToMe=true)
+	@ListenTo(sendToMe = true)
 	private void onRemoveTablePerspective(RemoveTablePerspectiveEvent event) {
 		removeTablePerspective(event.getTablePerspective());
 	}
@@ -285,6 +304,9 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 			findXLZ();
 			rootElement.setData(initTablePerspectives());
 			createBiClusterPerspectives(x, l, z);
+			createBiClusterPerspectives(x, l, z);
+			rootElement.createBands();
+			rootElement.setClusterSizes();
 		}
 		fireTablePerspectiveChanged();
 	}
@@ -320,7 +342,6 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 		rootElement = new GLRootElement();
 		return rootElement;
 	}
-
 
 	private void fireTablePerspectiveChanged() {
 		EventPublisher.trigger(new TablePerspectivesChangedEvent(this).from(this));

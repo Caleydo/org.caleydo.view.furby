@@ -112,6 +112,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 			int recSize = (int) ((i.getNumberOfRecElements() * (maxClusterRecSize) / maxRecClusterElements));
 			int dimSize = (int) ((i.getNumberOfDimElements() * (maxClusterDimSize) / maxDimClusterElements));
 			i.setSize(dimSize, recSize);
+			i.relayout();
 		}
 
 	}

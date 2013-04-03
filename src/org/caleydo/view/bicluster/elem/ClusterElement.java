@@ -123,6 +123,7 @@ public class ClusterElement extends GLElementContainer implements IBlockRenderer
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
+		// relayout();
 		super.renderImpl(g, w, h);
 		if (isDragged) {
 			g.color(Colors.RED);
