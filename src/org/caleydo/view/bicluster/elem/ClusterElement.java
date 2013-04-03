@@ -158,7 +158,7 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 			break;
 		case MOUSE_OVER:
 			if (!pick.isAnyDragging())
-				isHoovered = true;
+				isHoovered =true;
 			break;
 		case MOUSE_OUT:
 			isHoovered = false;
@@ -269,8 +269,7 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	 *            setter, see {@link force}
 	 */
 	public void setAttForce(Vec2d force) {
-		if (isHoovered)
-			return;
+		if (isHoovered) return;
 		this.attForce = force;
 	}
 
@@ -279,8 +278,7 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	 *            setter, see {@link force}
 	 */
 	public void setRepForce(Vec2d force) {
-		if (isHoovered)
-			return;
+		if (isHoovered) return;
 		this.repForce = force;
 	}
 

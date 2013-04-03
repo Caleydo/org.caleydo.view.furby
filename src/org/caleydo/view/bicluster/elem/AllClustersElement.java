@@ -47,7 +47,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	// resetDamping(); is called)
 
 	float repulsion = 0.04f;
-	float attractionFactor = 1f;
+	float attractionFactor = 1.2f;
 	// double aD = 0.3;
 
 	public Integer fixedElementsCount = 15;
@@ -310,20 +310,24 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	 * @return
 	 */
 	private Vec2d getDistance(ClusterElement i, ClusterElement j, float w, float h) {
-		Vec2f iLoc = i.getLocation();
-		Vec2f jLoc = j.getLocation();
-		Vec2f iSize = i.getSize();
-		Vec2f jSize = j.getSize();
+		Vec2d iLoc = virtualPositions.get(i);
+		Vec2d jLoc = virtualPositions.get(j);
+		Vec2f ifSize = i.getSize();
+		Vec2f jfSize = j.getSize();
+		double iSizeX = i.getSize().x() / w;
+		double iSizeY = i.getSize().y() / h;
+		double jSizeX = j.getSize().x() / w;
+		double jSizeY = j.getSize().y() / h;
 
-		Vec2d iMiddle = new Vec2d(iLoc.x() + iSize.x() / 2., iLoc.y() + iSize.y() / 2.);
-		Vec2d jMiddle = new Vec2d(jLoc.x() + jSize.x() / 2., jLoc.y() + jSize.y() / 2.);
+		Vec2d iMiddle = new Vec2d(iLoc.x() + iSizeX / 2., iLoc.y() + iSizeY / 2.);
+		Vec2d jMiddle = new Vec2d(jLoc.x() + jSizeX / 2., jLoc.y() + jSizeY / 2.);
 		Vec2d dist = iMiddle.minus(jMiddle);
-		return new Vec2d(dist.x() / w, dist.y() / h);
+		return dist;
 	}
 
 	private void setLocation(ClusterElement v, double xPos, double yPos, float w, float h) {
-		xPos = xPos * (w - 300) + 100;
-		yPos = yPos * (h - 275) + 50;
+		xPos = xPos * (w - 200) + 100 - v.getSize().x() / 2;
+		yPos = yPos * (h - 175) + 90 - v.getSize().y() / 2;
 		if (xPos > w || xPos < 0 || yPos > h || yPos < 0)
 			System.out.println(xPos + "/" + yPos);
 		v.getIGLayoutElement().setLocation((float) xPos, (float) yPos);
