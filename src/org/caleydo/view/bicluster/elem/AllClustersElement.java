@@ -47,7 +47,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	// resetDamping(); is called)
 
 	float repulsion = 0.04f;
-	float attractionFactor = 1.2f;
+	float attractionFactor = 1.5f;
 	// double aD = 0.3;
 
 	public Integer fixedElementsCount = 15;
@@ -76,12 +76,12 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		super.init(context);
 	}
 
-	public void setData(List<TablePerspective> list) {
+	public void setData(List<TablePerspective> list, TablePerspective x) {
 		this.clear();
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(p, this);
+				final ClusterElement el = new ClusterElement(p, x, this);
 				this.add(el);
 			}
 		}
@@ -91,9 +91,12 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private GLElement dragedElement = null;
 	Stopwatch stopwatch = new Stopwatch();
 
+	float lastW, lastH;
+
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-
+		lastW = w;
+		lastH = h;
 		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
@@ -244,6 +247,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			}
 
 		}
+
 		for (IGLLayoutElement iGLL : children) {
 			ClusterElement i = (ClusterElement) iGLL.asElement();
 			Vec2d force = i.getAttForce().plus(i.getRepForce());
@@ -375,7 +379,5 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	public void setDragedLayoutElement(ClusterElement element) {
 		this.dragedElement = element;
 	}
-
-
 
 }

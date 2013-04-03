@@ -60,6 +60,8 @@ import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.elem.GLRootElement;
 import org.caleydo.view.bicluster.event.ToolbarEvent;
+import org.caleydo.view.bicluster.sorting.ASortingStrategy;
+import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 
 /**
  * <p>
@@ -85,6 +87,8 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 	private float sampleThreshold = 4.5f;
 	private float geneThreshold = 0.08f;
 
+	private ASortingStrategy strategy;
+
 	private final List<TablePerspective> perspectives = new ArrayList<>();
 
 	GLRootElement rootElement;
@@ -100,7 +104,7 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 
 		if (this.perspectives.size() >= 3) {
 			findXLZ();
-			rootElement.setData(initTablePerspectives());
+			rootElement.setData(initTablePerspectives(), x);
 			createBiClusterPerspectives(x, l, z);
 			createBiClusterPerspectives(x, l, z);
 			rootElement.createBands();
@@ -165,8 +169,12 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 		Map<Integer, Future<List<Integer>>> bcDimScanFut = new HashMap<>();
 		Map<Integer, Future<List<Integer>>> bcRecScanFut = new HashMap<>();
 		for (int bcNr = 0; bcNr < bcCountData; bcNr++) {
-			Future<List<Integer>> recList = executorService.submit(new ScanProbabilityMatrix(geneThreshold, L, bcNr));
-			Future<List<Integer>> dimList = executorService.submit(new ScanProbabilityMatrix(sampleThreshold, Z, bcNr));
+			ASortingStrategy strategy = new ProbabilityStrategy(L, bcNr);
+			Future<List<Integer>> recList = executorService.submit(new ScanProbabilityMatrix(geneThreshold, L, bcNr,
+					strategy));
+			strategy = new ProbabilityStrategy(Z, bcNr);
+			Future<List<Integer>> dimList = executorService.submit(new ScanProbabilityMatrix(sampleThreshold, Z, bcNr,
+					strategy));
 
 			bcRecScanFut.put(bcNr, recList);
 			bcDimScanFut.put(bcNr, dimList);
@@ -180,8 +188,7 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 				ClusterElement el = (ClusterElement) rootElement.getClusters().get(i);
 
 				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i));
-				el.setIndices(dimIndices, recIndices, setXElements, l.getDataDomain().getDimensionLabel(i));
-				// el.setPerspectiveLabel(dimensionName, recordName)
+				el.setIndices(dimIndices, recIndices, setXElements, l.getDataDomain().getDimensionLabel(i), i);
 			} catch (InterruptedException | ExecutionException | NullPointerException e) {
 				e.printStackTrace();
 			}
@@ -286,7 +293,7 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 		this.perspectives.add(newTablePerspective);
 		if (getRoot() != null && perspectives.size() == 3) {
 			findXLZ();
-			rootElement.setData(initTablePerspectives());
+			rootElement.setData(initTablePerspectives(), x);
 			createBiClusterPerspectives(x, l, z);
 		}
 		fireTablePerspectiveChanged();
@@ -297,7 +304,7 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 		this.perspectives.addAll(newTablePerspectives);
 		if (getRoot() != null && perspectives.size() == 3) {
 			findXLZ();
-			rootElement.setData(initTablePerspectives());
+			rootElement.setData(initTablePerspectives(), x);
 			createBiClusterPerspectives(x, l, z);
 			createBiClusterPerspectives(x, l, z);
 			rootElement.createBands();
@@ -318,7 +325,7 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 				it.remove();
 		}
 		if (rootElement != null && this.perspectives.size() < 3) {
-			rootElement.setData(null);
+			rootElement.setData(null, null);
 		}
 		fireTablePerspectiveChanged();
 	}

@@ -21,12 +21,10 @@ package org.caleydo.view.bicluster.concurrent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
 import org.caleydo.core.data.collection.table.Table;
-import org.caleydo.core.util.collection.Pair;
+import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 
 /**
  * @author user
@@ -37,31 +35,38 @@ public class ScanProbabilityMatrix implements Callable<List<Integer>> {
 	private float threshold;
 	private Table table;
 	private int bcNr;
+	private ASortingStrategy strategy;
 
-	public ScanProbabilityMatrix(float threshold, Table t, int bcNr) {
+	public ScanProbabilityMatrix(float threshold, Table t, int bcNr, ASortingStrategy strat) {
 		this.threshold = threshold;
 		this.table = t;
 		this.bcNr = bcNr;
+		this.strategy = strat;
 	}
 
 	private List<Integer> scanProbTable() {
-		Set<Pair<Integer, Float>> indicesList = new TreeSet<Pair<Integer, Float>>(Pair.<Float> compareSecond());
+		// Comparator<Pair<Integer, Float>> cmp = new Comparator<Pair<Integer, Float>>() {
+		//
+		// @Override
+		// public int compare(Pair<Integer, Float> o1, Pair<Integer, Float> o2) {
+		//
+		// return o2.getSecond().compareTo(o1.getSecond());
+		// }
+		//
+		// };
+		// Set<Pair<Integer, Float>> indicesList = new TreeSet<Pair<Integer, Float>>(cmp);
 		final int tablesize = table.depth(); // table.getRowIDList().size();
 		for (int nr = 0; nr < tablesize; nr++) {
-			Pair<Integer, Float> pair;
 			float p;
 			p = (float) table.getRaw(bcNr, nr);
-
 			if (Math.abs(p) > threshold) {
-				pair = new Pair<>(nr, p);
-				indicesList.add(pair);
+				strategy.addIndex(nr);
 			}
 		}
-		List<Integer> indices = new ArrayList<>(indicesList.size());
-		for (Pair<Integer, Float> p : indicesList) {
-			indices.add(p.getFirst());
+		List<Integer> indices = new ArrayList<>();
+		for (Integer i : strategy) {
+			indices.add(i);
 		}
-		// System.out.println("BC Nr. " + this.bcNr + ": " + fulltime / 1000. + "s");
 		return indices;
 	}
 

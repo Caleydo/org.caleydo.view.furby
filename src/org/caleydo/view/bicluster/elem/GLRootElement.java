@@ -52,7 +52,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		super.init(context);
 	}
 
-	public void setData(List<TablePerspective> list) {
+	public void setData(List<TablePerspective> list, TablePerspective x) {
 		if (bands.size() > 0)
 			bands.clear();
 		if (clusters.size() > 0)
@@ -60,7 +60,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(p, clusters);
+				final ClusterElement el = new ClusterElement(p, x, clusters);
 				clusters.add(el);
 			}
 		}

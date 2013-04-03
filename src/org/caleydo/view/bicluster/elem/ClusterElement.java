@@ -58,20 +58,23 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	private final AllClustersElement root;
 	private Vec2d attForce = new Vec2d(0, 0);
 	private Vec2d repForce = new Vec2d(0, 0);
-	private Vec2d velocity = new Vec2d(0, 0);
 	private boolean isDragged = false;
 	private boolean isHoovered = false;
+	private final TablePerspective x;
 
 	private Map<GLElement, List<Integer>> xOverlap;
 	private Map<GLElement, List<Integer>> yOverlap;
 
+	private int sortingMode = 0;
 
+	// 0 Prob
+	// 1 value
 
-	public ClusterElement(TablePerspective data, AllClustersElement root) {
+	public ClusterElement(TablePerspective data, TablePerspective x, AllClustersElement root) {
 		super(GLLayouts.LAYERS);
 		this.data = data;
 		this.root = root;
-
+		this.x = x;
 		this.add(new HeatMapElement(data, this, EDetailLevel.HIGH));
 
 		setVisibility(EVisibility.PICKABLE);
@@ -166,11 +169,11 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	 * @param dimIndices
 	 * @param recIndices
 	 * @param setXElements
-	 * @param string
+	 * @param id
+	 * @param
 	 */
-	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements, String string) {
-
-		data.setLabel(string);
+	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements, String id, int bcNr) {
+		data.setLabel(id);
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
 			setVisibility(EVisibility.PICKABLE);
 			VirtualArray dimArray = getDimensionVirtualArray();
@@ -198,6 +201,7 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 		fireTablePerspectiveChanged();
 		// setSize(200, 200);
 	}
+
 
 	/**
 	 *
@@ -262,20 +266,7 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 		return repForce;
 	}
 
-	/**
-	 * @return the velocity, see {@link #velocity}
-	 */
-	public Vec2d getVelocity() {
-		return velocity;
-	}
 
-	/**
-	 * @param velocity
-	 *            setter, see {@link velocity}
-	 */
-	public void setVelocity(Vec2d velocity) {
-		this.velocity = velocity;
-	}
 
 	/**
 	 *

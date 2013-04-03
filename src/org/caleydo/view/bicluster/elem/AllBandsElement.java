@@ -68,7 +68,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout {
 			b.setLocation(0, 0);
 		}
 		relayout();
-		// System.out.println("nächster run");
 	}
 
 	public void updateSelection() {
