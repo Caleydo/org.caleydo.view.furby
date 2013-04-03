@@ -138,6 +138,7 @@ public class ClusterElement extends GLElementContainer implements IBlockRenderer
 	protected void onPicked(Pick pick) {
 		// TODO: if we hover a block -> don't move it
 		// TODO: a toolbar on hover like in stratomex would be nice, that pops up, when the mouse is over the element
+
 		switch (pick.getPickingMode()) {
 		case DRAGGED:
 			if (isDragged == false) {
@@ -146,14 +147,15 @@ public class ClusterElement extends GLElementContainer implements IBlockRenderer
 			}
 			root.resetDamping();
 			isDragged = true;
-			// as you know have the better picking listener:
-			java.awt.Point now = pick.getPickedPoint();
-			java.awt.Point start = pick.getDragStartPoint();
-			int diffX = start.x - now.x;
-			int diffY = start.y - now.y;
-			setLocation(pickLocation.x() - diffX, pickLocation.y() - diffY);
+			setLocation(getLocation().x() + pick.getDx(), getLocation().y() + pick.getDy());
 			relayoutParent();
 			repaintPick();
+			break;
+		case CLICKED:
+			pick.setDoDragging(true);
+			break;
+		case MOUSE_RELEASED:
+			pick.setDoDragging(false);
 			break;
 		default:
 			isDragged = false;
