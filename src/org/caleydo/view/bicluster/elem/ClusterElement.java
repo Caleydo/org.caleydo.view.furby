@@ -19,8 +19,6 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import gleem.linalg.Vec2f;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +33,6 @@ import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.color.Color;
-import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
@@ -68,7 +65,7 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	private Map<GLElement, List<Integer>> xOverlap;
 	private Map<GLElement, List<Integer>> yOverlap;
 
-	private String id;
+
 
 	public ClusterElement(TablePerspective data, AllClustersElement root) {
 		super(GLLayouts.LAYERS);
@@ -117,31 +114,27 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	 * @return the id, see {@link #id}
 	 */
 	public String getId() {
-		return id;
+		return data.getLabel();
 	}
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		// relayout();
 		super.renderImpl(g, w, h);
-		if (isDragged) {
-			g.color(Colors.RED);
-			g.fillRect(0, 0, w, h);
-			g.color(Colors.BLACK);
-		}
+		// if (isDragged) {
+		// g.color(Colors.RED);
+		// g.fillRect(0, 0, w, h);
+		// g.color(Colors.BLACK);
+		// }
 		g.drawText(getId(), 0, -15, 70, 12);
 	}
 
-	private Vec2f pickLocation;
-
 	protected void onPicked(Pick pick) {
-		// TODO: if we hover a block -> don't move it
 		// TODO: a toolbar on hover like in stratomex would be nice, that pops up, when the mouse is over the element
 
 		switch (pick.getPickingMode()) {
 		case DRAGGED:
 			if (isDragged == false) {
-				pickLocation = getLocation();
 				root.setDragedLayoutElement(this);
 			}
 			root.resetDamping();
@@ -158,38 +151,15 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 			break;
 		case MOUSE_OVER:
 			if (!pick.isAnyDragging())
-				isHoovered =true;
+				isHoovered = true;
 			break;
 		case MOUSE_OUT:
 			isHoovered = false;
+			break;
 		default:
 			isDragged = false;
 			root.setDragedLayoutElement(null);
 		}
-
-		// switch (pick.getPickingMode()) {
-		// case CLICKED:
-		// draged = true;
-		// break;
-		// case DRAGGED:
-		// System.out.println("now dragged");
-		// break;
-		// case MOUSE_OUT:
-		// draged = false;
-		// break;
-		// case MOUSE_OVER:
-		// // onMouseOver(pick);
-		// break;
-		// case MOUSE_MOVED:
-		// if (draged)
-		// setLocation(pick.getPickedPoint().x, pick.getPickedPoint().y);
-		// break;
-		// case MOUSE_RELEASED:
-		// draged = false;
-		// default:
-		// break;
-		// }
-
 	}
 
 	/**
@@ -199,7 +169,8 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	 * @param string
 	 */
 	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements, String string) {
-		this.id = string;
+
+		data.setLabel(string);
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
 			setVisibility(EVisibility.PICKABLE);
 			VirtualArray dimArray = getDimensionVirtualArray();
@@ -269,7 +240,8 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	 *            setter, see {@link force}
 	 */
 	public void setAttForce(Vec2d force) {
-		if (isHoovered) return;
+		if (isHoovered)
+			return;
 		this.attForce = force;
 	}
 
@@ -278,7 +250,8 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	 *            setter, see {@link force}
 	 */
 	public void setRepForce(Vec2d force) {
-		if (isHoovered) return;
+		if (isHoovered)
+			return;
 		this.repForce = force;
 	}
 

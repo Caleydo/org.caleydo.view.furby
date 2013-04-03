@@ -94,9 +94,9 @@ public class RecBandElement extends BandElement {
 	protected void onClicked(Pick pick) {
 		highlight = !highlight;
 		if (highlight)
-			root.setRecordSelection(this);
+			root.setSelection(this);
 		else
-			root.setDimensionSelection(null);
+			root.setSelection(null);
 		selectElements();
 		super.onClicked(pick);
 	}

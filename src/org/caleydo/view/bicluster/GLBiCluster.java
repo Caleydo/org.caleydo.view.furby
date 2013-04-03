@@ -74,11 +74,6 @@ import org.caleydo.view.bicluster.event.ToolbarEvent;
  * @author Marc Streit
  */
 
-// TODO Fix Band start and End positions.
-// TODO Framerate drop when bands are displayed
-// TODO Fix Drag and Drop on specific clusters
-// TODO Irrational layouting in some cases
-
 public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiveBasedView {
 	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
 	public static final String VIEW_NAME = "BiCluster Visualization";

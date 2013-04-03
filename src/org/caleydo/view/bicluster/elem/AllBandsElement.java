@@ -41,20 +41,8 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout {
 		setLayout(this);
 	}
 
-	public void setRecordSelection(BandElement b) {
-		if (selection != null) {
-			selection.deselect();
-			for (GLElement i : this) {
-				((BandElement) i).updatePosition();
-			}
-		}
-		selection = b;
-		for (GLElement i : this) {
-			((BandElement) i).highlightOverlapWith(b);
-		}
-	}
 
-	public void setDimensionSelection(BandElement b) {
+	public void setSelection(BandElement b) {
 		if (selection != null) {
 			selection.deselect();
 			for (GLElement i : this) {
