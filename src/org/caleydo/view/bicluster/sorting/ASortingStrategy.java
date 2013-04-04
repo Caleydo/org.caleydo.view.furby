@@ -33,7 +33,7 @@ public abstract class ASortingStrategy implements Iterable<Integer> {
 
 
 
-	protected Set<Pair<Float, Integer>> indices;
+	protected Set<Pair<Integer, Float>> indices;
 
 	public abstract void setIndices(List<Integer> dimIndices);
 

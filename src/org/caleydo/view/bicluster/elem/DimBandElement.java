@@ -62,10 +62,10 @@ public class DimBandElement extends BandElement {
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		if (visible) {
 			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, highlight,
-					highlight ? Colors.RED.getRGBA() : color, .5f);
+					highlight ? highlightColor : color, .5f);
 			if (highlightOverlap.size() > 0)
 				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, highlight,
-						Colors.RED.getRGBA(), .5f);
+						highlightColor, .5f);
 		}
 		// super.renderImpl(g, w, h);
 		// System.out.println(first.getId() + "/" + second.getId());
@@ -214,7 +214,7 @@ public class DimBandElement extends BandElement {
 	 * org.caleydo.view.bicluster.elem.BandElement#highlightOverlapWith(org.caleydo.view.bicluster.elem.BandElement)
 	 */
 	@Override
-	public void highlightOverlapWith(BandElement b) {
+	public void highlightSelectionOverlapWith(BandElement b) {
 		highlightOverlap = new ArrayList<>();
 		if (b instanceof DimBandElement) {
 			List<Integer> highList = new LinkedList<>(overlap);
@@ -227,7 +227,7 @@ public class DimBandElement extends BandElement {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.caleydo.view.bicluster.elem.BandElement#fireSelectionChanged()
 	 */
 	@Override

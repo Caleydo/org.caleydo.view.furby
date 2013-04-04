@@ -43,30 +43,33 @@ public class ProbabilityStrategy extends ASortingStrategy {
 	public ProbabilityStrategy(Table t, int bcNr) {
 		this.bcNr = bcNr;
 		this.t = t;
-		this.indices = new TreeSet<>();
+		this.indices = new TreeSet<>(new Comparator<Pair<Integer, Float>>() {
+
+			@Override
+			public int compare(Pair<Integer, Float> o1, Pair<Integer, Float> o2) {
+				int val = o1.getSecond().compareTo(o2.getSecond());
+				if (val == 0)
+					val = o1.getFirst().compareTo(o2.getFirst());
+				return val;
+			}
+
+		});
 	}
 
 	@Override
 	public void setIndices(List<Integer> dimIndices) {
-		for (Integer indice : dimIndices) {
-			ComparablePair<Float, Integer> pair = new ComparablePair<>((float) t.getRaw(indice, bcNr), indice);
+		for (Integer index : dimIndices) {
+			ComparablePair<Integer, Float> pair = new ComparablePair<>(index, (float) t.getRaw(index, bcNr));
 			this.indices.add(pair);
 		}
 	}
 
 	@Override
 	public void addIndex(int index) {
-		if (this.indices == null)
-			this.indices = new TreeSet<>(new Comparator<Pair<Float, Integer>>() {
-
-				@Override
-				public int compare(Pair<Float, Integer> o1, Pair<Float, Integer> o2) {
-					return o1.getFirst().compareTo(o2.getFirst());
-				}
-
-			});
-		ComparablePair<Float, Integer> pair = new ComparablePair<>((float) t.getRaw(bcNr, index), index);
-		this.indices.add(pair);
+		ComparablePair<Integer, Float> pair = new ComparablePair<>(index, (float) t.getRaw(bcNr, index));
+		indices.add(pair);
+		// if (!indices.add(pair))
+		// System.out.println(pair.hashCode());
 	}
 
 	/*
@@ -77,7 +80,7 @@ public class ProbabilityStrategy extends ASortingStrategy {
 	@Override
 	public Iterator<Integer> iterator() {
 		return new Iterator<Integer>() {
-			final private Iterator<Pair<Float, Integer>> superIter = indices.iterator();
+			final private Iterator<Pair<Integer, Float>> superIter = indices.iterator();
 
 			@Override
 			public boolean hasNext() {
@@ -87,9 +90,9 @@ public class ProbabilityStrategy extends ASortingStrategy {
 
 			@Override
 			public Integer next() {
-				Pair<Float, Integer> next = superIter.next();
+				Pair<Integer, Float> next = superIter.next();
 				// System.out.println(next.getFirst());
-				return next.getSecond();
+				return next.getFirst();
 			}
 
 			@Override

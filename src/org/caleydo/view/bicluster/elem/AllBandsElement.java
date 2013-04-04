@@ -63,7 +63,7 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		}
 		selection = b;
 		for (GLElement i : this) {
-			((BandElement) i).highlightOverlapWith(b);
+			((BandElement) i).highlightSelectionOverlapWith(b);
 		}
 	}
 
@@ -84,14 +84,13 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 
 	public void updateSelection() {
 		for (GLElement i : this) {
-			((BandElement) i).highlightOverlapWith(selection);
+			((BandElement) i).highlightSelectionOverlapWith(selection);
 			if (i == selection)
 				((BandElement) i).selectElements();
 		}
-		selectionMixin.fireDimensionSelectionDelta();
-		selectionMixin.fireRecordSelectionDelta();
+		// selectionMixin.fireDimensionSelectionDelta();
+		// selectionMixin.fireRecordSelectionDelta();
 	}
-
 
 	/*
 	 * (non-Javadoc)

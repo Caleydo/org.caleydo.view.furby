@@ -72,6 +72,7 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 
 	protected List<Pair<Point2D, Point2D>> bandPoints;
 	protected List<Pair<Point2D, Point2D>> highlightPoints;
+	protected float[] highlightColor;
 
 
 	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
@@ -84,6 +85,7 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 		selectionType = selectionManager.getSelectionType();
 		highlightPoints = new ArrayList<>();
 		highlightOverlap = new ArrayList<>();
+		highlightColor = selectionType.getColor();
 
 	}
 
@@ -120,5 +122,5 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	/**
 	 * @param b
 	 */
-	public abstract void highlightOverlapWith(BandElement b);
+	public abstract void highlightSelectionOverlapWith(BandElement b);
 }

@@ -45,17 +45,9 @@ public class ScanProbabilityMatrix implements Callable<List<Integer>> {
 	}
 
 	private List<Integer> scanProbTable() {
-		// Comparator<Pair<Integer, Float>> cmp = new Comparator<Pair<Integer, Float>>() {
-		//
-		// @Override
-		// public int compare(Pair<Integer, Float> o1, Pair<Integer, Float> o2) {
-		//
-		// return o2.getSecond().compareTo(o1.getSecond());
-		// }
-		//
-		// };
-		// Set<Pair<Integer, Float>> indicesList = new TreeSet<Pair<Integer, Float>>(cmp);
+
 		final int tablesize = table.depth(); // table.getRowIDList().size();
+
 		for (int nr = 0; nr < tablesize; nr++) {
 			float p;
 			p = (float) table.getRaw(bcNr, nr);
@@ -63,6 +55,7 @@ public class ScanProbabilityMatrix implements Callable<List<Integer>> {
 				strategy.addIndex(nr);
 			}
 		}
+
 		List<Integer> indices = new ArrayList<>();
 		for (Integer i : strategy) {
 			indices.add(i);

@@ -30,7 +30,6 @@ import javax.media.opengl.GLContext;
 
 import org.caleydo.core.data.selection.EventBasedSelectionManager;
 import org.caleydo.core.util.collection.Pair;
-import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.picking.Pick;
@@ -41,7 +40,7 @@ import org.caleydo.core.view.opengl.picking.Pick;
  */
 public class RecBandElement extends BandElement {
 
-	private float[] color = Colors.GREEN.getRGBA();
+	private float[] color = { 0f, 0, 0.05f, 0.05f };
 
 	/**
 	 * @param view
@@ -63,10 +62,10 @@ public class RecBandElement extends BandElement {
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		if (visible) {
 			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, highlight,
-					highlight ? Colors.RED.getRGBA() : color, .5f);
+					highlight ? highlightColor : color, .5f);
 			if (highlightOverlap.size() > 0)
 				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, highlight,
-						Colors.RED.getRGBA(), .5f);
+						highlightColor, .5f);
 		}
 	}
 
@@ -228,7 +227,7 @@ public class RecBandElement extends BandElement {
 	 * org.caleydo.view.bicluster.elem.BandElement#highlightOverlapWith(org.caleydo.view.bicluster.elem.BandElement)
 	 */
 	@Override
-	public void highlightOverlapWith(BandElement b) {
+	public void highlightSelectionOverlapWith(BandElement b) {
 		highlightOverlap = new ArrayList<>();
 		if (b instanceof RecBandElement) {
 			List<Integer> highList = new LinkedList<>(overlap);
@@ -241,7 +240,7 @@ public class RecBandElement extends BandElement {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.caleydo.view.bicluster.elem.BandElement#fireSelectionChanged()
 	 */
 	@Override
