@@ -48,13 +48,12 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	protected static ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
 	protected static EventPublisher eventPublisher;
 
-
 	{
 		bandRenderer.init(GLContext.getCurrentGL().getGL2());
 		eventPublisher = GeneralManager.get().getEventPublisher();
 	}
 
-	protected boolean highlight = false;
+	protected boolean highlight = false; // indicates whether the band is selected and should be drawn in a other color.
 	protected ClusterElement first;
 	protected ClusterElement second;
 	protected List<Integer> overlap;
@@ -77,8 +76,6 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 
 	protected List<Pair<Point2D, Point2D>> bandPoints;
 	protected List<Pair<Point2D, Point2D>> highlightPoints;
-
-
 
 	/**
 	 * @param idType
@@ -106,10 +103,17 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	public void selectElements() {
 		if (selectionManager == null)
 			return;
+		// if (first.getId().contains("bicluster22") && second.getId().contains("bicluster7")) {
+		// System.out.println("stop");
+		System.out.println("Band von " + first.getId() + "/" + second.getId() + " ID's: " + overlap);
+		// }
+
 		selectionManager.clearSelection(selectionType);
 		for (Integer id : overlap) {
-			if (highlight)
+			if (highlight) {
+				System.out.println("id: " + id + " zu selection gefügt.");
 				selectionManager.addToType(selectionType, id);
+			}
 
 		}
 		SelectionUpdateEvent event = new SelectionUpdateEvent();
