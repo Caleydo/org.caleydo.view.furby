@@ -63,6 +63,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				final ClusterElement el = new ClusterElement(p, x, clusters);
 				clusters.add(el);
 			}
+			bands.setData(x);
 		}
 	}
 

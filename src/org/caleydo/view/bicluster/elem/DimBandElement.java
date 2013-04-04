@@ -47,8 +47,8 @@ public class DimBandElement extends BandElement {
 	 * @param view
 	 */
 	public DimBandElement(GLElement first, GLElement second, AllBandsElement root) {
-		super(first, second, ((ClusterElement) first).getDimensionIDCategory(), ((ClusterElement) first)
-				.getDimOverlap(second), ((ClusterElement) first).getDimensionIDType(), root);
+		super(first, second, ((ClusterElement) first).getDimOverlap(second), root.getSelectionMixin()
+				.getDimensionSelectionManager(), root);
 	}
 
 	/*
@@ -94,6 +94,7 @@ public class DimBandElement extends BandElement {
 		else
 			root.setSelection(null);
 		selectElements();
+
 		super.onClicked(pick);
 	}
 
@@ -221,6 +222,17 @@ public class DimBandElement extends BandElement {
 			highlightOverlap = highList;
 		}
 		updatePosition();
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.caleydo.view.bicluster.elem.BandElement#fireSelectionChanged()
+	 */
+	@Override
+	protected void fireSelectionChanged() {
+		root.getSelectionMixin().fireDimensionSelectionDelta();
 
 	}
 

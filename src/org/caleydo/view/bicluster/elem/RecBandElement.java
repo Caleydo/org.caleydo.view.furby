@@ -47,8 +47,8 @@ public class RecBandElement extends BandElement {
 	 * @param view
 	 */
 	public RecBandElement(GLElement first, GLElement second, AllBandsElement root) {
-		super(first, second, ((ClusterElement) first).getRecordIDCategory(), ((ClusterElement) first)
-				.getRecOverlap(second), ((ClusterElement) first).getRecordIDType(), root);
+		super(first, second, ((ClusterElement) first).getRecOverlap(second), root.getSelectionMixin()
+				.getRecordSelectionManager(), root);
 
 	}
 
@@ -98,6 +98,7 @@ public class RecBandElement extends BandElement {
 		else
 			root.setSelection(null);
 		selectElements();
+
 		super.onClicked(pick);
 	}
 
@@ -235,6 +236,17 @@ public class RecBandElement extends BandElement {
 			highlightOverlap = highList;
 		}
 		updatePosition();
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.caleydo.view.bicluster.elem.BandElement#fireSelectionChanged()
+	 */
+	@Override
+	protected void fireSelectionChanged() {
+		root.getSelectionMixin().fireRecordSelectionDelta();
 
 	}
 

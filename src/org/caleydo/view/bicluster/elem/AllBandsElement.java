@@ -21,6 +21,9 @@ package org.caleydo.view.bicluster.elem;
 
 import java.util.List;
 
+import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.data.selection.SelectionManager;
+import org.caleydo.core.data.selection.TablePerspectiveSelectionMixin;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
@@ -30,9 +33,18 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
  * @author user
  *
  */
-public class AllBandsElement extends GLElementContainer implements IGLLayout {
+public class AllBandsElement extends GLElementContainer implements IGLLayout,
+		TablePerspectiveSelectionMixin.ITablePerspectiveMixinCallback {
 
 	BandElement selection;
+	TablePerspectiveSelectionMixin selectionMixin;
+
+	/**
+	 * @return the selectionMixin, see {@link #selectionMixin}
+	 */
+	public TablePerspectiveSelectionMixin getSelectionMixin() {
+		return selectionMixin;
+	}
 
 	/**
 	 * @param view
@@ -76,8 +88,41 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout {
 			if (i == selection)
 				((BandElement) i).selectElements();
 		}
+		selectionMixin.fireDimensionSelectionDelta();
+		selectionMixin.fireRecordSelectionDelta();
 	}
 
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.caleydo.core.data.selection.TablePerspectiveSelectionMixin.ITablePerspectiveMixinCallback#onSelectionUpdate
+	 * (org.caleydo.core.data.selection.SelectionManager)
+	 */
+	@Override
+	public void onSelectionUpdate(SelectionManager manager) {
+		updateSelection();
+		repaintAll();
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see
+	 * org.caleydo.core.data.selection.TablePerspectiveSelectionMixin.ITablePerspectiveMixinCallback#onVAUpdate(org.
+	 * caleydo.core.data.perspective.table.TablePerspective)
+	 */
+	@Override
+	public void onVAUpdate(TablePerspective tablePerspective) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void setData(TablePerspective x) {
+		selectionMixin = new TablePerspectiveSelectionMixin(x, this);
+	}
 
 }
 

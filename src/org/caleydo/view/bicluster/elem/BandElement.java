@@ -25,13 +25,10 @@ import java.util.List;
 
 import javax.media.opengl.GLContext;
 
-import org.caleydo.core.data.selection.EventBasedSelectionManager;
 import org.caleydo.core.data.selection.IEventBasedSelectionManagerUser;
+import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
-import org.caleydo.core.data.selection.delta.SelectionDelta;
 import org.caleydo.core.event.EventPublisher;
-import org.caleydo.core.event.data.SelectionUpdateEvent;
-import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.manager.GeneralManager;
 import org.caleydo.core.util.collection.Pair;
@@ -69,32 +66,22 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	protected IDType idType;
 	protected String dataDomainID;
 	protected SelectionType selectionType;
-	protected IDCategory idCategory;
-	protected EventBasedSelectionManager selectionManager;
+	protected SelectionManager selectionManager;
 	protected boolean visible = false;
 	protected AllBandsElement root;
 
 	protected List<Pair<Point2D, Point2D>> bandPoints;
 	protected List<Pair<Point2D, Point2D>> highlightPoints;
 
-	/**
-	 * @param idType
-	 * @param list
-	 * @param root
-	 * @param idCategory2
-	 *
-	 */
-	protected BandElement(GLElement first, GLElement second, IDCategory idCategory, List<Integer> list, IDType idType,
+
+	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
 			AllBandsElement root) {
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
 		this.overlap = list;
-		this.idType = idType;
-		this.dataDomainID = ((ClusterElement) first).getDataDomainID();
-		IDType mappingIDType = idCategory.getPrimaryMappingType();
-		this.selectionManager = new EventBasedSelectionManager(this, mappingIDType);
-		this.selectionType = selectionManager.getSelectionType();
 		this.root = root;
+		this.selectionManager = selectionManager;
+		selectionType = selectionManager.getSelectionType();
 		highlightPoints = new ArrayList<>();
 		highlightOverlap = new ArrayList<>();
 
@@ -105,23 +92,18 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 			return;
 		// if (first.getId().contains("bicluster22") && second.getId().contains("bicluster7")) {
 		// System.out.println("stop");
-		System.out.println("Band von " + first.getId() + "/" + second.getId() + " ID's: " + overlap);
+		// System.out.println("Band von " + first.getId() + "/" + second.getId() + " ID's: " + overlap);
 		// }
 
 		selectionManager.clearSelection(selectionType);
-		for (Integer id : overlap) {
-			if (highlight) {
-				System.out.println("id: " + id + " zu selection gefügt.");
-				selectionManager.addToType(selectionType, id);
-			}
-
+		// for (Integer id : overlap) {
+		if (highlight) {
+			// System.out.println("id: " + id + " zu selection gefügt.");
+			// selectionManager.addToType(selectionType, id);
+			selectionManager.addToType(selectionType, overlap);
 		}
-		SelectionUpdateEvent event = new SelectionUpdateEvent();
-		event.setSender(this);
-		SelectionDelta delta = selectionManager.getDelta();
-		event.setSelectionDelta(delta);
-		event.setEventSpace(dataDomainID);
-		eventPublisher.triggerEvent(event);
+		// }
+		fireSelectionChanged();
 	}
 
 	public void deselect() {
@@ -132,6 +114,8 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	}
 
 	public abstract void updatePosition();
+
+	protected abstract void fireSelectionChanged();
 
 	/**
 	 * @param b
