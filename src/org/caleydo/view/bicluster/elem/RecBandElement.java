@@ -127,7 +127,7 @@ public class RecBandElement extends BandElement {
 		highlightPoints = new ArrayList<>();
 		int os = overlap.size();
 		int hOS = highlightOverlap.size();
-		// if (first.getId().contains("22"))
+		// if (second.getId().contains("bicluster17") && first.getId().contains("bicluster20"))
 		// System.out.println("here");
 		if (fLoc.x() < sLoc.x()) {
 			// second right
@@ -159,9 +159,8 @@ public class RecBandElement extends BandElement {
 				} else {
 					bandPoints.add(pair(first.getLocation().x(), first.getLocation().y(), first.getLocation().x(),
 							(float) (first.getLocation().y() + firRecScaFac * os)));
-					bandPoints.add(pair(second.getLocation().x(),
-							(float) (second.getLocation().y() - secRecScaFac * os), second.getLocation().x(), second
-									.getLocation().y()));
+					bandPoints.add(pair(second.getLocation().x(), second.getLocation().y(), second.getLocation().x(),
+							(float) (second.getLocation().y() + secRecScaFac * os)));
 				}
 			}
 
@@ -171,12 +170,12 @@ public class RecBandElement extends BandElement {
 				// second far at left
 				if (hOS > 0) {
 					highlightPoints.add(pair(sLoc.x() + sSize.x(), sLoc.y(), sLoc.x() + sSize.x(),
-							(float) (sLoc.y() + secRecScaFac * os)));
+							(float) (sLoc.y() + secRecScaFac * hOS)));
 					highlightPoints.add(pair(fLoc.x(), fLoc.y(), fLoc.x(), (float) (fLoc.y() + firRecScaFac * hOS)));
-					bandPoints.add(pair(sLoc.x() + sSize.x(), (float) (sLoc.y() + secRecScaFac * os),
+					bandPoints.add(pair(sLoc.x() + sSize.x(), (float) (sLoc.y() + secRecScaFac * hOS),
 							sLoc.x() + sSize.x(), (float) (sLoc.y() + secRecScaFac * os)));
 					bandPoints.add(pair(fLoc.x(), (float) (fLoc.y() + firRecScaFac * hOS), fLoc.x(),
-							(float) (fLoc.y() + firRecScaFac * hOS)));
+							(float) (fLoc.y() + firRecScaFac * os)));
 				} else {
 					bandPoints.add(pair(sLoc.x() + sSize.x(), sLoc.y(), sLoc.x() + sSize.x(),
 							(float) (sLoc.y() + secRecScaFac * os)));
@@ -184,17 +183,17 @@ public class RecBandElement extends BandElement {
 				}
 			} else {
 				if (hOS > 0) {
-					highlightPoints.add(pair(fLoc.x(), fLoc.y(), (float) (fLoc.x() + firRecScaFac * os), fLoc.y()));
-					highlightPoints.add(pair(sLoc.x(), sLoc.y(), (float) (sLoc.x() + secRecScaFac * hOS), sLoc.y()));
-					bandPoints.add(pair((float) (fLoc.x() + firRecScaFac * os), fLoc.y(),
-							(float) (fLoc.x() + firRecScaFac * os), fLoc.y()));
-					bandPoints.add(pair((float) (sLoc.x() + secRecScaFac * hOS), sLoc.y(),
-							(float) (sLoc.x() + secRecScaFac * hOS), sLoc.y()));
+					highlightPoints.add(pair(fLoc.x(), fLoc.y(), fLoc.x(), (float) (fLoc.y() + firRecScaFac * os)));
+					highlightPoints.add(pair(sLoc.x(), sLoc.y(), sLoc.x(), (float) (sLoc.y() + secRecScaFac * hOS)));
+					bandPoints.add(pair(fLoc.x(), (float) (fLoc.y() + firRecScaFac * os), fLoc.x(),
+							(float) (fLoc.y() + firRecScaFac * os)));
+					bandPoints.add(pair(sLoc.x(), (float) (sLoc.y() + secRecScaFac * hOS), sLoc.x(),
+							(float) (sLoc.y() + secRecScaFac * hOS)));
 				} else {
-					bandPoints.add(pair(first.getLocation().x(), first.getLocation().y(), (float) (first.getLocation()
-							.x() + firRecScaFac * os), first.getLocation().y()));
-					bandPoints.add(pair(second.getLocation().x(), second.getLocation().y(), (float) (second
-							.getLocation().x() + secRecScaFac * hOS), second.getLocation().y()));
+					bandPoints.add(pair(first.getLocation().x(), first.getLocation().y(), first.getLocation().x(),
+							(float) (first.getLocation().y() + firRecScaFac * os)));
+					bandPoints.add(pair(second.getLocation().x(), second.getLocation().y(), second.getLocation().x(),
+							(float) (second.getLocation().y() + secRecScaFac * os)));
 
 				}
 			}
