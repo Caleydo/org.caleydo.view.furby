@@ -69,4 +69,17 @@
             viewID="org.caleydo.view.bicluster">
       </ViewCategory>
    </extension>
+   <extension
+         id="packageGenerator"
+         name="PackageGenerator"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.caleydo.view.bicluster.PackageGenerator">
+         </run>
+      </application>
+   </extension>
 </plugin>
