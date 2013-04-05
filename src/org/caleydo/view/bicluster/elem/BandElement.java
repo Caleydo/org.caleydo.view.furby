@@ -28,9 +28,7 @@ import javax.media.opengl.GLContext;
 import org.caleydo.core.data.selection.IEventBasedSelectionManagerUser;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
-import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.id.IDType;
-import org.caleydo.core.manager.GeneralManager;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
@@ -43,11 +41,9 @@ import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 public abstract class BandElement extends PickableGLElement implements IEventBasedSelectionManagerUser {
 
 	protected static ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
-	protected static EventPublisher eventPublisher;
 
 	{
 		bandRenderer.init(GLContext.getCurrentGL().getGL2());
-		eventPublisher = GeneralManager.get().getEventPublisher();
 	}
 
 	protected boolean highlight = false; // indicates whether the band is selected and should be drawn in a other color.

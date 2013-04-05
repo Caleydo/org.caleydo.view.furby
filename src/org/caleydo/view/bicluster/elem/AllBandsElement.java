@@ -24,6 +24,7 @@ import java.util.List;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.TablePerspectiveSelectionMixin;
+import org.caleydo.core.event.EventListenerManager.DeepScan;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
@@ -35,9 +36,10 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
  */
 public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		TablePerspectiveSelectionMixin.ITablePerspectiveMixinCallback {
+	@DeepScan
+	private final TablePerspectiveSelectionMixin selectionMixin;
 
 	BandElement selection;
-	TablePerspectiveSelectionMixin selectionMixin;
 
 	/**
 	 * @return the selectionMixin, see {@link #selectionMixin}
@@ -49,7 +51,8 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	/**
 	 * @param view
 	 */
-	public AllBandsElement() {
+	public AllBandsElement(TablePerspective tablePerspective) {
+		this.selectionMixin = new TablePerspectiveSelectionMixin(tablePerspective, this);
 		setLayout(this);
 	}
 
@@ -67,11 +70,7 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.caleydo.core.view.opengl.layout2.layout.IGLLayout#doLayout(java.util.List, float, float)
-	 */
+
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (GLElement b : this) {
@@ -92,13 +91,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		// selectionMixin.fireRecordSelectionDelta();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.caleydo.core.data.selection.TablePerspectiveSelectionMixin.ITablePerspectiveMixinCallback#onSelectionUpdate
-	 * (org.caleydo.core.data.selection.SelectionManager)
-	 */
 	@Override
 	public void onSelectionUpdate(SelectionManager manager) {
 		updateSelection();
@@ -106,23 +98,11 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.caleydo.core.data.selection.TablePerspectiveSelectionMixin.ITablePerspectiveMixinCallback#onVAUpdate(org.
-	 * caleydo.core.data.perspective.table.TablePerspective)
-	 */
 	@Override
 	public void onVAUpdate(TablePerspective tablePerspective) {
 		// TODO Auto-generated method stub
 
 	}
-
-	public void setData(TablePerspective x) {
-		selectionMixin = new TablePerspectiveSelectionMixin(x, this);
-	}
-
 }
 
 

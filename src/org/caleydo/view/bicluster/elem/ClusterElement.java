@@ -38,8 +38,14 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
+import org.caleydo.core.view.opengl.layout2.animation.MoveTransitions;
+import org.caleydo.core.view.opengl.layout2.animation.Transitions;
+import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.util.Vec2d;
@@ -53,7 +59,7 @@ import org.caleydo.view.heatmap.v2.IBlockColorer;
  * @author Samuel Gratzl
  * @author Michael Gillhofer
  */
-public class ClusterElement extends GLElementContainer implements IBlockColorer {
+public class ClusterElement extends AnimatedGLElementContainer implements IBlockColorer, IGLLayout {
 	private final TablePerspective data;
 	private final AllClustersElement root;
 	private Vec2d attForce = new Vec2d(0, 0);
@@ -71,10 +77,11 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	// 1 value
 
 	public ClusterElement(TablePerspective data, TablePerspective x, AllClustersElement root) {
-		super(GLLayouts.LAYERS);
+		setLayout(this);
 		this.data = data;
 		this.root = root;
 		this.x = x;
+		this.add(new ToolBar()); // add a element toolbar
 		this.add(new HeatMapElement(data, this, EDetailLevel.HIGH));
 
 		setVisibility(EVisibility.PICKABLE);
@@ -85,6 +92,18 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 				onPicked(pick);
 			}
 		});
+	}
+
+	@Override
+	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
+		IGLLayoutElement toolbar = children.get(0);
+		if (isHoovered) { // depending whether we are hovered or not, show hide the toolbar
+			toolbar.setBounds(0, -16, w, 16);
+		} else {
+			toolbar.setBounds(0, 0, w, 0); // hide by setting the height to 0
+		}
+		IGLLayoutElement content = children.get(1);
+		content.setBounds(0,0, w, h);
 	}
 
 	@Override
@@ -122,7 +141,6 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		// relayout();
 		super.renderImpl(g, w, h);
 		// if (isDragged) {
 		// g.color(Colors.RED);
@@ -133,8 +151,6 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	}
 
 	protected void onPicked(Pick pick) {
-		// TODO: a toolbar on hover like in stratomex would be nice, that pops up, when the mouse is over the element
-
 		switch (pick.getPickingMode()) {
 		case DRAGGED:
 			if (isDragged == false) {
@@ -153,11 +169,16 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 			pick.setDoDragging(false);
 			break;
 		case MOUSE_OVER:
-			if (!pick.isAnyDragging())
+			if (!pick.isAnyDragging()) {
 				isHoovered = true;
+				relayout(); // for showing the toolbar
+			}
 			break;
 		case MOUSE_OUT:
-			isHoovered = false;
+			if (isHoovered) {
+				isHoovered = false;
+				relayout(); // for showing the toolbar
+			}
 			break;
 		default:
 			isDragged = false;
@@ -346,6 +367,38 @@ public class ClusterElement extends GLElementContainer implements IBlockColorer 
 	 */
 	protected IGLLayoutElement getIGLayoutElement() {
 		return GLElementAccessor.asLayoutElement(this);
+	}
+
+	/**
+	 * a simple toolbar for the {@link ClusterElement}
+	 *
+	 * @author Samuel Gratzl
+	 *
+	 */
+	private class ToolBar extends GLElementContainer {
+		public ToolBar() {
+			super(GLLayouts.flowHorizontal(2));
+
+			// move to the top
+			setzDelta(0.5f);
+
+			// create buttons
+			createButtons();
+
+			setSize(Float.NaN, 16);
+
+			// define the animation used to move this element
+			this.setLayoutData(new MoveTransitions.MoveTransitionBase(Transitions.NO, Transitions.LINEAR,
+					Transitions.NO, Transitions.LINEAR));
+		}
+
+		protected void createButtons() {
+			this.add(new GLElement()); // spacer
+			GLButton hide = new GLButton();
+			hide.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
+			hide.setSize(16, Float.NaN);
+			this.add(hide);
+		}
 	}
 
 }

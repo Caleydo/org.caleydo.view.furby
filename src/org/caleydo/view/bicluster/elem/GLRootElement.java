@@ -19,12 +19,15 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import gleem.linalg.Vec4f;
+
 import java.util.List;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
+import org.caleydo.core.view.opengl.layout2.IPopupLayer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 
@@ -34,36 +37,38 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
  */
 public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private AllBandsElement bands;
-	private AllClustersElement clusters;
+	private final AllClustersElement clusters = new AllClustersElement();
 
+	private GlobalToolBarElement globalToolBar = new GlobalToolBarElement();
 	/**
 	 *
 	 */
 	public GLRootElement() {
-		bands = new AllBandsElement();
-		clusters = new AllClustersElement();
-		this.add(bands);
-		this.add(clusters);
 		setLayout(this);
 	}
 
 	@Override
 	protected void init(IGLElementContext context) {
 		super.init(context);
+		// show the global toolbar as a popup
+		context.getPopupLayer().show(globalToolBar, new Vec4f(10, 10, 200, 200),
+				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE);
 	}
 
 	public void setData(List<TablePerspective> list, TablePerspective x) {
-		if (bands.size() > 0)
-			bands.clear();
+		this.clear();
+		bands = new AllBandsElement(x);
+		this.add(bands);
 		if (clusters.size() > 0)
 			clusters.clear();
+		this.add(clusters);
+
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
 				final ClusterElement el = new ClusterElement(p, x, clusters);
 				clusters.add(el);
 			}
-			bands.setData(x);
 		}
 	}
 
@@ -71,6 +76,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	 *
 	 */
 	public void createBands() {
+		if (bands == null)
+			return;
 		if (bands.size() == 0) {
 			int i = 1;
 			for (GLElement start : clusters) {
@@ -130,17 +137,10 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		return clusters;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.caleydo.core.view.opengl.layout2.layout.IGLLayout#doLayout(java.util.List, float, float)
-	 */
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-		bands.setSize(w, h);
-		bands.setLocation(0, 0);
-		clusters.setSize(w, h);
-		clusters.setLocation(0, 0);
+		for (IGLLayoutElement child : children)
+			child.setBounds(0, 0, w, h);
 
 	}
 
