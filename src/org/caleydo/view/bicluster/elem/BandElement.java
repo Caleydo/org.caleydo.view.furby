@@ -25,7 +25,6 @@ import java.util.List;
 
 import javax.media.opengl.GLContext;
 
-import org.caleydo.core.data.selection.IEventBasedSelectionManagerUser;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.id.IDType;
@@ -37,10 +36,10 @@ import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 
 /**
- * @author user
+ * @author Michael Gillhofer
  *
  */
-public abstract class BandElement extends PickableGLElement implements IEventBasedSelectionManagerUser {
+public abstract class BandElement extends PickableGLElement {
 
 	protected static ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
 
@@ -70,9 +69,10 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 
 	protected List<Pair<Point2D, Point2D>> bandPoints;
 	protected List<Pair<Point2D, Point2D>> highlightPoints;
-	protected float[] highlightColor;
+	private float[] highlightColor;
+	private float[] hooveredColor;
 	private float[] defaultColor;
-
+	private boolean hoovered;
 
 	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
 			AllBandsElement root, float[] defaultColor) {
@@ -86,7 +86,7 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 		highlightPoints = new ArrayList<>();
 		highlightOverlap = new ArrayList<>();
 		highlightColor = selectionType.getColor();
-
+		hooveredColor = SelectionType.MOUSE_OVER.getColor();
 	}
 
 	public void selectElements() {
@@ -118,8 +118,14 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		if (visible) {
-			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, highlight,
-					highlight ? highlightColor : defaultColor, .5f);
+			float[] bandColor;
+			if (highlight)
+				bandColor = highlightColor;
+			else if (hoovered)
+				bandColor = hooveredColor;
+			else
+				bandColor = defaultColor;
+			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, highlight, bandColor, .5f);
 			if (highlightOverlap.size() > 0)
 				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, highlight,
 						highlightColor, .5f);
@@ -149,12 +155,27 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 		super.onClicked(pick);
 	}
 
+	@Override
+	protected void onMouseOver(Pick pick) {
+		if (selectionManager == null)
+			return;
+		hoovered = true;
+		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
+		selectionManager.addToType(SelectionType.MOUSE_OVER, overlap);
+		fireSelectionChanged();
+		super.onMouseOver(pick);
+	}
+
+	@Override
+	protected void onMouseOut(Pick pick) {
+		hoovered = false;
+		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
+		super.onMouseOut(pick);
+	}
+
 	public abstract void updatePosition();
 
 	protected abstract void fireSelectionChanged();
 
-	/**
-	 * @param b
-	 */
 	public abstract void highlightSelectionOverlapWith(BandElement b);
 }

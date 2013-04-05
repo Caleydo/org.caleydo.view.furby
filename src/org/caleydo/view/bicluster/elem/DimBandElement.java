@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.caleydo.core.data.selection.EventBasedSelectionManager;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -145,12 +144,6 @@ public class DimBandElement extends BandElement {
 		return Pair.make(_1, _2);
 	}
 
-
-	@Override
-	public void notifyOfSelectionChange(EventBasedSelectionManager selectionManager) {
-		// TODO Auto-generated method stub
-
-	}
 
 
 	@Override
