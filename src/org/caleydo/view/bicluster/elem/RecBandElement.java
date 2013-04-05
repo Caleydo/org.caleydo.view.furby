@@ -40,55 +40,40 @@ import org.caleydo.core.view.opengl.picking.Pick;
  */
 public class RecBandElement extends BandElement {
 
-	private float[] color = { 0f, 0, 0.05f, 0.05f };
+	private static float[] recBandColor = { 0f, 0, 0.05f, 0.05f };
 
 	/**
 	 * @param view
 	 */
 	public RecBandElement(GLElement first, GLElement second, AllBandsElement root) {
 		super(first, second, ((ClusterElement) first).getRecOverlap(second), root.getSelectionMixin()
-				.getRecordSelectionManager(), root);
+				.getRecordSelectionManager(), root, recBandColor);
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.caleydo.core.view.opengl.layout2.GLElementAdapter#renderImpl(org.caleydo.core.view.opengl.layout2.GLGraphics,
-	 * float, float)
-	 */
+
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		if (visible) {
 			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, highlight,
-					highlight ? highlightColor : color, .5f);
+					highlight ? highlightColor : recBandColor, .5f);
 			if (highlightOverlap.size() > 0)
 				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, highlight,
 						highlightColor, .5f);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.caleydo.core.view.opengl.layout2.GLElement#renderPickImpl(org.caleydo.core.view.opengl.layout2.GLGraphics,
-	 * float, float)
-	 */
+
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (visible) {
-			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, false, color, .5f);
-			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, false, color, .5f);
+			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, false, recBandColor, .5f);
+			bandRenderer
+					.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, false, recBandColor, .5f);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.caleydo.core.view.opengl.layout2.PickableGLElement#onClicked(org.caleydo.core.view.opengl.picking.Pick)
-	 */
+
 	@Override
 	protected void onClicked(Pick pick) {
 		highlight = !highlight;
@@ -206,25 +191,13 @@ public class RecBandElement extends BandElement {
 		return Pair.make(_1, _2);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.caleydo.core.data.selection.IEventBasedSelectionManagerUser#notifyOfSelectionChange(org.caleydo.core.data
-	 * .selection.EventBasedSelectionManager)
-	 */
 	@Override
 	public void notifyOfSelectionChange(EventBasedSelectionManager selectionManager) {
 		// TODO Auto-generated method stub
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.caleydo.view.bicluster.elem.BandElement#highlightOverlapWith(org.caleydo.view.bicluster.elem.BandElement)
-	 */
+
 	@Override
 	public void highlightSelectionOverlapWith(BandElement b) {
 		highlightOverlap = new ArrayList<>();
@@ -237,11 +210,7 @@ public class RecBandElement extends BandElement {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.caleydo.view.bicluster.elem.BandElement#fireSelectionChanged()
-	 */
+
 	@Override
 	protected void fireSelectionChanged() {
 		root.getSelectionMixin().fireRecordSelectionDelta();

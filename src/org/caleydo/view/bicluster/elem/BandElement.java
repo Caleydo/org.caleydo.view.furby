@@ -31,7 +31,9 @@ import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
+import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 
 /**
@@ -69,15 +71,17 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 	protected List<Pair<Point2D, Point2D>> bandPoints;
 	protected List<Pair<Point2D, Point2D>> highlightPoints;
 	protected float[] highlightColor;
+	private float[] defaultColor;
 
 
 	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
-			AllBandsElement root) {
+			AllBandsElement root, float[] defaultColor) {
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
 		this.overlap = list;
 		this.root = root;
 		this.selectionManager = selectionManager;
+		this.defaultColor = defaultColor;
 		selectionType = selectionManager.getSelectionType();
 		highlightPoints = new ArrayList<>();
 		highlightOverlap = new ArrayList<>();
@@ -109,6 +113,40 @@ public abstract class BandElement extends PickableGLElement implements IEventBas
 		highlightOverlap = new ArrayList<>();
 		selectElements();
 		repaint();
+	}
+
+	@Override
+	protected void renderImpl(GLGraphics g, float w, float h) {
+		if (visible) {
+			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, highlight,
+					highlight ? highlightColor : defaultColor, .5f);
+			if (highlightOverlap.size() > 0)
+				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, highlight,
+						highlightColor, .5f);
+		}
+		// super.renderImpl(g, w, h);
+		// System.out.println(first.getId() + "/" + second.getId());
+	}
+
+	@Override
+	protected void renderPickImpl(GLGraphics g, float w, float h) {
+		if (visible) {
+			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, false, defaultColor, .5f);
+			bandRenderer
+					.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, false, defaultColor, .5f);
+		}
+	}
+
+	@Override
+	protected void onClicked(Pick pick) {
+		highlight = !highlight;
+		if (highlight)
+			root.setSelection(this);
+		else
+			root.setSelection(null);
+		selectElements();
+
+		super.onClicked(pick);
 	}
 
 	public abstract void updatePosition();
