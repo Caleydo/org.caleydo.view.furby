@@ -31,16 +31,13 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 
 /**
- * @author user
- *
+ * @author Michael Gillhofer
+ * 
  */
 public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		TablePerspectiveSelectionMixin.ITablePerspectiveMixinCallback {
 	@DeepScan
 	private final TablePerspectiveSelectionMixin selectionMixin;
-
-	BandElement selection;
-	BandElement hovered;
 
 	/**
 	 * @return the selectionMixin, see {@link #selectionMixin}
@@ -58,32 +55,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	}
 
 
-	public void setSelection(BandElement b) {
-		if (selection != null) {
-			selection.deselect();
-			for (GLElement i : this) {
-				((BandElement) i).updatePosition();
-			}
-		}
-		selection = b;
-		for (GLElement i : this) {
-			((BandElement) i).highlightSelectionOverlapWith(b);
-		}
-	}
-
-	public void setHoverd(BandElement b) {
-		if (hovered != null) {
-			hovered.unhover();
-			for (GLElement i : this) {
-				((BandElement) i).updatePosition();
-			}
-		}
-		hovered = b;
-		for (GLElement i : this) {
-			((BandElement) i).highlightHoverdOverlapWith(b);
-		}
-	}
-
 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
@@ -97,16 +68,13 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 
 	public void updateSelection() {
 		for (GLElement i : this) {
-			((BandElement) i).highlightSelectionOverlapWith(selection);
-			if (i == selection)
-				((BandElement) i).selectElements();
+			((BandElement) i).recalculateSelection();
 		}
 	}
 
 	@Override
 	public void onSelectionUpdate(SelectionManager manager) {
-		updateSelection();
-		repaintAll();
+
 
 	}
 

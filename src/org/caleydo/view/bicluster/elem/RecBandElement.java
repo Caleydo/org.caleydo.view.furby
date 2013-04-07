@@ -23,9 +23,10 @@ import gleem.linalg.Vec2f;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
+import org.caleydo.core.data.selection.SelectionType;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.event.data.SelectionUpdateEvent;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 
@@ -43,7 +44,6 @@ public class RecBandElement extends BandElement {
 	public RecBandElement(GLElement first, GLElement second, AllBandsElement root) {
 		super(first, second, ((ClusterElement) first).getRecOverlap(second), root.getSelectionMixin()
 				.getRecordSelectionManager(), root, recBandColor);
-
 	}
 
 	@Override
@@ -153,29 +153,6 @@ public class RecBandElement extends BandElement {
 		return Pair.make(_1, _2);
 	}
 
-	@Override
-	public void highlightSelectionOverlapWith(BandElement b) {
-		highlightOverlap = new ArrayList<>();
-		if (b instanceof RecBandElement) {
-			List<Integer> highList = new LinkedList<>(overlap);
-			highList.retainAll(b.overlap);
-			highlightOverlap = highList;
-		}
-		updatePosition();
-
-	}
-
-	@Override
-	public void highlightHoverdOverlapWith(BandElement b) {
-		hoverOverlap = new ArrayList<>();
-		if (b instanceof RecBandElement) {
-			List<Integer> highList = new LinkedList<>(overlap);
-			highList.retainAll(b.overlap);
-			hoverOverlap = highList;
-		}
-		updatePosition();
-
-	}
 
 	@Override
 	protected void fireSelectionChanged() {
@@ -183,4 +160,22 @@ public class RecBandElement extends BandElement {
 
 	}
 
+	@Override
+	@ListenTo
+	public void selectionUpdate(SelectionUpdateEvent e) {
+		hoverOverlap = new ArrayList<>(selectionManager.getElements(SelectionType.MOUSE_OVER));
+		hoverOverlap.retainAll(overlap);
+		highlightOverlap = new ArrayList<>(selectionManager.getElements(selectionType));
+		highlightOverlap.retainAll(overlap);
+		updatePosition();
+	}
+
+	@Override
+	protected void recalculateSelection() {
+		if (highlight)
+			selectElement();
+		if (hoverd)
+			hoverElement();
+
+	}
 }

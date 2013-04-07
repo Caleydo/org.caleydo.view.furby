@@ -23,9 +23,10 @@ import gleem.linalg.Vec2f;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
+import org.caleydo.core.data.selection.SelectionType;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.event.data.SelectionUpdateEvent;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -45,8 +46,6 @@ public class DimBandElement extends BandElement {
 		super(first, second, ((ClusterElement) first).getDimOverlap(second), root.getSelectionMixin()
 				.getDimensionSelectionManager(), root, dimBandColor);
 	}
-
-
 
 	@Override
 	public void updatePosition() {
@@ -149,34 +148,27 @@ public class DimBandElement extends BandElement {
 
 
 	@Override
-	public void highlightSelectionOverlapWith(BandElement b) {
-		highlightOverlap = new ArrayList<>();
-		if (b instanceof DimBandElement) {
-			List<Integer> highList = new LinkedList<>(overlap);
-			highList.retainAll(b.overlap);
-			highlightOverlap = highList;
-		}
-		updatePosition();
-
-	}
-
-
-	@Override
-	public void highlightHoverdOverlapWith(BandElement b) {
-		hoverOverlap = new ArrayList<>();
-		if (b instanceof DimBandElement) {
-			List<Integer> highList = new LinkedList<>(overlap);
-			highList.retainAll(b.overlap);
-			hoverOverlap = highList;
-		}
-		updatePosition();
-	}
-
-
-
-	@Override
 	protected void fireSelectionChanged() {
 		root.getSelectionMixin().fireDimensionSelectionDelta();
+	}
+
+	@Override
+	@ListenTo
+	public void selectionUpdate(SelectionUpdateEvent e) {
+		hoverOverlap = new ArrayList<>(selectionManager.getElements(SelectionType.MOUSE_OVER));
+		hoverOverlap.retainAll(overlap);
+		highlightOverlap = new ArrayList<>(selectionManager.getElements(selectionType));
+		highlightOverlap.retainAll(overlap);
+		updatePosition();
+
+	}
+
+	@Override
+	protected void recalculateSelection() {
+		if (highlight)
+			selectElement();
+		if (hoverd)
+			hoverElement();
 	}
 
 }
