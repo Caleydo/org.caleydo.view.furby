@@ -72,6 +72,8 @@ public class DimBandElement extends BandElement {
 		highlightPoints = new ArrayList<>();
 		int os = overlap.size();
 		int hOS = highlightOverlap.size();
+		if (hOS == 0)
+			hOS = hoverOverlap.size();
 		if (fLoc.y() < sLoc.y()) {
 			// first on top
 			if (fLoc.y() + fSize.y() < sLoc.y()) {
@@ -160,9 +162,21 @@ public class DimBandElement extends BandElement {
 
 
 	@Override
+	public void highlightHoverdOverlapWith(BandElement b) {
+		hoverOverlap = new ArrayList<>();
+		if (b instanceof DimBandElement) {
+			List<Integer> highList = new LinkedList<>(overlap);
+			highList.retainAll(b.overlap);
+			hoverOverlap = highList;
+		}
+		updatePosition();
+	}
+
+
+
+	@Override
 	protected void fireSelectionChanged() {
 		root.getSelectionMixin().fireDimensionSelectionDelta();
-
 	}
 
 }

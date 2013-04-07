@@ -47,11 +47,11 @@ public abstract class BandElement extends PickableGLElement {
 		bandRenderer.init(GLContext.getCurrentGL().getGL2());
 	}
 
-	protected boolean highlight = false; // indicates whether the band is selected and should be drawn in a other color.
 	protected ClusterElement first;
 	protected ClusterElement second;
 	protected List<Integer> overlap;
 	protected List<Integer> highlightOverlap;
+	protected List<Integer> hoverOverlap;
 
 	/**
 	 * @return the overlap, see {@link #overlap}
@@ -70,9 +70,10 @@ public abstract class BandElement extends PickableGLElement {
 	protected List<Pair<Point2D, Point2D>> bandPoints;
 	protected List<Pair<Point2D, Point2D>> highlightPoints;
 	private float[] highlightColor;
-	private float[] hooveredColor;
+	private float[] hoveredColor;
 	private float[] defaultColor;
-	private boolean hoovered;
+	private boolean hoverd = false;
+	protected boolean highlight = false; // indicates whether the band is selected and should be drawn in a other color.
 
 	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
 			AllBandsElement root, float[] defaultColor) {
@@ -86,25 +87,27 @@ public abstract class BandElement extends PickableGLElement {
 		highlightPoints = new ArrayList<>();
 		highlightOverlap = new ArrayList<>();
 		highlightColor = selectionType.getColor();
-		hooveredColor = SelectionType.MOUSE_OVER.getColor();
+		hoveredColor = SelectionType.MOUSE_OVER.getColor();
+		hoverOverlap = new ArrayList<>();
 	}
 
 	public void selectElements() {
 		if (selectionManager == null)
 			return;
-		// if (first.getId().contains("bicluster22") && second.getId().contains("bicluster7")) {
-		// System.out.println("stop");
-		// System.out.println("Band von " + first.getId() + "/" + second.getId() + " ID's: " + overlap);
-		// }
-
 		selectionManager.clearSelection(selectionType);
-		// for (Integer id : overlap) {
 		if (highlight) {
-			// System.out.println("id: " + id + " zu selection gefügt.");
-			// selectionManager.addToType(selectionType, id);
 			selectionManager.addToType(selectionType, overlap);
 		}
-		// }
+		fireSelectionChanged();
+	}
+
+	private void hoverElements() {
+		if (selectionManager == null)
+			return;
+		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
+		if (hoverd) {
+			selectionManager.addToType(SelectionType.MOUSE_OVER, overlap);
+		}
 		fireSelectionChanged();
 	}
 
@@ -115,20 +118,33 @@ public abstract class BandElement extends PickableGLElement {
 		repaint();
 	}
 
+
+	public void unhover() {
+		hoverd = false;
+		hoverOverlap = new ArrayList<>();
+		hoverElements();
+		repaint();
+
+	}
+
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
+		float[] bandColor;
 		if (visible) {
-			float[] bandColor;
 			if (highlight)
 				bandColor = highlightColor;
-			else if (hoovered)
-				bandColor = hooveredColor;
+			else if (hoverd)
+				bandColor = hoveredColor;
 			else
 				bandColor = defaultColor;
 			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, highlight, bandColor, .5f);
-			if (highlightOverlap.size() > 0)
+			if (highlightOverlap.size() > 0) {
 				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, highlight,
 						highlightColor, .5f);
+			} else if (hoverOverlap.size() > 0) {
+				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, hoverd,
+						hoveredColor, .5f);
+			}
 		}
 		// super.renderImpl(g, w, h);
 		// System.out.println(first.getId() + "/" + second.getId());
@@ -157,19 +173,17 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	protected void onMouseOver(Pick pick) {
-		if (selectionManager == null)
-			return;
-		hoovered = true;
-		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
-		selectionManager.addToType(SelectionType.MOUSE_OVER, overlap);
-		fireSelectionChanged();
+		hoverd = true;
+		root.setHoverd(this);
+		hoverElements();
 		super.onMouseOver(pick);
 	}
 
 	@Override
 	protected void onMouseOut(Pick pick) {
-		hoovered = false;
-		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
+		hoverd = false;
+		root.setHoverd(null);
+		hoverElements();
 		super.onMouseOut(pick);
 	}
 
@@ -178,4 +192,7 @@ public abstract class BandElement extends PickableGLElement {
 	protected abstract void fireSelectionChanged();
 
 	public abstract void highlightSelectionOverlapWith(BandElement b);
+
+	public abstract void highlightHoverdOverlapWith(BandElement b);
+
 }

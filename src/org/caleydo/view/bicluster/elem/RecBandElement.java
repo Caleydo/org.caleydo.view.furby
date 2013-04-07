@@ -72,6 +72,8 @@ public class RecBandElement extends BandElement {
 		highlightPoints = new ArrayList<>();
 		int os = overlap.size();
 		int hOS = highlightOverlap.size();
+		if (hOS == 0)
+			hOS = hoverOverlap.size();
 		// if (second.getId().contains("bicluster17") && first.getId().contains("bicluster20"))
 		// System.out.println("here");
 		if (fLoc.x() < sLoc.x()) {
@@ -151,7 +153,6 @@ public class RecBandElement extends BandElement {
 		return Pair.make(_1, _2);
 	}
 
-
 	@Override
 	public void highlightSelectionOverlapWith(BandElement b) {
 		highlightOverlap = new ArrayList<>();
@@ -164,6 +165,17 @@ public class RecBandElement extends BandElement {
 
 	}
 
+	@Override
+	public void highlightHoverdOverlapWith(BandElement b) {
+		hoverOverlap = new ArrayList<>();
+		if (b instanceof RecBandElement) {
+			List<Integer> highList = new LinkedList<>(overlap);
+			highList.retainAll(b.overlap);
+			hoverOverlap = highList;
+		}
+		updatePosition();
+
+	}
 
 	@Override
 	protected void fireSelectionChanged() {
