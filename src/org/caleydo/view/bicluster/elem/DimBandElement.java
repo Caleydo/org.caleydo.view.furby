@@ -52,9 +52,9 @@ public class DimBandElement extends BandElement {
 			double endDimBandScaleFactor = second.getSize().x() / (double) second.getNumberOfDimElements();
 			double startDimBandScaleFactor = first.getSize().x() / (double) first.getNumberOfDimElements();
 			addPointsToBand(startDimBandScaleFactor, endDimBandScaleFactor);
-			band = TesselatedPolygons.band(bandPoints);
+			band = TesselatedPolygons.band(bandPoints).setDrawBandBordersOnFill(false);
 			if (highlightPoints.size() > 0)
-				highlightBand = TesselatedPolygons.band(highlightPoints);
+				highlightBand = TesselatedPolygons.band(highlightPoints).setDrawBandBordersOnFill(false);
 		} else
 			setVisibility(EVisibility.NONE);
 		repaintAll();

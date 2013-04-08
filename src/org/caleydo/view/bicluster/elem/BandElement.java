@@ -24,8 +24,6 @@ import gleem.linalg.Vec3f;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.media.opengl.GLContext;
-
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
@@ -37,20 +35,12 @@ import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.spline.Band;
-import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 
 /**
  * @author Michael Gillhofer
  *
  */
 public abstract class BandElement extends PickableGLElement {
-
-	protected static ConnectionBandRenderer bandRenderer = new ConnectionBandRenderer();
-
-	{
-		bandRenderer.init(GLContext.getCurrentGL().getGL2());
-	}
-
 	protected ClusterElement first;
 	protected ClusterElement second;
 	protected List<Integer> overlap;
@@ -105,13 +95,19 @@ public abstract class BandElement extends PickableGLElement {
 				bandColor = hoveredColor;
 			else
 				bandColor = defaultColor;
-			g.color(bandColor);
-			g.fillPolygon(band);
+
+			if (band != null) {
+				g.color(bandColor[0], bandColor[1], bandColor[2], 1);
+				g.drawPath(band);
+				g.color(bandColor[0], bandColor[1], bandColor[2], 0.5f);
+				g.fillPolygon(band);
+			}
+
 			if (highlightOverlap.size() > 0) {
-				g.color(highlightColor);
+				g.color(highlightColor[0], highlightColor[1], highlightColor[2], 0.5f);
 				g.fillPolygon(highlightBand);
 			} else if (hoverOverlap.size() > 0) {
-				g.color(hoveredColor);
+				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.5f);
 				g.fillPolygon(highlightBand);
 			}
 		}
@@ -138,7 +134,8 @@ public abstract class BandElement extends PickableGLElement {
 			g.color(defaultColor);
 			if (highlightBand != null)
 				g.fillPolygon(highlightBand);
-			g.fillPolygon(band);
+			if (band != null)
+				g.fillPolygon(band);
 			// bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, false, defaultColor, .5f);
 			// bandRenderer
 			// .renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, false, defaultColor, .5f);
