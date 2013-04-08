@@ -32,12 +32,14 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 
 /**
  * @author Michael Gillhofer
- * 
+ *
  */
 public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		TablePerspectiveSelectionMixin.ITablePerspectiveMixinCallback {
 	@DeepScan
 	private final TablePerspectiveSelectionMixin selectionMixin;
+
+	private BandElement selection;
 
 	/**
 	 * @return the selectionMixin, see {@link #selectionMixin}
@@ -82,6 +84,16 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	public void onVAUpdate(TablePerspective tablePerspective) {
 		// TODO Auto-generated method stub
 
+	}
+
+	/**
+	 * @param selection
+	 *            setter, see {@link selection}
+	 */
+	public void setSelection(BandElement selection) {
+		if (this.selection != null)
+			this.selection.deselect();
+		this.selection = selection;
 	}
 }
 

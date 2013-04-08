@@ -77,7 +77,6 @@ public abstract class BandElement extends PickableGLElement {
 	protected boolean hoverd = false;
 	protected boolean highlight = false; // indicates whether the band is selected and should be drawn in a other color.
 
-
 	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
 			AllBandsElement root, float[] defaultColor) {
 		this.first = (ClusterElement) first;
@@ -92,43 +91,6 @@ public abstract class BandElement extends PickableGLElement {
 		highlightColor = selectionType.getColor();
 		hoveredColor = SelectionType.MOUSE_OVER.getColor();
 		hoverOverlap = new ArrayList<>();
-	}
-
-	public void selectElement() {
-		if (selectionManager == null)
-			return;
-		selectionManager.clearSelection(selectionType);
-		if (highlight) {
-			selectionManager.addToType(selectionType, overlap);
-		}
-		fireSelectionChanged();
-		relayout();
-	}
-
-	public void deselect() {
-		highlight = false;
-		highlightOverlap = new ArrayList<>();
-		selectElement();
-		repaint();
-	}
-
-	protected void hoverElement() {
-		if (selectionManager == null)
-			return;
-		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
-		if (hoverd) {
-			selectionManager.addToType(SelectionType.MOUSE_OVER, overlap);
-		}
-		fireSelectionChanged();
-		relayout();
-	}
-
-	public void unhover() {
-		hoverd = false;
-		hoverOverlap = new ArrayList<>();
-		hoverElement();
-		repaint();
-
 	}
 
 	@Override
@@ -166,8 +128,31 @@ public abstract class BandElement extends PickableGLElement {
 	@Override
 	protected void onClicked(Pick pick) {
 		highlight = !highlight;
+		if (!highlight) {
+			// highlightOverlap = new ArrayList<>();
+			root.setSelection(null);
+		} else
+			root.setSelection(this);
 		selectElement();
 		super.onClicked(pick);
+	}
+
+	protected void selectElement() {
+		if (selectionManager == null)
+			return;
+		selectionManager.clearSelection(selectionType);
+		if (highlight) {
+			selectionManager.addToType(selectionType, overlap);
+		}
+		fireSelectionChanged();
+		relayout();
+	}
+
+	public void deselect() {
+		highlight = false;
+		// highlightOverlap = new ArrayList<>();
+		updatePosition();
+		repaint();
 	}
 
 	@Override
@@ -180,8 +165,21 @@ public abstract class BandElement extends PickableGLElement {
 	@Override
 	protected void onMouseOut(Pick pick) {
 		hoverd = false;
+		// hoverOverlap = new ArrayList<>();
 		hoverElement();
+		repaint();
 		super.onMouseOut(pick);
+	}
+
+	protected void hoverElement() {
+		if (selectionManager == null)
+			return;
+		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
+		if (hoverd) {
+			selectionManager.addToType(SelectionType.MOUSE_OVER, overlap);
+		}
+		fireSelectionChanged();
+		relayout();
 	}
 
 	public abstract void updatePosition();
@@ -192,6 +190,5 @@ public abstract class BandElement extends PickableGLElement {
 
 	@ListenTo
 	public abstract void selectionUpdate(SelectionUpdateEvent e);
-
 
 }
