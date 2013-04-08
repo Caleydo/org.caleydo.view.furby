@@ -46,12 +46,12 @@ public class RecBandElement extends BandElement {
 		overlap = first.getRecOverlap(second);
 		int overlapSize = overlap.size();
 		if (overlapSize > 0 && first.isVisible() && second.isVisible()) {
-			visible = true;
+			setVisibility(EVisibility.PICKABLE);
 			double endRecBandScaleFactor = second.getSize().y() / (double) second.getNumberOfRecElements();
 			double startRecBandScaleFactor = first.getSize().y() / (double) first.getNumberOfRecElements();
 			addPointsToBand(startRecBandScaleFactor, endRecBandScaleFactor);
 		} else
-			visible = false;
+			setVisibility(EVisibility.NONE);
 		repaintAll();
 
 		// bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), point, highlight, colorY, .5f);

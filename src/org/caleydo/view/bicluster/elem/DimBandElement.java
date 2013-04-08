@@ -47,12 +47,12 @@ public class DimBandElement extends BandElement {
 		overlap = first.getDimOverlap(second);
 		int overlapSize = overlap.size();
 		if (overlapSize > 0 && first.isVisible() && second.isVisible()) {
-			visible = true;
+			setVisibility(EVisibility.PICKABLE);
 			double endDimBandScaleFactor = second.getSize().x() / (double) second.getNumberOfDimElements();
 			double startDimBandScaleFactor = first.getSize().x() / (double) first.getNumberOfDimElements();
 			addPointsToBand(startDimBandScaleFactor, endDimBandScaleFactor);
 		} else
-			visible = false;
+			setVisibility(EVisibility.NONE);
 		repaintAll();
 
 	}

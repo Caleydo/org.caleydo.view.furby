@@ -66,7 +66,6 @@ public abstract class BandElement extends PickableGLElement {
 	protected String dataDomainID;
 	protected SelectionType selectionType;
 	protected SelectionManager selectionManager;
-	protected boolean visible = false;
 	protected AllBandsElement root;
 
 	protected List<Pair<Point2D, Point2D>> bandPoints;
@@ -95,7 +94,7 @@ public abstract class BandElement extends PickableGLElement {
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		float[] bandColor;
-		if (visible) {
+		if (isVisible()) {
 			if (isHighlighted())
 				bandColor = highlightColor;
 			else if (isHovered())
@@ -115,6 +114,14 @@ public abstract class BandElement extends PickableGLElement {
 		// System.out.println(first.getId() + "/" + second.getId());
 	}
 
+	/**
+	 * @return
+	 */
+	private boolean isVisible() {
+		// TODO Auto-generated method stub
+		return getVisibility() == EVisibility.PICKABLE;
+	}
+
 	private boolean isHighlighted() {
 		return highlightOverlap.size() != 0 && highlightOverlap.size() == overlap.size();
 	}
@@ -125,7 +132,7 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
-		if (visible) {
+		if (isVisible()) {
 			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, false, defaultColor, .5f);
 			bandRenderer
 					.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, false, defaultColor, .5f);
