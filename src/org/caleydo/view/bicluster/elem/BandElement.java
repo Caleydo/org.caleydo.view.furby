@@ -19,7 +19,8 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import java.awt.geom.Point2D;
+import gleem.linalg.Vec3f;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +36,7 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.core.view.opengl.util.spline.ConnectionBandRenderer;
 
 /**
@@ -68,8 +70,10 @@ public abstract class BandElement extends PickableGLElement {
 	protected SelectionManager selectionManager;
 	protected AllBandsElement root;
 
-	protected List<Pair<Point2D, Point2D>> bandPoints;
-	protected List<Pair<Point2D, Point2D>> highlightPoints;
+	protected List<Pair<Vec3f, Vec3f>> bandPoints;
+	protected Band band;
+	protected List<Pair<Vec3f, Vec3f>> highlightPoints;
+	protected Band highlightBand;
 	private float[] highlightColor;
 	private float[] hoveredColor;
 	private float[] defaultColor;
@@ -101,24 +105,22 @@ public abstract class BandElement extends PickableGLElement {
 				bandColor = hoveredColor;
 			else
 				bandColor = defaultColor;
-			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, false, bandColor, .5f);
+			g.color(bandColor);
+			g.fillPolygon(band);
 			if (highlightOverlap.size() > 0) {
-				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, true,
-						highlightColor, .5f);
+				g.color(highlightColor);
+				g.fillPolygon(highlightBand);
 			} else if (hoverOverlap.size() > 0) {
-				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, true, hoveredColor,
-						.5f);
+				g.color(hoveredColor);
+				g.fillPolygon(highlightBand);
 			}
 		}
-		// super.renderImpl(g, w, h);
-		// System.out.println(first.getId() + "/" + second.getId());
 	}
 
 	/**
 	 * @return
 	 */
 	private boolean isVisible() {
-		// TODO Auto-generated method stub
 		return getVisibility() == EVisibility.PICKABLE;
 	}
 
@@ -133,9 +135,13 @@ public abstract class BandElement extends PickableGLElement {
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (isVisible()) {
-			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, false, defaultColor, .5f);
-			bandRenderer
-					.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, false, defaultColor, .5f);
+			g.color(defaultColor);
+			if (highlightBand != null)
+				g.fillPolygon(highlightBand);
+			g.fillPolygon(band);
+			// bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, false, defaultColor, .5f);
+			// bandRenderer
+			// .renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, false, defaultColor, .5f);
 		}
 	}
 
@@ -218,9 +224,15 @@ public abstract class BandElement extends PickableGLElement {
 
 	}
 
-	protected Pair<Point2D, Point2D> pair(float x1, float y1, float x2, float y2) {
-		Point2D _1 = new Point2D.Float(x1, y1);
-		Point2D _2 = new Point2D.Float(x2, y2);
+	// protected Pair<Point2D, Point2D> pair(float x1, float y1, float x2, float y2) {
+	// Point2D _1 = new Point2D.Float(x1, y1);
+	// Point2D _2 = new Point2D.Float(x2, y2);
+	// return Pair.make(_1, _2);
+	// }
+
+	protected Pair<Vec3f, Vec3f> pair(float x1, float y1, float x2, float y2) {
+		Vec3f _1 = new Vec3f(x1, y1, 0);
+		Vec3f _2 = new Vec3f(x2, y2, 0);
 		return Pair.make(_1, _2);
 	}
 

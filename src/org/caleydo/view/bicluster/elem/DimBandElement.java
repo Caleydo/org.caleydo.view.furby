@@ -25,6 +25,7 @@ import java.util.ArrayList;
 
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 
 /**
  * @author Michael Gillhofer
@@ -51,6 +52,9 @@ public class DimBandElement extends BandElement {
 			double endDimBandScaleFactor = second.getSize().x() / (double) second.getNumberOfDimElements();
 			double startDimBandScaleFactor = first.getSize().x() / (double) first.getNumberOfDimElements();
 			addPointsToBand(startDimBandScaleFactor, endDimBandScaleFactor);
+			band = TesselatedPolygons.band(bandPoints);
+			if (highlightPoints.size() > 0)
+				highlightBand = TesselatedPolygons.band(highlightPoints);
 		} else
 			setVisibility(EVisibility.NONE);
 		repaintAll();
@@ -134,14 +138,9 @@ public class DimBandElement extends BandElement {
 		}
 	}
 
-
 	@Override
 	protected void fireSelectionChanged() {
 		root.getSelectionMixin().fireDimensionSelectionDelta();
 	}
-
-
-
-
 
 }
