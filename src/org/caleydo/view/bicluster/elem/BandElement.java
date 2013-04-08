@@ -95,19 +95,21 @@ public abstract class BandElement extends PickableGLElement {
 				bandColor = hoveredColor;
 			else
 				bandColor = defaultColor;
-
 			if (band != null) {
-				g.color(bandColor[0], bandColor[1], bandColor[2], 1);
+				g.color(bandColor[0], bandColor[1], bandColor[2], 0.8f);
 				g.drawPath(band);
 				g.color(bandColor[0], bandColor[1], bandColor[2], 0.5f);
 				g.fillPolygon(band);
 			}
-
 			if (highlightOverlap.size() > 0) {
+				g.color(highlightColor[0], highlightColor[1], highlightColor[2], 0.8f);
+				g.drawPath(highlightBand);
 				g.color(highlightColor[0], highlightColor[1], highlightColor[2], 0.5f);
 				g.fillPolygon(highlightBand);
 			} else if (hoverOverlap.size() > 0) {
-				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.5f);
+				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
+				g.drawPath(highlightBand);
+				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
 				g.fillPolygon(highlightBand);
 			}
 		}
