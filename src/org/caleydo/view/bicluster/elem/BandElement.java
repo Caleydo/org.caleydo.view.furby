@@ -74,8 +74,7 @@ public abstract class BandElement extends PickableGLElement {
 	private float[] highlightColor;
 	private float[] hoveredColor;
 	private float[] defaultColor;
-	protected boolean hoverd = false;
-	protected boolean highlight = false; // indicates whether the band is selected and should be drawn in a other color.
+	protected boolean hoverd;
 
 	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
 			AllBandsElement root, float[] defaultColor) {
@@ -97,23 +96,31 @@ public abstract class BandElement extends PickableGLElement {
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		float[] bandColor;
 		if (visible) {
-			if (highlight)
+			if (isHighlighted())
 				bandColor = highlightColor;
-			else if (hoverd)
+			else if (isHovered())
 				bandColor = hoveredColor;
 			else
 				bandColor = defaultColor;
-			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, highlight, bandColor, .5f);
+			bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, false, bandColor, .5f);
 			if (highlightOverlap.size() > 0) {
-				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, highlight,
+				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, true,
 						highlightColor, .5f);
 			} else if (hoverOverlap.size() > 0) {
-				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, hoverd,
-						hoveredColor, .5f);
+				bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, true, hoveredColor,
+						.5f);
 			}
 		}
 		// super.renderImpl(g, w, h);
 		// System.out.println(first.getId() + "/" + second.getId());
+	}
+
+	private boolean isHighlighted() {
+		return highlightOverlap.size() != 0 && highlightOverlap.size() == overlap.size();
+	}
+
+	private boolean isHovered() {
+		return hoverOverlap.size() != 0 && hoverOverlap.size() == overlap.size();
 	}
 
 	@Override
@@ -127,12 +134,13 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	protected void onClicked(Pick pick) {
-		highlight = !highlight;
-		if (!highlight) {
-			// highlightOverlap = new ArrayList<>();
+		if (isHighlighted()) {
+			highlightOverlap = new ArrayList<>();
 			root.setSelection(null);
-		} else
+		} else {
+			highlightOverlap = new ArrayList<>(overlap);
 			root.setSelection(this);
+		}
 		selectElement();
 		super.onClicked(pick);
 	}
@@ -141,7 +149,7 @@ public abstract class BandElement extends PickableGLElement {
 		if (selectionManager == null)
 			return;
 		selectionManager.clearSelection(selectionType);
-		if (highlight) {
+		if (isHighlighted()) {
 			selectionManager.addToType(selectionType, overlap);
 		}
 		fireSelectionChanged();
@@ -149,7 +157,7 @@ public abstract class BandElement extends PickableGLElement {
 	}
 
 	public void deselect() {
-		highlight = false;
+		highlightOverlap = new ArrayList<>();
 		// highlightOverlap = new ArrayList<>();
 		updatePosition();
 		repaint();
@@ -182,13 +190,31 @@ public abstract class BandElement extends PickableGLElement {
 		relayout();
 	}
 
+	protected void recalculateSelection() {
+		if (root.getSelection() != this)
+			return;
+		highlightOverlap = new ArrayList<>(overlap);
+		selectElement();
+	}
+
 	public abstract void updatePosition();
 
 	protected abstract void fireSelectionChanged();
 
-	protected abstract void recalculateSelection();
-
 	@ListenTo
-	public abstract void selectionUpdate(SelectionUpdateEvent e);
+	public void listenToSelectionEvent(SelectionUpdateEvent e) {
+		hoverOverlap = new ArrayList<>(selectionManager.getElements(SelectionType.MOUSE_OVER));
+		hoverOverlap.retainAll(overlap);
+		highlightOverlap = new ArrayList<>(selectionManager.getElements(selectionType));
+		highlightOverlap.retainAll(overlap);
+		updatePosition();
+
+	}
+
+	protected Pair<Point2D, Point2D> pair(float x1, float y1, float x2, float y2) {
+		Point2D _1 = new Point2D.Float(x1, y1);
+		Point2D _2 = new Point2D.Float(x2, y2);
+		return Pair.make(_1, _2);
+	}
 
 }

@@ -56,8 +56,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		setLayout(this);
 	}
 
-
-
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (GLElement b : this) {
@@ -69,14 +67,13 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	}
 
 	public void updateSelection() {
-		for (GLElement i : this) {
-			((BandElement) i).recalculateSelection();
-		}
+		if (selection == null)
+			return;
+		selection.recalculateSelection();
 	}
 
 	@Override
 	public void onSelectionUpdate(SelectionManager manager) {
-
 
 	}
 
@@ -95,6 +92,8 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 			this.selection.deselect();
 		this.selection = selection;
 	}
+
+	public BandElement getSelection() {
+		return this.selection;
+	}
 }
-
-

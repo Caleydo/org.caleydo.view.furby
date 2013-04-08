@@ -21,13 +21,8 @@ package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
 
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
-import org.caleydo.core.data.selection.SelectionType;
-import org.caleydo.core.event.EventListenerManager.ListenTo;
-import org.caleydo.core.event.data.SelectionUpdateEvent;
-import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 
@@ -139,36 +134,14 @@ public class DimBandElement extends BandElement {
 		}
 	}
 
-	private Pair<Point2D, Point2D> pair(float x1, float y1, float x2, float y2) {
-		Point2D _1 = new Point2D.Float(x1, y1);
-		Point2D _2 = new Point2D.Float(x2, y2);
-		return Pair.make(_1, _2);
-	}
-
-
 
 	@Override
 	protected void fireSelectionChanged() {
 		root.getSelectionMixin().fireDimensionSelectionDelta();
 	}
 
-	@Override
-	@ListenTo
-	public void selectionUpdate(SelectionUpdateEvent e) {
-		hoverOverlap = new ArrayList<>(selectionManager.getElements(SelectionType.MOUSE_OVER));
-		hoverOverlap.retainAll(overlap);
-		highlightOverlap = new ArrayList<>(selectionManager.getElements(selectionType));
-		highlightOverlap.retainAll(overlap);
-		updatePosition();
 
-	}
 
-	@Override
-	protected void recalculateSelection() {
-		if (highlight)
-			selectElement();
-		if (hoverd)
-			hoverElement();
-	}
+
 
 }
