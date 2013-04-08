@@ -24,6 +24,7 @@ import gleem.linalg.Vec2f;
 import java.util.ArrayList;
 
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 
 /**
  * @author Michael Gillhofer
@@ -50,6 +51,9 @@ public class RecBandElement extends BandElement {
 			double endRecBandScaleFactor = second.getSize().y() / (double) second.getNumberOfRecElements();
 			double startRecBandScaleFactor = first.getSize().y() / (double) first.getNumberOfRecElements();
 			addPointsToBand(startRecBandScaleFactor, endRecBandScaleFactor);
+			band = TesselatedPolygons.band(bandPoints).setDrawBandBordersOnFill(false);
+			if (highlightPoints.size() > 0)
+				highlightBand = TesselatedPolygons.band(highlightPoints).setDrawBandBordersOnFill(false);
 		} else
 			setVisibility(EVisibility.NONE);
 		repaintAll();
