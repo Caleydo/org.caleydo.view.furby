@@ -31,7 +31,10 @@ public class SimpleBandTest extends GLElement {
 
 		// can be stored :)
 		Band band = TesselatedPolygons.band(points);
+		band.setDrawBandBordersOnly(true).setDrawBandBordersOnFill(false);
 
+		g.color(0, 0, 1, 1.f);
+		g.drawPath(band);
 		g.color(0, 0, 1, 0.5f);
 		g.fillPolygon(band);
 	}
