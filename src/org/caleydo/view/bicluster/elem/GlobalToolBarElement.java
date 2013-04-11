@@ -21,6 +21,7 @@ package org.caleydo.view.bicluster.elem;
 
 import java.awt.Color;
 
+import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -31,6 +32,7 @@ import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.layout.GLFlowLayout;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.ToolbarEvent;
 
 /**
@@ -41,11 +43,14 @@ import org.caleydo.view.bicluster.event.ToolbarEvent;
 public class GlobalToolBarElement extends GLElementContainer implements GLButton.ISelectionCallback,
 		GLSlider.ISelectionCallback {
 
-	private final GLButton fixedClusterButton;
-	private final GLSlider geneThrSpinner;
-	private final GLSlider sampleThrSpinner;
-	private final GLElement sampleLabel;
-	private final GLElement geneLabel;
+	float maxRecordValue = 0.2f;
+	float maxDimensionValue = 5f;
+
+	private GLButton fixedClusterButton;
+	private GLSlider recordThresholdSlider;
+	private GLSlider dimensionThresholdSlider;
+	private GLElement dimensionLabel;
+	private GLElement recordLabel;
 
 	public GlobalToolBarElement() {
 		setLayout(new GLFlowLayout(false, 5, new GLPadding(10)));
@@ -56,31 +61,9 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		fixedClusterButton.setCallback(this);
 		fixedClusterButton.setSize(Float.NaN, 16);
 		this.add(fixedClusterButton);
-
-		this.sampleLabel = new GLElement();
-		sampleLabel.setSize(Float.NaN, 16);
-		this.add(sampleLabel);
-
-		this.sampleThrSpinner = new GLSlider(0, 5, 4.5f);
-		sampleThrSpinner.setCallback(this);
-		sampleThrSpinner.setSize(Float.NaN, 18);
-		this.add(sampleThrSpinner);
-
-		this.geneLabel = new GLElement();
-		geneLabel.setSize(Float.NaN, 16);
-		this.add(geneLabel);
-
-		this.geneThrSpinner = new GLSlider(0, 0.3f, 0.08f);
-		geneThrSpinner.setCallback(this);
-		geneThrSpinner.setSize(Float.NaN, 18);
-		this.add(geneThrSpinner);
-
-		setText(sampleLabel, "Sample Threshold");
-		setText(geneLabel, "Gene Threshold");
-
+		initSliders();
 		setRenderer(GLRenderers.fillRect(new Color(0.8f, 0.8f, 0.8f, .8f)));
 	}
-
 
 	private void setText(GLElement elem, String text) {
 		elem.setRenderer(GLRenderers.drawText(text, VAlign.LEFT, new GLPadding(1)));
@@ -93,14 +76,52 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 	}
 
 	private void update() {
-		float samplTh = sampleThrSpinner.getValue();
-		float geneTh = geneThrSpinner.getValue();
+		float samplTh = dimensionThresholdSlider.getValue();
+		float geneTh = recordThresholdSlider.getValue();
 		EventPublisher.trigger(new ToolbarEvent(geneTh, samplTh, fixedClusterButton.isSelected()));
 	}
 
 	@Override
 	public void onSelectionChanged(GLButton button, boolean selected) {
 		update();
+	}
+
+	@ListenTo
+	public void listenTo(MaxThresholdChangeEvent e) {
+		maxRecordValue = (float) e.getRecThreshold();
+		maxDimensionValue = (float) e.getDimThreshold();
+		initSliders();
+	}
+
+	/**
+	 *
+	 */
+	private void initSliders() {
+		this.remove(dimensionLabel);
+		this.dimensionLabel = new GLElement();
+		dimensionLabel.setSize(Float.NaN, 16);
+		this.add(dimensionLabel);
+
+		this.remove(dimensionThresholdSlider);
+		this.dimensionThresholdSlider = new GLSlider(0, maxDimensionValue, 4.5f);
+		dimensionThresholdSlider.setCallback(this);
+		dimensionThresholdSlider.setSize(Float.NaN, 18);
+		this.add(dimensionThresholdSlider);
+
+		this.remove(recordLabel);
+		this.recordLabel = new GLElement();
+		recordLabel.setSize(Float.NaN, 16);
+		this.add(recordLabel);
+
+		this.remove(recordThresholdSlider);
+		this.recordThresholdSlider = new GLSlider(0, maxRecordValue, 0.08f);
+		recordThresholdSlider.setCallback(this);
+		recordThresholdSlider.setSize(Float.NaN, 18);
+		this.add(recordThresholdSlider);
+
+		setText(dimensionLabel, "Sample Threshold");
+		setText(recordLabel, "Gene Threshold");
+
 	}
 
 }

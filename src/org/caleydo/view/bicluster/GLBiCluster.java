@@ -36,6 +36,7 @@ import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.perspective.variable.Perspective;
 import org.caleydo.core.data.perspective.variable.PerspectiveInitializationData;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.serialize.ASerializedView;
@@ -46,8 +47,10 @@ import org.caleydo.core.view.opengl.canvas.IGLCanvas;
 import org.caleydo.core.view.opengl.layout2.AGLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.view.AMultiTablePerspectiveElementView;
 import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
+import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.elem.GLRootElement;
+import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.ToolbarEvent;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
@@ -75,6 +78,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 
 	private float sampleThreshold = 4.5f;
 	private float geneThreshold = 0.08f;
+	double maxDimThreshold = 0, maxRecThreshold = 0;
 
 	private ASortingStrategy strategy;
 
@@ -139,14 +143,14 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		int bcCountData = L.getColumnIDList().size(); // Nr of BCs in L & Z
 
 		// Tables indices for Genes and Tables of a specific BiCluster.
-		Map<Integer, Future<List<Integer>>> bcDimScanFut = new HashMap<>();
-		Map<Integer, Future<List<Integer>>> bcRecScanFut = new HashMap<>();
+		Map<Integer, Future<ScanResult>> bcDimScanFut = new HashMap<>();
+		Map<Integer, Future<ScanResult>> bcRecScanFut = new HashMap<>();
 		for (int bcNr = 0; bcNr < bcCountData; bcNr++) {
 			ASortingStrategy strategy = new ProbabilityStrategy(L, bcNr);
-			Future<List<Integer>> recList = executorService.submit(new ScanProbabilityMatrix(geneThreshold, L, bcNr,
+			Future<ScanResult> recList = executorService.submit(new ScanProbabilityMatrix(geneThreshold, L, bcNr,
 					strategy));
 			strategy = new ProbabilityStrategy(Z, bcNr);
-			Future<List<Integer>> dimList = executorService.submit(new ScanProbabilityMatrix(sampleThreshold, Z, bcNr,
+			Future<ScanResult> dimList = executorService.submit(new ScanProbabilityMatrix(sampleThreshold, Z, bcNr,
 					strategy));
 
 			bcRecScanFut.put(bcNr, recList);
@@ -154,10 +158,17 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		}
 
 		// actually alter the cluster perspectives
+
 		for (Integer i : bcDimScanFut.keySet()) {
 			try {
-				List<Integer> dimIndices = bcDimScanFut.get(i).get();
-				List<Integer> recIndices = bcRecScanFut.get(i).get();
+				ScanResult dimResult = bcDimScanFut.get(i).get();
+				ScanResult recResult = bcRecScanFut.get(i).get();
+				List<Integer> dimIndices = dimResult.getIndices();
+				List<Integer> recIndices = recResult.getIndices();
+				if (dimResult.getMax() > maxDimThreshold)
+					maxDimThreshold = dimResult.getMax();
+				if (recResult.getMax() > maxRecThreshold)
+					maxRecThreshold = recResult.getMax();
 				ClusterElement el = (ClusterElement) rootElement.getClusters().get(i);
 
 				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i));
@@ -242,6 +253,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			findXLZ();
 			rootElement.setData(initTablePerspectives(), x);
 			createBiClusterPerspectives(x, l, z);
+			createBiClusterPerspectives(x, l, z);
+			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold, maxRecThreshold));
 			rootElement.createBands();
 			rootElement.setClusterSizes();
 		}

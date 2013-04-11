@@ -22,7 +22,6 @@ package org.caleydo.view.bicluster;
 import org.caleydo.core.view.ARcpGLViewPart;
 import org.caleydo.core.view.MinimumSizeComposite;
 import org.caleydo.core.view.ViewManager;
-import org.caleydo.view.bicluster.view.Toolbar;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -84,14 +83,11 @@ public class RcpGLBiClusterView extends ARcpGLViewPart {
 
 	protected void createToolArea(Composite composite) {
 		composite.setLayout(new RowLayout());
-
-		Toolbar.createToolBar(composite);
 	}
 
 
 	@Override
 	public void addToolBarContent() {
-		toolBarManager.add(new Toolbar());
 		toolBarManager.update(true);
 	}
 
