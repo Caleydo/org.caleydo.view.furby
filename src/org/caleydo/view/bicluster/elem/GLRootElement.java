@@ -51,7 +51,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	protected void init(IGLElementContext context) {
 		super.init(context);
 		// show the global toolbar as a popup
-		context.getPopupLayer().show(globalToolBar, new Vec4f(10, 10, 200, 200),
+		context.getPopupLayer().show(globalToolBar, new Vec4f(Float.NaN, 0, 200, 200),
 				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE);
 	}
 

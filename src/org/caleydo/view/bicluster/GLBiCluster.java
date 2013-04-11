@@ -21,41 +21,30 @@ package org.caleydo.view.bicluster;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import javax.media.opengl.GLAutoDrawable;
-
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.datadomain.DataSupportDefinitions;
-import org.caleydo.core.data.datadomain.IDataDomain;
 import org.caleydo.core.data.datadomain.IDataSupportDefinition;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.perspective.variable.Perspective;
 import org.caleydo.core.data.perspective.variable.PerspectiveInitializationData;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
-import org.caleydo.core.event.EventPublisher;
-import org.caleydo.core.event.view.TablePerspectivesChangedEvent;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.serialize.ASerializedView;
 import org.caleydo.core.util.collection.Pair;
-import org.caleydo.core.view.IMultiTablePerspectiveBasedView;
-import org.caleydo.core.view.listener.AddTablePerspectivesEvent;
-import org.caleydo.core.view.listener.RemoveTablePerspectiveEvent;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.canvas.ATableBasedView;
 import org.caleydo.core.view.opengl.canvas.IGLCanvas;
-import org.caleydo.core.view.opengl.layout2.AGLElementView;
-import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.AGLElementDecorator;
+import org.caleydo.core.view.opengl.layout2.view.AMultiTablePerspectiveElementView;
 import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.elem.GLRootElement;
@@ -76,7 +65,7 @@ import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
  * @author Marc Streit
  */
 
-public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiveBasedView {
+public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
 	public static final String VIEW_NAME = "BiCluster Visualization";
 
@@ -89,27 +78,11 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 
 	private ASortingStrategy strategy;
 
-	private final List<TablePerspective> perspectives = new ArrayList<>();
-
 	GLRootElement rootElement;
 	private boolean setXElements = false;
 
 	public GLBiCluster(IGLCanvas glCanvas) {
 		super(glCanvas, VIEW_TYPE, VIEW_NAME);
-	}
-
-	@Override
-	public void init(GLAutoDrawable drawable) {
-		super.init(drawable);
-
-		if (this.perspectives.size() >= 3) {
-			findXLZ();
-			rootElement.setData(initTablePerspectives(), x);
-			createBiClusterPerspectives(x, l, z);
-			createBiClusterPerspectives(x, l, z);
-			rootElement.createBands();
-			rootElement.setClusterSizes();
-		}
 	}
 
 	private List<TablePerspective> initTablePerspectives() {
@@ -217,9 +190,9 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 	 * Category, the remaining one will be X
 	 */
 	private void findXLZ() {
-		TablePerspective a = perspectives.get(0);
-		TablePerspective b = perspectives.get(1);
-		TablePerspective c = perspectives.get(2);
+		TablePerspective a = tablePerspectives.get(0);
+		TablePerspective b = tablePerspectives.get(1);
+		TablePerspective c = tablePerspectives.get(2);
 		IDCategory a_d = a.getDataDomain().getDimensionIDCategory();
 		IDCategory b_d = b.getDataDomain().getDimensionIDCategory();
 		IDCategory c_d = c.getDataDomain().getDimensionIDCategory();
@@ -239,11 +212,6 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 	}
 
 	@Override
-	public boolean isDataView() {
-		return true;
-	}
-
-	@Override
 	public ASerializedView getSerializableRepresentation() {
 		SerializedBiClusterView serializedForm = new SerializedBiClusterView(this);
 		serializedForm.setViewID(this.getID());
@@ -255,98 +223,28 @@ public class GLBiCluster extends AGLElementView implements IMultiTablePerspectiv
 		return "BiCluster";
 	}
 
-	@ListenTo
-	private void onAddTablePerspective(AddTablePerspectivesEvent event) {
-		List<TablePerspective> validTablePerspectives = new ArrayList<TablePerspective>(event.getTablePerspectives()
-				.size());
-		{// filter invalid
-			final IDataSupportDefinition dsd = getDataSupportDefinition();
-			for (TablePerspective tablePerspective : event.getTablePerspectives()) {
-				if (dsd.apply(tablePerspective.getDataDomain())) {
-					validTablePerspectives.add(tablePerspective);
-				}
-			}
-		}
-
-		if (validTablePerspectives.isEmpty()) {
-			// Make clear for (e.g. for DVI) that no perspectives have been added.
-			fireTablePerspectiveChanged();
-		} else {
-			addTablePerspectives(validTablePerspectives);
-		}
-	}
-
-	@ListenTo(sendToMe = true)
-	private void onRemoveTablePerspective(RemoveTablePerspectiveEvent event) {
-		removeTablePerspective(event.getTablePerspective());
-	}
-
 	@Override
 	public IDataSupportDefinition getDataSupportDefinition() {
 		return DataSupportDefinitions.tableBased;
 	}
 
 	@Override
-	public void addTablePerspective(TablePerspective newTablePerspective) {
-		if (this.perspectives.contains(newTablePerspective))
-			return;
-		this.perspectives.add(newTablePerspective);
-		if (getRoot() != null && perspectives.size() == 3) {
-			findXLZ();
-			rootElement.setData(initTablePerspectives(), x);
-			createBiClusterPerspectives(x, l, z);
+	protected void applyTablePerspectives(AGLElementDecorator root, List<TablePerspective> all,
+			List<TablePerspective> added, List<TablePerspective> removed) {
+		// single time init
+		if (root.getContent() == null) {
+			rootElement = new GLRootElement();
+			root.setContent(rootElement);
 		}
-		fireTablePerspectiveChanged();
-	}
-
-	@Override
-	public void addTablePerspectives(List<TablePerspective> newTablePerspectives) {
-		this.perspectives.addAll(newTablePerspectives);
-		if (getRoot() != null && perspectives.size() == 3) {
+		if (all.size() < 3)
+			rootElement.setData(null, null);
+		else if (all.size() == 3) {
 			findXLZ();
 			rootElement.setData(initTablePerspectives(), x);
-			createBiClusterPerspectives(x, l, z);
 			createBiClusterPerspectives(x, l, z);
 			rootElement.createBands();
 			rootElement.setClusterSizes();
 		}
-		fireTablePerspectiveChanged();
-	}
-
-	@Override
-	public List<TablePerspective> getTablePerspectives() {
-		return perspectives;
-	}
-
-	@Override
-	public void removeTablePerspective(TablePerspective tablePerspective) {
-		for (Iterator<TablePerspective> it = perspectives.iterator(); it.hasNext();) {
-			if (it.next() == tablePerspective)
-				it.remove();
-		}
-		if (rootElement != null && this.perspectives.size() < 3) {
-			rootElement.setData(null, null);
-		}
-		fireTablePerspectiveChanged();
-	}
-
-	@Override
-	public Set<IDataDomain> getDataDomains() {
-		Set<IDataDomain> dataDomains = new HashSet<IDataDomain>();
-		for (TablePerspective tablePerspective : perspectives) {
-			dataDomains.add(tablePerspective.getDataDomain());
-		}
-		return dataDomains;
-	}
-
-	@Override
-	protected GLElement createRoot() {
-		rootElement = new GLRootElement();
-		return rootElement;
-	}
-
-	private void fireTablePerspectiveChanged() {
-		EventPublisher.trigger(new TablePerspectivesChangedEvent(this).from(this));
 	}
 
 	@ListenTo
