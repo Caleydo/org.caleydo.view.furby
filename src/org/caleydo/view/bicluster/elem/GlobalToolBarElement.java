@@ -21,39 +21,86 @@ package org.caleydo.view.bicluster.elem;
 
 import java.awt.Color;
 
+import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
+import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.EButtonMode;
-import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
+import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.layout.GLFlowLayout;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.view.bicluster.event.ToolbarEvent;
 
 /**
  *
  * @author Samuel Gratzl
  *
  */
-public class GlobalToolBarElement extends GLElementContainer {
+public class GlobalToolBarElement extends GLElementContainer implements GLButton.ISelectionCallback,
+		GLSlider.ISelectionCallback {
+
+	private final GLButton fixedClusterButton;
+	private final GLSlider geneThrSpinner;
+	private final GLSlider sampleThrSpinner;
+	private final GLElement sampleLabel;
+	private final GLElement geneLabel;
 
 	public GlobalToolBarElement() {
 		setLayout(new GLFlowLayout(false, 5, new GLPadding(10)));
 
-		// a simple button
-		GLButton adaptive = new GLButton(EButtonMode.CHECKBOX);
-		adaptive.setRenderer(GLRenderers.drawText("Global", VAlign.LEFT, new GLPadding(2)));
-		adaptive.setSelectedRenderer(GLRenderers.drawText("Adaptive", VAlign.LEFT, new GLPadding(2)));
-		adaptive.setCallback(new ISelectionCallback() {
-			@Override
-			public void onSelectionChanged(GLButton button, boolean selected) {
-				// TODO Auto-generated method stub
-			}
-		});
-		adaptive.setSize(Float.NaN, 16);
-		this.add(adaptive);
+		this.fixedClusterButton = new GLButton(EButtonMode.CHECKBOX);
+		fixedClusterButton.setRenderer(GLButton.createCheckRenderer("Show only 15 Elements"));
+		fixedClusterButton.setSelected(false);
+		fixedClusterButton.setCallback(this);
+		fixedClusterButton.setSize(Float.NaN, 16);
+		this.add(fixedClusterButton);
+
+		this.sampleLabel = new GLElement();
+		sampleLabel.setSize(Float.NaN, 16);
+		this.add(sampleLabel);
+
+		this.sampleThrSpinner = new GLSlider(0, 5, 4.5f);
+		sampleThrSpinner.setCallback(this);
+		sampleThrSpinner.setSize(Float.NaN, 18);
+		this.add(sampleThrSpinner);
+
+		this.geneLabel = new GLElement();
+		geneLabel.setSize(Float.NaN, 16);
+		this.add(geneLabel);
+
+		this.geneThrSpinner = new GLSlider(0, 0.3f, 0.08f);
+		geneThrSpinner.setCallback(this);
+		geneThrSpinner.setSize(Float.NaN, 18);
+		this.add(geneThrSpinner);
+
+		setText(sampleLabel, "Sample Threshold");
+		setText(geneLabel, "Gene Threshold");
 
 		setRenderer(GLRenderers.fillRect(new Color(0.8f, 0.8f, 0.8f, .8f)));
+	}
+
+
+	private void setText(GLElement elem, String text) {
+		elem.setRenderer(GLRenderers.drawText(text, VAlign.LEFT, new GLPadding(1)));
+
+	}
+
+	@Override
+	public void onSelectionChanged(GLSlider slider, float value) {
+		update();
+	}
+
+	private void update() {
+		float samplTh = sampleThrSpinner.getValue();
+		float geneTh = geneThrSpinner.getValue();
+		EventPublisher.trigger(new ToolbarEvent(geneTh, samplTh, fixedClusterButton.isSelected()));
+	}
+
+	@Override
+	public void onSelectionChanged(GLButton button, boolean selected) {
+		update();
 	}
 
 }
