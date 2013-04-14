@@ -27,10 +27,30 @@ import org.caleydo.core.event.AEvent;
  */
 public class SortingChangeEvent extends AEvent {
 
+	SortingType sortingType;
+
+
+
+
+
+	public SortingType getType() {
+		return sortingType;
+	}
+
 	@Override
 	public boolean checkIntegrity() {
 		// TODO Auto-generated method stub
 		return true;
+	}
+
+
+	public SortingChangeEvent(SortingType sortingType, Object source) {
+		this.sortingType = sortingType;
+		this.setSender(source);
+	}
+
+	public enum SortingType {
+		probabilitySorting, bandSorting
 	}
 
 }

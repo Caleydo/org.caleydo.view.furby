@@ -29,6 +29,7 @@ import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
 import org.caleydo.core.data.virtualarray.events.RecordVAUpdateEvent;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
@@ -48,6 +49,8 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.view.bicluster.event.SortingChangeEvent;
+import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
@@ -71,7 +74,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	private Map<GLElement, List<Integer>> xOverlap;
 	private Map<GLElement, List<Integer>> yOverlap;
 
-	private int sortingMode = 0;
+	private SortingType sortingType;
+	private List<Integer> dimProbabilitySorting;
+	private List<Integer> recProbabilitySorting;
+	private List<Integer> dimBandSorting;
+	private List<Integer> recBandSorting;
+
+	private boolean setXElements;
+	private int bcNr;
 
 	// 0 Prob
 	// 1 value
@@ -103,7 +113,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			toolbar.setBounds(0, 0, w, 0); // hide by setting the height to 0
 		}
 		IGLLayoutElement content = children.get(1);
-		content.setBounds(0,0, w, h);
+		content.setBounds(0, 0, w, h);
 	}
 
 	@Override
@@ -197,24 +207,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		data.setLabel(id);
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
 			setVisibility(EVisibility.PICKABLE);
-			VirtualArray dimArray = getDimensionVirtualArray();
-			VirtualArray recArray = getRecordVirtualArray();
-			dimArray.clear();
-			int count = 0;
-			for (Integer i : dimIndices) {
-				if (setXElements && root.getFixedElementsCount() <= count)
-					break;
-				dimArray.append(i);
-				count++;
-			}
-			count = 0;
-			recArray.clear();
-			for (Integer i : recIndices) {
-				if (setXElements && root.getFixedElementsCount() <= count)
-					break;
-				recArray.append(i);
-				count++;
-			}
+			this.bcNr = bcNr;
+			this.setXElements = setXElements;
+			recreateVirtualArrays(dimIndices, recIndices);
 		} else {
 			setVisibility(EVisibility.NONE);
 		}
@@ -223,6 +218,30 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		// setSize(200, 200);
 	}
 
+	private void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices) {
+		VirtualArray dimArray = getDimensionVirtualArray();
+		VirtualArray recArray = getRecordVirtualArray();
+		dimArray.clear();
+		dimProbabilitySorting = new ArrayList<Integer>(dimIndices);
+		dimBandSorting = null;
+		int count = 0;
+		for (Integer i : dimIndices) {
+			if (setXElements && root.getFixedElementsCount() <= count)
+				break;
+			dimArray.append(i);
+			count++;
+		}
+		count = 0;
+		recArray.clear();
+		recProbabilitySorting = new ArrayList<Integer>(recIndices);
+		recBandSorting = null;
+		for (Integer i : recIndices) {
+			if (setXElements && root.getFixedElementsCount() <= count)
+				break;
+			recArray.append(i);
+			count++;
+		}
+	}
 
 	/**
 	 *
@@ -286,8 +305,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	public Vec2d getRepForce() {
 		return repForce;
 	}
-
-
 
 	/**
 	 *
@@ -399,6 +416,51 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			hide.setSize(16, Float.NaN);
 			this.add(hide);
 		}
+	}
+
+	@ListenTo
+	public void listenTo(SortingChangeEvent e) {
+		if (e.getSender() instanceof ClusterElement && e.getSender() == this) {
+			// only local change
+		} else {
+			switch (e.getType()) {
+			case probabilitySorting:
+				if (sortingType == SortingType.probabilitySorting)
+					return;
+				else {
+					sortingType = SortingType.probabilitySorting;
+					probabilitySorting();
+				}
+				break;
+			case bandSorting:
+				if (sortingType == SortingType.bandSorting)
+					return;
+				else {
+					sortingType = SortingType.bandSorting;
+					bandSorting();
+				}
+				break;
+			default:
+			}
+
+		}
+
+	}
+
+	/**
+	 *
+	 */
+	private void bandSorting() {
+
+	}
+
+	/**
+	 *
+	 */
+	private void probabilitySorting() {
+		dimBandSorting = new ArrayList<Integer>(getDimensionVirtualArray().getIDs());
+		recBandSorting = new ArrayList<Integer>(getRecordVirtualArray().getIDs());
+		recreateVirtualArrays(dimProbabilitySorting, recProbabilitySorting);
 	}
 
 }

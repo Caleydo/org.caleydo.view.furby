@@ -33,6 +33,7 @@ import org.caleydo.core.view.opengl.layout2.layout.GLFlowLayout;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
+import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.ToolbarThresholdEvent;
 
 /**
@@ -105,10 +106,12 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		if (button == overlapSortingModeButton) {
 			overlapSortingModeButton.setSelected(selected);
 			probabilitySortingModeButton.setSelected(!selected);
+			EventPublisher.trigger(new SortingChangeEvent(SortingChangeEvent.SortingType.bandSorting, this));
 		}
 		if (button == probabilitySortingModeButton) {
 			probabilitySortingModeButton.setSelected(selected);
 			overlapSortingModeButton.setSelected(!selected);
+			EventPublisher.trigger(new SortingChangeEvent(SortingChangeEvent.SortingType.probabilitySorting, this));
 		}
 	}
 

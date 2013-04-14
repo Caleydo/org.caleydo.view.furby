@@ -235,4 +235,8 @@ public abstract class BandElement extends PickableGLElement {
 		return Pair.make(_1, _2);
 	}
 
+	public enum BandType {
+		recordBand, dimensionBand;
+	}
+
 }
