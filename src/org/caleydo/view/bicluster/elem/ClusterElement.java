@@ -21,8 +21,10 @@ package org.caleydo.view.bicluster.elem;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
@@ -51,6 +53,7 @@ import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
+import org.caleydo.view.bicluster.sorting.BandSorting;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
@@ -71,8 +74,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	private boolean isHoovered = false;
 	private final TablePerspective x;
 
-	private Map<GLElement, List<Integer>> xOverlap;
-	private Map<GLElement, List<Integer>> yOverlap;
+	private Map<GLElement, List<Integer>> dimOverlap;
+	private Map<GLElement, List<Integer>> recOverlap;
 
 	private SortingType sortingType;
 	private List<Integer> dimProbabilitySorting;
@@ -80,7 +83,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	private List<Integer> dimBandSorting;
 	private List<Integer> recBandSorting;
 
-	private boolean setXElements;
+	private boolean setOnlyShowXElements;
 	private int bcNr;
 
 	// 0 Prob
@@ -208,7 +211,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
 			setVisibility(EVisibility.PICKABLE);
 			this.bcNr = bcNr;
-			this.setXElements = setXElements;
+			this.setOnlyShowXElements = setXElements;
+			dimProbabilitySorting = new ArrayList<Integer>(dimIndices);
+			recProbabilitySorting = new ArrayList<Integer>(recIndices);
+			dimBandSorting = null;
+			recBandSorting = null;
 			recreateVirtualArrays(dimIndices, recIndices);
 		} else {
 			setVisibility(EVisibility.NONE);
@@ -222,21 +229,17 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		VirtualArray dimArray = getDimensionVirtualArray();
 		VirtualArray recArray = getRecordVirtualArray();
 		dimArray.clear();
-		dimProbabilitySorting = new ArrayList<Integer>(dimIndices);
-		dimBandSorting = null;
 		int count = 0;
 		for (Integer i : dimIndices) {
-			if (setXElements && root.getFixedElementsCount() <= count)
+			if (setOnlyShowXElements && root.getFixedElementsCount() <= count)
 				break;
 			dimArray.append(i);
 			count++;
 		}
 		count = 0;
 		recArray.clear();
-		recProbabilitySorting = new ArrayList<Integer>(recIndices);
-		recBandSorting = null;
 		for (Integer i : recIndices) {
-			if (setXElements && root.getFixedElementsCount() <= count)
+			if (setOnlyShowXElements && root.getFixedElementsCount() <= count)
 				break;
 			recArray.append(i);
 			count++;
@@ -247,8 +250,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	 *
 	 */
 	private void calculateOverlap() {
-		xOverlap = new HashMap<>();
-		yOverlap = new HashMap<>();
+		dimOverlap = new HashMap<>();
+		recOverlap = new HashMap<>();
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
 		List<Integer> myRecIndizes = getRecordVirtualArray().getIDs();
 		// overallOverlapSize = 0;
@@ -261,12 +264,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			List<Integer> eIndizes = new ArrayList<Integer>(myDimIndizes);
 
 			eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
-			xOverlap.put(element, eIndizes);
+			dimOverlap.put(element, eIndizes);
 			xOverlapSize += eIndizes.size();
 
 			eIndizes = new ArrayList<Integer>(myRecIndizes);
 			eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
-			yOverlap.put(element, eIndizes);
+			recOverlap.put(element, eIndizes);
 			yOverlapSize += eIndizes.size();
 
 		}
@@ -357,14 +360,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	}
 
 	public List<Integer> getDimOverlap(GLElement jElement) {
-		return xOverlap.get(jElement);
+		return dimOverlap.get(jElement);
 	}
 
 	/**
-	 * @return the yOverlap, see {@link #yOverlap}
+	 * @return the yOverlap, see {@link #recOverlap}
 	 */
 	public List<Integer> getRecOverlap(GLElement jElement) {
-		return yOverlap.get(jElement);
+		return recOverlap.get(jElement);
 	}
 
 	// int overallOverlapSize;
@@ -447,11 +450,39 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 	}
 
-	/**
-	 *
-	 */
 	private void bandSorting() {
+		Set<Integer> finalDimSorting = new LinkedHashSet<Integer>();
+		List<List<Integer>> nonEmptyDimBands = new ArrayList<>();
+		for (List<Integer> dimBand : dimOverlap.values()) {
+			if (dimBand.size() > 0)
+				nonEmptyDimBands.add(dimBand);
+		}
 
+		// if (nonEmptyDimBands.size() > 0)
+		// System.out.println(nonEmptyDimBands);
+		BandSorting dimConflicts = new BandSorting(nonEmptyDimBands);
+		for (Integer i : dimConflicts) {
+			finalDimSorting.add(i);
+		}
+		finalDimSorting.addAll(dimProbabilitySorting);
+
+		Set<Integer> finalRecSorting = new LinkedHashSet<Integer>();
+		List<List<Integer>> nonEmptyRecBands = new ArrayList<>();
+		for (List<Integer> recBand : recOverlap.values()) {
+			if (recBand.size() > 0)
+				nonEmptyRecBands.add(recBand);
+		}
+
+		// if (nonEmptyRecBands.size() > 0)
+		// System.out.println(nonEmptyRecBands);
+		BandSorting recConflicts = new BandSorting(nonEmptyRecBands);
+		for (Integer i : recConflicts) {
+			finalRecSorting.add(i);
+		}
+		finalRecSorting.addAll(recProbabilitySorting);
+
+		recreateVirtualArrays(new ArrayList<Integer>(finalDimSorting), new ArrayList<Integer>(finalRecSorting));
+		fireTablePerspectiveChanged();
 	}
 
 	/**
@@ -460,7 +491,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	private void probabilitySorting() {
 		dimBandSorting = new ArrayList<Integer>(getDimensionVirtualArray().getIDs());
 		recBandSorting = new ArrayList<Integer>(getRecordVirtualArray().getIDs());
+		sortingType = SortingType.probabilitySorting;
 		recreateVirtualArrays(dimProbabilitySorting, recProbabilitySorting);
+		fireTablePerspectiveChanged();
 	}
 
 }

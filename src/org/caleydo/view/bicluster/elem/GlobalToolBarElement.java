@@ -34,6 +34,7 @@ import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
+import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.ToolbarThresholdEvent;
 
 /**
@@ -48,7 +49,7 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 	float maxDimensionValue = 5f;
 
 	private GLButton fixedClusterButton;
-	private GLButton overlapSortingModeButton;
+	private GLButton bandSortingModeButton;
 	private GLButton probabilitySortingModeButton;
 	private GLSlider recordThresholdSlider;
 	private GLSlider dimensionThresholdSlider;
@@ -57,12 +58,12 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 
 	public GlobalToolBarElement() {
 		setLayout(new GLFlowLayout(false, 5, new GLPadding(10)));
-		this.overlapSortingModeButton = new GLButton(EButtonMode.CHECKBOX);
-		overlapSortingModeButton.setRenderer(GLButton.createCheckRenderer("Sort by Bands"));
-		overlapSortingModeButton.setSelected(false);
-		overlapSortingModeButton.setCallback(this);
-		overlapSortingModeButton.setSize(Float.NaN, 16);
-		this.add(overlapSortingModeButton);
+		this.bandSortingModeButton = new GLButton(EButtonMode.CHECKBOX);
+		bandSortingModeButton.setRenderer(GLButton.createCheckRenderer("Sort by Bands"));
+		bandSortingModeButton.setSelected(false);
+		bandSortingModeButton.setCallback(this);
+		bandSortingModeButton.setSize(Float.NaN, 16);
+		this.add(bandSortingModeButton);
 
 		this.probabilitySortingModeButton = new GLButton(EButtonMode.CHECKBOX);
 		probabilitySortingModeButton.setRenderer(GLButton.createCheckRenderer("Sort by Probability"));
@@ -101,18 +102,21 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 
 	@Override
 	public void onSelectionChanged(GLButton button, boolean selected) {
-		if (button == fixedClusterButton)
+		if (button == fixedClusterButton) {
 			update();
-		if (button == overlapSortingModeButton) {
-			overlapSortingModeButton.setSelected(selected);
+			return;
+		}
+		if (button == bandSortingModeButton) {
+			bandSortingModeButton.setSelected(selected);
 			probabilitySortingModeButton.setSelected(!selected);
-			EventPublisher.trigger(new SortingChangeEvent(SortingChangeEvent.SortingType.bandSorting, this));
 		}
 		if (button == probabilitySortingModeButton) {
 			probabilitySortingModeButton.setSelected(selected);
-			overlapSortingModeButton.setSelected(!selected);
-			EventPublisher.trigger(new SortingChangeEvent(SortingChangeEvent.SortingType.probabilitySorting, this));
+			bandSortingModeButton.setSelected(!selected);
 		}
+		boolean isBandSorting = bandSortingModeButton.isSelected();
+		EventPublisher.trigger(new SortingChangeEvent(isBandSorting ? SortingType.bandSorting
+				: SortingType.probabilitySorting, this));
 	}
 
 	@ListenTo
