@@ -51,7 +51,7 @@ import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.elem.GLRootElement;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
-import org.caleydo.view.bicluster.event.ToolbarEvent;
+import org.caleydo.view.bicluster.event.ToolbarThresholdEvent;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 
@@ -261,7 +261,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	}
 
 	@ListenTo
-	private void handleUpdate(ToolbarEvent event) {
+	private void handleUpdate(ToolbarThresholdEvent event) {
 		geneThreshold = event.getGeneThreshold();
 		sampleThreshold = event.getSampleThreshold();
 		if ((x != null && l != null && z != null) || setXElements != event.isFixedClusterCount()) {

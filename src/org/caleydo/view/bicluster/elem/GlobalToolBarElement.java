@@ -33,7 +33,7 @@ import org.caleydo.core.view.opengl.layout2.layout.GLFlowLayout;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
-import org.caleydo.view.bicluster.event.ToolbarEvent;
+import org.caleydo.view.bicluster.event.ToolbarThresholdEvent;
 
 /**
  *
@@ -47,6 +47,8 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 	float maxDimensionValue = 5f;
 
 	private GLButton fixedClusterButton;
+	private GLButton overlapSortingModeButton;
+	private GLButton probabilitySortingModeButton;
 	private GLSlider recordThresholdSlider;
 	private GLSlider dimensionThresholdSlider;
 	private GLElement dimensionLabel;
@@ -54,13 +56,28 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 
 	public GlobalToolBarElement() {
 		setLayout(new GLFlowLayout(false, 5, new GLPadding(10)));
+		this.overlapSortingModeButton = new GLButton(EButtonMode.CHECKBOX);
+		overlapSortingModeButton.setRenderer(GLButton.createCheckRenderer("Sort by Bands"));
+		overlapSortingModeButton.setSelected(false);
+		overlapSortingModeButton.setCallback(this);
+		overlapSortingModeButton.setSize(Float.NaN, 16);
+		this.add(overlapSortingModeButton);
 
+		this.probabilitySortingModeButton = new GLButton(EButtonMode.CHECKBOX);
+		probabilitySortingModeButton.setRenderer(GLButton.createCheckRenderer("Sort by Probability"));
+		probabilitySortingModeButton.setSelected(true);
+		probabilitySortingModeButton.setCallback(this);
+		probabilitySortingModeButton.setSize(Float.NaN, 16);
+		this.add(probabilitySortingModeButton);
+
+		this.add(new GLButton(EButtonMode.BUTTON)); // Spacer
 		this.fixedClusterButton = new GLButton(EButtonMode.CHECKBOX);
 		fixedClusterButton.setRenderer(GLButton.createCheckRenderer("Show only 15 Elements"));
 		fixedClusterButton.setSelected(false);
 		fixedClusterButton.setCallback(this);
 		fixedClusterButton.setSize(Float.NaN, 16);
 		this.add(fixedClusterButton);
+
 		initSliders();
 		setRenderer(GLRenderers.fillRect(new Color(0.8f, 0.8f, 0.8f, .8f)));
 	}
@@ -78,12 +95,21 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 	private void update() {
 		float samplTh = dimensionThresholdSlider.getValue();
 		float geneTh = recordThresholdSlider.getValue();
-		EventPublisher.trigger(new ToolbarEvent(geneTh, samplTh, fixedClusterButton.isSelected()));
+		EventPublisher.trigger(new ToolbarThresholdEvent(geneTh, samplTh, fixedClusterButton.isSelected()));
 	}
 
 	@Override
 	public void onSelectionChanged(GLButton button, boolean selected) {
-		update();
+		if (button == fixedClusterButton)
+			update();
+		if (button == overlapSortingModeButton) {
+			overlapSortingModeButton.setSelected(selected);
+			probabilitySortingModeButton.setSelected(!selected);
+		}
+		if (button == probabilitySortingModeButton) {
+			probabilitySortingModeButton.setSelected(selected);
+			overlapSortingModeButton.setSelected(!selected);
+		}
 	}
 
 	@ListenTo

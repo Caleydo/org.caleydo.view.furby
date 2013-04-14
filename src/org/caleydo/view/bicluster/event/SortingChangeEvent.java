@@ -25,50 +25,12 @@ import org.caleydo.core.event.AEvent;
  * @author user
  *
  */
-public class ToolbarEvent extends AEvent {
+public class SortingChangeEvent extends AEvent {
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.caleydo.core.event.AEvent#checkIntegrity()
-	 */
 	@Override
 	public boolean checkIntegrity() {
+		// TODO Auto-generated method stub
 		return true;
 	}
-
-	float geneThreshold;
-	float sampleThreshold;
-	boolean fixedClusterCount;
-
-
-
-	/**
-	 * @return the fixedClusterCount, see {@link #fixedClusterCount}
-	 */
-	public boolean isFixedClusterCount() {
-		return fixedClusterCount;
-	}
-
-	/**
-	 * @return the geneThreshold, see {@link #geneThreshold}
-	 */
-	public float getGeneThreshold() {
-		return geneThreshold;
-	}
-
-	/**
-	 * @return the sampleThreshold, see {@link #sampleThreshold}
-	 */
-	public float getSampleThreshold() {
-		return sampleThreshold;
-	}
-
-	public ToolbarEvent(float geneThreshold, float sampleThreshold, boolean fixedClusterSelection) {
-		this.geneThreshold = geneThreshold;
-		this.sampleThreshold = sampleThreshold;
-		this.fixedClusterCount = fixedClusterSelection;
-	}
-
 
 }

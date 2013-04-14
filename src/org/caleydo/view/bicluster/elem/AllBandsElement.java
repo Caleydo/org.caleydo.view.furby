@@ -52,7 +52,10 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	 * @param view
 	 */
 	public AllBandsElement(TablePerspective tablePerspective) {
-		this.selectionMixin = new TablePerspectiveSelectionMixin(tablePerspective, this);
+		if (tablePerspective != null)
+			this.selectionMixin = new TablePerspectiveSelectionMixin(tablePerspective, this);
+		else
+			this.selectionMixin = null;
 		setLayout(this);
 	}
 
