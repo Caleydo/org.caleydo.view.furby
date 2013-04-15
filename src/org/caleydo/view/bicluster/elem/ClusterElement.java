@@ -37,6 +37,7 @@ import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
+import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
@@ -45,6 +46,7 @@ import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer
 import org.caleydo.core.view.opengl.layout2.animation.MoveTransitions;
 import org.caleydo.core.view.opengl.layout2.animation.Transitions;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
+import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
@@ -77,14 +79,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	private Map<GLElement, List<Integer>> dimOverlap;
 	private Map<GLElement, List<Integer>> recOverlap;
 
-	private SortingType sortingType;
+	private SortingType sortingType = SortingType.probabilitySorting;
 	private List<Integer> dimProbabilitySorting;
 	private List<Integer> recProbabilitySorting;
-	private List<Integer> dimBandSorting;
-	private List<Integer> recBandSorting;
 
 	private boolean setOnlyShowXElements;
 	private int bcNr;
+	private ToolBar toolBar;
 
 	// 0 Prob
 	// 1 value
@@ -94,7 +95,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		this.data = data;
 		this.root = root;
 		this.x = x;
-		this.add(new ToolBar()); // add a element toolbar
+		toolBar = new ToolBar();
+		this.add(toolBar); // add a element toolbar
 		this.add(new HeatMapElement(data, this, EDetailLevel.HIGH));
 
 		setVisibility(EVisibility.PICKABLE);
@@ -197,32 +199,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			isDragged = false;
 			root.setDragedLayoutElement(null);
 		}
-	}
-
-	/**
-	 * @param dimIndices
-	 * @param recIndices
-	 * @param setXElements
-	 * @param id
-	 * @param
-	 */
-	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements, String id, int bcNr) {
-		data.setLabel(id);
-		if (dimIndices.size() > 0 && recIndices.size() > 0) {
-			setVisibility(EVisibility.PICKABLE);
-			this.bcNr = bcNr;
-			this.setOnlyShowXElements = setXElements;
-			dimProbabilitySorting = new ArrayList<Integer>(dimIndices);
-			recProbabilitySorting = new ArrayList<Integer>(recIndices);
-			dimBandSorting = null;
-			recBandSorting = null;
-			recreateVirtualArrays(dimIndices, recIndices);
-		} else {
-			setVisibility(EVisibility.NONE);
-		}
-		calculateOverlap();
-		fireTablePerspectiveChanged();
-		// setSize(200, 200);
 	}
 
 	private void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices) {
@@ -395,7 +371,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	 * @author Samuel Gratzl
 	 *
 	 */
-	private class ToolBar extends GLElementContainer {
+	private class ToolBar extends GLElementContainer implements ISelectionCallback {
+
+		GLButton hide, sorting;
+		SortingType sortingButtonCaption = SortingType.probabilitySorting;
+
 		public ToolBar() {
 			super(GLLayouts.flowHorizontal(2));
 
@@ -414,11 +394,39 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 		protected void createButtons() {
 			this.add(new GLElement()); // spacer
-			GLButton hide = new GLButton();
+			sorting = new GLButton();
+			sorting.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
+			sorting.setRenderer(GLRenderers.drawText(
+					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
+			sorting.setSize(16, Float.NaN);
+			sorting.setCallback(this);
+			this.add(sorting);
+			hide = new GLButton();
 			hide.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
+			hide.setRenderer(GLRenderers.drawText("X", VAlign.CENTER));
 			hide.setSize(16, Float.NaN);
 			this.add(hide);
 		}
+
+		void setSortingCaption(SortingType caption) {
+			sortingButtonCaption = caption;
+			sorting.setRenderer(GLRenderers.drawText(
+					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
+		}
+
+		@Override
+		public void onSelectionChanged(GLButton button, boolean selected) {
+			if (button == hide) {
+				// close cluster
+			} else if (button == sorting) {
+				setSortingCaption(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
+						: SortingType.probabilitySorting);
+				sort(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
+						: SortingType.probabilitySorting);
+			}
+
+		}
+
 	}
 
 	@ListenTo
@@ -426,28 +434,52 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		if (e.getSender() instanceof ClusterElement && e.getSender() == this) {
 			// only local change
 		} else {
-			switch (e.getType()) {
-			case probabilitySorting:
-				if (sortingType == SortingType.probabilitySorting)
-					return;
-				else {
-					sortingType = SortingType.probabilitySorting;
-					probabilitySorting();
-				}
-				break;
-			case bandSorting:
-				if (sortingType == SortingType.bandSorting)
-					return;
-				else {
-					sortingType = SortingType.bandSorting;
-					bandSorting();
-				}
-				break;
-			default:
-			}
+			sort(e.getType());
 
 		}
+		toolBar.setSortingCaption(e.getType());
 
+	}
+
+	/**
+	 * @param dimIndices
+	 * @param recIndices
+	 * @param setXElements
+	 * @param id
+	 * @param
+	 */
+	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements, String id, int bcNr) {
+		data.setLabel(id);
+		dimProbabilitySorting = new ArrayList<Integer>(dimIndices);
+		recProbabilitySorting = new ArrayList<Integer>(recIndices);
+		this.bcNr = bcNr;
+		this.setOnlyShowXElements = setXElements;
+		if (dimIndices.size() > 0 && recIndices.size() > 0) {
+			setVisibility(EVisibility.PICKABLE);
+			recreateVirtualArrays(dimIndices, recIndices);
+		} else {
+			setVisibility(EVisibility.NONE);
+		}
+		calculateOverlap();
+		if (getVisibility() == EVisibility.PICKABLE)
+			sort(sortingType);
+		fireTablePerspectiveChanged();
+		// setSize(200, 200);
+	}
+
+	private void sort(SortingType type) {
+		switch (type) {
+		case probabilitySorting:
+			sortingType = SortingType.probabilitySorting;
+			probabilitySorting();
+			break;
+		case bandSorting:
+			sortingType = SortingType.bandSorting;
+			bandSorting();
+
+			break;
+		default:
+		}
 	}
 
 	private void bandSorting() {
@@ -489,8 +521,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	 *
 	 */
 	private void probabilitySorting() {
-		dimBandSorting = new ArrayList<Integer>(getDimensionVirtualArray().getIDs());
-		recBandSorting = new ArrayList<Integer>(getRecordVirtualArray().getIDs());
 		sortingType = SortingType.probabilitySorting;
 		recreateVirtualArrays(dimProbabilitySorting, recProbabilitySorting);
 		fireTablePerspectiveChanged();
