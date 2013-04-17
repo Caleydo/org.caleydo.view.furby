@@ -63,16 +63,17 @@ import org.caleydo.view.heatmap.v2.IBlockColorer;
 
 /**
  * e.g. a class for representing a cluster
- *
+ * 
  * @author Samuel Gratzl
  * @author Michael Gillhofer
  */
-public class ClusterElement extends AnimatedGLElementContainer implements IBlockColorer, IGLLayout {
+public class ClusterElement extends AnimatedGLElementContainer implements
+		IBlockColorer, IGLLayout {
 	private final TablePerspective data;
 	private final AllClustersElement root;
 	private Vec2d attForce = new Vec2d(0, 0);
 	private Vec2d repForce = new Vec2d(0, 0);
-	private Vec2d centerForce = new Vec2d(0, 0);
+	private Vec2d frameForce = new Vec2d(0, 0);
 	private boolean isDragged = false;
 	private boolean isHoovered = false;
 	private final TablePerspective x;
@@ -91,7 +92,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	// 0 Prob
 	// 1 value
 
-	public ClusterElement(TablePerspective data, TablePerspective x, AllClustersElement root) {
+	public ClusterElement(TablePerspective data, TablePerspective x,
+			AllClustersElement root) {
 		setLayout(this);
 		this.data = data;
 		this.root = root;
@@ -111,9 +113,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	}
 
 	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
+	public void doLayout(List<? extends IGLLayoutElement> children, float w,
+			float h) {
 		IGLLayoutElement toolbar = children.get(0);
-		if (isHoovered) { // depending whether we are hovered or not, show hide the toolbar
+		if (isHoovered) { // depending whether we are hovered or not, show hide
+							// the toolbar
 			toolbar.setBounds(0, -16, w, 16);
 		} else {
 			toolbar.setBounds(0, 0, w, 0); // hide by setting the height to 0
@@ -123,9 +127,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	}
 
 	@Override
-	public Color apply(int recordID, int dimensionID, ATableBasedDataDomain dataDomain, boolean deSelected) {
+	public Color apply(int recordID, int dimensionID,
+			ATableBasedDataDomain dataDomain, boolean deSelected) {
 		// TODO custom implementation with alpha values or something like that
-		return BasicBlockColorer.INSTANCE.apply(recordID, dimensionID, dataDomain, deSelected);
+		return BasicBlockColorer.INSTANCE.apply(recordID, dimensionID,
+				dataDomain, deSelected);
 	}
 
 	public IDCategory getRecordIDCategory() {
@@ -174,7 +180,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			}
 			root.resetDamping();
 			isDragged = true;
-			setLocation(getLocation().x() + pick.getDx(), getLocation().y() + pick.getDy());
+			setLocation(getLocation().x() + pick.getDx(), getLocation().y()
+					+ pick.getDy());
 			relayoutParent();
 			repaintPick();
 			break;
@@ -187,12 +194,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		case MOUSE_OVER:
 			if (!pick.isAnyDragging()) {
 				isHoovered = true;
+				root.setHooveredElement(this);
 				relayout(); // for showing the toolbar
 			}
 			break;
 		case MOUSE_OUT:
 			if (isHoovered) {
 				isHoovered = false;
+				root.setHooveredElement(null);
 				relayout(); // for showing the toolbar
 			}
 			break;
@@ -202,7 +211,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		}
 	}
 
-	private void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices) {
+	private void recreateVirtualArrays(List<Integer> dimIndices,
+			List<Integer> recIndices) {
 		VirtualArray dimArray = getDimensionVirtualArray();
 		VirtualArray recArray = getRecordVirtualArray();
 		dimArray.clear();
@@ -232,8 +242,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
 		List<Integer> myRecIndizes = getRecordVirtualArray().getIDs();
 		// overallOverlapSize = 0;
-		xOverlapSize = 0;
-		yOverlapSize = 0;
+		dimensionOverlapSize = 0;
+		recordOverlapSize = 0;
 		for (GLElement element : root.asList()) {
 			if (element == this)
 				continue;
@@ -242,12 +252,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 			eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
 			dimOverlap.put(element, eIndizes);
-			xOverlapSize += eIndizes.size();
+			dimensionOverlapSize += eIndizes.size();
 
 			eIndizes = new ArrayList<Integer>(myRecIndizes);
 			eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
 			recOverlap.put(element, eIndizes);
-			yOverlapSize += eIndizes.size();
+			recordOverlapSize += eIndizes.size();
 
 		}
 	}
@@ -264,8 +274,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	 *            setter, see {@link force}
 	 */
 	public void setAttForce(Vec2d force) {
-		if (isHoovered)
-			return;
+
 		this.attForce = force;
 	}
 
@@ -274,8 +283,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	 *            setter, see {@link force}
 	 */
 	public void setRepForce(Vec2d force) {
-		if (isHoovered)
-			return;
+
 		this.repForce = force;
 	}
 
@@ -286,8 +294,21 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		return repForce;
 	}
 
+	public Vec2d getFrameForce() {
+
+		return frameForce;
+	}
+
 	/**
-	 *
+	 * @param frameForce
+	 *            setter, see {@link centerForce}
+	 */
+	public void setFrameForce(Vec2d frameForce) {
+		this.frameForce = frameForce;
+	}
+
+	/**
+	 * 
 	 * @param dimensionName
 	 * @param recordName
 	 */
@@ -298,10 +319,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	}
 
 	private void fireTablePerspectiveChanged() {
-		EventPublisher.trigger(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
-				.getRecordPerspective().getPerspectiveID(), this));
-		EventPublisher.trigger(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
-				.getDimensionPerspective().getPerspectiveID(), this));
+		EventPublisher.trigger(new RecordVAUpdateEvent(data.getDataDomain()
+				.getDataDomainID(), data.getRecordPerspective()
+				.getPerspectiveID(), this));
+		EventPublisher.trigger(new DimensionVAUpdateEvent(data.getDataDomain()
+				.getDataDomainID(), data.getDimensionPerspective()
+				.getPerspectiveID(), this));
 
 		repaintAll();
 	}
@@ -348,15 +371,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	}
 
 	// int overallOverlapSize;
-	int xOverlapSize;
-	int yOverlapSize;
+	int dimensionOverlapSize;
+	int recordOverlapSize;
 
-	public int getXOverlapSize() {
-		return xOverlapSize;
+	public int getDimensionOverlapSize() {
+		return dimensionOverlapSize;
 	}
 
-	public int getYOverlapSize() {
-		return yOverlapSize;
+	public int getRecordOverlapSize() {
+		return recordOverlapSize;
 	}
 
 	/**
@@ -368,11 +391,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 	/**
 	 * a simple toolbar for the {@link ClusterElement}
-	 *
+	 * 
 	 * @author Samuel Gratzl
-	 *
+	 * 
 	 */
-	private class ToolBar extends GLElementContainer implements ISelectionCallback {
+	private class ToolBar extends GLElementContainer implements
+			ISelectionCallback {
 
 		GLButton hide, sorting;
 		SortingType sortingButtonCaption = SortingType.probabilitySorting;
@@ -389,16 +413,19 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			setSize(Float.NaN, 16);
 
 			// define the animation used to move this element
-			this.setLayoutData(new MoveTransitions.MoveTransitionBase(Transitions.NO, Transitions.LINEAR,
-					Transitions.NO, Transitions.LINEAR));
+			this.setLayoutData(new MoveTransitions.MoveTransitionBase(
+					Transitions.NO, Transitions.LINEAR, Transitions.NO,
+					Transitions.LINEAR));
 		}
 
 		protected void createButtons() {
 			this.add(new GLElement()); // spacer
 			sorting = new GLButton();
 			sorting.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
-			sorting.setRenderer(GLRenderers.drawText(
-					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
+			sorting.setRenderer(GLRenderers
+					.drawText(
+							sortingButtonCaption == SortingType.probabilitySorting ? "P"
+									: "B", VAlign.CENTER));
 			sorting.setSize(16, Float.NaN);
 			sorting.setCallback(this);
 			this.add(sorting);
@@ -411,8 +438,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 		void setSortingCaption(SortingType caption) {
 			sortingButtonCaption = caption;
-			sorting.setRenderer(GLRenderers.drawText(
-					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
+			sorting.setRenderer(GLRenderers
+					.drawText(
+							sortingButtonCaption == SortingType.probabilitySorting ? "P"
+									: "B", VAlign.CENTER));
 		}
 
 		@Override
@@ -449,7 +478,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	 * @param id
 	 * @param
 	 */
-	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements, String id, int bcNr) {
+	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices,
+			boolean setXElements, String id, int bcNr) {
 		data.setLabel(id);
 		dimProbabilitySorting = new ArrayList<Integer>(dimIndices);
 		recProbabilitySorting = new ArrayList<Integer>(recIndices);
@@ -514,7 +544,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		}
 		finalRecSorting.addAll(recProbabilitySorting);
 
-		recreateVirtualArrays(new ArrayList<Integer>(finalDimSorting), new ArrayList<Integer>(finalRecSorting));
+		recreateVirtualArrays(new ArrayList<Integer>(finalDimSorting),
+				new ArrayList<Integer>(finalRecSorting));
 		fireTablePerspectiveChanged();
 	}
 
@@ -525,21 +556,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		sortingType = SortingType.probabilitySorting;
 		recreateVirtualArrays(dimProbabilitySorting, recProbabilitySorting);
 		fireTablePerspectiveChanged();
-	}
-
-	/**
-	 * @return the centerForce, see {@link #centerForce}
-	 */
-	public Vec2d getCenterForce() {
-		return centerForce;
-	}
-
-	/**
-	 * @param centerForce
-	 *            setter, see {@link centerForce}
-	 */
-	public void setCenterForce(Vec2d centerForce) {
-		this.centerForce = centerForce;
 	}
 
 }

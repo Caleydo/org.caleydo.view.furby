@@ -135,6 +135,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				damping = 0;
 		}
 	};
+	private ClusterElement hoveredElement;
 
 	/**
 	 *
@@ -158,8 +159,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		for (IGLLayoutElement iGLE : children) {
 			GLElement vGL = iGLE.asElement();
 			ClusterElement v = (ClusterElement) vGL;
-			xOverlapSize += v.getXOverlapSize();
-			yOverlapSize += v.getYOverlapSize();
+			xOverlapSize += v.getDimensionOverlapSize();
+			yOverlapSize += v.getRecordOverlapSize();
 		}
 		// System.out.println(overallOverlapSize);
 		// double attraction = attractionFactor / (xOverlapSize + yOverlapSize);
@@ -233,12 +234,12 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			forceX = distFromFrame.x() < 0 ? -forceX : forceX;
 			forceY = distFromFrame.y() < 0 ? -forceY : forceY;
 			// double forceY = borderForceFactor * distFromFrame.lengthSquared() / distFromFrame.y();
-			i.setCenterForce(new Vec2d(forceX, forceY));
+			i.setFrameForce(new Vec2d(forceX, forceY));
 		}
 
 		for (IGLLayoutElement iGLL : children) {
 			ClusterElement i = (ClusterElement) iGLL.asElement();
-			Vec2d force = i.getAttForce().plus(i.getRepForce()).plus(i.getCenterForce());
+			Vec2d force = i.getAttForce().plus(i.getRepForce()).plus(i.getFrameForce());
 			while (force.length() > 100)
 				force.scale(0.1);
 			Vec2d pos = getCenter(i);
@@ -249,50 +250,13 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			// System.out.println("  Fra: " + i.getCenterForce());
 			// System.out.println("  Sum: " + force);
 			// virtualPositions.remove(vEl);
-			if (i != dragedElement)
+			if (i != dragedElement && i != hoveredElement)
 				setLocation(i, (float) pos.x(), (float) pos.y(), w, h);
 			// virtualPositions.put(i, pos);
 		}
 		// System.out.println("iteration done");
 
-		// xMax = -100;
-		// yMax = -100;
-		// xMin = 100;
-		// yMin = 100;
-		// // set tmp positions
-		// for (IGLLayoutElement iGLL : children) {
-		// GLElement iElement = iGLL.asElement();
-		// ClusterElement i = (ClusterElement) iElement;
-		// Vec2d pos = getCenter(i);
-		//
-		// double xPos = pos.x();
-		// double yPos = pos.y();
-		// if (xPos < xMin)
-		// xMin = xPos;
-		// if (xPos > xMax)
-		// xMax = xPos;
-		// if (yPos < yMin)
-		// yMin = yPos;
-		// if (yPos > yMax)
-		// yMax = yPos;
-		// }
-		//
-		// Vec2d min = new Vec2d(-xMin, -yMin);
-		// Vec2d max = new Vec2d(xMax, yMax);
-		// max.add(min);
-		// System.out.println("Max: " + max);
-		// System.out.println("Min: " + min);
-		// for (IGLLayoutElement iGLL : children) {
-		// GLElement iElement = iGLL.asElement();
-		// ClusterElement i = (ClusterElement) iElement;
-		// Vec2d pos = getCenter(i);
-		// pos.add(min);
-		// // double posX = pos.x() / max.x();
-		// // double posY = pos.y() / max.y();
-		// // if (i != dragedElement)
-		// // i.setLocation((float) pos.x(), (float) pos.y());
-		// // setLocation(i, pos.x(), pos.y(), w, h);
-		// }
+
 
 	}
 
@@ -349,6 +313,10 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	 */
 	public void setDragedLayoutElement(ClusterElement element) {
 		this.dragedElement = element;
+	}
+	
+	public void setHooveredElement(ClusterElement hooveredElement) {
+		this.hoveredElement = hooveredElement;
 	}
 
 }
