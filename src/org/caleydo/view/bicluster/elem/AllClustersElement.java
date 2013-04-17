@@ -21,16 +21,13 @@ package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
-import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
@@ -46,8 +43,9 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	float layoutStabilisationTime = 3000; // After X Milliseconds the layout is fixed until a cluster is moved
 	// resetDamping(); is called)
 
-	float repulsion = 0.04f;
-	float attractionFactor = 1.5f;
+	float repulsion = 250000f;
+	float attractionFactor = 300f;
+	float borderForceFactor = 200f;
 	// double aD = 0.3;
 
 	public Integer fixedElementsCount = 15;
@@ -101,31 +99,13 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
 		} else {
-			if (dragedElement == null) {
-				forceDirectedLayout(children, w, h);
-			} else {
-				dragElement(w, h);
-			}
+			forceDirectedLayout(children, w, h);
+
 		}
 		for (IGLLayoutElement child : children) {
 			child.setSize(child.getSetWidth(), child.getSetHeight());
 		}
 		relayout();
-	}
-
-	/**
-	 *
-	 */
-	private void dragElement(float w, float h) {
-
-		GLElement iElement = dragedElement;
-		ClusterElement i = (ClusterElement) iElement;
-		Vec2f pos = i.getLocation();
-		double posX = (pos.x()) / w;
-		double posY = (pos.y()) / h;
-
-		virtualPositions.put(i, new Vec2d(posX, posY));
-
 	}
 
 	double damping = 1f;
@@ -161,7 +141,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	 */
 
 	// contains positions of the childs in [0,1] x [0,1] space
-	Map<ClusterElement, Vec2d> virtualPositions = new HashMap<>();
+	// Map<ClusterElement, Vec2d> virtualPositions = new HashMap<>();
 
 	/**
 	 * @param children2
@@ -174,7 +154,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 		// calculate the attraction based on the size of all overlaps
 		// int overallOverlapSize = 0;
-		int xOverlapSize = 0, yOverlapSize = 0;
+		double xOverlapSize = 0, yOverlapSize = 0;
 		for (IGLLayoutElement iGLE : children) {
 			GLElement vGL = iGLE.asElement();
 			ClusterElement v = (ClusterElement) vGL;
@@ -184,11 +164,13 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		// System.out.println(overallOverlapSize);
 		// double attraction = attractionFactor / (xOverlapSize + yOverlapSize);
 		double attractionX = 1;
-
-		attractionX = attractionFactor / (xOverlapSize + yOverlapSize);
 		double attractionY = 1;
-
+		attractionX = attractionFactor / (xOverlapSize + yOverlapSize);
 		attractionY = attractionFactor / (yOverlapSize + xOverlapSize);
+		xOverlapSize /= 3;
+		yOverlapSize /= 3;
+
+
 
 		// layout begin
 		for (IGLLayoutElement iGLE : children) { // Loop through Vertices
@@ -207,10 +189,10 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 					continue;
 				// squared distance between "u" and "v" in 2D space
 				// calculate the repulsion between two vertices
-				// Vec2d distVec = getDistance(i, j, w, h);
-				Vec2d distVec = virtualPositions.get(i).minus(virtualPositions.get(j));
+				Vec2d distVec = getDistance(i, j);
+				// Vec2d distVec = virtualPositions.get(i).minus(virtualPositions.get(j));
 				double rsq = distVec.lengthSquared();
-				// rsq = rsq * rsq;
+				rsq *= distVec.length();
 				double forcex = repulsion * distVec.x() / rsq;
 				double forcey = repulsion * distVec.y() / rsq;
 				forcex += i.getRepForce().x();
@@ -229,8 +211,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 					continue;
 				int overlapSizeX = xOverlap.size();
 				int overlapSizeY = yOverlap.size();
-				Vec2d distVec = virtualPositions.get(j).minus(virtualPositions.get(i));
-				// Vec2d distVec = getDistance(j, i, w, h);
+				// Vec2d distVec = virtualPositions.get(j).minus(virtualPositions.get(i));
+				Vec2d distVec = getDistance(j, i);
 				double dist = distVec.length/* Squared */();
 				// int isXNeg = distVec.x() < 0 ? -1 : 1;
 				// int isYNeg = distVec.y() < 0 ? -1 : 1;
@@ -245,121 +227,110 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				i.setAttForce(new Vec2d(forcex, forcey));
 
 			}
-
+			Vec2d distFromFrame = getDistanceFromBorder(i, w, h);
+			double forceX = Math.exp(borderForceFactor / Math.abs(distFromFrame.x())) - 1;
+			double forceY = Math.exp(borderForceFactor / Math.abs(distFromFrame.y())) - 1;
+			forceX = distFromFrame.x() < 0 ? -forceX : forceX;
+			forceY = distFromFrame.y() < 0 ? -forceY : forceY;
+			// double forceY = borderForceFactor * distFromFrame.lengthSquared() / distFromFrame.y();
+			i.setCenterForce(new Vec2d(forceX, forceY));
 		}
 
 		for (IGLLayoutElement iGLL : children) {
 			ClusterElement i = (ClusterElement) iGLL.asElement();
-			Vec2d force = i.getAttForce().plus(i.getRepForce());
-			Vec2d pos = virtualPositions.get(i);
+			Vec2d force = i.getAttForce().plus(i.getRepForce()).plus(i.getCenterForce());
+			while (force.length() > 100)
+				force.scale(0.1);
+			Vec2d pos = getCenter(i);
 			pos = force.times(damping).plus(pos);
+			// System.out.println(i.getId() + ": ");
+			// System.out.println("  Att: " + i.getAttForce());
+			// System.out.println("  Rep: " + i.getRepForce());
+			// System.out.println("  Fra: " + i.getCenterForce());
+			// System.out.println("  Sum: " + force);
 			// virtualPositions.remove(vEl);
-			virtualPositions.put(i, pos);
+			if (i != dragedElement)
+				setLocation(i, (float) pos.x(), (float) pos.y(), w, h);
+			// virtualPositions.put(i, pos);
 		}
+		// System.out.println("iteration done");
 
-		// after moving all elements, rescaling to [0,1] must take place, elements could be out of the drawing area
-		xMax = -100;
-		yMax = -100;
-		xMin = 100;
-		yMin = 100;
-		// set tmp positions
-		for (IGLLayoutElement iGLL : children) {
-			GLElement iElement = iGLL.asElement();
-			ClusterElement i = (ClusterElement) iElement;
-			Vec2d pos = virtualPositions.get(i);
+		// xMax = -100;
+		// yMax = -100;
+		// xMin = 100;
+		// yMin = 100;
+		// // set tmp positions
+		// for (IGLLayoutElement iGLL : children) {
+		// GLElement iElement = iGLL.asElement();
+		// ClusterElement i = (ClusterElement) iElement;
+		// Vec2d pos = getCenter(i);
+		//
+		// double xPos = pos.x();
+		// double yPos = pos.y();
+		// if (xPos < xMin)
+		// xMin = xPos;
+		// if (xPos > xMax)
+		// xMax = xPos;
+		// if (yPos < yMin)
+		// yMin = yPos;
+		// if (yPos > yMax)
+		// yMax = yPos;
+		// }
+		//
+		// Vec2d min = new Vec2d(-xMin, -yMin);
+		// Vec2d max = new Vec2d(xMax, yMax);
+		// max.add(min);
+		// System.out.println("Max: " + max);
+		// System.out.println("Min: " + min);
+		// for (IGLLayoutElement iGLL : children) {
+		// GLElement iElement = iGLL.asElement();
+		// ClusterElement i = (ClusterElement) iElement;
+		// Vec2d pos = getCenter(i);
+		// pos.add(min);
+		// // double posX = pos.x() / max.x();
+		// // double posY = pos.y() / max.y();
+		// // if (i != dragedElement)
+		// // i.setLocation((float) pos.x(), (float) pos.y());
+		// // setLocation(i, pos.x(), pos.y(), w, h);
+		// }
 
-			double xPos = pos.x();
-			double yPos = pos.y();
-			if (xPos < xMin)
-				xMin = xPos;
-			if (xPos > xMax)
-				xMax = xPos;
-			if (yPos < yMin)
-				yMin = yPos;
-			if (yPos > yMax)
-				yMax = yPos;
-		}
-
-		Vec2d min = new Vec2d(-xMin, -yMin);
-		Vec2d max = new Vec2d(xMax, yMax);
-		max.add(min);
-		for (IGLLayoutElement iGLL : children) {
-			GLElement iElement = iGLL.asElement();
-			ClusterElement i = (ClusterElement) iElement;
-			Vec2d pos = virtualPositions.get(i);
-			pos.add(min);
-			double posX = pos.x() / max.x();
-			double posY = pos.y() / max.y();
-			virtualPositions.put(i, new Vec2d(posX, posY));
-		}
-
-		// finally drawing the virtual positions
-		for (IGLLayoutElement iGLL : children) {
-			GLElement iElement = iGLL.asElement();
-			ClusterElement i = (ClusterElement) iElement;
-
-			Vec2d pos = virtualPositions.get(i);
-			setLocation(i, pos.x(), pos.y(), w, h);
-
-			// System.out.println("ID: " + i.getId() + i.getLocation() + "   " + virtualPositions.get(i));
-			// System.out.println("   Att Force: " + i.getAttForce() + "  RepForce: " + i.getRepForce());
-		}
 	}
 
-	/**
-	 * @param i
-	 * @param j
-	 * @param h
-	 * @param w
-	 * @return
-	 */
-	private Vec2d getDistance(ClusterElement i, ClusterElement j, float w, float h) {
-		Vec2d iLoc = virtualPositions.get(i);
-		Vec2d jLoc = virtualPositions.get(j);
-		Vec2f ifSize = i.getSize();
-		Vec2f jfSize = j.getSize();
-		double iSizeX = i.getSize().x() / w;
-		double iSizeY = i.getSize().y() / h;
-		double jSizeX = j.getSize().x() / w;
-		double jSizeY = j.getSize().y() / h;
-
-		Vec2d iMiddle = new Vec2d(iLoc.x() + iSizeX / 2., iLoc.y() + iSizeY / 2.);
-		Vec2d jMiddle = new Vec2d(jLoc.x() + jSizeX / 2., jLoc.y() + jSizeY / 2.);
-		Vec2d dist = iMiddle.minus(jMiddle);
+	private Vec2d getDistanceFromBorder(ClusterElement i, float w, float h) {
+		Vec2d pos = getCenter(i);
+		Vec2d dist = pos;
+		if (dist.x() > w / 2)
+			dist.setX(-(w - dist.x()));
+		if (dist.y() > h / 2)
+			dist.setY(-(h - dist.y()));
 		return dist;
 	}
 
-	private void setLocation(ClusterElement v, double xPos, double yPos, float w, float h) {
-		xPos = xPos * (w - 200) + 100 - v.getSize().x() / 2;
-		yPos = yPos * (h - 175) + 90 - v.getSize().y() / 2;
-		if (xPos > w || xPos < 0 || yPos > h || yPos < 0)
-			System.out.println(xPos + "/" + yPos);
-		v.getIGLayoutElement().setLocation((float) xPos, (float) yPos);
-		v.repaintPick();
-
+	private Vec2d getCenter(ClusterElement i) {
+		Vec2f vec = i.getLocation().addScaled(0.5f, i.getSize());
+		return new Vec2d(vec.x(), vec.y());
 	}
 
-	@Override
-	protected void renderImpl(GLGraphics g, float w, float h) {
-		// for (GLElement iGLL : this) {
-		// ClusterElement i = (ClusterElement) iGLL;
-		// if (!i.isVisible())
-		// continue;
-		// g.fillRect(i.getLocation().x(), i.getLocation().y(), i.getSize().x(), i.getSize().y());
-		// // System.out.println(i.getLocation() + " " + i.getSize());
-		// g.drawText(i.getId(), i.getLocation().x(), i.getLocation().y() - 15, 70, 12);
-		// }
-		super.renderImpl(g, w, h);
+	private Vec2d getDistance(ClusterElement i, ClusterElement j) {
+		return getCenter(i).minus(getCenter(j));
+	}
+
+	private void setLocation(ClusterElement v, double xPos, double yPos, float w, float h) {
+		// xPos = xPos * (w - 200) + 100 - v.getSize().x() / 2;
+		// yPos = yPos * (h - 175) + 90 - v.getSize().y() / 2;
+		if (xPos > w || xPos < 0 || yPos > h || yPos < 0)
+			System.out.println(v.getId() + ": " + xPos + "/" + yPos);
+		v.setLocation((float) (xPos - v.getSize().x() / 2), (float) (yPos - v.getSize().y() / 2));
+		// v.getIGLayoutElement().setLocation((float) ((xPos - v.getSize().x()) * 0.8 + 100),
+		// (float) ((yPos - v.getSize().y()) * 0.8 + 50));
+		v.repaintPick();
 	}
 
 	private void initialLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		int rowCount = ((int) (Math.sqrt(children.size())) + 1);
-		double space = 1. / rowCount;
 		int i = 0;
 		for (GLElement child : asList()) {
-
-			Vec2d pos = new Vec2d(i / rowCount * space, i % rowCount * space);
-			virtualPositions.put((ClusterElement) child, pos);
+			Vec2d pos = new Vec2d(i / rowCount * 160 + 200, (i % rowCount) * 160 + 100);
 			setLocation((ClusterElement) child, pos.x(), pos.y(), w, h);
 			i++;
 		}

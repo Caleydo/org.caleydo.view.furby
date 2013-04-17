@@ -72,6 +72,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	private final AllClustersElement root;
 	private Vec2d attForce = new Vec2d(0, 0);
 	private Vec2d repForce = new Vec2d(0, 0);
+	private Vec2d centerForce = new Vec2d(0, 0);
 	private boolean isDragged = false;
 	private boolean isHoovered = false;
 	private final TablePerspective x;
@@ -524,6 +525,21 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		sortingType = SortingType.probabilitySorting;
 		recreateVirtualArrays(dimProbabilitySorting, recProbabilitySorting);
 		fireTablePerspectiveChanged();
+	}
+
+	/**
+	 * @return the centerForce, see {@link #centerForce}
+	 */
+	public Vec2d getCenterForce() {
+		return centerForce;
+	}
+
+	/**
+	 * @param centerForce
+	 *            setter, see {@link centerForce}
+	 */
+	public void setCenterForce(Vec2d centerForce) {
+		this.centerForce = centerForce;
 	}
 
 }
