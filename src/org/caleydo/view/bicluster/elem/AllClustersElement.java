@@ -93,6 +93,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
+		if (lastW > w || lastH >h) scaleView(children, w,h);
 		lastW = w;
 		lastH = h;
 		if (!isInitLayoutDone && !children.isEmpty()) {
@@ -106,6 +107,16 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			child.setSize(child.getSetWidth(), child.getSetHeight());
 		}
 		relayout();
+	}
+
+	private void scaleView(List<? extends IGLLayoutElement> children, float w,
+			float h) {
+		for (IGLLayoutElement igllChild: children) {
+			GLElement child = igllChild.asElement();
+			Vec2f loc = child.getLocation();
+			child.setLocation(loc.x()*w/lastW, loc.y()*h/lastH);
+		}
+		
 	}
 
 	double damping = 1f;
