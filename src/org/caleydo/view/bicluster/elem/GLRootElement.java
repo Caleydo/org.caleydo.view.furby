@@ -30,16 +30,21 @@ import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.IPopupLayer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.view.bicluster.event.ToolbarThresholdEvent;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
+
+;
 
 /**
  * @author user
- *
+ * 
  */
 public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private AllBandsElement bands;
 	private final AllClustersElement clusters = new AllClustersElement(this);
 
 	private GlobalToolBarElement globalToolBar = new GlobalToolBarElement();
+
 	/**
 	 *
 	 */
@@ -51,7 +56,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	protected void init(IGLElementContext context) {
 		super.init(context);
 		// show the global toolbar as a popup
-		context.getPopupLayer().show(globalToolBar, new Vec4f(Float.NaN, 0, 200, 200),
+		context.getPopupLayer().show(globalToolBar,
+				new Vec4f(Float.NaN, 0, 200, 200),
 				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE);
 	}
 
@@ -82,7 +88,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		if (bands.size() == 0) {
 			int i = 1;
 			for (GLElement start : clusters) {
-				for (GLElement end : clusters.asList().subList(i, clusters.asList().size())) {
+				for (GLElement end : clusters.asList().subList(i,
+						clusters.asList().size())) {
 					if (start == end)
 						continue;
 					bands.add(new RecBandElement(start, end, bands));
@@ -100,11 +107,15 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	int maxClusterDimSize = 150;
 
 	/**
+	 * @param j 
 	 *
 	 */
-	public void setClusterSizes() {
+	public void setClusterSizes(int j) {
 		double maxDimClusterElements = 1;
 		double maxRecClusterElements = 1;
+		maxClusterDimSize = j;
+		maxClusterRecSize = j;
+		
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
 			if (!i.isVisible())
@@ -118,17 +129,17 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		}
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
-			int recSize = (int) ((i.getNumberOfRecElements() * (maxClusterRecSize) / maxRecClusterElements));
-			int dimSize = (int) ((i.getNumberOfDimElements() * (maxClusterDimSize) / maxDimClusterElements));
+			int recSize = (int) ((i.getNumberOfRecElements()
+					* (maxClusterRecSize) / maxRecClusterElements));
+			int dimSize = (int) ((i.getNumberOfDimElements()
+					* (maxClusterDimSize) / maxDimClusterElements));
 			i.setSize(dimSize, recSize);
 			i.relayout();
 		}
 
 	}
 
-	/**
-	 *
-	 */
+
 	public void resetDamping() {
 		clusters.resetDamping();
 
@@ -139,7 +150,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	}
 
 	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
+	public void doLayout(List<? extends IGLLayoutElement> children, float w,
+			float h) {
 		for (IGLLayoutElement child : children)
 			child.setBounds(0, 0, w, h);
 

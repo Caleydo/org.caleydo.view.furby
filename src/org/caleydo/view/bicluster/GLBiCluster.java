@@ -256,10 +256,13 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			createBiClusterPerspectives(x, l, z);
 			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold, maxRecThreshold));
 			rootElement.createBands();
-			rootElement.setClusterSizes();
+			rootElement.setClusterSizes(largeClusterSize);
 		}
 	}
 
+	private int smallClusterSize = 100;
+	private int largeClusterSize = 150;
+	
 	@ListenTo
 	private void handleUpdate(ToolbarThresholdEvent event) {
 		geneThreshold = event.getGeneThreshold();
@@ -268,7 +271,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			setXElements = event.isFixedClusterCount();
 			createBiClusterPerspectives(x, l, z);
 		}
-		rootElement.setClusterSizes();
+		rootElement.setClusterSizes(event.isFixedClusterCount() ? smallClusterSize : largeClusterSize);
 
 	}
 }
