@@ -263,7 +263,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			ClusterElement i = (ClusterElement) iGLL.asElement();
 			Vec2d force = i.getAttForce().plus(i.getRepForce())
 					.plus(i.getFrameForce());
-			while (force.length() > 100)
+			while (force.length() > 10)
 				force.scale(0.1);
 			Vec2d pos = getCenter(i);
 			pos = force.times(damping).plus(pos);

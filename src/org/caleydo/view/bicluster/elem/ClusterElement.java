@@ -419,7 +419,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 
 		protected void createButtons() {
-			this.add(new GLElement()); // spacer
+			GLElement spacer = new GLButton();
+			this.add(spacer); // spacer
 			sorting = new GLButton();
 			sorting.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
 			sorting.setRenderer(GLRenderers
@@ -435,6 +436,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			hide.setSize(16, Float.NaN);
 			this.add(hide);
 		}
+		
 
 		void setSortingCaption(SortingType caption) {
 			sortingButtonCaption = caption;
