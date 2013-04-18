@@ -37,7 +37,7 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
  */
 public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private AllBandsElement bands;
-	private final AllClustersElement clusters = new AllClustersElement();
+	private final AllClustersElement clusters = new AllClustersElement(this);
 
 	private GlobalToolBarElement globalToolBar = new GlobalToolBarElement();
 	/**
@@ -70,6 +70,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				clusters.add(el);
 			}
 		}
+		clusters.setToolbar(globalToolBar);
 	}
 
 	/**
