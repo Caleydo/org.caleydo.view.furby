@@ -365,8 +365,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		int rowCount = ((int) (Math.sqrt(children.size())) + 1);
 		int i = 0;
 		for (GLElement child : asList()) {
-			Vec2d pos = new Vec2d(i / rowCount * 160 + 200,
-					(i % rowCount) * 160 + 100);
+			Vec2d pos = new Vec2d(i / rowCount * 250 + 200,
+					(i % rowCount) * 180 + 100);
 			setLocation((ClusterElement) child, pos.x(), pos.y(), w, h);
 			i++;
 		}
