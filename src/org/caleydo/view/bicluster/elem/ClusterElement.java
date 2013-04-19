@@ -577,6 +577,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		isHoovered = false;
 		root.setHooveredElement(null);
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
+		EventPublisher.trigger(new ClusterHoveredElement(this, false));
 	}
 
 	@ListenTo
@@ -584,9 +585,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		isHidden = false;
 		if (hasContent) {
 			setVisibility(EVisibility.PICKABLE);
-			// for (GLElement i : this) {
-			// i.setVisibility(EVisibility.PICKABLE);
-			// }
 		}
 	}
 
