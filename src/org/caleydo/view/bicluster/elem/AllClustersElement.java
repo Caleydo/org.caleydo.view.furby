@@ -98,15 +98,15 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w,
 			float h) {
-		if (lastW > w || lastH > h)
-			scaleView(children, w, h);
-		lastW = w;
-		lastH = h;
-		clearClusterCollisions(children, w, h);
 		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
 		} else {
+			if (lastW > w || lastH > h)
+				scaleView(children, w, h);
+			lastW = w;
+			lastH = h;
+			clearClusterCollisions(children, w, h);
 			forceDirectedLayout(children, w, h);
 
 		}
@@ -125,8 +125,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				Vec2d jCenter = getCenter((ClusterElement) j.asElement());
 				if (iCenter.minus(jCenter).length() < 5) {
 					// move i
-					i.setLocation((i.getLocation().x() + 60) % w, (i
-							.getLocation().y() + 60) % h);
+					i.setLocation((i.getLocation().x() + 100) % w, (i
+							.getLocation().y() + 100) % h);
 				}
 			}
 			k++;

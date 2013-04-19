@@ -97,6 +97,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private boolean setOnlyShowXElements;
 	private int bcNr;
 	private ToolBar toolBar;
+	private HeaderBar headerBar;
 	private float opacityfactor = 1;
 	private float highOpacityFactor = 1;
 	private float lowOpacityFactor = 0.2f;
@@ -108,7 +109,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.root = root;
 		this.x = x;
 		toolBar = new ToolBar();
+		headerBar = new HeaderBar();
 		this.add(toolBar); // add a element toolbar
+		this.add(headerBar);
 		this.add(new HeatMapElement(data, this, EDetailLevel.HIGH));
 
 		setVisibility(EVisibility.PICKABLE);
@@ -119,21 +122,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				onPicked(pick);
 			}
 		});
-	}
-
-	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w,
-			float h) {
-		// if (isHidden) return;
-		IGLLayoutElement toolbar = children.get(0);
-		if (isHoovered) { // depending whether we are hovered or not, show hide
-							// the toolbar
-			toolbar.setBounds(0, -16, w, 16);
-		} else {
-			toolbar.setBounds(0, 0, w, 0); // hide by setting the height to 0
-		}
-		IGLLayoutElement content = children.get(1);
-		content.setBounds(0, 0, w, h);
 	}
 
 	@Override
@@ -412,6 +400,56 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return GLElementAccessor.asLayoutElement(this);
 	}
 
+	@Override
+	public void doLayout(List<? extends IGLLayoutElement> children, float w,
+			float h) {
+		// if (isHidden) return;
+		IGLLayoutElement toolbar = children.get(0);
+		IGLLayoutElement headerbar = children.get(1);
+		if (isHoovered) { // depending whether we are hovered or not, show hide
+							// the toolbar's
+			toolbar.setBounds(-16, 0, 16, 50);
+			headerbar.setBounds(0, -16, w<50 ? 50: w, 16);
+		} else {
+			toolbar.setBounds(0, 0, 0, 50); // hide by setting the width to 0
+			headerbar.setBounds(0, 0, w, 0);
+		}
+		IGLLayoutElement content = children.get(2);
+		content.setBounds(0, 0, w, h);
+	}
+
+	private class HeaderBar extends GLElementContainer implements
+			ISelectionCallback {
+
+		public HeaderBar() {
+			super(GLLayouts.flowHorizontal(1));
+
+			// move to the top
+			setzDelta(0.5f);
+
+			// create buttons
+			createButtons();
+
+			setSize(Float.NaN, 20);
+
+			// define the animation used to move this element
+			this.setLayoutData(new MoveTransitions.MoveTransitionBase(
+					Transitions.NO, Transitions.LINEAR, Transitions.NO,
+					Transitions.LINEAR));
+		}
+
+		protected void createButtons() {
+			GLElement spacer = new GLButton();
+			this.add(spacer); // spacer
+		}
+
+		@Override
+		public void onSelectionChanged(GLButton button, boolean selected) {
+			//nothing to click here
+			
+		}
+	}
+
 	/**
 	 * a simple toolbar for the {@link ClusterElement}
 	 * 
@@ -425,7 +463,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		SortingType sortingButtonCaption = SortingType.probabilitySorting;
 
 		public ToolBar() {
-			super(GLLayouts.flowHorizontal(2));
+			super(GLLayouts.flowVertical(2));
 
 			// move to the top
 			setzDelta(0.5f);
@@ -433,7 +471,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			// create buttons
 			createButtons();
 
-			setSize(Float.NaN, 16);
+			setSize(Float.NaN, 20);
 
 			// define the animation used to move this element
 			this.setLayoutData(new MoveTransitions.MoveTransitionBase(
@@ -442,8 +480,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 
 		protected void createButtons() {
-			GLElement spacer = new GLButton();
-			this.add(spacer); // spacer
 			sorting = new GLButton();
 			sorting.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
 			sorting.setRenderer(GLRenderers
@@ -452,13 +488,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 									: "B", VAlign.CENTER));
 			sorting.setSize(16, Float.NaN);
 			sorting.setCallback(this);
-			this.add(sorting);
 			hide = new GLButton();
 			hide.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
 			hide.setRenderer(GLRenderers.drawText("X", VAlign.CENTER));
 			hide.setSize(16, Float.NaN);
 			hide.setCallback(this);
 			this.add(hide);
+			this.add(sorting);
+			GLElement spacer = new GLButton();
+			this.add(spacer); // spacer
 		}
 
 		void setSortingCaption(SortingType caption) {
@@ -519,8 +557,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	public void listenTo(ClusterHoveredElement event) {
 		// System.out.println("hovered:");
 		ClusterElement hoveredElement = event.getElement();
-//		if (getID().contains("bicluster25"))
-//			System.out.println("Hier");
 		if (hoveredElement == this || getDimOverlap(hoveredElement).size() > 0
 				|| getRecOverlap(hoveredElement).size() > 0)
 			return;
