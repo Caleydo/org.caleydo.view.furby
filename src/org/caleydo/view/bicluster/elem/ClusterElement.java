@@ -53,6 +53,7 @@ import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.picking.PickingManager;
@@ -112,7 +113,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		headerBar = new HeaderBar();
 		this.add(toolBar); // add a element toolbar
 		this.add(headerBar);
-		this.add(new HeatMapElement(data, this, EDetailLevel.HIGH));
+		GLElement heatmap = new HeatMapElement(data, this, EDetailLevel.HIGH); 
+		heatmap.setzDelta(0.5f);
+		setzDelta(3f);
+		this.add(heatmap);
 
 		setVisibility(EVisibility.PICKABLE);
 		this.onPick(new IPickingListener() {
@@ -174,8 +178,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		if (isHoovered) {
 			g.color(highlightedColor);
 		}
-		g.drawRoundedRect(0, 0, w, h, 2);
-		g.drawText(getID(), 0, -15, 70, 12);
+		g.drawRoundedRect(-1, -1, w+2, h+2, 1);
+		g.drawText(getID(), 0, -16, 70, 12);
 		float[] black = { 0, 0, 0, 1 };
 		g.textColor(black);
 		// g.textColor(black);
@@ -409,10 +413,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		if (isHoovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
 			toolbar.setBounds(-16, 0, 16, 50);
-			headerbar.setBounds(0, -16, w<50 ? 50: w, 16);
+			headerbar.setBounds(0, -18, w < 55 ? 55 : w+2, 17);
 		} else {
-			toolbar.setBounds(0, 0, 0, 50); // hide by setting the width to 0
-			headerbar.setBounds(0, 0, w, 0);
+			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
+			headerbar.setBounds(0, 0, w < 50 ? 50 : w, 0);
 		}
 		IGLLayoutElement content = children.get(2);
 		content.setBounds(0, 0, w, h);
@@ -440,13 +444,23 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		protected void createButtons() {
 			GLElement spacer = new GLButton();
+			spacer.setzDelta(-0.5f);
+			spacer.setRenderer(new IGLRenderer() {
+				
+				@Override
+				public void render(GLGraphics g, float w, float h, GLElement parent) {
+					g.color(SelectionType.MOUSE_OVER.getColor());
+					g.fillRoundedRect(0, 0, w, h,2);
+					
+				}
+			});
 			this.add(spacer); // spacer
 		}
 
 		@Override
 		public void onSelectionChanged(GLButton button, boolean selected) {
-			//nothing to click here
-			
+			// nothing to click here
+
 		}
 	}
 
@@ -466,7 +480,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			super(GLLayouts.flowVertical(2));
 
 			// move to the top
-			setzDelta(0.5f);
+			setzDelta(-0.1f);
 
 			// create buttons
 			createButtons();
@@ -475,7 +489,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 			// define the animation used to move this element
 			this.setLayoutData(new MoveTransitions.MoveTransitionBase(
-					Transitions.NO, Transitions.LINEAR, Transitions.NO,
+					Transitions.LINEAR, Transitions.NO, Transitions.LINEAR,
 					Transitions.LINEAR));
 		}
 
