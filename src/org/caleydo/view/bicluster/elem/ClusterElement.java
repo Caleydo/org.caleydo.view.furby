@@ -54,6 +54,7 @@ import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
+import org.caleydo.view.bicluster.event.ClusterHoveredElement;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
@@ -119,7 +120,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w,
 			float h) {
-//		if (isHidden) return;
+		// if (isHidden) return;
 		IGLLayoutElement toolbar = children.get(0);
 		if (isHoovered) { // depending whether we are hovered or not, show hide
 							// the toolbar
@@ -135,8 +136,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	public Color apply(int recordID, int dimensionID,
 			ATableBasedDataDomain dataDomain, boolean deSelected) {
 		// TODO custom implementation with alpha values or something like that
-		return BasicBlockColorer.INSTANCE.apply(recordID, dimensionID,
+		Color color = BasicBlockColorer.INSTANCE.apply(recordID, dimensionID,
 				dataDomain, deSelected);
+
+		color.a = (float) (color.a * opacityfactor);
+		return color;
 	}
 
 	public IDCategory getRecordIDCategory() {
@@ -200,6 +204,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			if (!pick.isAnyDragging()) {
 				isHoovered = true;
 				root.setHooveredElement(this);
+				EventPublisher.trigger(new ClusterHoveredElement(this, true));
 				relayout(); // for showing the toolbar
 			}
 			break;
@@ -208,6 +213,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				isHoovered = false;
 				root.setHooveredElement(null);
 				relayout(); // for showing the toolbar
+				EventPublisher.trigger(new ClusterHoveredElement(this, false));
 			}
 			break;
 		default:
@@ -378,6 +384,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	// int overallOverlapSize;
 	int dimensionOverlapSize;
 	int recordOverlapSize;
+	private double opacityfactor = 1;
 
 	public int getDimensionOverlapSize() {
 		return dimensionOverlapSize;
@@ -454,9 +461,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		@Override
 		public void onSelectionChanged(GLButton button, boolean selected) {
 			if (button == hide) {
-//				for (GLElement i : this) {
-//					i.setVisibility(EVisibility.NONE);
-//				}
+				// for (GLElement i : this) {
+				// i.setVisibility(EVisibility.NONE);
+				// }
 				hideThisElement();
 			} else if (button == sorting) {
 				setSortingCaption(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
@@ -480,9 +487,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		isHidden = false;
 		if (hasContent) {
 			setVisibility(EVisibility.PICKABLE);
-//			for (GLElement i : this) {
-//				i.setVisibility(EVisibility.PICKABLE);
-//			}
+			// for (GLElement i : this) {
+			// i.setVisibility(EVisibility.PICKABLE);
+			// }
 		}
 	}
 
@@ -495,7 +502,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		}
 		toolBar.setSortingCaption(e.getType());
+	}
 
+	@ListenTo
+	public void listenTo(ClusterHoveredElement event) {
+//		System.out.println("hovered:");
+		if (event.getElement() == this)
+			return;
+		else if (event.isMouseOver())
+			opacityfactor = 0.3;
+		else
+			opacityfactor = 1;
+		relayout();
 	}
 
 	/**

@@ -35,10 +35,11 @@ import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.spline.Band;
+import org.caleydo.view.bicluster.event.ClusterHoveredElement;
 
 /**
  * @author Michael Gillhofer
- *
+ * 
  */
 public abstract class BandElement extends PickableGLElement {
 	protected ClusterElement first;
@@ -69,7 +70,10 @@ public abstract class BandElement extends PickableGLElement {
 	private float[] defaultColor;
 	protected boolean hoverd;
 
-	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
+	private float opacityFactor = 1;
+
+	protected BandElement(GLElement first, GLElement second,
+			List<Integer> list, SelectionManager selectionManager,
 			AllBandsElement root, float[] defaultColor) {
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
@@ -96,20 +100,26 @@ public abstract class BandElement extends PickableGLElement {
 			else
 				bandColor = defaultColor;
 			if (band != null) {
-				g.color(bandColor[0], bandColor[1], bandColor[2], 0.8f);
+				g.color(bandColor[0], bandColor[1], bandColor[2],
+						0.8f * opacityFactor);
 				g.drawPath(band);
-				g.color(bandColor[0], bandColor[1], bandColor[2], 0.5f);
+				g.color(bandColor[0], bandColor[1], bandColor[2],
+						0.5f * opacityFactor);
 				g.fillPolygon(band);
 			}
 			if (highlightOverlap.size() > 0) {
-				g.color(highlightColor[0], highlightColor[1], highlightColor[2], 0.8f);
+				g.color(highlightColor[0], highlightColor[1],
+						highlightColor[2], 0.8f * opacityFactor);
 				g.drawPath(highlightBand);
-				g.color(highlightColor[0], highlightColor[1], highlightColor[2], 0.5f);
+				g.color(highlightColor[0], highlightColor[1],
+						highlightColor[2], 0.5f * opacityFactor);
 				g.fillPolygon(highlightBand);
 			} else if (hoverOverlap.size() > 0) {
-				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
+				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2],
+						0.8f * opacityFactor);
 				g.drawPath(highlightBand);
-				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
+				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2],
+						0.8f * opacityFactor);
 				g.fillPolygon(highlightBand);
 			}
 		}
@@ -123,11 +133,13 @@ public abstract class BandElement extends PickableGLElement {
 	}
 
 	private boolean isHighlighted() {
-		return highlightOverlap.size() != 0 && highlightOverlap.size() == overlap.size();
+		return highlightOverlap.size() != 0
+				&& highlightOverlap.size() == overlap.size();
 	}
 
 	private boolean isHovered() {
-		return hoverOverlap.size() != 0 && hoverOverlap.size() == overlap.size();
+		return hoverOverlap.size() != 0
+				&& hoverOverlap.size() == overlap.size();
 	}
 
 	@Override
@@ -138,9 +150,11 @@ public abstract class BandElement extends PickableGLElement {
 				g.fillPolygon(highlightBand);
 			if (band != null)
 				g.fillPolygon(band);
-			// bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(), bandPoints, false, defaultColor, .5f);
+			// bandRenderer.renderComplexBand(GLContext.getCurrentGL().getGL2(),
+			// bandPoints, false, defaultColor, .5f);
 			// bandRenderer
-			// .renderComplexBand(GLContext.getCurrentGL().getGL2(), highlightPoints, false, defaultColor, .5f);
+			// .renderComplexBand(GLContext.getCurrentGL().getGL2(),
+			// highlightPoints, false, defaultColor, .5f);
 		}
 	}
 
@@ -215,19 +229,26 @@ public abstract class BandElement extends PickableGLElement {
 
 	@ListenTo
 	public void listenToSelectionEvent(SelectionUpdateEvent e) {
-		hoverOverlap = new ArrayList<>(selectionManager.getElements(SelectionType.MOUSE_OVER));
+		hoverOverlap = new ArrayList<>(
+				selectionManager.getElements(SelectionType.MOUSE_OVER));
 		hoverOverlap.retainAll(overlap);
-		highlightOverlap = new ArrayList<>(selectionManager.getElements(selectionType));
+		highlightOverlap = new ArrayList<>(
+				selectionManager.getElements(selectionType));
 		highlightOverlap.retainAll(overlap);
 		updatePosition();
 
 	}
 
-	// protected Pair<Point2D, Point2D> pair(float x1, float y1, float x2, float y2) {
-	// Point2D _1 = new Point2D.Float(x1, y1);
-	// Point2D _2 = new Point2D.Float(x2, y2);
-	// return Pair.make(_1, _2);
-	// }
+	@ListenTo
+	public void listenTo(ClusterHoveredElement event) {
+		if (event.getElement() == first || event.getElement() == second)
+			return;
+		else if (event.isMouseOver())
+			opacityFactor = 0.15f;
+		else
+			opacityFactor = 1f;
+		relayout();
+	}
 
 	protected Pair<Vec3f, Vec3f> pair(float x1, float y1, float x2, float y2) {
 		Vec3f _1 = new Vec3f(x1, y1, 0);
