@@ -106,6 +106,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				scaleView(children, w, h);
 			lastW = w;
 			lastH = h;
+			bringClustersBackToFrame(children, w, h);
 			clearClusterCollisions(children, w, h);
 			forceDirectedLayout(children, w, h);
 
@@ -114,6 +115,14 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			child.setSize(child.getSetWidth(), child.getSetHeight());
 		}
 		relayout();
+	}
+
+	private void bringClustersBackToFrame(
+			List<? extends IGLLayoutElement> children, float w, float h) {
+		for (IGLLayoutElement i : children) {
+			i.setLocation(i.getLocation().x() %w, i.getLocation().y()%h);
+		}
+		
 	}
 
 	private void clearClusterCollisions(
