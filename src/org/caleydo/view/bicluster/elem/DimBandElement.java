@@ -45,6 +45,10 @@ public class DimBandElement extends BandElement {
 
 	@Override
 	public void updatePosition() {
+//		System.out.println(dimBandColor[0]);
+//		System.out.println(dimBandColor[1]);
+//		System.out.println(dimBandColor[2]);
+//		System.out.println(dimBandColor[3]);
 		overlap = first.getDimOverlap(second);
 		int overlapSize = overlap.size();
 		if (overlapSize > 0 && first.isVisible() && second.isVisible()) {

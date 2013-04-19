@@ -32,7 +32,7 @@ import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
  */
 public class RecBandElement extends BandElement {
 
-	private static float[] recBandColor = { 0f, 0, 0.05f, 0.05f };
+	private static float[] recBandColor = { 0.862f, 0.862f, 1f, 1f };
 
 	/**
 	 * @param view

@@ -28,6 +28,8 @@ import java.util.Set;
 
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.data.selection.SelectionManager;
+import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
 import org.caleydo.core.data.virtualarray.events.RecordVAUpdateEvent;
@@ -53,6 +55,8 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.core.view.opengl.picking.PickingManager;
+import org.caleydo.core.view.opengl.picking.PickingManager2;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterHoveredElement;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
@@ -93,9 +97,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private boolean setOnlyShowXElements;
 	private int bcNr;
 	private ToolBar toolBar;
-
-	// 0 Prob
-	// 1 value
+	private float opacityfactor = 1;
+	private float highOpacityFactor = 1;
+	private float lowOpacityFactor = 0.2f;
 
 	public ClusterElement(TablePerspective data, TablePerspective x,
 			AllClustersElement root) {
@@ -173,12 +177,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
-		// if (isDragged) {
-		// g.color(Colors.RED);
-		// g.fillRect(0, 0, w, h);
-		// g.color(Colors.BLACK);
-		// }
+		float[] color = { 0, 0, 0, (float) opacityfactor };
+		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
+		g.color(color);
+		g.textColor(color);
+		// color. *=opacityfactor;
+		// g.color(java.awt.Color.BLACK);
+		if (isHoovered) {
+			g.color(highlightedColor);
+		}
+		g.drawRoundedRect(0, 0, w, h, 2);
 		g.drawText(getID(), 0, -15, 70, 12);
+		float[] black = {0,0,0,1};
+		g.textColor(black);
+//		g.textColor(black);
 	}
 
 	protected void onPicked(Pick pick) {
@@ -384,7 +396,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	// int overallOverlapSize;
 	int dimensionOverlapSize;
 	int recordOverlapSize;
-	private double opacityfactor = 1;
 
 	public int getDimensionOverlapSize() {
 		return dimensionOverlapSize;
@@ -512,9 +523,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				|| getRecOverlap(event.getElement()).size() > 0)
 			return;
 		else if (event.isMouseOver())
-			opacityfactor = 0.3;
+			opacityfactor = lowOpacityFactor;
 		else
-			opacityfactor = 1;
+			opacityfactor = highOpacityFactor;
 		relayout();
 	}
 
