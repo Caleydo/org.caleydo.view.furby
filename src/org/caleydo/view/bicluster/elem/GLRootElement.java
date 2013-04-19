@@ -135,7 +135,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 					* (maxClusterDimSize) / maxDimClusterElements));
 //			if (recSize < 50) recSize = 50;
 //			if (dimSize < 50) dimSize =50;
-			i.setSize(dimSize, recSize);
+			i.setClusterSize(dimSize, recSize);
 			i.relayout();
 		}
 

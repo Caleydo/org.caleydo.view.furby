@@ -19,6 +19,8 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import gleem.linalg.Vec2f;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -28,7 +30,6 @@ import java.util.Set;
 
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
@@ -56,8 +57,6 @@ import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
-import org.caleydo.core.view.opengl.picking.PickingManager;
-import org.caleydo.core.view.opengl.picking.PickingManager2;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterHoveredElement;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
@@ -113,9 +112,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		headerBar = new HeaderBar();
 		this.add(toolBar); // add a element toolbar
 		this.add(headerBar);
-		GLElement heatmap = new HeatMapElement(data, this, EDetailLevel.HIGH); 
+		GLElement heatmap = new HeatMapElement(data, this, EDetailLevel.HIGH);
 		heatmap.setzDelta(0.5f);
-		setzDelta(3f);
+//		setzDelta(f);
 		this.add(heatmap);
 
 		setVisibility(EVisibility.PICKABLE);
@@ -178,7 +177,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		if (isHoovered) {
 			g.color(highlightedColor);
 		}
-		g.drawRoundedRect(-1, -1, w+2, h+2, 1);
+		g.drawRoundedRect(-1, -1, w + 2, h + 2, 1);
 		g.drawText(getID(), 0, -16, 70, 12);
 		float[] black = { 0, 0, 0, 1 };
 		g.textColor(black);
@@ -388,6 +387,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	// int overallOverlapSize;
 	int dimensionOverlapSize;
 	int recordOverlapSize;
+	private int dimSize;
+	private int recSize;
 
 	public int getDimensionOverlapSize() {
 		return dimensionOverlapSize;
@@ -412,8 +413,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		IGLLayoutElement headerbar = children.get(1);
 		if (isHoovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
-			toolbar.setBounds(-16, 0, 16, 50);
-			headerbar.setBounds(0, -18, w < 55 ? 55 : w+2, 17);
+			toolbar.setBounds(-18, 0, 18, 64);
+			headerbar.setBounds(0, -18, w < 55 ? 55 : w + 2, 17);
 		} else {
 			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
 			headerbar.setBounds(0, 0, w < 50 ? 50 : w, 0);
@@ -446,12 +447,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			GLElement spacer = new GLButton();
 			spacer.setzDelta(-0.5f);
 			spacer.setRenderer(new IGLRenderer() {
-				
+
 				@Override
-				public void render(GLGraphics g, float w, float h, GLElement parent) {
+				public void render(GLGraphics g, float w, float h,
+						GLElement parent) {
 					g.color(SelectionType.MOUSE_OVER.getColor());
-					g.fillRoundedRect(0, 0, w, h,2);
-					
+					g.fillRoundedRect(0, 0, w, h, 2);
+
 				}
 			});
 			this.add(spacer); // spacer
@@ -473,11 +475,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private class ToolBar extends GLElementContainer implements
 			ISelectionCallback {
 
-		GLButton hide, sorting;
+		GLButton hide, sorting, enlarge, smaller;
 		SortingType sortingButtonCaption = SortingType.probabilitySorting;
 
 		public ToolBar() {
-			super(GLLayouts.flowVertical(2));
+			super(GLLayouts.flowVertical(4));
 
 			// move to the top
 			setzDelta(-0.1f);
@@ -502,15 +504,26 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 									: "B", VAlign.CENTER));
 			sorting.setSize(16, Float.NaN);
 			sorting.setCallback(this);
+			sorting.setTooltip("Change sorting");
 			hide = new GLButton();
-			hide.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
-			hide.setRenderer(GLRenderers.drawText("X", VAlign.CENTER));
+			hide.setRenderer(GLRenderers.fillImage("./resources/icons/dialog_close.png"));
+			hide.setTooltip("Close");
 			hide.setSize(16, Float.NaN);
 			hide.setCallback(this);
 			this.add(hide);
 			this.add(sorting);
-			GLElement spacer = new GLButton();
-			this.add(spacer); // spacer
+			enlarge = new GLButton();
+			enlarge.setSize(16, Float.NaN);
+			enlarge.setTooltip("Enlarge");
+			enlarge.setRenderer(GLRenderers.fillImage("./resources/icons/zoom_in.png"));
+			enlarge.setCallback(this);
+			smaller = new GLButton();
+			smaller.setTooltip("reduce");
+			smaller.setSize(16, Float.NaN);
+			smaller.setRenderer(GLRenderers.fillImage("./resources/icons/zoom_out.png"));
+			smaller.setCallback(this);
+			this.add(enlarge);
+			this.add(smaller);
 		}
 
 		void setSortingCaption(SortingType caption) {
@@ -533,8 +546,29 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 						: SortingType.probabilitySorting);
 				sort(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
 						: SortingType.probabilitySorting);
+			} else if (button == enlarge) {
+				scaleFactor +=0.6;
+				resize();
+			} else if (button == smaller) {
+				scaleFactor = 1;
+				resize();
 			}
 		}
+	}
+	
+	
+	
+	public void setClusterSize(int x, int y){
+		dimSize = x;
+		recSize = y;
+		resize();
+	}
+
+	private double scaleFactor=1;
+	
+	private void resize() {
+		setSize((float)(dimSize*scaleFactor), (float)(recSize*scaleFactor));
+		relayout();
 	}
 
 	public void hideThisElement() {
