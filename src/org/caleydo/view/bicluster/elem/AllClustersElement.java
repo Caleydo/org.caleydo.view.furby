@@ -329,7 +329,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private void setLocation(ClusterElement v, double xPos, double yPos,
 			float w, float h) {
 		if (xPos > w || xPos < 0 || yPos > h || yPos < 0)
-			System.out.println(v.getId() + ": " + xPos + "/" + yPos);
+			System.out.println(v.getID() + ": " + xPos + "/" + yPos);
 		v.setLocation((float) (xPos - v.getSize().x() / 2), (float) (yPos - v
 				.getSize().y() / 2));
 		v.repaintPick();

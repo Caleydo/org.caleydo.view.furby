@@ -53,8 +53,10 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
+import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.sorting.BandSorting;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
@@ -76,6 +78,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private Vec2d frameForce = new Vec2d(0, 0);
 	private boolean isDragged = false;
 	private boolean isHoovered = false;
+	private boolean isHidden = false;
+	private boolean hasContent = false;
 	private final TablePerspective x;
 
 	private Map<GLElement, List<Integer>> dimOverlap;
@@ -115,6 +119,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w,
 			float h) {
+//		if (isHidden) return;
 		IGLLayoutElement toolbar = children.get(0);
 		if (isHoovered) { // depending whether we are hovered or not, show hide
 							// the toolbar
@@ -157,7 +162,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	/**
 	 * @return the id, see {@link #id}
 	 */
-	public String getId() {
+	public String getID() {
 		return data.getLabel();
 	}
 
@@ -169,7 +174,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		// g.fillRect(0, 0, w, h);
 		// g.color(Colors.BLACK);
 		// }
-		g.drawText(getId(), 0, -15, 70, 12);
+		g.drawText(getID(), 0, -15, 70, 12);
 	}
 
 	protected void onPicked(Pick pick) {
@@ -434,9 +439,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			hide.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
 			hide.setRenderer(GLRenderers.drawText("X", VAlign.CENTER));
 			hide.setSize(16, Float.NaN);
+			hide.setCallback(this);
 			this.add(hide);
 		}
-		
 
 		void setSortingCaption(SortingType caption) {
 			sortingButtonCaption = caption;
@@ -449,16 +454,36 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		@Override
 		public void onSelectionChanged(GLButton button, boolean selected) {
 			if (button == hide) {
-				// close cluster
+//				for (GLElement i : this) {
+//					i.setVisibility(EVisibility.NONE);
+//				}
+				hideThisElement();
 			} else if (button == sorting) {
 				setSortingCaption(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
 						: SortingType.probabilitySorting);
 				sort(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
 						: SortingType.probabilitySorting);
 			}
-
 		}
+	}
 
+	public void hideThisElement() {
+		isHidden = true;
+		setVisibility(EVisibility.NONE);
+		isHoovered = false;
+		root.setHooveredElement(null);
+		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
+	}
+
+	@ListenTo
+	public void listenTo(UnhidingClustersEvent event) {
+		isHidden = false;
+		if (hasContent) {
+			setVisibility(EVisibility.PICKABLE);
+//			for (GLElement i : this) {
+//				i.setVisibility(EVisibility.PICKABLE);
+//			}
+		}
 	}
 
 	@ListenTo
@@ -488,10 +513,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.bcNr = bcNr;
 		this.setOnlyShowXElements = setXElements;
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
-			setVisibility(EVisibility.PICKABLE);
+			hasContent = true;
+			if (!isHidden)
+				setVisibility(EVisibility.PICKABLE);
 			recreateVirtualArrays(dimIndices, recIndices);
 		} else {
 			setVisibility(EVisibility.NONE);
+			hasContent = false;
 		}
 		calculateOverlap();
 		if (getVisibility() == EVisibility.PICKABLE)

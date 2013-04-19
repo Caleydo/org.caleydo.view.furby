@@ -20,22 +20,28 @@
 package org.caleydo.view.bicluster.elem;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
+import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.EButtonMode;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.layout.GLFlowLayout;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
+import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.ToolbarThresholdEvent;
+import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 
 /**
  *
@@ -55,6 +61,8 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 	private GLSlider dimensionThresholdSlider;
 	private GLElement dimensionLabel;
 	private GLElement recordLabel;
+	private GLButton clearHiddenClusterButton;
+	private List<String> clearHiddenButtonTooltipList = new ArrayList<>();
 
 	public GlobalToolBarElement() {
 		setLayout(new GLFlowLayout(false, 5, new GLPadding(10)));
@@ -72,7 +80,21 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		probabilitySortingModeButton.setSize(Float.NaN, 16);
 		this.add(probabilitySortingModeButton);
 
-		this.add(new GLButton(EButtonMode.BUTTON)); // Spacer
+		
+		clearHiddenClusterButton = new GLButton(EButtonMode.BUTTON);
+		clearHiddenClusterButton.setRenderer(new IGLRenderer() {
+			
+			@Override
+			public void render(GLGraphics g, float w, float h, GLElement parent) {
+				g.drawText("Clear hidden Elements", 18, 5, w, 14);
+				
+			}
+		});
+		clearHiddenClusterButton.setCallback(this);
+		clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
+		this.add(clearHiddenClusterButton);
+		
+		
 		this.fixedClusterButton = new GLButton(EButtonMode.CHECKBOX);
 		fixedClusterButton.setRenderer(GLButton.createCheckRenderer("Show only 15 Elements"));
 		fixedClusterButton.setSelected(false);
@@ -114,6 +136,11 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 			probabilitySortingModeButton.setSelected(selected);
 			bandSortingModeButton.setSelected(!selected);
 		}
+		if (button == clearHiddenClusterButton) {
+			clearHiddenButtonTooltipList = new ArrayList<>();
+			clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
+			EventPublisher.trigger(new UnhidingClustersEvent());
+		}
 		boolean isBandSorting = bandSortingModeButton.isSelected();
 		EventPublisher.trigger(new SortingChangeEvent(isBandSorting ? SortingType.bandSorting
 				: SortingType.probabilitySorting, this));
@@ -126,6 +153,17 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		initSliders();
 	}
 
+	
+	@ListenTo
+	public void listenTo(ClusterGetsHiddenEvent event){
+		clearHiddenButtonTooltipList.add(event.getClusterID());
+		StringBuilder tooltip = new StringBuilder("HiddenClusters: ");
+		for (String s: clearHiddenButtonTooltipList) {
+			tooltip.append("\n   ");
+			tooltip.append(s);
+		}
+		clearHiddenClusterButton.setTooltip(tooltip.toString());
+	}
 	/**
 	 *
 	 */
