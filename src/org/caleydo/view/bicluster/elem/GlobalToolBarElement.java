@@ -139,6 +139,14 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		if (button == clearHiddenClusterButton) {
 			clearHiddenButtonTooltipList = new ArrayList<>();
 			clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
+			clearHiddenClusterButton.setRenderer(new IGLRenderer() {
+				
+				@Override
+				public void render(GLGraphics g, float w, float h, GLElement parent) {
+					g.drawText("Clear hidden Elements", 18, 5, w, 14);
+					
+				}
+			});
 			EventPublisher.trigger(new UnhidingClustersEvent());
 		}
 		boolean isBandSorting = bandSortingModeButton.isSelected();
@@ -163,6 +171,14 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 			tooltip.append(s);
 		}
 		clearHiddenClusterButton.setTooltip(tooltip.toString());
+		clearHiddenClusterButton.setRenderer(new IGLRenderer() {
+			
+			@Override
+			public void render(GLGraphics g, float w, float h, GLElement parent) {
+				g.drawText("Clear hidden Elements (" + clearHiddenButtonTooltipList.size() + ")", 18, 5, w, 14);
+				
+			}
+		});
 	}
 	/**
 	 *
