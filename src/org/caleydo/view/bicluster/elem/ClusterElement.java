@@ -188,9 +188,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 		g.drawRoundedRect(0, 0, w, h, 2);
 		g.drawText(getID(), 0, -15, 70, 12);
-		float[] black = {0,0,0,1};
+		float[] black = { 0, 0, 0, 1 };
 		g.textColor(black);
-//		g.textColor(black);
+		// g.textColor(black);
 	}
 
 	protected void onPicked(Pick pick) {
@@ -518,9 +518,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@ListenTo
 	public void listenTo(ClusterHoveredElement event) {
 		// System.out.println("hovered:");
-		if (event.getElement() == this
-				|| getDimOverlap(event.getElement()).size() > 0
-				|| getRecOverlap(event.getElement()).size() > 0)
+		ClusterElement hoveredElement = event.getElement();
+//		if (getID().contains("bicluster25"))
+//			System.out.println("Hier");
+		if (hoveredElement == this || getDimOverlap(hoveredElement).size() > 0
+				|| getRecOverlap(hoveredElement).size() > 0)
 			return;
 		else if (event.isMouseOver())
 			opacityfactor = lowOpacityFactor;
