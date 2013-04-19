@@ -102,6 +102,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			scaleView(children, w, h);
 		lastW = w;
 		lastH = h;
+		clearClusterCollisions(children, w, h);
 		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
@@ -113,6 +114,24 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			child.setSize(child.getSetWidth(), child.getSetHeight());
 		}
 		relayout();
+	}
+
+	private void clearClusterCollisions(
+			List<? extends IGLLayoutElement> children, float w, float h) {
+		int k = 1;
+		for (IGLLayoutElement i : children) {
+			for (IGLLayoutElement j : children.subList(k, children.size())) {
+				Vec2d iCenter = getCenter((ClusterElement) i.asElement());
+				Vec2d jCenter = getCenter((ClusterElement) j.asElement());
+				if (iCenter.minus(jCenter).length() < 5) {
+					// move i
+					i.setLocation((i.getLocation().x() + 60) % w, (i
+							.getLocation().y() + 60) % h);
+				}
+			}
+			k++;
+		}
+
 	}
 
 	private void scaleView(List<? extends IGLLayoutElement> children, float w,
@@ -247,7 +266,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 					/ Math.abs(distFromBottomRight.y()));
 			i.setFrameForce(new Vec2d(forceX, forceY));
 
-			//Toolbar force
+			// Toolbar force
 			Vec2d distVec = getDistance(i, toolbar);
 			double rsq = distVec.lengthSquared();
 			rsq *= distVec.length();
@@ -277,13 +296,13 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 		}
 
-
 	}
 
 	private Vec2d getDistance(ClusterElement i, GlobalToolBarElement tools) {
 		Vec2f toolsPos = tools.getAbsoluteLocation();
 		Vec2f toolsSize = tools.getSize();
-		Vec2d toolsCenter = new Vec2d(toolsPos.x() + toolsSize.x(), toolsPos.y()+toolsSize.y());
+		Vec2d toolsCenter = new Vec2d(toolsPos.x() + toolsSize.x(),
+				toolsPos.y() + toolsSize.y());
 		Vec2d distVec = getCenter(i).minus(toolsCenter);
 		double distance = distVec.length();
 		Vec2f iSize = i.getSize();
