@@ -506,8 +506,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@ListenTo
 	public void listenTo(ClusterHoveredElement event) {
-//		System.out.println("hovered:");
-		if (event.getElement() == this)
+		// System.out.println("hovered:");
+		if (event.getElement() == this
+				|| getDimOverlap(event.getElement()).size() > 0
+				|| getRecOverlap(event.getElement()).size() > 0)
 			return;
 		else if (event.isMouseOver())
 			opacityfactor = 0.3;
