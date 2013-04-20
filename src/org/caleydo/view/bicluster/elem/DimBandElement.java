@@ -29,7 +29,7 @@ import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 
 /**
  * @author Michael Gillhofer
- *
+ * 
  */
 public class DimBandElement extends BandElement {
 
@@ -38,9 +38,11 @@ public class DimBandElement extends BandElement {
 	/**
 	 * @param view
 	 */
-	public DimBandElement(GLElement first, GLElement second, AllBandsElement root) {
-		super(first, second, ((ClusterElement) first).getDimOverlap(second), root.getSelectionMixin()
-				.getDimensionSelectionManager(), root, dimBandColor);
+	public DimBandElement(GLElement first, GLElement second,
+			AllBandsElement root) {
+		super(first, second, ((ClusterElement) first).getDimOverlap(second),
+				root.getSelectionMixin().getDimensionSelectionManager(), root,
+				dimBandColor);
 	}
 
 	@Override
@@ -49,19 +51,26 @@ public class DimBandElement extends BandElement {
 		int overlapSize = overlap.size();
 		if (overlapSize > 0 && first.isVisible() && second.isVisible()) {
 			setVisibility(EVisibility.PICKABLE);
-			double endDimBandScaleFactor = second.getSize().x() / (double) second.getNumberOfDimElements();
-			double startDimBandScaleFactor = first.getSize().x() / (double) first.getNumberOfDimElements();
+			double endDimBandScaleFactor = second.getSize().x()
+					/ (double) second.getNumberOfDimElements();
+			double startDimBandScaleFactor = first.getSize().x()
+					/ (double) first.getNumberOfDimElements();
 			addPointsToBand(startDimBandScaleFactor, endDimBandScaleFactor);
-			band = TesselatedPolygons.band(bandPoints).setDrawBandBordersOnFill(false);
+			band = TesselatedPolygons.band(bandPoints)
+					.setDrawBandBordersOnFill(false);
 			if (highlightPoints.size() > 0)
-				highlightBand = TesselatedPolygons.band(highlightPoints).setDrawBandBordersOnFill(false);
+				highlightBand = TesselatedPolygons.band(highlightPoints)
+						.setDrawBandBordersOnFill(false);
 		} else
 			setVisibility(EVisibility.NONE);
 		repaintAll();
 
 	}
 
-	private void addPointsToBand(double firDimScaFac, double secDimScFac) {
+	private void addPointsToBand(double firDimScaFacDouble,
+			double secDimScaFacDouble) {
+		float firDimScaFac = (float) firDimScaFacDouble;
+		float secDimScaFac = (float) secDimScaFacDouble;
 		Vec2f fLoc = first.getLocation();
 		Vec2f sLoc = second.getLocation();
 		Vec2f fSize = first.getSize();
@@ -72,36 +81,61 @@ public class DimBandElement extends BandElement {
 		int hOS = highlightOverlap.size();
 		if (hOS == 0)
 			hOS = hoverOverlap.size();
+
+//		if (first.getID().contains("bicluster16")
+//				&& second.getID().contains("bicluster13")) {
+//			System.out.println("Stop");
+//		}
+//		boolean isFirstBandSplit = isBandSplitted(first);
+//		boolean isSecondBandSplit = isBandSplitted(second);
+		// first/second-BandDelta for moving the band to the correct sample in
+		// the heatmap
+		float fBD = /*isFirstBandSplit ? 0 : */findLeftestOverlapIndex(first);
+		float sBD = /*isSecondBandSplit ? 0 : */findLeftestOverlapIndex(second);
+		float fdx = fBD * firDimScaFac;
+		float sdx = sBD * secDimScaFac;
 		if (fLoc.y() < sLoc.y()) {
 			// first on top
 			if (fLoc.y() + fSize.y() < sLoc.y()) {
 				// second far at the bottom
 				if (hOS > 0) {
-					highlightPoints.add(pair(fLoc.x(), fLoc.y() + fSize.y(), (float) (fLoc.x() + firDimScaFac * hOS),
-							fLoc.y() + fSize.y()));
-					highlightPoints.add(pair(sLoc.x(), sLoc.y(), (float) (sLoc.x() + secDimScFac * hOS), sLoc.y()));
-					bandPoints.add(pair((float) (fLoc.x() + firDimScaFac * hOS), fLoc.y() + fSize.y(),
-							(float) (fLoc.x() + firDimScaFac * os), fLoc.y() + fSize.y()));
-					bandPoints.add(pair((float) (sLoc.x() + secDimScFac * hOS), sLoc.y(),
-							(float) (sLoc.x() + secDimScFac * os), sLoc.y()));
+					highlightPoints.add(pair(fLoc.x() + fdx,
+							fLoc.y() + fSize.y(), fLoc.x() + firDimScaFac
+									* (hOS + fBD), fLoc.y() + fSize.y()));
+					highlightPoints.add(pair(sLoc.x() + sdx, sLoc.y(), sLoc.x()
+							+ secDimScaFac * (hOS + sBD), sLoc.y()));
+					bandPoints.add(pair(fLoc.x() + firDimScaFac * (hOS + fBD),
+							fLoc.y() + fSize.y(), fLoc.x() + firDimScaFac
+									* (os + fBD), fLoc.y() + fSize.y()));
+					bandPoints.add(pair(sLoc.x() + secDimScaFac * (hOS + sBD),
+							sLoc.y(), sLoc.x() + secDimScaFac * (os + sBD),
+							sLoc.y()));
 				} else {
-					bandPoints.add(pair(fLoc.x(), fLoc.y() + fSize.y(), (float) (fLoc.x() + firDimScaFac * os),
-							fLoc.y() + fSize.y()));
-					bandPoints.add(pair(sLoc.x(), sLoc.y(), (float) (sLoc.x() + secDimScFac * os), sLoc.y()));
+					bandPoints.add(pair(fLoc.x() + fdx, fLoc.y() + fSize.y(),
+							fLoc.x() + firDimScaFac * (os + fBD), fLoc.y()
+									+ fSize.y()));
+					bandPoints.add(pair(sLoc.x() + sdx, sLoc.y(), sLoc.x()
+							+ secDimScaFac * (os + sBD), sLoc.y()));
 				}
 			} else {
 				// second in between
 				if (hOS > 0) {
-					highlightPoints.add(pair(fLoc.x(), fLoc.y(), (float) (fLoc.x() + firDimScaFac * hOS), fLoc.y()));
-					highlightPoints.add(pair(sLoc.x(), sLoc.y(), (float) (sLoc.x() + secDimScFac * hOS), sLoc.y()));
-					bandPoints.add(pair((float) (fLoc.x() + firDimScaFac * hOS), fLoc.y(),
-							(float) (fLoc.x() + firDimScaFac * os), fLoc.y()));
-					bandPoints.add(pair((float) (sLoc.x() + secDimScFac * hOS), sLoc.y(),
-							(float) (sLoc.x() + secDimScFac * os), sLoc.y()));
+					highlightPoints.add(pair(fLoc.x() + fdx, fLoc.y(), fLoc.x()
+							+ firDimScaFac * (hOS + fBD), fLoc.y()));
+					highlightPoints.add(pair(sLoc.x() + sdx, sLoc.y(), sLoc.x()
+							+ secDimScaFac * (hOS + sBD), sLoc.y()));
+					bandPoints.add(pair(fLoc.x() + firDimScaFac * (hOS + fBD),
+							fLoc.y(), fLoc.x() + firDimScaFac * (os + fBD),
+							fLoc.y()));
+					bandPoints.add(pair(sLoc.x() + secDimScaFac * (hOS + sBD),
+							sLoc.y(), sLoc.x() + secDimScaFac * (os + sBD),
+							sLoc.y()));
 
 				} else {
-					bandPoints.add(pair(fLoc.x(), fLoc.y(), (float) (fLoc.x() + firDimScaFac * os), fLoc.y()));
-					bandPoints.add(pair(sLoc.x(), sLoc.y(), (float) (sLoc.x() + secDimScFac * os), sLoc.y()));
+					bandPoints.add(pair(fLoc.x() + fdx, fLoc.y(), fLoc.x()
+							+ firDimScaFac * (os + fBD), fLoc.y()));
+					bandPoints.add(pair(sLoc.x() + sdx, sLoc.y(), sLoc.x()
+							+ secDimScaFac * (os + sBD), sLoc.y()));
 				}
 			}
 
@@ -110,37 +144,63 @@ public class DimBandElement extends BandElement {
 			if (sLoc.y() + sSize.y() < fLoc.y()) {
 				// second far at the top
 				if (hOS > 0) {
-					highlightPoints.add(pair(sLoc.x(), sLoc.y() + sSize.y(), (float) (sLoc.x() + secDimScFac * hOS),
-							sLoc.y() + sSize.y()));
-					highlightPoints.add(pair(fLoc.x(), fLoc.y(), (float) (fLoc.x() + firDimScaFac * hOS), fLoc.y()));
-					bandPoints.add(pair((float) (sLoc.x() + secDimScFac * hOS), sLoc.y() + sSize.y(),
-							(float) (sLoc.x() + secDimScFac * os), sLoc.y() + sSize.y()));
-					bandPoints.add(pair((float) (fLoc.x() + firDimScaFac * hOS), fLoc.y(),
-							(float) (fLoc.x() + firDimScaFac * os), fLoc.y()));
+					highlightPoints.add(pair(sLoc.x() + sdx,
+							sLoc.y() + sSize.y(), sLoc.x() + secDimScaFac
+									* (hOS + sBD), sLoc.y() + sSize.y()));
+					highlightPoints.add(pair(fLoc.x() + fdx, fLoc.y(), fLoc.x()
+							+ firDimScaFac * (hOS + fBD), fLoc.y()));
+					bandPoints.add(pair(sLoc.x() + secDimScaFac * (hOS + sBD),
+							sLoc.y() + sSize.y(), sLoc.x() + secDimScaFac
+									* (os + sBD), sLoc.y() + sSize.y()));
+					bandPoints.add(pair(fLoc.x() + firDimScaFac * (hOS + fBD),
+							fLoc.y(), fLoc.x() + firDimScaFac * (os + fBD),
+							fLoc.y()));
 				} else {
-					bandPoints.add(pair(sLoc.x(), sLoc.y() + sSize.y(), (float) (sLoc.x() + secDimScFac * os), sLoc.y()
-							+ sSize.y()));
-					bandPoints.add(pair(fLoc.x(), fLoc.y(), (float) (fLoc.x() + firDimScaFac * os), fLoc.y()));
+					bandPoints.add(pair(sLoc.x() + sdx, sLoc.y() + sSize.y(),
+							sLoc.x() + secDimScaFac * (os + sBD), sLoc.y()
+									+ sSize.y()));
+					bandPoints.add(pair(fLoc.x() + fdx, fLoc.y(), fLoc.x()
+							+ firDimScaFac * (os + fBD), fLoc.y()));
 				}
 			} else {
 				if (hOS > 0) {
-					highlightPoints.add(pair(fLoc.x(), fLoc.y(), (float) (fLoc.x() + firDimScaFac * hOS), fLoc.y()));
-					highlightPoints.add(pair(sLoc.x(), sLoc.y(), (float) (sLoc.x() + secDimScFac * hOS), sLoc.y()));
-					bandPoints.add(pair((float) (fLoc.x() + firDimScaFac * hOS), fLoc.y(),
-							(float) (fLoc.x() + firDimScaFac * os), fLoc.y()));
-					bandPoints.add(pair((float) (sLoc.x() + secDimScFac * hOS), sLoc.y(),
-							(float) (sLoc.x() + secDimScFac * os), sLoc.y()));
+					highlightPoints.add(pair(fLoc.x() + fdx, fLoc.y(), fLoc.x()
+							+ firDimScaFac * (hOS + fBD), fLoc.y()));
+					highlightPoints.add(pair(sLoc.x() + sdx, sLoc.y(), sLoc.x()
+							+ secDimScaFac * (hOS + sBD), sLoc.y()));
+					bandPoints.add(pair(fLoc.x() + firDimScaFac * (hOS + fBD),
+							fLoc.y(), fLoc.x() + firDimScaFac * (os + fBD),
+							fLoc.y()));
+					bandPoints.add(pair(sLoc.x() + secDimScaFac * (hOS + sBD),
+							sLoc.y(), sLoc.x() + secDimScaFac * (os + sBD),
+							sLoc.y()));
 				} else {
-					bandPoints.add(pair(fLoc.x(), fLoc.y(), (float) (fLoc.x() + firDimScaFac * os), fLoc.y()));
-					bandPoints.add(pair(sLoc.x(), sLoc.y(), (float) (sLoc.x() + secDimScFac * os), sLoc.y()));
+					bandPoints.add(pair(fLoc.x() + fdx, fLoc.y(), fLoc.x()
+							+ firDimScaFac * (os + fBD), fLoc.y()));
+					bandPoints.add(pair(sLoc.x() + sdx, sLoc.y(), sLoc.x()
+							+ secDimScaFac * (os + sBD), sLoc.y()));
 				}
 			}
 		}
 	}
 
+	private int findLeftestOverlapIndex(ClusterElement element) {
+		int smallest = 1000000;
+		for (Integer i : overlap) {
+			int cur = element.getDimIndexOf(i);
+			if (cur < smallest)
+				smallest = cur;
+		}
+		return smallest;
+	}
+
 	@Override
 	protected void fireSelectionChanged() {
 		root.getSelectionMixin().fireDimensionSelectionDelta();
+	}
+
+	protected boolean isBandSplitted(ClusterElement cluster) {
+		return !cluster.isContinuousDimSequenze(overlap);
 	}
 
 }

@@ -159,4 +159,11 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	}
 
+	public void recalculateOverlap() {
+		for (GLElement iGL: clusters){
+			((ClusterElement) iGL).calculateOverlap();
+		}
+		
+	}
+
 }

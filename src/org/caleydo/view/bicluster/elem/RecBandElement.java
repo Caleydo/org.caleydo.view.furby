@@ -75,17 +75,15 @@ public class RecBandElement extends BandElement {
 		int hOS = highlightOverlap.size();
 		if (hOS == 0)
 			hOS = hoverOverlap.size();
-		// if (second.getId().contains("bicluster17") && first.getId().contains("bicluster20"))
-		// System.out.println("here");
-//		if (first.getID().contains("bicluster6") && second.getID().contains("bicluster18")){
-//			System.out.println("stop");
+//		if (first.getID().contains("bicluster22")&& second.getID().contains("bicluster7")){
+//			System.out.println("Stop");
 //		}
+		
 		boolean isBandSplitFirst = isBandSplitted(first);
 		boolean isBandSplitSecond = isBandSplitted(second);
 		//Delta for moving the band to the correct gene in the heatmap
-		float fBD = isBandSplitFirst ?  0 : first.getRecIndexOf(overlap.get(0));
-		float sBD = isBandSplitSecond ?  0 : second.getRecIndexOf(overlap.get(0));
-//		System.out.println(first.getID() + " / " + second.getID() + ": " + isBandSplitFirst + " " + isBandSplitSecond);
+		float fBD = isBandSplitFirst ?  0 : findLeftestOverlapIndex(first);
+		float sBD = isBandSplitSecond ?  0 : findLeftestOverlapIndex(second);
 		if (fLoc.x() < sLoc.x()) {
 			// second right
 			if (fLoc.x() + fSize.x() < sLoc.x()) {
@@ -159,17 +157,23 @@ public class RecBandElement extends BandElement {
 	}
 
 
-	private boolean isBandSplitted(ClusterElement cluster) {
-		return !cluster.isContinuousRecSequenze(overlap);
-	}
-
 	@Override
 	protected void fireSelectionChanged() {
 		root.getSelectionMixin().fireRecordSelectionDelta();
 
 	}
 
+	protected boolean isBandSplitted(ClusterElement cluster) {
+		return !cluster.isContinuousRecSequenze(overlap);
+	}
 
-
+	private int findLeftestOverlapIndex(ClusterElement element) {
+		int smallest = 1000000;
+		for (Integer i: overlap) {
+			int cur =element.getRecIndexOf(i);
+			if (cur < smallest)	 smallest =cur;
+		}
+		return smallest;
+	}
 
 }

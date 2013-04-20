@@ -252,7 +252,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	/**
 	 *
 	 */
-	private void calculateOverlap() {
+	void calculateOverlap() {
 		dimOverlap = new HashMap<>();
 		recOverlap = new HashMap<>();
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
@@ -274,8 +274,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
 			recOverlap.put(element, eIndizes);
 			recordOverlapSize += eIndizes.size();
-
 		}
+		if (getVisibility() == EVisibility.PICKABLE)
+			sort(sortingType);
+		fireTablePerspectiveChanged();
 	}
 
 	/**
@@ -639,10 +641,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			setVisibility(EVisibility.NONE);
 			hasContent = false;
 		}
-		calculateOverlap();
-		if (getVisibility() == EVisibility.PICKABLE)
-			sort(sortingType);
-		fireTablePerspectiveChanged();
+		
 		// setSize(200, 200);
 	}
 
@@ -708,16 +707,36 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	public boolean isContinuousRecSequenze(List<Integer> overlap) {
 		List<Integer> recordArray = getRecordVirtualArray().getIDs();
-		return Collections.indexOfSubList(recordArray, overlap) < 0 ? false
-				: true;
+		int index = 0;
+		for (Integer i : recordArray) {
+			if (overlap.contains(i)) break;
+			index++;
+		}
+		if (index > recordArray.size()-overlap.size()) return false;
+		int done = 1;
+		for (Integer i: recordArray.subList(index, recordArray.size()-1)){
+			if (done++ >= overlap.size()) break;
+			if (!overlap.contains(i)) return false;
+		}
+		return true;
 	}
 
 	public boolean isContinuousDimSequenze(List<Integer> overlap) {
 		List<Integer> recordArray = getDimensionVirtualArray().getIDs();
-		return Collections.indexOfSubList(recordArray, overlap) < 0 ? false
-				: true;
+		int index = 0;
+		for (Integer i : recordArray) {
+			if (overlap.contains(i)) break;
+			index++;
+		}
+		if (index > recordArray.size()-overlap.size()) return false;
+		int done = 1;
+		for (Integer i: recordArray.subList(index, recordArray.size()-1)){
+			if (done++ >= overlap.size()) break;
+			if (!overlap.contains(i)) return false;
+		}
+		return true;
 	}
-	
+
 	public int getDimIndexOf(int value) {
 		return getDimensionVirtualArray().indexOf(value);
 	}

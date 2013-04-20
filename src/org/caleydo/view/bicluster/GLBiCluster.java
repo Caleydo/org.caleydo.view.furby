@@ -177,6 +177,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 				e.printStackTrace();
 			}
 		}
+		rootElement.recalculateOverlap();
 		rootElement.createBands();
 		rootElement.resetDamping();
 	}
