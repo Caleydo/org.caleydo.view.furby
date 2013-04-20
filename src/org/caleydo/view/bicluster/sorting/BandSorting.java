@@ -68,4 +68,53 @@ public class BandSorting implements Iterable<Integer> {
 		return finalSorting.iterator();
 	}
 
+	
+
+
+	/**
+	 * @author Michael Gillhofer
+	 *
+	 */
+	public class BandConflict implements Comparable<BandConflict> {
+		List<Integer> first;
+		List<Integer> second;
+		List<Integer> conflict;
+
+		/**
+		 * @return the first, see {@link #first}
+		 */
+		public List<Integer> getFirst() {
+			return first;
+		}
+
+		/**
+		 * @return the second, see {@link #second}
+		 */
+		public List<Integer> getSecond() {
+			return second;
+		}
+
+		/**
+		 * @return the conflict, see {@link #conflict}
+		 */
+		public List<Integer> getConflict() {
+			return conflict;
+		}
+
+		@Override
+		public int compareTo(BandConflict o) {
+			return new Integer(conflict.size()).compareTo(o.conflict.size());
+		}
+
+		/**
+		 *
+		 */
+		public BandConflict(List<Integer> first, List<Integer> second, List<Integer> conflict) {
+			this.first = first;
+			this.second = second;
+			this.conflict = conflict;
+		}
+
+	}
+
 }

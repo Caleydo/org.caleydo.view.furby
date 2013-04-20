@@ -19,9 +19,8 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import gleem.linalg.Vec2f;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -98,6 +97,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private int bcNr;
 	private ToolBar toolBar;
 	private HeaderBar headerBar;
+	private GLElement heatmap;
 	private float opacityfactor = 1;
 	private float highOpacityFactor = 1;
 	private float lowOpacityFactor = 0.2f;
@@ -112,9 +112,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		headerBar = new HeaderBar();
 		this.add(toolBar); // add a element toolbar
 		this.add(headerBar);
-		GLElement heatmap = new HeatMapElement(data, this, EDetailLevel.HIGH);
+		heatmap = new HeatMapElement(data, this, EDetailLevel.HIGH);
 		heatmap.setzDelta(0.5f);
-//		setzDelta(f);
+		// setzDelta(f);
 		this.add(heatmap);
 
 		setVisibility(EVisibility.PICKABLE);
@@ -125,6 +125,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				onPicked(pick);
 			}
 		});
+
+		this.setLayoutData(MoveTransitions.MOVE_AND_GROW_LINEAR);
 	}
 
 	@Override
@@ -506,7 +508,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			sorting.setCallback(this);
 			sorting.setTooltip("Change sorting");
 			hide = new GLButton();
-			hide.setRenderer(GLRenderers.fillImage("./resources/icons/dialog_close.png"));
+			hide.setRenderer(GLRenderers
+					.fillImage("./resources/icons/dialog_close.png"));
 			hide.setTooltip("Close");
 			hide.setSize(16, Float.NaN);
 			hide.setCallback(this);
@@ -515,12 +518,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			enlarge = new GLButton();
 			enlarge.setSize(16, Float.NaN);
 			enlarge.setTooltip("Enlarge");
-			enlarge.setRenderer(GLRenderers.fillImage("./resources/icons/zoom_in.png"));
+			enlarge.setRenderer(GLRenderers
+					.fillImage("./resources/icons/zoom_in.png"));
 			enlarge.setCallback(this);
 			smaller = new GLButton();
-			smaller.setTooltip("reduce");
+			smaller.setTooltip("Reduce");
 			smaller.setSize(16, Float.NaN);
-			smaller.setRenderer(GLRenderers.fillImage("./resources/icons/zoom_out.png"));
+			smaller.setRenderer(GLRenderers
+					.fillImage("./resources/icons/zoom_out.png"));
 			smaller.setCallback(this);
 			this.add(enlarge);
 			this.add(smaller);
@@ -537,9 +542,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		@Override
 		public void onSelectionChanged(GLButton button, boolean selected) {
 			if (button == hide) {
-				// for (GLElement i : this) {
-				// i.setVisibility(EVisibility.NONE);
-				// }
 				hideThisElement();
 			} else if (button == sorting) {
 				setSortingCaption(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
@@ -547,27 +549,28 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				sort(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
 						: SortingType.probabilitySorting);
 			} else if (button == enlarge) {
-				scaleFactor +=0.6;
+				scaleFactor += 0.6;
+				heatmap.setzDelta(1f);
 				resize();
 			} else if (button == smaller) {
 				scaleFactor = 1;
+				heatmap.setzDelta(0.5f);
 				resize();
 			}
 		}
 	}
-	
-	
-	
-	public void setClusterSize(int x, int y){
+
+	public void setClusterSize(int x, int y) {
 		dimSize = x;
 		recSize = y;
 		resize();
 	}
 
-	private double scaleFactor=1;
-	
+	private double scaleFactor = 1;
+
 	private void resize() {
-		setSize((float)(dimSize*scaleFactor), (float)(recSize*scaleFactor));
+		setSize((float) (dimSize * scaleFactor),
+				(float) (recSize * scaleFactor));
 		relayout();
 	}
 
@@ -703,4 +706,23 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		fireTablePerspectiveChanged();
 	}
 
+	public boolean isContinuousRecSequenze(List<Integer> overlap) {
+		List<Integer> recordArray = getRecordVirtualArray().getIDs();
+		return Collections.indexOfSubList(recordArray, overlap) < 0 ? false
+				: true;
+	}
+
+	public boolean isContinuousDimSequenze(List<Integer> overlap) {
+		List<Integer> recordArray = getDimensionVirtualArray().getIDs();
+		return Collections.indexOfSubList(recordArray, overlap) < 0 ? false
+				: true;
+	}
+	
+	public int getDimIndexOf(int value) {
+		return getDimensionVirtualArray().indexOf(value);
+	}
+
+	public int getRecIndexOf(int value) {
+		return getRecordVirtualArray().indexOf(value);
+	}
 }
