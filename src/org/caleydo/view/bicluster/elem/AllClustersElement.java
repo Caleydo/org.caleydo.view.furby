@@ -132,7 +132,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			for (IGLLayoutElement j : children.subList(k, children.size())) {
 				Vec2d iCenter = getCenter((ClusterElement) i.asElement());
 				Vec2d jCenter = getCenter((ClusterElement) j.asElement());
-				if (iCenter.minus(jCenter).length() < 5) {
+				if (iCenter.minus(jCenter).length() < 10) {
 					// move i
 					i.setLocation((i.getLocation().x() + 100) % w, (i
 							.getLocation().y() + 100) % h);
@@ -326,6 +326,9 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	private Vec2d getDistanceFromTopLeft(ClusterElement i, float w, float h) {
 		Vec2d pos = getCenter(i);
+		Vec2f size = i.getSize();
+		pos.setX(pos.x()-size.x()*0.5);
+		pos.setY(pos.y()-size.y()*0.5);
 		return pos;
 	}
 
@@ -333,6 +336,10 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		Vec2d dist = getDistanceFromTopLeft(i, w, h);
 		dist.setX(-(w - dist.x()));
 		dist.setY(-(h - dist.y()));
+		Vec2f size = i.getSize();
+		dist.setX(dist.x()+size.x()*0.5);
+		dist.setY(dist.y()+size.y()*0.5);
+
 		return dist;
 	}
 
