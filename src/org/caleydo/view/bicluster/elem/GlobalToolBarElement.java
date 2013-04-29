@@ -86,7 +86,7 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 			
 			@Override
 			public void render(GLGraphics g, float w, float h, GLElement parent) {
-				g.drawText("Clear hidden Elements", 18, 5, w, 14);
+				g.drawText("Show all Clusters", 18, 5, w, 14);
 				
 			}
 		});
@@ -143,7 +143,7 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 				
 				@Override
 				public void render(GLGraphics g, float w, float h, GLElement parent) {
-					g.drawText("Clear hidden Elements", 18, 5, w, 14);
+					g.drawText("Show all clusters", 18, 5, w, 14);
 					
 				}
 			});
@@ -175,7 +175,7 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 			
 			@Override
 			public void render(GLGraphics g, float w, float h, GLElement parent) {
-				g.drawText("Clear hidden Elements (" + clearHiddenButtonTooltipList.size() + ")", 18, 5, w, 14);
+				g.drawText("Show all clusters (+" + clearHiddenButtonTooltipList.size() + ")", 18, 5, w, 14);
 				
 			}
 		});
