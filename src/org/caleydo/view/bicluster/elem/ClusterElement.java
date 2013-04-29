@@ -19,6 +19,8 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,6 +28,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.swing.Timer;
 
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
@@ -101,6 +105,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private float opacityfactor = 1;
 	private float highOpacityFactor = 1;
 	private float lowOpacityFactor = 0.2f;
+	private float curOpacityFactor = 1f;
+	private float opacityDelta = 0.02f;
 
 	public ClusterElement(TablePerspective data, TablePerspective x,
 			AllClustersElement root) {
@@ -129,6 +135,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.setLayoutData(MoveTransitions.MOVE_AND_GROW_LINEAR);
 	}
 
+	Timer timer = new Timer(10, new ActionListener() {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			if (opacityfactor < curOpacityFactor)
+				curOpacityFactor -= opacityDelta;
+			else if (opacityfactor > curOpacityFactor)
+				curOpacityFactor += opacityDelta;
+			else
+				timer.setDelay(1000);
+			repaint();
+		}
+	});
+
 	@Override
 	public Color apply(int recordID, int dimensionID,
 			ATableBasedDataDomain dataDomain, boolean deSelected) {
@@ -136,7 +156,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		Color color = BasicBlockColorer.INSTANCE.apply(recordID, dimensionID,
 				dataDomain, deSelected);
 
-		color.a = (float) (color.a * opacityfactor);
+		color.a = (float) (color.a * curOpacityFactor);
 		return color;
 	}
 
@@ -170,7 +190,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
-		float[] color = { 0, 0, 0, (float) opacityfactor };
+		float[] color = { 0, 0, 0, (float) curOpacityFactor };
 		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
 		g.textColor(color);
@@ -611,10 +631,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		if (hoveredElement == this || getDimOverlap(hoveredElement).size() > 0
 				|| getRecOverlap(hoveredElement).size() > 0)
 			return;
-		else if (event.isMouseOver())
+		else if (event.isMouseOver()) {
 			opacityfactor = lowOpacityFactor;
-		else
+
+		} else {
 			opacityfactor = highOpacityFactor;
+		}
+		timer.setDelay(10);
+		timer.restart();
 		relayout();
 	}
 
@@ -641,7 +665,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			setVisibility(EVisibility.NONE);
 			hasContent = false;
 		}
-		
+
 		// setSize(200, 200);
 	}
 
@@ -709,14 +733,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		List<Integer> recordArray = getRecordVirtualArray().getIDs();
 		int index = 0;
 		for (Integer i : recordArray) {
-			if (overlap.contains(i)) break;
+			if (overlap.contains(i))
+				break;
 			index++;
 		}
-		if (index > recordArray.size()-overlap.size()) return false;
+		if (index > recordArray.size() - overlap.size())
+			return false;
 		int done = 1;
-		for (Integer i: recordArray.subList(index, recordArray.size()-1)){
-			if (done++ >= overlap.size()) break;
-			if (!overlap.contains(i)) return false;
+		for (Integer i : recordArray.subList(index, recordArray.size() - 1)) {
+			if (done++ >= overlap.size())
+				break;
+			if (!overlap.contains(i))
+				return false;
 		}
 		return true;
 	}
@@ -725,14 +753,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		List<Integer> recordArray = getDimensionVirtualArray().getIDs();
 		int index = 0;
 		for (Integer i : recordArray) {
-			if (overlap.contains(i)) break;
+			if (overlap.contains(i))
+				break;
 			index++;
 		}
-		if (index > recordArray.size()-overlap.size()) return false;
+		if (index > recordArray.size() - overlap.size())
+			return false;
 		int done = 1;
-		for (Integer i: recordArray.subList(index, recordArray.size()-1)){
-			if (done++ >= overlap.size()) break;
-			if (!overlap.contains(i)) return false;
+		for (Integer i : recordArray.subList(index, recordArray.size() - 1)) {
+			if (done++ >= overlap.size())
+				break;
+			if (!overlap.contains(i))
+				return false;
 		}
 		return true;
 	}

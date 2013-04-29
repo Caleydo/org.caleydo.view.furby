@@ -22,6 +22,7 @@ package org.caleydo.view.bicluster.elem;
 import gleem.linalg.Vec2f;
 import gleem.linalg.Vec4f;
 
+import java.awt.Rectangle;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -30,6 +31,7 @@ import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
+import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.util.Vec2d;
@@ -120,22 +122,32 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private void bringClustersBackToFrame(
 			List<? extends IGLLayoutElement> children, float w, float h) {
 		for (IGLLayoutElement i : children) {
-			i.setLocation(i.getLocation().x() %w, i.getLocation().y()%h);
+			i.setLocation(i.getLocation().x() % w, i.getLocation().y() % h);
 		}
-		
+
 	}
 
 	private void clearClusterCollisions(
 			List<? extends IGLLayoutElement> children, float w, float h) {
 		int k = 1;
 		for (IGLLayoutElement i : children) {
-			for (IGLLayoutElement j : children.subList(k, children.size())) {
-				Vec2d iCenter = getCenter((ClusterElement) i.asElement());
-				Vec2d jCenter = getCenter((ClusterElement) j.asElement());
-				if (iCenter.minus(jCenter).length() < 10) {
-					// move i
-					i.setLocation((i.getLocation().x() + 100) % w, (i
-							.getLocation().y() + 100) % h);
+			for (IGLLayoutElement j : children) {
+				if (j == i || j == dragedElement || i == dragedElement)
+					continue;
+				Vec2f iSize = i.asElement().getSize();
+				Vec2f iLoc = i.asElement().getLocation();
+				Vec2f jSize = j.asElement().getSize();
+				Vec2f jLoc = j.asElement().getLocation();
+				Rectangle iRec = new Rectangle((int) iLoc.x(), (int) iLoc.y(),
+						(int) iSize.x(), (int) iSize.y());
+				Rectangle jRec = new Rectangle((int) jLoc.x(), (int) jLoc.y(),
+						(int) jSize.x(), (int) jSize.y());
+				if (iRec.intersects(jRec)) {
+					// if (iCenter.minus(jCenter).length() < 10) {
+					// // move i
+					if (i != dragedElement)
+						i.setLocation((iLoc.x() + jSize.x() / 3 * 2) % w,
+								(iLoc.y() + jSize.x() / 3 * 2) % h);
 				}
 			}
 			k++;
@@ -327,8 +339,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private Vec2d getDistanceFromTopLeft(ClusterElement i, float w, float h) {
 		Vec2d pos = getCenter(i);
 		Vec2f size = i.getSize();
-		pos.setX(pos.x()-size.x()*0.5);
-		pos.setY(pos.y()-size.y()*0.5);
+		pos.setX(pos.x() - size.x() * 0.5);
+		pos.setY(pos.y() - size.y() * 0.5);
 		return pos;
 	}
 
@@ -337,8 +349,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		dist.setX(-(w - dist.x()));
 		dist.setY(-(h - dist.y()));
 		Vec2f size = i.getSize();
-		dist.setX(dist.x()+size.x()*0.5);
-		dist.setY(dist.y()+size.y()*0.5);
+		dist.setX(dist.x() + size.x() * 0.5);
+		dist.setY(dist.y() + size.y() * 0.5);
 
 		return dist;
 	}
