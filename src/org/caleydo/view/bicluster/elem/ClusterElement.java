@@ -19,8 +19,6 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import gleem.linalg.Vec2f;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -76,8 +74,8 @@ import org.caleydo.view.heatmap.v2.IBlockColorer;
 /**
  * e.g. a class for representing a cluster
  * 
- * @author Samuel Gratzl
  * @author Michael Gillhofer
+ * @author Samuel Gratzl
  */
 public class ClusterElement extends AnimatedGLElementContainer implements
 		IBlockColorer, IGLLayout {
@@ -144,6 +142,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				curOpacityFactor -= opacityDelta;
 			else if (opacityfactor > curOpacityFactor)
 				curOpacityFactor += opacityDelta;
+			else timer.stop();
+			relayout();
 			repaint();
 		}
 	});
@@ -211,7 +211,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			if (isDragged == false) {
 				root.setDragedLayoutElement(this);
 			}
-			root.resetDamping();
 			isDragged = true;
 			setLocation(getLocation().x() + pick.getDx(), getLocation().y()
 					+ pick.getDy());
@@ -540,7 +539,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			focus = new GLButton();
 			focus.setRenderer(GLRenderers.drawText(" F"));
 			focus.setSize(16, Float.NaN);
-			focus.setTooltip("Focus this Button");
+			focus.setTooltip("Focus this Cluster");
 			focus.setCallback(this);
 			this.add(focus);
 			enlarge = new GLButton();

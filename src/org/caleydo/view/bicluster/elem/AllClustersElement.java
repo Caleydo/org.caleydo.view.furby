@@ -43,18 +43,14 @@ import com.google.common.base.Stopwatch;
  * @author Michael Gillhofer
  */
 public class AllClustersElement extends GLElementContainer implements IGLLayout {
-	float layoutStabilisationTime = 3000; // After X Milliseconds the layout is
-											// fixed until a cluster is moved
-	// resetDamping(); is called)
-
+	
 	float repulsion = 200000f;
 	float attractionFactor = 400f;
 	float borderForceFactor = 300f;
 	// double aD = 0.3;
 
 	public Integer fixedElementsCount = 15;
-	private GLRootElement glRootElement;
-
+	
 	/**
 	 * @return the fixedElementsCount, see {@link #fixedElementsCount}
 	 */
@@ -72,7 +68,6 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	public AllClustersElement(GLRootElement glRootElement) {
 		setLayout(this);
-		this.glRootElement = glRootElement;
 	}
 
 	@Override
@@ -92,8 +87,6 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	}
 
 	private boolean isInitLayoutDone = false;
-	Stopwatch stopwatch = new Stopwatch();
-
 	float lastW, lastH;
 
 	@Override
@@ -131,7 +124,6 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	private void clearClusterCollisions(
 			List<? extends IGLLayoutElement> children, float w, float h) {
-		int k = 1;
 		for (IGLLayoutElement i : children) {
 			for (IGLLayoutElement j : children) {
 				if (j == i)
@@ -151,7 +143,6 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 							(jLoc.x() + 200) % w, (jLoc.y() + 200) % h, w, h);
 				}
 			}
-			k++;
 		}
 
 	}
@@ -168,34 +159,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	double damping = 1f;
 
-	double timerInterval = 100; // ms
-
-	Timer dampingTimer = new Timer();
-
-	public void resetDamping() {
-		damping = 1.f;
-	}
-
-	TimerTask timerTask = new TimerTask() { // periodic tasks for stabilizing
-											// layout after
-											// layoutStabilisationTime
-		// seconds.
-
-		@Override
-		public void run() {
-			// setDamping();
-
-		}
-
-		protected void setDamping() {
-			double amount = (1. / (layoutStabilisationTime / timerInterval));
-			if (damping >= amount)
-				damping -= amount;
-			else
-				damping = 0;
-		}
-	};
-
+	
 	/**
 	 * @param children2
 	 * @param w

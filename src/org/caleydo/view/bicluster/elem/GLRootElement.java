@@ -142,11 +142,6 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	}
 
 
-	public void resetDamping() {
-		clusters.resetDamping();
-
-	}
-
 	public AllClustersElement getClusters() {
 		return clusters;
 	}
