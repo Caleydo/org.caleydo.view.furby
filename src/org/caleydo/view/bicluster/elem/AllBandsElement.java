@@ -24,7 +24,12 @@ import java.util.List;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.TablePerspectiveSelectionMixin;
+import org.caleydo.core.data.selection.delta.SelectionDelta;
+import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.event.EventListenerManager.DeepScan;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.event.data.SelectionCommandEvent;
+import org.caleydo.core.event.data.SelectionUpdateEvent;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
@@ -77,7 +82,12 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 
 	@Override
 	public void onSelectionUpdate(SelectionManager manager) {
-
+		SelectionDelta selectionDelta = manager.getDelta();
+		SelectionUpdateEvent event = new SelectionUpdateEvent();
+		event.setSender(selectionMixin);
+		event.setEventSpace(selectionMixin.getTablePerspective().getDataDomain().getDataDomainID());
+		event.setSelectionDelta(selectionDelta);
+		EventPublisher.trigger(event);
 	}
 
 	@Override
@@ -99,4 +109,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	public BandElement getSelection() {
 		return this.selection;
 	}
+	
+
 }

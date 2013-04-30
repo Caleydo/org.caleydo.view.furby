@@ -151,7 +151,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	public Color apply(int recordID, int dimensionID,
 			ATableBasedDataDomain dataDomain, boolean deSelected) {
-		// TODO custom implementation with alpha values or something like that
 		Color color = BasicBlockColorer.INSTANCE.apply(recordID, dimensionID,
 				dataDomain, deSelected);
 
