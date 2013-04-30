@@ -1,4 +1,4 @@
-package org.caleydo.view.bicluster.elem;
+package org.caleydo.view.bicluster.event;
 
 import org.caleydo.core.event.AEvent;
 import org.caleydo.core.view.opengl.layout2.GLElement;

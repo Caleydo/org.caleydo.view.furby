@@ -32,6 +32,10 @@ import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.IPopupLayer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.view.bicluster.event.ClusterScaleEvent;
+import org.caleydo.view.bicluster.event.CreateBandsEvent;
+import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
+import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 
 ;
 
@@ -103,22 +107,17 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		bands.updateSelection();
 	}
 
-	int maxDimClusterElements = 0;
-	int maxRecClusterElements = 0;
+
 	int maxClusterRecSize = 150;
 	int maxClusterDimSize = 150;
-	private int smallClusterSize = 100;
-	private int largeClusterSize = 150;
 
-	/**
-	 * @param j
-	 * 
-	 */
+	private int curClusterSize = 150;
+
 	public void setClusterSizes() {
 		double maxDimClusterElements = 1;
 		double maxRecClusterElements = 1;
-		maxClusterDimSize = largeClusterSize;
-		maxClusterRecSize = largeClusterSize;
+		maxClusterDimSize = curClusterSize;
+		maxClusterRecSize = curClusterSize;
 
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
@@ -168,9 +167,35 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	public void listenTo(ClusterScaleEvent event) {
 		setClusterSizes();
 	}
-	
+
 	@ListenTo
 	public void listenTo(CreateBandsEvent event) {
 		createBands();
+	}
+
+	int count = 0;
+
+	@ListenTo
+	public void listenTo(RecalculateOverlapEvent event) {
+		if (event.isGlobal())
+			count++;
+		else {
+			recalculateOverlap();
+			count = 0;
+		}
+		if (count == clusters.size()) {
+			recalculateOverlap();
+			count = 0;
+		}
+	}
+
+	private int smallClusterSize = 100;
+	private int largeClusterSize = 150;
+
+	@ListenTo
+	public void listenTo(LZThresholdChangeEvent event) {
+		if (event.isFixedClusterCount()) curClusterSize = smallClusterSize;
+		else curClusterSize = largeClusterSize;
+//		setClusterSizes();
 	}
 }

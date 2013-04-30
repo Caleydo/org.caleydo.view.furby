@@ -67,8 +67,11 @@ import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterHoveredElement;
+import org.caleydo.view.bicluster.event.ClusterScaleEvent;
+import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
+import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
@@ -269,7 +272,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		dimArray.clear();
 		int count = 0;
 		for (Integer i : dimIndices) {
-			if (setOnlyShowXElements && allClusters.getFixedElementsCount() <= count)
+			if (setOnlyShowXElements
+					&& allClusters.getFixedElementsCount() <= count)
 				break;
 			dimArray.append(i);
 			count++;
@@ -277,7 +281,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		count = 0;
 		recArray.clear();
 		for (Integer i : recIndices) {
-			if (setOnlyShowXElements && allClusters.getFixedElementsCount() <= count)
+			if (setOnlyShowXElements
+					&& allClusters.getFixedElementsCount() <= count)
 				break;
 			recArray.append(i);
 			count++;
@@ -827,16 +832,19 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@ListenTo
 	public void listenTo(LZThresholdChangeEvent event) {
-		if (!event.isGlobalEvent()) return;
+		if (!event.isGlobalEvent())
+			return;
 		if (event.getRecordThreshold() != recThreshold
-				|| event.getDimensionThreshold() != dimThreshold) {
+				|| event.getDimensionThreshold() != dimThreshold
+				|| setOnlyShowXElements != event.isFixedClusterCount()) {
 			recThreshold = event.getRecordThreshold();
 			dimThreshold = event.getDimensionThreshold();
-			rebuildMyData();
+			setOnlyShowXElements = event.isFixedClusterCount();
+			rebuildMyData(event.isGlobalEvent());
 		}
 	}
 
-	private void rebuildMyData() {
+	private void rebuildMyData(boolean isGlobal) {
 		Table L = l.getDataDomain().getTable();
 		Table Z = z.getDataDomain().getTable();
 		Future<ScanResult> recList = null, dimList = null;
@@ -855,8 +863,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			e.printStackTrace();
 		}
 		setIndices(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr);
-		calculateOverlap();
 		EventPublisher.trigger(new ClusterScaleEvent(this));
+		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal));
 		EventPublisher.trigger(new CreateBandsEvent(this));
 
 	}
