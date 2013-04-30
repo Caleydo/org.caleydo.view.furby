@@ -21,8 +21,12 @@ package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec3f;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.Timer;
 
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
@@ -101,10 +105,10 @@ public abstract class BandElement extends PickableGLElement {
 				bandColor = defaultColor;
 			if (band != null) {
 				g.color(bandColor[0], bandColor[1], bandColor[2],
-						0.8f * opacityFactor);
+						0.8f * curOpacityFactor);
 				g.drawPath(band);
 				g.color(bandColor[0], bandColor[1], bandColor[2],
-						0.5f * opacityFactor);
+						0.5f * curOpacityFactor);
 				g.fillPolygon(band);
 			}
 			if (highlightOverlap.size() > 0) {
@@ -236,9 +240,26 @@ public abstract class BandElement extends PickableGLElement {
 				selectionManager.getElements(selectionType));
 		highlightOverlap.retainAll(overlap);
 		updatePosition();
-
 	}
 
+	private float opacityDelta=0.02f;
+	private float curOpacityFactor = 1;
+
+	Timer timer = new Timer(10, new ActionListener() {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			if (opacityFactor < curOpacityFactor)
+				curOpacityFactor -= opacityDelta;
+			else if (opacityFactor > curOpacityFactor)
+				curOpacityFactor += opacityDelta;
+			else timer.stop();
+			relayout();
+			repaint();
+		}
+	});
+	
+	
 	@ListenTo
 	public void listenTo(ClusterHoveredElement event) {
 		if (event.getElement() == first || event.getElement() == second)
@@ -247,6 +268,7 @@ public abstract class BandElement extends PickableGLElement {
 			opacityFactor = 0.15f;
 		else
 			opacityFactor = 1f;
+		timer.restart();
 		relayout();
 	}
 
