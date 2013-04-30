@@ -19,10 +19,11 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import gleem.linalg.Vec2f;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -62,6 +63,7 @@ import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterHoveredElement;
+import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
@@ -131,7 +133,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				onPicked(pick);
 			}
 		});
-
 		this.setLayoutData(MoveTransitions.MOVE_AND_GROW_LINEAR);
 	}
 
@@ -143,8 +144,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				curOpacityFactor -= opacityDelta;
 			else if (opacityfactor > curOpacityFactor)
 				curOpacityFactor += opacityDelta;
-			else
-				timer.setDelay(1000);
 			repaint();
 		}
 	});
@@ -413,6 +412,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	int recordOverlapSize;
 	private int dimSize;
 	private int recSize;
+	private boolean isFocused = false;
 
 	public int getDimensionOverlapSize() {
 		return dimensionOverlapSize;
@@ -437,7 +437,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		IGLLayoutElement headerbar = children.get(1);
 		if (isHoovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
-			toolbar.setBounds(-18, 0, 18, 64);
+			toolbar.setBounds(-18, 0, 18, 80);
 			headerbar.setBounds(0, -18, w < 55 ? 55 : w + 2, 17);
 		} else {
 			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
@@ -499,11 +499,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private class ToolBar extends GLElementContainer implements
 			ISelectionCallback {
 
-		GLButton hide, sorting, enlarge, smaller;
+		GLButton hide, sorting, enlarge, smaller, focus;
 		SortingType sortingButtonCaption = SortingType.probabilitySorting;
 
 		public ToolBar() {
-			super(GLLayouts.flowVertical(4));
+			super(GLLayouts.flowVertical(5));
 
 			// move to the top
 			setzDelta(-0.1f);
@@ -520,15 +520,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 
 		protected void createButtons() {
-			sorting = new GLButton();
-			sorting.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
-			sorting.setRenderer(GLRenderers
-					.drawText(
-							sortingButtonCaption == SortingType.probabilitySorting ? "P"
-									: "B", VAlign.CENTER));
-			sorting.setSize(16, Float.NaN);
-			sorting.setCallback(this);
-			sorting.setTooltip("Change sorting");
 			hide = new GLButton();
 			hide.setRenderer(GLRenderers
 					.fillImage("./resources/icons/dialog_close.png"));
@@ -536,20 +527,35 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			hide.setSize(16, Float.NaN);
 			hide.setCallback(this);
 			this.add(hide);
+			sorting = new GLButton();
+			// sorting.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
+			sorting.setRenderer(GLRenderers
+					.drawText(
+							sortingButtonCaption == SortingType.probabilitySorting ? "P"
+									: "B", VAlign.CENTER));
+			sorting.setSize(16, Float.NaN);
+			sorting.setTooltip("Change sorting");
+			sorting.setCallback(this);
 			this.add(sorting);
+			focus = new GLButton();
+			focus.setRenderer(GLRenderers.drawText(" F"));
+			focus.setSize(16, Float.NaN);
+			focus.setTooltip("Focus this Button");
+			focus.setCallback(this);
+			this.add(focus);
 			enlarge = new GLButton();
 			enlarge.setSize(16, Float.NaN);
 			enlarge.setTooltip("Enlarge");
 			enlarge.setRenderer(GLRenderers
 					.fillImage("./resources/icons/zoom_in.png"));
 			enlarge.setCallback(this);
+			this.add(enlarge);
 			smaller = new GLButton();
 			smaller.setTooltip("Reduce");
 			smaller.setSize(16, Float.NaN);
 			smaller.setRenderer(GLRenderers
 					.fillImage("./resources/icons/zoom_out.png"));
 			smaller.setCallback(this);
-			this.add(enlarge);
 			this.add(smaller);
 		}
 
@@ -578,6 +584,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				scaleFactor = 1;
 				heatmap.setzDelta(0.5f);
 				resize();
+				EventPublisher.trigger(new FocusChangeEvent(null));
+			} else if (button == focus) {
+				focusThisButton();
 			}
 		}
 	}
@@ -586,6 +595,31 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		dimSize = x;
 		recSize = y;
 		resize();
+	}
+
+	
+	void focusThisButton() {
+		this.isFocused = !this.isFocused;
+		if (isFocused) {
+			scaleFactor = scaleFactor >= 3 ? 3 : 2;
+			resize();
+			EventPublisher.trigger(new FocusChangeEvent(this));
+		} else {
+			scaleFactor = 1;
+			resize();
+			EventPublisher.trigger(new FocusChangeEvent(null));
+		}
+//		relayout();
+		repaintAll();
+	}
+	
+	@ListenTo
+	public void listenTo(FocusChangeEvent e) {
+		if (e.getSender() == this) return;
+		if (!isFocused) return;
+		scaleFactor = 1;
+		resize();
+		this.isFocused = false;
 	}
 
 	private double scaleFactor = 1;
@@ -637,7 +671,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		} else {
 			opacityfactor = highOpacityFactor;
 		}
-		timer.setDelay(10);
 		timer.restart();
 		relayout();
 	}

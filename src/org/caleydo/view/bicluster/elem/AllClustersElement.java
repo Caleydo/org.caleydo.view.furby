@@ -20,7 +20,6 @@
 package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
-import gleem.linalg.Vec4f;
 
 import java.awt.Rectangle;
 import java.util.List;
@@ -28,12 +27,13 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
-import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.util.Vec2d;
 
 import com.google.common.base.Stopwatch;
@@ -92,7 +92,6 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	}
 
 	private boolean isInitLayoutDone = false;
-	private GLElement dragedElement = null;
 	Stopwatch stopwatch = new Stopwatch();
 
 	float lastW, lastH;
@@ -108,6 +107,9 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				scaleView(children, w, h);
 			lastW = w;
 			lastH = h;
+			if (focusedElement != null) {
+				setLocation((ClusterElement) focusedElement, w / 2, h / 2, w, h);
+			}
 			bringClustersBackToFrame(children, w, h);
 			clearClusterCollisions(children, w, h);
 			forceDirectedLayout(children, w, h);
@@ -132,7 +134,9 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		int k = 1;
 		for (IGLLayoutElement i : children) {
 			for (IGLLayoutElement j : children) {
-				if (j == i || j == dragedElement || i == dragedElement)
+				if (j == i)
+					continue;
+				if ((j.asElement() == dragedElement || j.asElement() == focusedElement))
 					continue;
 				Vec2f iSize = i.asElement().getSize();
 				Vec2f iLoc = i.asElement().getLocation();
@@ -143,11 +147,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				Rectangle jRec = new Rectangle((int) jLoc.x(), (int) jLoc.y(),
 						(int) jSize.x(), (int) jSize.y());
 				if (iRec.intersects(jRec)) {
-					// if (iCenter.minus(jCenter).length() < 10) {
-					// // move i
-					if (i != dragedElement)
-						i.setLocation((iLoc.x() + jSize.x() / 3 * 2) % w,
-								(iLoc.y() + jSize.x() / 3 * 2) % h);
+					setLocation((ClusterElement) j.asElement(),
+							(jLoc.x() + 200) % w, (jLoc.y() + 200) % h, w, h);
 				}
 			}
 			k++;
@@ -194,14 +195,6 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				damping = 0;
 		}
 	};
-	private ClusterElement hoveredElement;
-
-	/**
-	 *
-	 */
-
-	// contains positions of the childs in [0,1] x [0,1] space
-	// Map<ClusterElement, Vec2d> virtualPositions = new HashMap<>();
 
 	/**
 	 * @param children2
@@ -303,7 +296,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			ClusterElement i = (ClusterElement) iGLL.asElement();
 			Vec2d force = i.getAttForce().plus(i.getRepForce())
 					.plus(i.getFrameForce());
-			while (force.length() > 10)
+			while (force.length() > 20)
 				force.scale(0.1);
 			Vec2d pos = getCenter(i);
 			pos = force.times(damping).plus(pos);
@@ -312,7 +305,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			// System.out.println("  Rep: " + i.getRepForce());
 			// System.out.println("  Fra: " + i.getCenterForce());
 			// System.out.println("  Sum: " + force);
-			if (i != dragedElement && i != hoveredElement)
+			if (i != dragedElement && i != hoveredElement
+					&& i != focusedElement)
 				setLocation(i, (float) pos.x(), (float) pos.y(), w, h);
 
 		}
@@ -401,6 +395,12 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		return dragedElement == null;
 	}
 
+	private ClusterElement hoveredElement = null;
+
+	private GLElement dragedElement = null;
+
+	private GLElement focusedElement = null;
+
 	/**
 	 * @param fixLayout
 	 *            setter, see {@link fixLayout}
@@ -418,6 +418,13 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	public void setToolbar(GlobalToolBarElement globalToolBar) {
 		this.toolbar = globalToolBar;
 
+	}
+
+	@ListenTo
+	public void ListenTo(FocusChangeEvent e) {
+		focusedElement = (GLElement) e.getSender();
+		if (focusedElement == null)
+			return;
 	}
 
 }
