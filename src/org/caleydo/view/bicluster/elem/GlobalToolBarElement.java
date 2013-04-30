@@ -40,7 +40,7 @@ import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
-import org.caleydo.view.bicluster.event.ToolbarThresholdEvent;
+import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 
 /**
@@ -119,7 +119,7 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 	private void update() {
 		float samplTh = dimensionThresholdSlider.getValue();
 		float geneTh = recordThresholdSlider.getValue();
-		EventPublisher.trigger(new ToolbarThresholdEvent(geneTh, samplTh, fixedClusterButton.isSelected()));
+		EventPublisher.trigger(new LZThresholdChangeEvent(geneTh, samplTh, fixedClusterButton.isSelected(), true));
 	}
 
 	@Override

@@ -27,9 +27,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import javax.swing.Timer;
 
+import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
@@ -59,13 +63,18 @@ import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
+import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterHoveredElement;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
+import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
+import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.BandSorting;
+import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
@@ -80,7 +89,13 @@ import org.caleydo.view.heatmap.v2.IBlockColorer;
 public class ClusterElement extends AnimatedGLElementContainer implements
 		IBlockColorer, IGLLayout {
 	private final TablePerspective data;
-	private final AllClustersElement root;
+	private final TablePerspective x;
+	private final TablePerspective l;
+	private final TablePerspective z;
+	private final AllClustersElement allClusters;
+	private final ExecutorService executor;
+	private float recThreshold = 0.08f;
+	private float dimThreshold = 4;
 	private Vec2d attForce = new Vec2d(0, 0);
 	private Vec2d repForce = new Vec2d(0, 0);
 	private Vec2d frameForce = new Vec2d(0, 0);
@@ -88,7 +103,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private boolean isHoovered = false;
 	private boolean isHidden = false;
 	private boolean hasContent = false;
-	private final TablePerspective x;
 
 	private Map<GLElement, List<Integer>> dimOverlap;
 	private Map<GLElement, List<Integer>> recOverlap;
@@ -108,12 +122,16 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private float curOpacityFactor = 1f;
 	private float opacityDelta = 0.02f;
 
-	public ClusterElement(TablePerspective data, TablePerspective x,
-			AllClustersElement root) {
+	public ClusterElement(TablePerspective data, AllClustersElement root,
+			TablePerspective x, TablePerspective l, TablePerspective z,
+			ExecutorService executor) {
 		setLayout(this);
 		this.data = data;
-		this.root = root;
+		this.allClusters = root;
 		this.x = x;
+		this.l = l;
+		this.z = z;
+		this.executor = executor;
 		toolBar = new ToolBar();
 		headerBar = new HeaderBar();
 		this.add(toolBar); // add a element toolbar
@@ -122,7 +140,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		heatmap.setzDelta(0.5f);
 		// setzDelta(f);
 		this.add(heatmap);
-
 		setVisibility(EVisibility.PICKABLE);
 		this.onPick(new IPickingListener() {
 
@@ -142,7 +159,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				curOpacityFactor -= opacityDelta;
 			else if (opacityfactor > curOpacityFactor)
 				curOpacityFactor += opacityDelta;
-			else timer.stop();
+			else
+				timer.stop();
 			relayout();
 			repaint();
 		}
@@ -208,7 +226,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		switch (pick.getPickingMode()) {
 		case DRAGGED:
 			if (isDragged == false) {
-				root.setDragedLayoutElement(this);
+				allClusters.setDragedLayoutElement(this);
 			}
 			isDragged = true;
 			setLocation(getLocation().x() + pick.getDx(), getLocation().y()
@@ -225,7 +243,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		case MOUSE_OVER:
 			if (!pick.isAnyDragging()) {
 				isHoovered = true;
-				root.setHooveredElement(this);
+				allClusters.setHooveredElement(this);
 				EventPublisher.trigger(new ClusterHoveredElement(this, true));
 				relayout(); // for showing the toolbar
 			}
@@ -233,14 +251,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		case MOUSE_OUT:
 			if (isHoovered) {
 				isHoovered = false;
-				root.setHooveredElement(null);
+				allClusters.setHooveredElement(null);
 				relayout(); // for showing the toolbar
 				EventPublisher.trigger(new ClusterHoveredElement(this, false));
 			}
 			break;
 		default:
 			isDragged = false;
-			root.setDragedLayoutElement(null);
+			allClusters.setDragedLayoutElement(null);
 		}
 	}
 
@@ -251,7 +269,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		dimArray.clear();
 		int count = 0;
 		for (Integer i : dimIndices) {
-			if (setOnlyShowXElements && root.getFixedElementsCount() <= count)
+			if (setOnlyShowXElements && allClusters.getFixedElementsCount() <= count)
 				break;
 			dimArray.append(i);
 			count++;
@@ -259,7 +277,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		count = 0;
 		recArray.clear();
 		for (Integer i : recIndices) {
-			if (setOnlyShowXElements && root.getFixedElementsCount() <= count)
+			if (setOnlyShowXElements && allClusters.getFixedElementsCount() <= count)
 				break;
 			recArray.append(i);
 			count++;
@@ -277,7 +295,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		// overallOverlapSize = 0;
 		dimensionOverlapSize = 0;
 		recordOverlapSize = 0;
-		for (GLElement element : root.asList()) {
+		for (GLElement element : allClusters.asList()) {
 			if (element == this)
 				continue;
 			ClusterElement e = (ClusterElement) element;
@@ -595,7 +613,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		resize();
 	}
 
-	
 	void focusThisButton() {
 		this.isFocused = !this.isFocused;
 		if (isFocused) {
@@ -607,14 +624,16 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			resize();
 			EventPublisher.trigger(new FocusChangeEvent(null));
 		}
-//		relayout();
+		// relayout();
 		repaintAll();
 	}
-	
+
 	@ListenTo
 	public void listenTo(FocusChangeEvent e) {
-		if (e.getSender() == this) return;
-		if (!isFocused) return;
+		if (e.getSender() == this)
+			return;
+		if (!isFocused)
+			return;
 		scaleFactor = 1;
 		resize();
 		this.isFocused = false;
@@ -632,7 +651,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		isHidden = true;
 		setVisibility(EVisibility.NONE);
 		isHoovered = false;
-		root.setHooveredElement(null);
+		allClusters.setHooveredElement(null);
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
 		EventPublisher.trigger(new ClusterHoveredElement(this, false));
 	}
@@ -696,8 +715,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			setVisibility(EVisibility.NONE);
 			hasContent = false;
 		}
-
-		// setSize(200, 200);
 	}
 
 	private void sort(SortingType type) {
@@ -806,5 +823,41 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	public int getRecIndexOf(int value) {
 		return getRecordVirtualArray().indexOf(value);
+	}
+
+	@ListenTo
+	public void listenTo(LZThresholdChangeEvent event) {
+		if (!event.isGlobalEvent()) return;
+		if (event.getRecordThreshold() != recThreshold
+				|| event.getDimensionThreshold() != dimThreshold) {
+			recThreshold = event.getRecordThreshold();
+			dimThreshold = event.getDimensionThreshold();
+			rebuildMyData();
+		}
+	}
+
+	private void rebuildMyData() {
+		Table L = l.getDataDomain().getTable();
+		Table Z = z.getDataDomain().getTable();
+		Future<ScanResult> recList = null, dimList = null;
+		ASortingStrategy strategy = new ProbabilityStrategy(L, bcNr);
+		recList = executor.submit(new ScanProbabilityMatrix(recThreshold, L,
+				bcNr, strategy));
+		strategy = new ProbabilityStrategy(Z, bcNr);
+		dimList = executor.submit(new ScanProbabilityMatrix(dimThreshold, Z,
+				bcNr, strategy));
+		List<Integer> dimIndices = null, recIndices = null;
+		try {
+			dimIndices = dimList.get().getIndices();
+			recIndices = recList.get().getIndices();
+		} catch (InterruptedException | ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		setIndices(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr);
+		calculateOverlap();
+		EventPublisher.trigger(new ClusterScaleEvent(this));
+		EventPublisher.trigger(new CreateBandsEvent(this));
+
 	}
 }

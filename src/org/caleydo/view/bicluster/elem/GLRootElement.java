@@ -22,16 +22,16 @@ package org.caleydo.view.bicluster.elem;
 import gleem.linalg.Vec4f;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.IPopupLayer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
-import org.caleydo.view.bicluster.event.ToolbarThresholdEvent;
-import org.caleydo.core.event.EventListenerManager.ListenTo;
 
 ;
 
@@ -61,7 +61,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE);
 	}
 
-	public void setData(List<TablePerspective> list, TablePerspective x) {
+	public void setData(List<TablePerspective> list, TablePerspective x,
+			TablePerspective l, TablePerspective z, ExecutorService executor) {
 		this.clear();
 		bands = new AllBandsElement(x);
 		this.add(bands);
@@ -72,7 +73,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(p, x, clusters);
+				final ClusterElement el = new ClusterElement(p, clusters, x, l,
+						z, executor);
 				clusters.add(el);
 			}
 		}
@@ -105,17 +107,19 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	int maxRecClusterElements = 0;
 	int maxClusterRecSize = 150;
 	int maxClusterDimSize = 150;
+	private int smallClusterSize = 100;
+	private int largeClusterSize = 150;
 
 	/**
-	 * @param j 
-	 *
+	 * @param j
+	 * 
 	 */
-	public void setClusterSizes(int j) {
+	public void setClusterSizes() {
 		double maxDimClusterElements = 1;
 		double maxRecClusterElements = 1;
-		maxClusterDimSize = j;
-		maxClusterRecSize = j;
-		
+		maxClusterDimSize = largeClusterSize;
+		maxClusterRecSize = largeClusterSize;
+
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
 			if (!i.isVisible())
@@ -133,14 +137,13 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 					* (maxClusterRecSize) / maxRecClusterElements));
 			int dimSize = (int) ((i.getNumberOfDimElements()
 					* (maxClusterDimSize) / maxDimClusterElements));
-//			if (recSize < 50) recSize = 50;
-//			if (dimSize < 50) dimSize =50;
+			// if (recSize < 50) recSize = 50;
+			// if (dimSize < 50) dimSize =50;
 			i.setClusterSize(dimSize, recSize);
 			i.relayout();
 		}
 
 	}
-
 
 	public AllClustersElement getClusters() {
 		return clusters;
@@ -155,10 +158,19 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	}
 
 	public void recalculateOverlap() {
-		for (GLElement iGL: clusters){
+		for (GLElement iGL : clusters) {
 			((ClusterElement) iGL).calculateOverlap();
 		}
-		
+
 	}
 
+	@ListenTo
+	public void listenTo(ClusterScaleEvent event) {
+		setClusterSizes();
+	}
+	
+	@ListenTo
+	public void listenTo(CreateBandsEvent event) {
+		createBands();
+	}
 }

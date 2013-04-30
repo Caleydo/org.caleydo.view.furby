@@ -25,49 +25,46 @@ import org.caleydo.core.event.AEvent;
  * @author user
  *
  */
-public class ToolbarThresholdEvent extends AEvent {
+public class LZThresholdChangeEvent extends AEvent {
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.caleydo.core.event.AEvent#checkIntegrity()
-	 */
+
 	@Override
 	public boolean checkIntegrity() {
 		return true;
 	}
 
-	float geneThreshold;
-	float sampleThreshold;
+	float recordThreshold;
+	float dimensionThreshold;
 	boolean fixedClusterCount;
+	boolean global; 
 
 
 
-	/**
-	 * @return the fixedClusterCount, see {@link #fixedClusterCount}
-	 */
 	public boolean isFixedClusterCount() {
 		return fixedClusterCount;
 	}
 
-	/**
-	 * @return the geneThreshold, see {@link #geneThreshold}
-	 */
-	public float getGeneThreshold() {
-		return geneThreshold;
+
+	public float getRecordThreshold() {
+		return recordThreshold;
 	}
 
-	/**
-	 * @return the sampleThreshold, see {@link #sampleThreshold}
-	 */
-	public float getSampleThreshold() {
-		return sampleThreshold;
+
+	public float getDimensionThreshold() {
+		return dimensionThreshold;
+	}
+	
+	public boolean isGlobalEvent() {
+		return global;
 	}
 
-	public ToolbarThresholdEvent(float geneThreshold, float sampleThreshold, boolean fixedClusterSelection) {
-		this.geneThreshold = geneThreshold;
-		this.sampleThreshold = sampleThreshold;
+	public LZThresholdChangeEvent(float recordThreshold, float dimensionThreshold, boolean fixedClusterSelection, boolean global) {
+		this.recordThreshold = recordThreshold;
+		this.dimensionThreshold = dimensionThreshold;
 		this.fixedClusterCount = fixedClusterSelection;
+		this.global = global;
+		System.out.println("Erstelle Cluster mit SampleTH: " + dimensionThreshold);
+		System.out.println("                     RecordTH: " + recordThreshold);
 	}
 
 

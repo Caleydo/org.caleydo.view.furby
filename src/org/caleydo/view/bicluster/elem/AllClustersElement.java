@@ -23,8 +23,7 @@ import gleem.linalg.Vec2f;
 
 import java.awt.Rectangle;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
@@ -35,8 +34,6 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.util.Vec2d;
-
-import com.google.common.base.Stopwatch;
 
 /**
  * @author Samuel Gratzl
@@ -75,12 +72,12 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		super.init(context);
 	}
 
-	public void setData(List<TablePerspective> list, TablePerspective x) {
+	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z, ExecutorService executor) {
 		this.clear();
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(p, x, this);
+				final ClusterElement el = new ClusterElement(p, this, x,l,z, executor);
 				this.add(el);
 			}
 		}
