@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="ASCII"?>
+<application:Application xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:advanced="http://www.eclipse.org/ui/2010/UIModel/application/ui/advanced" xmlns:application="http://www.eclipse.org/ui/2010/UIModel/application" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" elementId="org.eclipse.e4.legacy.ide.application" contributorURI="platform:/plugin/org.eclipse.ui.workbench" selectedElement="//@children.0" bindingContexts="//@rootContext.0">
+  <tags>activeSchemeId:org.eclipse.ui.defaultAcceleratorConfiguration</tags>
+  <children xsi:type="basic:TrimmedWindow" elementId="IDEWindow" contributorURI="platform:/plugin/org.eclipse.ui.workbench" selectedElement="//@children.0/@children.0" width="1024" height="768">
+    <tags>topLevel</tags>
+    <children xsi:type="basic:PartSashContainer" selectedElement="//@children.0/@children.0/@children.0" horizontal="true">
+      <children xsi:type="advanced:PerspectiveStack" containerData="7500" selectedElement="//@children.0/@children.0/@children.0/@children.0">
+        <children xsi:type="advanced:Perspective" elementId="org.caleydo.core.gui.perspective" selectedElement="//@children.0/@children.0/@children.0/@children.0/@children.0" label="Genome Perspective" iconURI="platform:/plugin/org.eclipse.ui/icons/full/eview16/default_persp.gif">
+          <children xsi:type="basic:PartSashContainer" selectedElement="//@children.0/@children.0/@children.0/@children.0/@children.0/@children.0" horizontal="true">
+            <children xsi:type="basic:PartSashContainer" containerData="1664" selectedElement="//@children.0/@children.0/@children.0/@children.0/@children.0/@children.0/@children.0">
+              <children xsi:type="basic:PartStack" elementId="topLeft" containerData="2000" selectedElement="//@children.0/@children.0/@children.0/@children.0/@children.0/@children.0/@children.0/@children.0">
+                <tags>newtablook</tags>
+                <children xsi:type="advanced:Placeholder" elementId="org.caleydo.core.gui.toolbar.RcpToolBarView" ref="//@children.0/@sharedElements.2"/>
+              </children>
+              <children xsi:type="basic:PartSashContainer" containerData="8000" selectedElement="//@children.0/@children.0/@children.0/@children.0/@children.0/@children.0/@children.1/@children.1">
+                <children xsi:type="basic:PartStack" elementId="middleLeft" containerData="4000" selectedElement="//@children.0/@children.0/@children.0/@children.0/@children.0/@children.0/@children.1/@children.0/@children.0">
+                  <tags>newtablook</tags>
+                  <children xsi:type="advanced:Placeholder" elementId="org.caleydo.view.info.selection" ref="//@children.0/@sharedElements.3"/>
+                </children>
+                <children xsi:type="basic:PartStack" elementId="bottomLeft" containerData="6000" selectedElement="//@children.0/@children.0/@children.0/@children.0/@children.0/@children.0/@children.1/@children.1/@children.0">
+                  <tags>newtablook</tags>
+                  <children xsi:type="advanced:Placeholder" elementId="org.caleydo.view.info.dataset" ref="//@children.0/@sharedElements.4"/>
+                </children>
+              </children>
+            </children>
+            <children xsi:type="basic:PartSashContainer" containerData="8336" selectedElement="//@children.0/@children.0/@children.0/@children.0/@children.0/@children.1/@children.1" horizontal="true">
+              <children xsi:type="advanced:Placeholder" elementId="org.eclipse.ui.editorss" toBeRendered="false" containerData="3000" ref="//@children.0/@sharedElements.1"/>
+              <children xsi:type="basic:PartStack" elementId="main" containerData="7000" selectedElement="//@children.0/@children.0/@children.0/@children.0/@children.0/@children.1/@children.1/@children.0">
+                <tags>newtablook</tags>
+                <children xsi:type="advanced:Placeholder" elementId="org.caleydo.view.dvi" ref="//@children.0/@sharedElements.5"/>
+                <children xsi:type="advanced:Placeholder" elementId="org.caleydo.view.stratomex" toBeRendered="false" ref="//@children.0/@sharedElements.6"/>
+                <children xsi:type="advanced:Placeholder" elementId="org.caleydo.view.bicluster" ref="//@children.0/@sharedElements.7"/>
+                <children xsi:type="advanced:Placeholder" elementId="org.caleydo.view.browser" toBeRendered="false" ref="//@children.0/@sharedElements.8"/>
+                <children xsi:type="advanced:Placeholder" elementId="org.caleydo.view.dvi" toBeRendered="false" ref="//@children.0/@sharedElements.5"/>
+                <children xsi:type="advanced:Placeholder" elementId="org.caleydo.view.pathway" toBeRendered="false" ref="//@children.0/@sharedElements.9"/>
+                <children xsi:type="advanced:Placeholder" elementId="org.caleydo.view.stratomex" toBeRendered="false" ref="//@children.0/@sharedElements.6"/>
+              </children>
+            </children>
+          </children>
+        </children>
+      </children>
+      <children xsi:type="basic:PartStack" elementId="stickyFolderRight" toBeRendered="false" containerData="2500">
+        <children xsi:type="advanced:Placeholder" elementId="org.eclipse.ui.internal.introview" toBeRendered="false" ref="//@children.0/@sharedElements.0"/>
+      </children>
+    </children>
+    <sharedElements xsi:type="basic:Part" elementId="org.eclipse.ui.internal.introview" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView" label="Welcome" iconURI="platform:/plugin/org.eclipse.ui/icons/full/eview16/defaultview_misc.gif" closeable="true">
+      <tags>View</tags>
+      <tags>categoryTag:General</tags>
+    </sharedElements>
+    <sharedElements xsi:type="advanced:Area" elementId="org.eclipse.ui.editorss">
+      <children xsi:type="basic:PartStack" elementId="org.eclipse.e4.primaryDataStack">
+        <tags>newtablook</tags>
+        <tags>org.eclipse.e4.primaryDataStack</tags>
+        <tags>EditorStack</tags>
+      </children>
+    </sharedElements>
+    <sharedElements xsi:type="basic:Part" elementId="org.caleydo.core.gui.toolbar.RcpToolBarView" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView" label="Tool Bar" iconURI="platform:/plugin/org.caleydo.core/resources/icons/view/general.png" tooltip="" closeable="true">
+      <persistedState key="memento" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;&#xA;&lt;view/>"/>
+      <tags>View</tags>
+      <tags>categoryTag:Caleydo</tags>
+      <menus elementId="org.caleydo.core.gui.toolbar.RcpToolBarView">
+        <tags>ViewMenu</tags>
+        <tags>menuContribution:menu</tags>
+      </menus>
+      <toolbar elementId="org.caleydo.core.gui.toolbar.RcpToolBarView"/>
+    </sharedElements>
+    <sharedElements xsi:type="basic:Part" elementId="org.caleydo.view.info.selection" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView" label="Selection Info" iconURI="platform:/plugin/org.caleydo.view.info.selection/resources/icons/info.png" tooltip="" closeable="true">
+      <persistedState key="memento" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;&#xA;&lt;view serialized=&quot;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; standalone=&amp;quot;yes&amp;quot;?&amp;gt;&amp;#x0A;&amp;lt;serializedSelectionInfoView&amp;gt;&amp;#x0A;    &amp;lt;viewID&amp;gt;0&amp;lt;/viewID&amp;gt;&amp;#x0A;    &amp;lt;viewType&amp;gt;org.caleydo.view.info.selection&amp;lt;/viewType&amp;gt;&amp;#x0A;&amp;lt;/serializedSelectionInfoView&amp;gt;&amp;#x0A;&quot;/>"/>
+      <tags>View</tags>
+      <tags>categoryTag:Caleydo</tags>
+      <menus elementId="org.caleydo.view.info.selection">
+        <tags>ViewMenu</tags>
+        <tags>menuContribution:menu</tags>
+      </menus>
+      <toolbar elementId="org.caleydo.view.info.selection"/>
+    </sharedElements>
+    <sharedElements xsi:type="basic:Part" elementId="org.caleydo.view.info.dataset" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView" label="Dataset Info" iconURI="platform:/plugin/org.caleydo.view.info.dataset/resources/icons/icon.png" tooltip="" closeable="true">
+      <persistedState key="memento" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;&#xA;&lt;view serialized=&quot;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; standalone=&amp;quot;yes&amp;quot;?&amp;gt;&amp;#x0A;&amp;lt;serializedDatasetInfoView&amp;gt;&amp;#x0A;    &amp;lt;viewID&amp;gt;0&amp;lt;/viewID&amp;gt;&amp;#x0A;    &amp;lt;viewType&amp;gt;org.caleydo.view.info.dataset&amp;lt;/viewType&amp;gt;&amp;#x0A;&amp;lt;/serializedDatasetInfoView&amp;gt;&amp;#x0A;&quot;/>"/>
+      <tags>View</tags>
+      <tags>categoryTag:Caleydo</tags>
+      <menus elementId="org.caleydo.view.info.dataset">
+        <tags>ViewMenu</tags>
+        <tags>menuContribution:menu</tags>
+      </menus>
+      <toolbar elementId="org.caleydo.view.info.dataset"/>
+    </sharedElements>
+    <sharedElements xsi:type="basic:Part" elementId="org.caleydo.view.dvi" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView" label="Data-View Integrator" iconURI="platform:/plugin/org.caleydo.view.dvi/resources/icons/dataviewintegrator.png" tooltip="" closeable="true">
+      <persistedState key="memento" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;&#xA;&lt;view serialized=&quot;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; standalone=&amp;quot;yes&amp;quot;?&amp;gt;&amp;#x0A;&amp;lt;serializedDVIView&amp;gt;&amp;#x0A;    &amp;lt;viewID&amp;gt;129&amp;lt;/viewID&amp;gt;&amp;#x0A;    &amp;lt;viewType&amp;gt;org.caleydo.view.dvi&amp;lt;/viewType&amp;gt;&amp;#x0A;&amp;lt;/serializedDVIView&amp;gt;&amp;#x0A;&quot;/>"/>
+      <tags>View</tags>
+      <tags>categoryTag:Caleydo</tags>
+      <menus elementId="org.caleydo.view.dvi">
+        <tags>ViewMenu</tags>
+        <tags>menuContribution:menu</tags>
+      </menus>
+      <toolbar elementId="org.caleydo.view.dvi">
+        <children xsi:type="menu:OpaqueToolItem" elementId="Graph Layout"/>
+        <children xsi:type="menu:OpaqueToolItem"/>
+      </toolbar>
+    </sharedElements>
+    <sharedElements xsi:type="basic:Part" elementId="org.caleydo.view.stratomex" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView" label="StratomeX" iconURI="platform:/plugin/org.caleydo.view.stratomex/resources/icons/icon.png" tooltip="" closeable="true">
+      <tags>View</tags>
+      <tags>categoryTag:Caleydo</tags>
+      <menus elementId="org.caleydo.view.stratomex">
+        <tags>ViewMenu</tags>
+        <tags>menuContribution:menu</tags>
+      </menus>
+      <toolbar elementId="org.caleydo.view.stratomex" visible="false"/>
+    </sharedElements>
+    <sharedElements xsi:type="basic:Part" elementId="org.caleydo.view.bicluster" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView" label="BiCluster Visualization" iconURI="platform:/plugin/org.caleydo.view.bicluster/resources/icons/icon.png" tooltip="" closeable="true">
+      <persistedState key="memento" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;&#xA;&lt;view serialized=&quot;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot; standalone=&amp;quot;yes&amp;quot;?&amp;gt;&amp;#x0A;&amp;lt;serializedBiClusterView&amp;gt;&amp;#x0A;    &amp;lt;viewID&amp;gt;529&amp;lt;/viewID&amp;gt;&amp;#x0A;    &amp;lt;viewType&amp;gt;org.caleydo.view.bicluster&amp;lt;/viewType&amp;gt;&amp;#x0A;    &amp;lt;dataDomainAndTablePerspectiveKeys&amp;gt;&amp;#x0A;        &amp;lt;first xsi:type=&amp;quot;xs:string&amp;quot; xmlns:xs=&amp;quot;http://www.w3.org/2001/XMLSchema&amp;quot; xmlns:xsi=&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot;&amp;gt;@DATADOMAIN1@&amp;lt;/first&amp;gt;&amp;#x0A;        &amp;lt;second xsi:type=&amp;quot;xs:string&amp;quot; xmlns:xs=&amp;quot;http://www.w3.org/2001/XMLSchema&amp;quot; xmlns:xsi=&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot;&amp;gt;@PERSPECTIVE1@&amp;lt;/second&amp;gt;&amp;#x0A;    &amp;lt;/dataDomainAndTablePerspectiveKeys&amp;gt;&amp;#x0A;    &amp;lt;dataDomainAndTablePerspectiveKeys&amp;gt;&amp;#x0A;        &amp;lt;first xsi:type=&amp;quot;xs:string&amp;quot; xmlns:xs=&amp;quot;http://www.w3.org/2001/XMLSchema&amp;quot; xmlns:xsi=&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot;&amp;gt;@DATADOMAIN2@&amp;lt;/first&amp;gt;&amp;#x0A;        &amp;lt;second xsi:type=&amp;quot;xs:string&amp;quot; xmlns:xs=&amp;quot;http://www.w3.org/2001/XMLSchema&amp;quot; xmlns:xsi=&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot;&amp;gt;@PERSPECTIVE2@&amp;lt;/second&amp;gt;&amp;#x0A;    &amp;lt;/dataDomainAndTablePerspectiveKeys&amp;gt;&amp;#x0A;    &amp;lt;dataDomainAndTablePerspectiveKeys&amp;gt;&amp;#x0A;        &amp;lt;first xsi:type=&amp;quot;xs:string&amp;quot; xmlns:xs=&amp;quot;http://www.w3.org/2001/XMLSchema&amp;quot; xmlns:xsi=&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot;&amp;gt;@DATADOMAIN3@&amp;lt;/first&amp;gt;&amp;#x0A;        &amp;lt;second xsi:type=&amp;quot;xs:string&amp;quot; xmlns:xs=&amp;quot;http://www.w3.org/2001/XMLSchema&amp;quot; xmlns:xsi=&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot;&amp;gt;@PERSPECTIVE3@&amp;lt;/second&amp;gt;&amp;#x0A;    &amp;lt;/dataDomainAndTablePerspectiveKeys&amp;gt;&amp;#x0A;&amp;lt;/serializedBiClusterView&amp;gt;&amp;#x0A;&quot;/>"/>
+      <tags>View</tags>
+      <tags>categoryTag:Caleydo</tags>
+      <menus elementId="org.caleydo.view.bicluster">
+        <tags>ViewMenu</tags>
+        <tags>menuContribution:menu</tags>
+      </menus>
+      <toolbar elementId="org.caleydo.view.bicluster" visible="false"/>
+    </sharedElements>
+    <sharedElements xsi:type="basic:Part" elementId="org.caleydo.view.browser" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView" label="Browser" iconURI="platform:/plugin/org.caleydo.view.browser/resources/icons/browser.png" closeable="true">
+      <tags>View</tags>
+      <tags>categoryTag:Caleydo</tags>
+    </sharedElements>
+    <sharedElements xsi:type="basic:Part" elementId="org.caleydo.view.pathway" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView" label="Pathway" iconURI="platform:/plugin/org.caleydo.view.pathway/resources/icons/pathway.png" closeable="true">
+      <tags>View</tags>
+      <tags>categoryTag:Caleydo</tags>
+    </sharedElements>
+    <trimBars elementId="org.eclipse.ui.main.toolbar" visible="false">
+      <children xsi:type="menu:ToolControl" elementId="PerspectiveSpacer" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.renderers.swt/org.eclipse.e4.ui.workbench.renderers.swt.LayoutModifierToolControl">
+        <tags>stretch</tags>
+      </children>
+      <children xsi:type="menu:ToolControl" elementId="Spacer Glue" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.renderers.swt/org.eclipse.e4.ui.workbench.renderers.swt.LayoutModifierToolControl">
+        <tags>glue</tags>
+      </children>
+      <children xsi:type="menu:ToolControl" elementId="SearchField" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.quickaccess.SearchField"/>
+      <children xsi:type="menu:ToolControl" elementId="Search-PS Glue" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.renderers.swt/org.eclipse.e4.ui.workbench.renderers.swt.LayoutModifierToolControl">
+        <tags>glue</tags>
+      </children>
+      <children xsi:type="menu:ToolControl" elementId="PerspectiveSwitcher" toBeRendered="false" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.e4.ui.workbench.addons.perspectiveswitcher.PerspectiveSwitcher">
+        <tags>Draggable</tags>
+      </children>
+    </trimBars>
+    <trimBars elementId="org.eclipse.ui.trim.status" toBeRendered="false" side="Bottom">
+      <children xsi:type="menu:ToolControl" elementId="org.eclipse.ui.StatusLine" toBeRendered="false" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.StandardTrim">
+        <tags>stretch</tags>
+      </children>
+      <children xsi:type="menu:ToolControl" elementId="org.eclipse.ui.HeapStatus" toBeRendered="false" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.StandardTrim"/>
+      <children xsi:type="menu:ToolControl" elementId="org.eclipse.ui.ProgressBar" toBeRendered="false" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.StandardTrim">
+        <tags>Draggable</tags>
+      </children>
+    </trimBars>
+    <trimBars elementId="org.eclipse.ui.trim.vertical1" side="Left"/>
+    <trimBars elementId="org.eclipse.ui.trim.vertical2" side="Right"/>
+  </children>
+  <handlers elementId="_UW9TY_r3Ed6gmo7caOxU9g" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.ExitHandler" command="//@commands.0"/>
+  <handlers elementId="_BESTZfr3Ed6gmo7caOxU04" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.swt/org.eclipse.e4.ui.internal.workbench.swt.handlers.ShowViewHandler" command="//@commands.1"/>
+  <handlers elementId="org.eclipse.e4.ui.saveHandler" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.handlers.SaveHandler" command="//@commands.2"/>
+  <handlers elementId="org.eclipse.e4.ui.saveAllHandler" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.handlers.SaveAllHandler" command="//@commands.3"/>
+  <bindingTables contributorURI="platform:/plugin/org.eclipse.ui.workbench" bindingContext="//@rootContext.0">
+    <bindings elementId="_UW9TZfr3Ed6gmo7caOxU9g" contributorURI="platform:/plugin/org.eclipse.ui.workbench" keySequence="CTRL+Q" command="//@commands.0"/>
+    <bindings elementId="_oRr6EAFSEd-Z8rQksLwRYw" contributorURI="platform:/plugin/org.eclipse.ui.workbench" keySequence="CTRL+S" command="//@commands.2"/>
+    <bindings contributorURI="platform:/plugin/org.eclipse.ui.workbench" keySequence="CTRL+SHIFT+S" command="//@commands.3"/>
+    <bindings keySequence="CTRL+INSERT" command="//@commands.34"/>
+    <bindings keySequence="ALT+PAGE_DOWN" command="//@commands.28"/>
+    <bindings keySequence="SHIFT+INSERT" command="//@commands.69"/>
+    <bindings keySequence="CTRL+SPACE" command="//@commands.68"/>
+    <bindings keySequence="CTRL+A" command="//@commands.26"/>
+    <bindings keySequence="CTRL+V" command="//@commands.69"/>
+    <bindings keySequence="CTRL+X" command="//@commands.12"/>
+    <bindings keySequence="CTRL+Y" command="//@commands.73"/>
+    <bindings keySequence="CTRL+F10" command="//@commands.49"/>
+    <bindings keySequence="CTRL+Z" command="//@commands.79"/>
+    <bindings keySequence="SHIFT+DEL" command="//@commands.12"/>
+    <bindings keySequence="CTRL+SHIFT+SPACE" command="//@commands.30"/>
+    <bindings keySequence="CTRL+C" command="//@commands.34"/>
+    <bindings keySequence="ALT+PAGE_UP" command="//@commands.64"/>
+  </bindingTables>
+  <bindingTables elementId="org.eclipse.ui.contexts.window" bindingContext="//@rootContext.0/@children.0">
+    <bindings keySequence="ALT+ARROW_RIGHT" command="//@commands.75"/>
+    <bindings keySequence="CTRL+SHIFT+NUMPAD_MULTIPLY" command="//@commands.22"/>
+    <bindings keySequence="CTRL+E" command="//@commands.62"/>
+    <bindings keySequence="ALT+ARROW_LEFT" command="//@commands.110"/>
+    <bindings keySequence="CTRL+," command="//@commands.72"/>
+    <bindings keySequence="CTRL+." command="//@commands.9"/>
+    <bindings keySequence="DEL" command="//@commands.54"/>
+    <bindings keySequence="CTRL+N" command="//@commands.31"/>
+    <bindings keySequence="CTRL+W" command="//@commands.29"/>
+    <bindings keySequence="CTRL+F4" command="//@commands.29"/>
+    <bindings keySequence="CTRL+SHIFT+W" command="//@commands.96"/>
+    <bindings keySequence="CTRL+SHIFT+F4" command="//@commands.96"/>
+    <bindings keySequence="CTRL+S" command="//@commands.95"/>
+    <bindings keySequence="CTRL+SHIFT+S" command="//@commands.42"/>
+    <bindings keySequence="F2" command="//@commands.8"/>
+    <bindings keySequence="CTRL+P" command="//@commands.74"/>
+    <bindings keySequence="ALT+CR" command="//@commands.105"/>
+    <bindings keySequence="CTRL+SHIFT+NUMPAD_DIVIDE" command="//@commands.61"/>
+    <bindings keySequence="ALT+F7" command="//@commands.108"/>
+    <bindings keySequence="ALT+SHIFT+F7" command="//@commands.39"/>
+    <bindings keySequence="CTRL+SHIFT+F8" command="//@commands.85"/>
+    <bindings keySequence="CTRL+F8" command="//@commands.112"/>
+    <bindings keySequence="CTRL+SHIFT+F7" command="//@commands.78"/>
+    <bindings keySequence="CTRL+F7" command="//@commands.101"/>
+    <bindings keySequence="CTRL+SHIFT+F6" command="//@commands.57"/>
+    <bindings keySequence="CTRL+F6" command="//@commands.102"/>
+    <bindings keySequence="CTRL+M" command="//@commands.58"/>
+    <bindings keySequence="F12" command="//@commands.38"/>
+    <bindings keySequence="ALT+-" command="//@commands.114"/>
+    <bindings keySequence="F5" command="//@commands.100"/>
+    <bindings keySequence="CTRL+F" command="//@commands.16"/>
+    <bindings keySequence="CTRL+SHIFT+E" command="//@commands.76"/>
+  </bindingTables>
+  <rootContext elementId="org.eclipse.ui.contexts.dialogAndWindow" contributorURI="platform:/plugin/org.eclipse.ui.workbench" name="In Dialogs and Windows" description="Either a dialog or a window is open">
+    <children elementId="org.eclipse.ui.contexts.window" contributorURI="platform:/plugin/org.eclipse.ui.workbench" name="In Windows" description="A window is open">
+      <children elementId="org.eclipse.e4.ui.contexts.views" contributorURI="platform:/plugin/org.eclipse.ui.workbench" name="%bindingcontext.name.bindingView"/>
+      <children elementId="org.eclipse.ui.textEditorScope" name="Editing Text" description="Editing Text Context"/>
+    </children>
+    <children elementId="org.eclipse.ui.contexts.dialog" contributorURI="platform:/plugin/org.eclipse.ui.workbench" name="In Dialogs" description="A dialog is open"/>
+  </rootContext>
+  <rootContext elementId="org.eclipse.ui.contexts.workbenchMenu" name="Workbench Menu" description="When no Workbench windows are active"/>
+  <rootContext elementId="org.eclipse.ui.contexts.actionSet" name="Action Set" description="Parent context for action sets"/>
+  <descriptors elementId="org.eclipse.e4.ui.compatibility.editor" allowMultiple="true" category="org.eclipse.e4.primaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityEditor">
+    <tags>Editor</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.browser" label="Browser" iconURI="platform:/plugin/org.caleydo.view.browser/resources/icons/browser.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.eclipse.ui.internal.introview" label="Welcome" iconURI="platform:/plugin/org.eclipse.ui/icons/full/eview16/defaultview_misc.gif" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:General</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.info.dataset" label="Dataset Info" iconURI="platform:/plugin/org.caleydo.view.info.dataset/resources/icons/icon.png" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.heatmap" label="Heat Map" iconURI="platform:/plugin/org.caleydo.view.heatmap/resources/icons/heatmap.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.heatmap.hierarchical" label="Hierarchical Heat Map" iconURI="platform:/plugin/org.caleydo.view.heatmap/resources/icons/heatmap.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Other</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.heatmap.uncertainty" label="Uncertainty Heat Map" iconURI="platform:/plugin/org.caleydo.view.heatmap/resources/icons/heatmap.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Other</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.dvi" label="Data-View Integrator" iconURI="platform:/plugin/org.caleydo.view.dvi/resources/icons/dataviewintegrator.png" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.bookmark" label="Bookmark" iconURI="platform:/plugin/org.caleydo.view.bookmark/resources/icons/bookmark.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.kaplanmeier" label="Kaplan Meier" iconURI="platform:/plugin/org.caleydo.view.kaplanmeier/resources/icons/icon.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.search" label="Search" iconURI="platform:/plugin/org.caleydo.view.search/resources/icons/search.png" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.histogram" label="Histogram, Color Legend" iconURI="platform:/plugin/org.caleydo.view.histogram/resources/icons/histogram.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.pathway" label="Pathway" iconURI="platform:/plugin/org.caleydo.view.pathway/resources/icons/pathway.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.selectionbrowser" label="Selection Browser" iconURI="platform:/plugin/org.eclipse.ui/icons/full/eview16/defaultview_misc.gif" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.info.selection" label="Selection Info" iconURI="platform:/plugin/org.caleydo.view.info.selection/resources/icons/info.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.filter" label="Filter" iconURI="platform:/plugin/org.caleydo.view.filter/resources/icons/icon.png" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.filterpipeline" label="Filter Pipeline" iconURI="platform:/plugin/org.caleydo.view.filterpipeline/resources/icons/icon.png" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.stratomex" label="StratomeX" iconURI="platform:/plugin/org.caleydo.view.stratomex/resources/icons/icon.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.view.bicluster" label="BiCluster Visualization" iconURI="platform:/plugin/org.caleydo.view.bicluster/resources/icons/icon.png" allowMultiple="true" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <descriptors elementId="org.caleydo.core.gui.toolbar.RcpToolBarView" label="Tool Bar" iconURI="platform:/plugin/org.caleydo.core/resources/icons/view/general.png" category="org.eclipse.e4.secondaryDataStack" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+    <tags>View</tags>
+    <tags>categoryTag:Caleydo</tags>
+  </descriptors>
+  <commands elementId="e4.exit" contributorURI="platform:/plugin/org.eclipse.ui.workbench" commandName="%command.name.exit" description=""/>
+  <commands elementId="e4.show.view" contributorURI="platform:/plugin/org.eclipse.ui.workbench" commandName="%command.name.showView">
+    <parameters elementId="org.eclipse.ui.views.showView.viewId" contributorURI="platform:/plugin/org.eclipse.ui.workbench" name="View"/>
+  </commands>
+  <commands elementId="org.eclipse.e4.ui.saveCommands" contributorURI="platform:/plugin/org.eclipse.ui.workbench" commandName="%command.name.save"/>
+  <commands elementId="org.eclipse.e4.ui.saveAllCommands" contributorURI="platform:/plugin/org.eclipse.ui.workbench" commandName="%command.name.saveAll"/>
+  <commands elementId="org.eclipse.ui.window.customizePerspective" commandName="Customize Perspective" description="Customize the current perspective" category="//@categories.1"/>
+  <commands elementId="org.caleydo.view.dvi.opendvi" commandName="Data-View Integrator" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.ToggleCoolbarAction" commandName="Toggle Toolbar Visibility" description="Toggles the visibility of the window toolbar" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.navigate.up" commandName="Up" description="Navigate up one level" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.edit.rename" commandName="Rename" description="Rename the selected item" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.navigate.next" commandName="Next" description="Navigate to the next item" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.window.closePerspective" commandName="Close Perspective" description="Close the current perspective" category="//@categories.1">
+    <parameters elementId="org.eclipse.ui.window.closePerspective.perspectiveId" name="Perspective Id"/>
+  </commands>
+  <commands elementId="org.eclipse.ui.window.hideShowEditors" commandName="Toggle Editor Area Visibility" description="Toggles the visibility of the editor area" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.edit.cut" commandName="Cut" description="Cut the selection to the clipboard" category="//@categories.5"/>
+  <commands elementId="org.caleydo.view.selectionbrowser.command.openselectionbrowser" commandName="Selection Browser" category="//@categories.7"/>
+  <commands elementId="org.caleydo.view.generaltoolbar.command.opengeneraltoolbar" commandName="Tool Bar" category="//@categories.7"/>
+  <commands elementId="org.caleydo.core.io.gui.import_data" commandName="Import Data" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.edit.findReplace" commandName="Find and Replace" description="Find and replace text" category="//@categories.5"/>
+  <commands elementId="org.eclipse.ui.edit.move" commandName="Move..." description="Move the selected item" category="//@categories.6"/>
+  <commands elementId="org.caleydo.view.info.selection.command.openselectioninfo" commandName="Selection Info" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.lockToolBar" commandName="Lock the Toolbars" description="Lock the Toolbars" category="//@categories.1"/>
+  <commands elementId="org.caleydo.core.gui.fullscreen" commandName="Full Screen" category="//@categories.7"/>
+  <commands elementId="org.caleydo.view.pathway.command.openpathway" commandName="Pathway" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.navigate.expandAll" commandName="Expand All" description="Expand the current tree" category="//@categories.3"/>
+  <commands elementId="org.caleydo.view.bicluster.command.opentemplate" commandName="BiCluster" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.file.import" commandName="Import" description="Import" category="//@categories.6">
+    <parameters elementId="importWizardId" name="Import Wizard"/>
+  </commands>
+  <commands elementId="org.eclipse.ui.help.helpSearch" commandName="Help Search" description="Open the help search" category="//@categories.2"/>
+  <commands elementId="org.eclipse.ui.edit.selectAll" commandName="Select All" description="Select all" category="//@categories.5"/>
+  <commands elementId="org.eclipse.ui.window.preferences" commandName="Preferences" description="Open the preferences dialog" category="//@categories.1">
+    <parameters elementId="preferencePageId" name="Preference Page"/>
+  </commands>
+  <commands elementId="org.eclipse.ui.navigate.nextSubTab" commandName="Next Sub-Tab" description="Switch to the next sub-tab" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.file.close" commandName="Close" description="Close the active editor" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.edit.text.contentAssist.contextInformation" commandName="Context Information" description="Show Context Information" category="//@categories.5"/>
+  <commands elementId="org.eclipse.ui.newWizard" commandName="New" description="Open the New item wizard" category="//@categories.6">
+    <parameters elementId="newWizardId" name="New Wizard"/>
+  </commands>
+  <commands elementId="org.eclipse.ui.help.tipsAndTricksAction" commandName="Tips and Tricks" description="Open the tips and tricks help page" category="//@categories.2"/>
+  <commands elementId="org.eclipse.ui.edit.addBookmark" commandName="Add Bookmark" description="Add a bookmark" category="//@categories.5"/>
+  <commands elementId="org.eclipse.ui.edit.copy" commandName="Copy" description="Copy the selection to the clipboard" category="//@categories.5"/>
+  <commands elementId="org.caleydo.core.startup.restart" commandName="Restart" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.pinEditor" commandName="Pin Editor" description="Pin the current editor" category="//@categories.1"/>
+  <commands elementId="org.caleydo.core.io.gui.export_data" commandName="Export Data" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.activateEditor" commandName="Activate Editor" description="Activate the editor" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.part.previousPage" commandName="Previous Page" description="Switch to the previous page" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.help.aboutAction" commandName="About" description="Open the about dialog" category="//@categories.2"/>
+  <commands elementId="org.eclipse.ui.help.helpContents" commandName="Help Contents" description="Open the help contents" category="//@categories.2"/>
+  <commands elementId="org.eclipse.ui.file.saveAll" commandName="Save All" description="Save all current contents" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.navigate.previousTab" commandName="Previous Tab" description="Switch to the previous tab" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.file.restartWorkbench" commandName="Restart" description="Restart the workbench" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.file.export" commandName="Export" description="Export" category="//@categories.6">
+    <parameters elementId="exportWizardId" name="Export Wizard"/>
+  </commands>
+  <commands elementId="org.eclipse.ui.window.resetPerspective" commandName="Reset Perspective" description="Reset the current perspective to its default state" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.window.showContextMenu" commandName="Show Context Menu" description="Show the context menu" category="//@categories.1"/>
+  <commands elementId="org.caleydo.view.heatmap.command.openheatmap" commandName="Heat Map" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.showViewMenu" commandName="Show View Menu" description="Show the view menu" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.window.savePerspective" commandName="Save Perspective As" description="Save the current perspective" category="//@categories.1"/>
+  <commands elementId="org.caleydo.view.info.dataset.command.opendatasetinfo" commandName="Dataset Info" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.newWindow" commandName="New Window" description="Open another window" category="//@categories.1"/>
+  <commands elementId="org.caleydo.view.kaplanmeier.command.openkaplanmeier" commandName="Kaplan Meier" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.edit.delete" commandName="Delete" description="Delete the selection" category="//@categories.5"/>
+  <commands elementId="org.eclipse.ui.window.showKeyAssist" commandName="Show Key Assist" description="Show the key assist dialog" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.file.saveAs" commandName="Save As" description="Save the current contents to another location" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.window.previousEditor" commandName="Previous Editor" description="Switch to the previous editor" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.window.maximizePart" commandName="Maximize Active View or Editor" description="Toggles maximize/restore state of active view or editor" category="//@categories.1"/>
+  <commands elementId="org.caleydo.core.startup.exit" commandName="Exit" category="//@categories.7"/>
+  <commands elementId="org.caleydo.core.util.clusterer.gui.cluster" commandName="Cluster" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.navigate.collapseAll" commandName="Collapse All" description="Collapse the current tree" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.window.openEditorDropDown" commandName="Quick Switch Editor" description="Open the editor drop down list" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.perspectives.showPerspective" commandName="Show Perspective" description="Show a particular perspective" category="//@categories.0">
+    <parameters elementId="org.eclipse.ui.perspectives.showPerspective.perspectiveId" name="Parameter"/>
+    <parameters elementId="org.eclipse.ui.perspectives.showPerspective.newWindow" name="In New Window"/>
+  </commands>
+  <commands elementId="org.eclipse.ui.navigate.previousSubTab" commandName="Previous Sub-Tab" description="Switch to the previous sub-tab" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.navigate.goInto" commandName="Go Into" description="Navigate into the selected item" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.activeContextInfo" commandName="Show activeContext Info" category="//@categories.1"/>
+  <commands elementId="org.caleydo.view.stratomex.command.openstratomex" commandName="StratomeX" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.edit.text.contentAssist.proposals" commandName="Content Assist" description="Content Assist" category="//@categories.5"/>
+  <commands elementId="org.eclipse.ui.edit.paste" commandName="Paste" description="Paste from the clipboard" category="//@categories.5"/>
+  <commands elementId="org.eclipse.ui.file.revert" commandName="Revert" description="Revert to the last saved state" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.navigate.nextTab" commandName="Next Tab" description="Switch to the next tab" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.navigate.previous" commandName="Previous" description="Navigate to the previous item" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.edit.redo" commandName="Redo" description="Redo the last operation" category="//@categories.5"/>
+  <commands elementId="org.eclipse.ui.file.print" commandName="Print" description="Print" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.navigate.forwardHistory" commandName="Forward History" description="Move forward in the editor navigation history" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.window.switchToEditor" commandName="Switch to Editor" description="Switch to an editor" category="//@categories.1"/>
+  <commands elementId="org.caleydo.view.filterpipeline.command.openfilterpipeline" commandName="Filter Pipeline" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.previousView" commandName="Previous View" description="Switch to the previous view" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.edit.undo" commandName="Undo" description="Undo the last operation" category="//@categories.5"/>
+  <commands elementId="org.eclipse.ui.navigate.back" commandName="Back" description="Navigate back" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.navigate.linkWithEditor" commandName="Toggle Link with Editor " description="Toggles linking of a view's selection with the active editor's selection" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.help.dynamicHelp" commandName="Dynamic Help" description="Open the dynamic help" category="//@categories.2"/>
+  <commands elementId="org.eclipse.ui.help.displayHelp" commandName="Display Help" description="Display a Help topic" category="//@categories.2">
+    <parameters elementId="href" name="Help topic href"/>
+  </commands>
+  <commands elementId="org.caleydo.view.bookmark.command.openbookmark" commandName="Bookmark" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.previousPerspective" commandName="Previous Perspective" description="Switch to the previous perspective" category="//@categories.1"/>
+  <commands elementId="org.caleydo.core.io.gui.save_project" commandName="Save Project" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.help.quickStartAction" commandName="Welcome" description="Show help for beginning users" category="//@categories.2"/>
+  <commands elementId="org.eclipse.ui.window.closeAllPerspectives" commandName="Close All Perspectives" description="Close all open perspectives" category="//@categories.1"/>
+  <commands elementId="org.caleydo.view.search.command.opensearch" commandName="Search" category="//@categories.7"/>
+  <commands elementId="org.caleydo.view.histogram.command.openhistogram" commandName="Histogram, Color Legend" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.newEditor" commandName="New Editor" description="Open another editor on the active editor's input" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.views.showView" commandName="Show View" description="Shows a particular view" category="//@categories.4">
+    <parameters elementId="org.eclipse.ui.views.showView.viewId" name="View"/>
+    <parameters elementId="org.eclipse.ui.views.showView.secondaryId" name="Secondary Id"/>
+    <parameters elementId="org.eclipse.ui.views.showView.makeFast" name="As FastView"/>
+  </commands>
+  <commands elementId="org.caleydo.core.gui.menu.known_bugs" commandName="Known Bugs" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.help.installationDialog" commandName="Installation Information" description="Open the installation dialog" category="//@categories.2"/>
+  <commands elementId="org.eclipse.ui.file.save" commandName="Save" description="Save the current contents" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.file.closeAll" commandName="Close All" description="Close all editors" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.window.spy" commandName="Show Contributing Plug-in" description="Shows contribution information for the currently selected element" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.file.closePart" commandName="Close Part" description="Close the active workbench part" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.window.quickAccess" commandName="Quick Access" description="Quickly access UI elements" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.file.refresh" commandName="Refresh" description="Refresh the selected items" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.window.nextView" commandName="Next View" description="Switch to the next view" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.window.nextEditor" commandName="Next Editor" description="Switch to the next editor" category="//@categories.1"/>
+  <commands elementId="org.caleydo.view.heatmap.command.openuncertaintyheatmap" commandName="Uncertainty Heat Map" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.minimizePart" commandName="Minimize Active View or Editor" description="Minimizes the active view or editor" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.file.properties" commandName="Properties" description="Display the properties of the selected item" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.navigate.showIn" commandName="Show In" category="//@categories.3">
+    <parameters elementId="org.eclipse.ui.navigate.showIn.targetId" name="Show In Target Id" optional="false"/>
+  </commands>
+  <commands elementId="org.eclipse.ui.navigate.forward" commandName="Forward" description="Navigate forward" category="//@categories.3"/>
+  <commands elementId="org.eclipse.ui.part.nextPage" commandName="Next Page" description="Switch to the next page" category="//@categories.3"/>
+  <commands elementId="org.caleydo.view.filter.command.openfilter" commandName="Filter" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.navigate.backwardHistory" commandName="Backward History" description="Move backward in the editor navigation history" category="//@categories.3"/>
+  <commands elementId="org.caleydo.core.gui.menu.help_contents" commandName="Help Contents" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.nextPerspective" commandName="Next Perspective" description="Switch to the next perspective" category="//@categories.1"/>
+  <commands elementId="org.caleydo.core.gui.menu.report_bug" commandName="Report Bug" category="//@categories.7"/>
+  <commands elementId="org.eclipse.ui.window.showSystemMenu" commandName="Show System Menu" description="Show the system menu" category="//@categories.1"/>
+  <commands elementId="org.eclipse.ui.file.closeOthers" commandName="Close Others" description="Close all editors except the one that is active" category="//@categories.6"/>
+  <commands elementId="org.eclipse.ui.file.exit" commandName="Exit" description="Exit the application" category="//@categories.6"/>
+  <commands elementId="org.caleydo.view.browser.command.openbrowser" commandName="Browser" category="//@categories.7"/>
+  <addons elementId="org.eclipse.e4.core.commands.service" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
+  <addons elementId="org.eclipse.e4.ui.contexts.service" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
+  <addons elementId="org.eclipse.e4.ui.bindings.service" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>
+  <addons elementId="org.eclipse.e4.ui.workbench.commands.model" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.addons.CommandProcessingAddon"/>
+  <addons elementId="org.eclipse.e4.ui.workbench.contexts.model" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.workbench/org.eclipse.e4.ui.internal.workbench.addons.ContextProcessingAddon"/>
+  <addons elementId="org.eclipse.e4.ui.workbench.bindings.model" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.swt/org.eclipse.e4.ui.workbench.swt.util.BindingProcessingAddon"/>
+  <addons elementId="Cleanup Addon" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.addons.swt/org.eclipse.e4.ui.workbench.addons.cleanupaddon.CleanupAddon"/>
+  <addons elementId="DnD Addon" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.addons.swt/org.eclipse.e4.ui.workbench.addons.dndaddon.DnDAddon"/>
+  <addons elementId="MinMax Addon" contributorURI="platform:/plugin/org.eclipse.ui.workbench" contributionURI="bundleclass://org.eclipse.e4.ui.workbench.addons.swt/org.eclipse.e4.ui.workbench.addons.minmax.MinMaxAddon"/>
+  <categories elementId="org.eclipse.ui.category.perspectives" name="Perspectives" description="Commands for opening perspectives"/>
+  <categories elementId="org.eclipse.ui.category.window" name="Window"/>
+  <categories elementId="org.eclipse.ui.category.help" name="Help"/>
+  <categories elementId="org.eclipse.ui.category.navigate" name="Navigate"/>
+  <categories elementId="org.eclipse.ui.category.views" name="Views" description="Commands for opening views"/>
+  <categories elementId="org.eclipse.ui.category.edit" name="Edit"/>
+  <categories elementId="org.eclipse.ui.category.file" name="File"/>
+  <categories elementId="org.eclipse.core.commands.categories.autogenerated" name="Uncategorized" description="Commands that were either auto-generated or have no category"/>
+</application:Application>
