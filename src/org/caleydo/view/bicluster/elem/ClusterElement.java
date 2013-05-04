@@ -55,6 +55,7 @@ import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer
 import org.caleydo.core.view.opengl.layout2.animation.MoveTransitions;
 import org.caleydo.core.view.opengl.layout2.animation.Transitions;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
+import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
@@ -71,6 +72,7 @@ import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
+import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
@@ -118,6 +120,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private int bcNr;
 	private ToolBar toolBar;
 	private HeaderBar headerBar;
+	private ThresholdBar dimThreshBar;
+	private ThresholdBar recThreshBar;
 	private GLElement heatmap;
 	private float opacityfactor = 1;
 	private float highOpacityFactor = 1;
@@ -137,8 +141,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.executor = executor;
 		toolBar = new ToolBar();
 		headerBar = new HeaderBar();
+		dimThreshBar = new ThresholdBar(true);
+		recThreshBar = new ThresholdBar(false);
 		this.add(toolBar); // add a element toolbar
 		this.add(headerBar);
+		this.add(dimThreshBar);
+		this.add(recThreshBar);
 		heatmap = new HeatMapElement(data, this, EDetailLevel.HIGH);
 		heatmap.setzDelta(0.5f);
 		// setzDelta(f);
@@ -213,8 +221,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
 		g.textColor(color);
-		// color. *=opacityfactor;
-		// g.color(java.awt.Color.BLACK);
 		if (isHoovered) {
 			g.color(highlightedColor);
 		}
@@ -222,7 +228,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		g.drawText(getID(), 0, -16, 70, 12);
 		float[] black = { 0, 0, 0, 1 };
 		g.textColor(black);
-		// g.textColor(black);
 	}
 
 	protected void onPicked(Pick pick) {
@@ -289,15 +294,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-	/**
-	 *
-	 */
+
 	void calculateOverlap() {
 		dimOverlap = new HashMap<>();
 		recOverlap = new HashMap<>();
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
 		List<Integer> myRecIndizes = getRecordVirtualArray().getIDs();
-		// overallOverlapSize = 0;
 		dimensionOverlapSize = 0;
 		recordOverlapSize = 0;
 		for (GLElement element : allClusters.asList()) {
@@ -320,56 +322,35 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		fireTablePerspectiveChanged();
 	}
 
-	/**
-	 * @return the force, see {@link #attForce}
-	 */
+
 	public Vec2d getAttForce() {
 		return attForce;
 	}
 
-	/**
-	 * @param force
-	 *            setter, see {@link force}
-	 */
-	public void setAttForce(Vec2d force) {
 
+	public void setAttForce(Vec2d force) {
 		this.attForce = force;
 	}
 
-	/**
-	 * @param force
-	 *            setter, see {@link force}
-	 */
-	public void setRepForce(Vec2d force) {
 
+	public void setRepForce(Vec2d force) {
 		this.repForce = force;
 	}
 
-	/**
-	 * @return the force, see {@link #attForce}
-	 */
+
 	public Vec2d getRepForce() {
 		return repForce;
 	}
 
 	public Vec2d getFrameForce() {
-
 		return frameForce;
 	}
 
-	/**
-	 * @param frameForce
-	 *            setter, see {@link centerForce}
-	 */
+	
 	public void setFrameForce(Vec2d frameForce) {
 		this.frameForce = frameForce;
 	}
 
-	/**
-	 * 
-	 * @param dimensionName
-	 * @param recordName
-	 */
 
 	public void setPerspectiveLabel(String dimensionName, String recordName) {
 		data.getDimensionPerspective().setLabel(dimensionName);
@@ -383,7 +364,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		EventPublisher.trigger(new DimensionVAUpdateEvent(data.getDataDomain()
 				.getDataDomainID(), data.getDimensionPerspective()
 				.getPerspectiveID(), this));
-
 		repaintAll();
 	}
 
@@ -403,16 +383,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return getRecordVirtualArray().size();
 	}
 
-	/**
-	 * @return the isDraged, see {@link #isDragged}
-	 */
+
 	public boolean isDragged() {
 		return isDragged;
 	}
 
-	/**
-	 * @return the isDrawn, see {@link #isVisible}
-	 */
+
 	public boolean isVisible() {
 		return getVisibility().doRender();
 	}
@@ -421,9 +397,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return dimOverlap.get(jElement);
 	}
 
-	/**
-	 * @return the yOverlap, see {@link #recOverlap}
-	 */
+
 	public List<Integer> getRecOverlap(GLElement jElement) {
 		return recOverlap.get(jElement);
 	}
@@ -443,9 +417,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return recordOverlapSize;
 	}
 
-	/**
-	 * @return
-	 */
+
 	protected IGLLayoutElement getIGLayoutElement() {
 		return GLElementAccessor.asLayoutElement(this);
 	}
@@ -456,15 +428,22 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		// if (isHidden) return;
 		IGLLayoutElement toolbar = children.get(0);
 		IGLLayoutElement headerbar = children.get(1);
+		IGLLayoutElement dimthreshbar = children.get(2);
+		IGLLayoutElement recthreshbar = children.get(3);
 		if (isHoovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
 			toolbar.setBounds(-18, 0, 18, 80);
 			headerbar.setBounds(0, -18, w < 55 ? 55 : w + 2, 17);
+			dimthreshbar.setBounds(0,-36,w < 55 ? 55 : w + 2,17);
+			recthreshbar.setBounds(-36,0,18,80);
+			
 		} else {
 			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
 			headerbar.setBounds(0, 0, w < 50 ? 50 : w, 0);
+			dimthreshbar.setBounds(0,0,w < 50 ? 50 : w, 0);
+			recthreshbar.setBounds(0,0,0,0);
 		}
-		IGLLayoutElement content = children.get(2);
+		IGLLayoutElement content = children.get(4);
 		content.setBounds(0, 0, w, h);
 	}
 
@@ -509,6 +488,64 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			// nothing to click here
 
 		}
+	}
+
+	private class ThresholdBar extends GLElementContainer
+			implements
+			org.caleydo.core.view.opengl.layout2.basic.GLSlider.ISelectionCallback {
+
+		boolean isHorizontal;
+		GLSlider slider;
+		double maxSliderValue;
+
+		protected ThresholdBar(boolean layout) {
+			super(layout ? GLLayouts.flowHorizontal(1) : GLLayouts
+					.flowVertical(1));
+			isHorizontal = layout;
+			// move to the top
+			setzDelta(+0.5f);
+
+			// create buttons
+			createButtons();
+
+			setSize(Float.NaN, 20);
+
+			// define the animation used to move this element
+			if (isHorizontal) {
+				this.setLayoutData(new MoveTransitions.MoveTransitionBase(
+						Transitions.LINEAR, Transitions.LINEAR, Transitions.NO,
+						Transitions.LINEAR));
+			} else {
+				this.setLayoutData(new MoveTransitions.MoveTransitionBase(
+						Transitions.LINEAR, Transitions.LINEAR, Transitions.LINEAR,
+						Transitions.NO));
+			}
+		}
+
+		protected void createButtons() {
+//			this.slider = new GLButton();
+			this.remove(slider);
+			this.slider = new GLSlider(0, (float) maxSliderValue, (float) (maxSliderValue/2));
+			slider.setzDelta(-0.5f);
+			slider.setCallback(this);
+			slider.setSize(Float.NaN, 18);
+			this.add(slider);
+		}
+
+		@Override
+		public void onSelectionChanged(GLSlider slider, float value) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@ListenTo
+		public void listenTo(MaxThresholdChangeEvent event) {
+			maxSliderValue = isHorizontal ? event.getDimThreshold() : event
+					.getRecThreshold();
+			createButtons();
+			relayout();
+		}
+
 	}
 
 	/**
@@ -591,7 +628,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		@Override
 		public void onSelectionChanged(GLButton button, boolean selected) {
 			if (button == hide) {
-				hideThisElement();
+				hideThisCluster();
 			} else if (button == sorting) {
 				setSortingCaption(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
 						: SortingType.probabilitySorting);
@@ -607,7 +644,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				resize();
 				EventPublisher.trigger(new FocusChangeEvent(null));
 			} else if (button == focus) {
-				focusThisButton();
+				focusThisCluster();
 			}
 		}
 	}
@@ -618,10 +655,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		resize();
 	}
 
-	void focusThisButton() {
+	void focusThisCluster() {
 		this.isFocused = !this.isFocused;
 		if (isFocused) {
-			scaleFactor = scaleFactor >= 3 ? 3 : 2;
+			scaleFactor = scaleFactor >= 4 ? 4 : 3;
 			resize();
 			EventPublisher.trigger(new FocusChangeEvent(this));
 		} else {
@@ -629,7 +666,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			resize();
 			EventPublisher.trigger(new FocusChangeEvent(null));
 		}
-		// relayout();
 		repaintAll();
 	}
 
@@ -652,7 +688,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		relayout();
 	}
 
-	public void hideThisElement() {
+	public void hideThisCluster() {
 		isHidden = true;
 		setVisibility(EVisibility.NONE);
 		isHoovered = false;
