@@ -28,7 +28,7 @@ import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 
 /**
  * @author user
- *
+ * 
  */
 public class ScanProbabilityMatrix implements Callable<ScanResult> {
 
@@ -37,7 +37,8 @@ public class ScanProbabilityMatrix implements Callable<ScanResult> {
 	private int bcNr;
 	private ASortingStrategy strategy;
 
-	public ScanProbabilityMatrix(float threshold, Table t, int bcNr, ASortingStrategy strat) {
+	public ScanProbabilityMatrix(float threshold, Table t, int bcNr,
+			ASortingStrategy strat) {
 		this.threshold = threshold;
 		this.table = t;
 		this.bcNr = bcNr;
@@ -48,6 +49,7 @@ public class ScanProbabilityMatrix implements Callable<ScanResult> {
 
 		final int tablesize = table.depth(); // table.getRowIDList().size();
 		double max = 0;
+		double min = 6e20;
 		for (int nr = 0; nr < tablesize; nr++) {
 			float p;
 			p = (float) table.getRaw(bcNr, nr);
@@ -56,18 +58,20 @@ public class ScanProbabilityMatrix implements Callable<ScanResult> {
 			}
 			if (p > max)
 				max = p;
+			if (p < min)
+				min = p;
 		}
 
 		List<Integer> indices = new ArrayList<>();
 		for (Integer i : strategy) {
 			indices.add(i);
 		}
-		return new ScanResult(indices, max);
+		return new ScanResult(indices, max, min);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see java.util.concurrent.Callable#call()
 	 */
 	@Override

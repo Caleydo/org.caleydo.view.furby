@@ -29,6 +29,7 @@ public class ScanResult {
 
 	List<Integer> indices;
 	double max;
+	double min;
 
 	/**
 	 * @return the indices, see {@link #indices}
@@ -44,12 +45,14 @@ public class ScanResult {
 		return max;
 	}
 
-	/**
-	 *
-	 */
-	public ScanResult(List<Integer> indices, double max) {
+	public double getMin(){
+		return min;
+	}
+	
+	public ScanResult(List<Integer> indices, double max, double min) {
 		this.indices = indices;
 		this.max = max;
+		this.min = min;
 	}
 
 }

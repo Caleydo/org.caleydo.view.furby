@@ -35,6 +35,7 @@ import javax.swing.Timer;
 
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
+import org.caleydo.core.data.datadomain.event.CreateClusteringEvent;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
@@ -215,19 +216,27 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	@Override
+	protected void renderPickImpl(GLGraphics g, float w, float h) {
+		if (isHoovered) {
+			g.fillRect(-20, -20, w < 55 ? 80 : w+25, h < 80 ? 100 : h+40);
+		}
+		super.renderPickImpl(g, w, h);
+	}
+
+	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
 		float[] color = { 0, 0, 0, (float) curOpacityFactor };
 		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
-		g.textColor(color);
 		if (isHoovered) {
 			g.color(highlightedColor);
 		}
-		g.drawRoundedRect(-1, -1, w + 2, h + 2, 1);
-		g.drawText(getID(), 0, -16, 70, 12);
-		float[] black = { 0, 0, 0, 1 };
-		g.textColor(black);
+		g.drawRect(-1, -1, w + 2, h + 2);
+		// g.textColor(color);
+		// g.drawText(getID(), 0, -16, 70, 12);
+		// float[] black = { 0, 0, 0, 1 };
+		// g.textColor(black);
 	}
 
 	protected void onPicked(Pick pick) {
@@ -294,7 +303,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-
 	void calculateOverlap() {
 		dimOverlap = new HashMap<>();
 		recOverlap = new HashMap<>();
@@ -322,21 +330,17 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		fireTablePerspectiveChanged();
 	}
 
-
 	public Vec2d getAttForce() {
 		return attForce;
 	}
-
 
 	public void setAttForce(Vec2d force) {
 		this.attForce = force;
 	}
 
-
 	public void setRepForce(Vec2d force) {
 		this.repForce = force;
 	}
-
 
 	public Vec2d getRepForce() {
 		return repForce;
@@ -346,11 +350,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return frameForce;
 	}
 
-	
 	public void setFrameForce(Vec2d frameForce) {
 		this.frameForce = frameForce;
 	}
-
 
 	public void setPerspectiveLabel(String dimensionName, String recordName) {
 		data.getDimensionPerspective().setLabel(dimensionName);
@@ -383,11 +385,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return getRecordVirtualArray().size();
 	}
 
-
 	public boolean isDragged() {
 		return isDragged;
 	}
-
 
 	public boolean isVisible() {
 		return getVisibility().doRender();
@@ -396,7 +396,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	public List<Integer> getDimOverlap(GLElement jElement) {
 		return dimOverlap.get(jElement);
 	}
-
 
 	public List<Integer> getRecOverlap(GLElement jElement) {
 		return recOverlap.get(jElement);
@@ -417,7 +416,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return recordOverlapSize;
 	}
 
-
 	protected IGLLayoutElement getIGLayoutElement() {
 		return GLElementAccessor.asLayoutElement(this);
 	}
@@ -434,14 +432,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 							// the toolbar's
 			toolbar.setBounds(-18, 0, 18, 80);
 			headerbar.setBounds(0, -18, w < 55 ? 55 : w + 2, 17);
-			dimthreshbar.setBounds(0,-36,w < 55 ? 55 : w + 2,17);
-			recthreshbar.setBounds(-36,0,18,80);
-			
+			dimthreshbar
+					.setBounds(-1, h < 60 ? 60 : h, w < 55 ? 55 : w + 2, 20);
+			recthreshbar.setBounds(w < 57 ? 57 : w+2, 0, 17, 80);
+
 		} else {
 			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
-			headerbar.setBounds(0, 0, w < 50 ? 50 : w, 0);
-			dimthreshbar.setBounds(0,0,w < 50 ? 50 : w, 0);
-			recthreshbar.setBounds(0,0,0,0);
+			headerbar.setBounds(0, -18, w < 50 ? 50 : w, 17);
+			dimthreshbar.setBounds(-1, h, 0, 0);
+			recthreshbar.setBounds(w, 0, 0, 0);
 		}
 		IGLLayoutElement content = children.get(4);
 		content.setBounds(0, 0, w, h);
@@ -469,14 +468,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		protected void createButtons() {
 			GLElement spacer = new GLButton();
-			spacer.setzDelta(-0.5f);
+			// spacer.setzDelta(-0.5f);
 			spacer.setRenderer(new IGLRenderer() {
 
 				@Override
 				public void render(GLGraphics g, float w, float h,
 						GLElement parent) {
 					g.color(SelectionType.MOUSE_OVER.getColor());
-					g.fillRoundedRect(0, 0, w, h, 2);
+					if (isHoovered)
+						g.fillRoundedRect(0, 0, w, h, 2);
+					float[] color = { 0, 0, 0, (float) curOpacityFactor };
+					g.textColor(color);
+					g.drawText(getID(), 0, 0, 70, 12);
+					float[] black = { 0, 0, 0, 1 };
+					g.textColor(black);
 
 				}
 			});
@@ -485,9 +490,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		@Override
 		public void onSelectionChanged(GLButton button, boolean selected) {
-			// nothing to click here
+			// TODO Auto-generated method stub
 
 		}
+
 	}
 
 	private class ThresholdBar extends GLElementContainer
@@ -496,7 +502,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		boolean isHorizontal;
 		GLSlider slider;
+		double maxValue;
 		double maxSliderValue;
+		double minSliderValue;
 
 		protected ThresholdBar(boolean layout) {
 			super(layout ? GLLayouts.flowHorizontal(1) : GLLayouts
@@ -517,35 +525,56 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 						Transitions.LINEAR));
 			} else {
 				this.setLayoutData(new MoveTransitions.MoveTransitionBase(
-						Transitions.LINEAR, Transitions.LINEAR, Transitions.LINEAR,
-						Transitions.NO));
+						Transitions.LINEAR, Transitions.LINEAR,
+						Transitions.LINEAR, Transitions.NO));
 			}
 		}
 
 		protected void createButtons() {
-//			this.slider = new GLButton();
+			// this.slider = new GLButton();
 			this.remove(slider);
-			this.slider = new GLSlider(0, (float) maxSliderValue, (float) (maxSliderValue/2));
+			this.slider = new GLSlider(0, (float) maxValue,
+					(float) (maxValue / 2));
 			slider.setzDelta(-0.5f);
 			slider.setCallback(this);
 			slider.setSize(Float.NaN, 18);
+			slider.setHorizontal(isHorizontal);
 			this.add(slider);
 		}
 
 		@Override
 		public void onSelectionChanged(GLSlider slider, float value) {
-			// TODO Auto-generated method stub
+			if (value <= minSliderValue || value >= maxSliderValue)
+				return;
+			if (isHorizontal)
+				dimThreshold = value;
+			else
+				recThreshold = value;
 
+			rebuildMyData(false);
+
+		}
+
+		protected void updateSliders(double maxValue, double minValue) {
+			maxSliderValue = maxValue;
+			minSliderValue = minValue;
+			// createButtons();
+			relayout();
 		}
 
 		@ListenTo
 		public void listenTo(MaxThresholdChangeEvent event) {
-			maxSliderValue = isHorizontal ? event.getDimThreshold() : event
+			maxValue = isHorizontal ? event.getDimThreshold() : event
 					.getRecThreshold();
 			createButtons();
-			relayout();
 		}
 
+		@ListenTo
+		public void listenTo(LZThresholdChangeEvent event) {
+			if (event.isGlobalEvent())
+				slider.setValue(isHorizontal ? event.getDimensionThreshold()
+						: event.getRecordThreshold());
+		}
 	}
 
 	/**
@@ -738,11 +767,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	 * @param recIndices
 	 * @param setXElements
 	 * @param id
+	 * @param maxRec
+	 * @param maxDim
 	 * @param
 	 */
-	public void setIndices(List<Integer> dimIndices, List<Integer> recIndices,
-			boolean setXElements, String id, int bcNr) {
+	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
+			boolean setXElements, String id, int bcNr, double maxDim,
+			double maxRec, double minDim, double minRec) {
 		data.setLabel(id);
+		if (maxDim >= 0 && maxRec >= 0) {
+			dimThreshBar.updateSliders(maxDim, minDim);
+			recThreshBar.updateSliders(maxRec, minRec);
+		}
 		dimProbabilitySorting = new ArrayList<Integer>(dimIndices);
 		recProbabilitySorting = new ArrayList<Integer>(recIndices);
 		this.bcNr = bcNr;
@@ -898,7 +934,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		setIndices(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr);
+		setData(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr,
+				-1, -1, -1, -1);
 		EventPublisher.trigger(new ClusterScaleEvent(this));
 		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal));
 		EventPublisher.trigger(new CreateBandsEvent(this));

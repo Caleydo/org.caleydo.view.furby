@@ -139,7 +139,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 
 	protected void createBiClusterPerspectives(TablePerspective x,
 			TablePerspective l, TablePerspective z) {
-		
 
 		Table L = l.getDataDomain().getTable();
 		Table Z = z.getDataDomain().getTable();
@@ -178,8 +177,10 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 						.get(i);
 
 				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i));
-				el.setIndices(dimIndices, recIndices, setXElements, l
-						.getDataDomain().getDimensionLabel(i), i);
+				el.setData(dimIndices, recIndices, setXElements, l
+						.getDataDomain().getDimensionLabel(i), i, dimResult
+						.getMax(), recResult.getMax(), dimResult.getMin(),
+						recResult.getMin());
 			} catch (InterruptedException | ExecutionException
 					| NullPointerException e) {
 				e.printStackTrace();
@@ -264,7 +265,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			rootElement.setData(null, null, null, null, executorService);
 		else if (all.size() == 3) {
 			findXLZ();
-			rootElement.setData(initTablePerspectives(), x, l , z, executorService);
+			rootElement.setData(initTablePerspectives(), x, l, z,
+					executorService);
 			createBiClusterPerspectives(x, l, z);
 			createBiClusterPerspectives(x, l, z);
 			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold,
@@ -274,20 +276,18 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		}
 	}
 
-
-
-//	@ListenTo
-//	private void handleUpdate(LZThresholdChangeEvent event) {
-//		geneThreshold = event.getRecordThreshold();
-//		sampleThreshold = event.getDimensionThreshold();
-//		if ((x != null && l != null && z != null)
-//				|| setXElements != event.isFixedClusterCount()) {
-//			setXElements = event.isFixedClusterCount();
-//			createBiClusterPerspectives(x, l, z);
-//		}
-//		rootElement
-//				.setClusterSizes(event.isFixedClusterCount() ? smallClusterSize
-//						: largeClusterSize);
-//
-//	}
+	// @ListenTo
+	// private void handleUpdate(LZThresholdChangeEvent event) {
+	// geneThreshold = event.getRecordThreshold();
+	// sampleThreshold = event.getDimensionThreshold();
+	// if ((x != null && l != null && z != null)
+	// || setXElements != event.isFixedClusterCount()) {
+	// setXElements = event.isFixedClusterCount();
+	// createBiClusterPerspectives(x, l, z);
+	// }
+	// rootElement
+	// .setClusterSizes(event.isFixedClusterCount() ? smallClusterSize
+	// : largeClusterSize);
+	//
+	// }
 }
