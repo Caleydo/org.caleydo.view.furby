@@ -270,6 +270,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				isHoovered = false;
 				allClusters.setHooveredElement(null);
 				relayout(); // for showing the toolbar
+				repaintAll();
 				EventPublisher.trigger(new ClusterHoveredElement(this, false));
 			}
 			break;
@@ -431,10 +432,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		if (isHoovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
 			toolbar.setBounds(-18, 0, 18, 80);
-			headerbar.setBounds(0, -18, w < 55 ? 55 : w + 2, 17);
+			headerbar.setBounds(0, -19, w < 55 ? 75 : w + 20, 17);
 			dimthreshbar
-					.setBounds(-1, h < 60 ? 60 : h, w < 55 ? 57 : w+2, 20);
-			recthreshbar.setBounds(w < 57 ? 57 : w + 2, 0, 17, h < 60 ? 60 : h);
+					.setBounds(-1, h < 60 ? 61 : h+1, w < 55 ? 56 : w+1, 20);
+			recthreshbar.setBounds(w < 57 ? 56 : w + 1, -1, 17, h < 60 ? 61 : h+1);
 
 		} else {
 			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
