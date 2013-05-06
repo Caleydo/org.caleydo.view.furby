@@ -218,7 +218,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (isHoovered) {
-			g.fillRect(-20, -20, w < 55 ? 80 : w+25, h < 80 ? 100 : h+40);
+			g.fillRect(-20, -20, w < 55 ? 80 : w + 25, h < 80 ? 100 : h + 40);
 		}
 		super.renderPickImpl(g, w, h);
 	}
@@ -433,8 +433,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			toolbar.setBounds(-18, 0, 18, 80);
 			headerbar.setBounds(0, -18, w < 55 ? 55 : w + 2, 17);
 			dimthreshbar
-					.setBounds(-1, h < 60 ? 60 : h, w < 55 ? 55 : w + 2, 20);
-			recthreshbar.setBounds(w < 57 ? 57 : w+2, 0, 17, 80);
+					.setBounds(-1, h < 60 ? 60 : h, w < 55 ? 57 : w+2, 20);
+			recthreshbar.setBounds(w < 57 ? 57 : w + 2, 0, 17, h < 60 ? 60 : h);
 
 		} else {
 			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
@@ -537,8 +537,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 					(float) (maxValue / 2));
 			slider.setzDelta(-0.5f);
 			slider.setCallback(this);
-			slider.setSize(Float.NaN, 18);
 			slider.setHorizontal(isHorizontal);
+			if (isHorizontal) {
+				slider.setSize(Float.NaN, 18);
+			} else {
+				slider.setSize(18, Float.NaN);
+			}
 			this.add(slider);
 		}
 
