@@ -166,7 +166,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.setLayoutData(MoveTransitions.MOVE_AND_GROW_LINEAR);
 	}
 
-
 	@Override
 	public Color apply(int recordID, int dimensionID,
 			ATableBasedDataDomain dataDomain, boolean deSelected) {
@@ -969,7 +968,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		setData(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr,
 				-1, -1, -1, -1);
 		EventPublisher.trigger(new ClusterScaleEvent(this));
-		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal));
+		if (!isGlobal)
+			EventPublisher.trigger(new RecalculateOverlapEvent(this, true));
 		EventPublisher.trigger(new CreateBandsEvent(this));
 
 	}
