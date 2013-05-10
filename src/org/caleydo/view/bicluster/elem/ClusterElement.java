@@ -603,8 +603,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			this.add(slider);
 		}
 
+		boolean ignoreNextChange = false;
+
 		@Override
 		public void onSelectionChanged(GLSlider slider, float value) {
+			if (ignoreNextChange) {
+				ignoreNextChange = false;
+				return;
+			}
 			if (value <= minSliderValue || value >= maxSliderValue)
 				return;
 			if (isHorizontal)
@@ -632,9 +638,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		@ListenTo
 		public void listenTo(LZThresholdChangeEvent event) {
-			if (event.isGlobalEvent())
+			if (event.isGlobalEvent()) {
 				slider.setValue(isHorizontal ? event.getDimensionThreshold()
 						: event.getRecordThreshold());
+				ignoreNextChange = true;
+			}
 		}
 	}
 
@@ -968,8 +976,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		setData(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr,
 				-1, -1, -1, -1);
 		EventPublisher.trigger(new ClusterScaleEvent(this));
-		if (!isGlobal)
-			EventPublisher.trigger(new RecalculateOverlapEvent(this, true));
+		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal));
 		EventPublisher.trigger(new CreateBandsEvent(this));
 
 	}

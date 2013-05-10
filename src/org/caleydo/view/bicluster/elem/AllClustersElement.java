@@ -20,6 +20,7 @@
 package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
+import gleem.linalg.Vec4f;
 
 import java.awt.Rectangle;
 import java.util.List;
@@ -41,7 +42,7 @@ import org.caleydo.view.bicluster.util.Vec2d;
  */
 public class AllClustersElement extends GLElementContainer implements IGLLayout {
 	
-	float repulsion = 200000f;
+	float repulsion = 250000f;
 	float attractionFactor = 400f;
 	float borderForceFactor = 300f;
 	// double aD = 0.3;
@@ -114,9 +115,11 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private void bringClustersBackToFrame(
 			List<? extends IGLLayoutElement> children, float w, float h) {
 		for (IGLLayoutElement i : children) {
-			i.setLocation(i.getLocation().x() % w, i.getLocation().y() % h);
+			Rectangle frame = new Rectangle(0, 0, (int)w, (int)h);
+			Vec4f bounds = i.asElement().getBounds();
+			Rectangle cluster = new Rectangle((int)bounds.x(), (int)bounds.y(), (int)bounds.z(), (int)bounds.w());
+			if (!frame.intersects(cluster)) i.setLocation((float)(Math.random()*w), (float)(Math.random()*h));
 		}
-
 	}
 
 	private void clearClusterCollisions(
@@ -245,8 +248,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			Vec2d distVec = getDistance(i, toolbar);
 			double rsq = distVec.lengthSquared();
 			rsq *= distVec.length();
-			double forcex = repulsion * distVec.x() / rsq;
-			double forcey = repulsion * distVec.y() / rsq;
+			double forcex = 2*repulsion * distVec.x() / rsq;
+			double forcey = 2*repulsion * distVec.y() / rsq;
 			forcex += i.getRepForce().x();
 			forcey += i.getRepForce().y();
 			i.setRepForce(new Vec2d(forcex, forcey));

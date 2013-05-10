@@ -182,6 +182,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		else {
 			recalculateOverlap();
 			count = 0;
+			return;
 		}
 		if (count == clusters.size()) {
 			recalculateOverlap();
