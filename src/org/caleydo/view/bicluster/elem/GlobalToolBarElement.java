@@ -37,10 +37,10 @@ import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
+import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
-import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 
 /**
@@ -67,34 +67,33 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 	public GlobalToolBarElement() {
 		setLayout(new GLFlowLayout(false, 5, new GLPadding(10)));
 		this.bandSortingModeButton = new GLButton(EButtonMode.CHECKBOX);
-		bandSortingModeButton.setRenderer(GLButton.createCheckRenderer("Sort by Bands"));
+		bandSortingModeButton.setRenderer(GLButton.createRadioRenderer("Sort by Bands"));
 		bandSortingModeButton.setSelected(false);
 		bandSortingModeButton.setCallback(this);
 		bandSortingModeButton.setSize(Float.NaN, 16);
 		this.add(bandSortingModeButton);
 
 		this.probabilitySortingModeButton = new GLButton(EButtonMode.CHECKBOX);
-		probabilitySortingModeButton.setRenderer(GLButton.createCheckRenderer("Sort by Probability"));
+		probabilitySortingModeButton.setRenderer(GLButton.createRadioRenderer("Sort by Probability"));
 		probabilitySortingModeButton.setSelected(true);
 		probabilitySortingModeButton.setCallback(this);
 		probabilitySortingModeButton.setSize(Float.NaN, 16);
 		this.add(probabilitySortingModeButton);
 
-		
+
 		clearHiddenClusterButton = new GLButton(EButtonMode.BUTTON);
 		clearHiddenClusterButton.setRenderer(new IGLRenderer() {
-			
+
 			@Override
 			public void render(GLGraphics g, float w, float h, GLElement parent) {
 				g.drawText("Show all Clusters", 18, 5, w, 14);
-				
+
 			}
 		});
 		clearHiddenClusterButton.setCallback(this);
 		clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
 		this.add(clearHiddenClusterButton);
-		
-		
+
 		this.fixedClusterButton = new GLButton(EButtonMode.CHECKBOX);
 		fixedClusterButton.setRenderer(GLButton.createCheckRenderer("Show only 15 Elements"));
 		fixedClusterButton.setSelected(false);
@@ -140,11 +139,11 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 			clearHiddenButtonTooltipList = new ArrayList<>();
 			clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
 			clearHiddenClusterButton.setRenderer(new IGLRenderer() {
-				
+
 				@Override
 				public void render(GLGraphics g, float w, float h, GLElement parent) {
 					g.drawText("Show all clusters", 18, 5, w, 14);
-					
+
 				}
 			});
 			EventPublisher.trigger(new UnhidingClustersEvent());
@@ -161,7 +160,7 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		initSliders();
 	}
 
-	
+
 	@ListenTo
 	public void listenTo(ClusterGetsHiddenEvent event){
 		clearHiddenButtonTooltipList.add(event.getClusterID());
@@ -172,11 +171,11 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		}
 		clearHiddenClusterButton.setTooltip(tooltip.toString());
 		clearHiddenClusterButton.setRenderer(new IGLRenderer() {
-			
+
 			@Override
 			public void render(GLGraphics g, float w, float h, GLElement parent) {
 				g.drawText("Show all clusters (+" + clearHiddenButtonTooltipList.size() + ")", 18, 5, w, 14);
-				
+
 			}
 		});
 	}
