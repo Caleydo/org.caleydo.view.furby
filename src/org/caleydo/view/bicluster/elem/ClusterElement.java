@@ -52,6 +52,8 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.IGLElementVisitor;
+import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
 import org.caleydo.core.view.opengl.layout2.animation.MoveTransitions;
 import org.caleydo.core.view.opengl.layout2.animation.Transitions;
@@ -94,6 +96,10 @@ import org.caleydo.view.heatmap.v2.IBlockColorer;
  */
 public class ClusterElement extends AnimatedGLElementContainer implements
 		IBlockColorer, IGLLayout {
+	private float highOpacityFactor = 1;
+	private float lowOpacityFactor = 0.2f;
+	private float opacityChangeInterval = 10f;
+
 	private final TablePerspective data;
 	private final TablePerspective x;
 	private final TablePerspective l;
@@ -101,7 +107,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private final AllClustersElement allClusters;
 	private final ExecutorService executor;
 	private float recThreshold = 0.08f;
-	private float dimThreshold = 4;
+	private float dimThreshold = 4.5f;
 	private Vec2d attForce = new Vec2d(0, 0);
 	private Vec2d repForce = new Vec2d(0, 0);
 	private Vec2d frameForce = new Vec2d(0, 0);
@@ -125,10 +131,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private ThresholdBar recThreshBar;
 	private GLElement heatmap;
 	private float opacityfactor = 1;
-	private float highOpacityFactor = 1;
-	private float lowOpacityFactor = 0.2f;
 	private float curOpacityFactor = 1f;
-	private float opacityDelta = 0.02f;
 
 	public ClusterElement(TablePerspective data, AllClustersElement root,
 			TablePerspective x, TablePerspective l, TablePerspective z,
@@ -141,7 +144,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.z = z;
 		this.executor = executor;
 		toolBar = new ToolBar();
-		headerBar = new HeaderBar();
+		headerBar = new HeaderBar(this);
 		dimThreshBar = new ThresholdBar(true);
 		recThreshBar = new ThresholdBar(false);
 		this.add(toolBar); // add a element toolbar
@@ -163,20 +166,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.setLayoutData(MoveTransitions.MOVE_AND_GROW_LINEAR);
 	}
 
-	Timer timer = new Timer(10, new ActionListener() {
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			if (opacityfactor < curOpacityFactor)
-				curOpacityFactor -= opacityDelta;
-			else if (opacityfactor > curOpacityFactor)
-				curOpacityFactor += opacityDelta;
-			else
-				timer.stop();
-			relayout();
-			repaint();
-		}
-	});
 
 	@Override
 	public Color apply(int recordID, int dimensionID,
@@ -218,14 +207,40 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (isHoovered) {
-			g.fillRect(-20, -20, w < 55 ? 80 : w + 25, h < 80 ? 100 : h + 40);
+			g.fillRect(-20, -20, w < 55 ? 80 : w + 45, h < 80 ? 130 : h + 50);
 		}
 		super.renderPickImpl(g, w, h);
+	}
+
+	private int accu; // for animating the opacity fading
+
+	@Override
+	public void layout(int deltaTimeMs) {
+		// duration -= delta
+		if (deltaTimeMs + accu > opacityChangeInterval) {
+
+			if (opacityfactor < curOpacityFactor)
+				curOpacityFactor -= 0.02;
+			else if (opacityfactor > curOpacityFactor)
+				curOpacityFactor += 0.02;
+
+			repaint();
+			for (GLElement child : this)
+				child.repaint();
+			accu = 0;
+		} else
+			accu += deltaTimeMs;
+		super.layout(deltaTimeMs);
+
 	}
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
+		// if (getID().contains("24")){
+		// System.out.println("stop");
+		// }
+
 		float[] color = { 0, 0, 0, (float) curOpacityFactor };
 		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
@@ -233,30 +248,28 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			g.color(highlightedColor);
 		}
 		g.drawRect(-1, -1, w + 2, h + 2);
-		// g.textColor(color);
-		// g.drawText(getID(), 0, -16, 70, 12);
-		// float[] black = { 0, 0, 0, 1 };
-		// g.textColor(black);
+
 	}
 
 	protected void onPicked(Pick pick) {
 		switch (pick.getPickingMode()) {
-		case DRAGGED:
-			if (isDragged == false) {
-				allClusters.setDragedLayoutElement(this);
-			}
-			isDragged = true;
-			setLocation(getLocation().x() + pick.getDx(), getLocation().y()
-					+ pick.getDy());
-			relayoutParent();
-			repaintPick();
-			break;
-		case CLICKED:
-			pick.setDoDragging(true);
-			break;
-		case MOUSE_RELEASED:
-			pick.setDoDragging(false);
-			break;
+		// case DRAGGED:
+		// if (!pick.isDoDragging()) return;
+		// if (isDragged == false) {
+		// allClusters.setDragedLayoutElement(this);
+		// }
+		// isDragged = true;
+		// setLocation(getLocation().x() + pick.getDx(), getLocation().y()
+		// + pick.getDy());
+		// relayoutParent();
+		// repaintPick();
+		// break;
+		// case CLICKED:
+		// if (!pick.isAnyDragging())pick.setDoDragging(true);
+		// break;
+		// case MOUSE_RELEASED:
+		// pick.setDoDragging(false);
+		// break;
 		case MOUSE_OVER:
 			if (!pick.isAnyDragging()) {
 				isHoovered = true;
@@ -266,17 +279,22 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			}
 			break;
 		case MOUSE_OUT:
-			if (isHoovered) {
+			if (isHoovered && !headerBar.isClicked()) {
+				// System.out.println("out");
 				isHoovered = false;
 				allClusters.setHooveredElement(null);
+				opacityfactor = highOpacityFactor;
+				// timer.restart();
 				relayout(); // for showing the toolbar
 				repaintAll();
+				for (GLElement child : this)
+					child.repaint();
 				EventPublisher.trigger(new ClusterHoveredElement(this, false));
 			}
 			break;
-		default:
-			isDragged = false;
-			allClusters.setDragedLayoutElement(null);
+		// default:
+		// isDragged = false;
+		// allClusters.setDragedLayoutElement(null);
 		}
 	}
 
@@ -433,9 +451,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 							// the toolbar's
 			toolbar.setBounds(-18, 0, 18, 80);
 			headerbar.setBounds(0, -19, w < 55 ? 75 : w + 20, 17);
-			dimthreshbar
-					.setBounds(-1, h < 60 ? 61 : h+1, w < 55 ? 56 : w+1, 20);
-			recthreshbar.setBounds(w < 57 ? 56 : w + 1, -1, 17, h < 60 ? 61 : h+1);
+			dimthreshbar.setBounds(-1, h < 60 ? 61 : h + 1,
+					w < 55 ? 56 : w + 1, 20);
+			recthreshbar.setBounds(w < 57 ? 56 : w + 1, -1, 17, h < 60 ? 61
+					: h + 1);
 
 		} else {
 			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
@@ -447,13 +466,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		content.setBounds(0, 0, w, h);
 	}
 
-	private class HeaderBar extends GLElementContainer implements
-			ISelectionCallback {
+	private class HeaderBar extends GLButton implements ISelectionCallback {
 
-		public HeaderBar() {
-			super(GLLayouts.flowHorizontal(1));
+		private boolean clicked = false;
 
+		public boolean isClicked() {
+			return clicked;
+		}
+
+		ClusterElement parent;
+
+		public HeaderBar(ClusterElement parent) {
+			// super(GLLayouts.flowHorizontal(1));
 			// move to the top
+			this.parent = parent;
 			setzDelta(0.5f);
 
 			// create buttons
@@ -462,15 +488,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			setSize(Float.NaN, 20);
 
 			// define the animation used to move this element
-			this.setLayoutData(new MoveTransitions.MoveTransitionBase(
-					Transitions.NO, Transitions.LINEAR, Transitions.NO,
-					Transitions.LINEAR));
+			// this.setLayoutData(new MoveTransitions.MoveTransitionBase(
+			// Transitions.NO, Transitions.LINEAR, Transitions.NO,
+			// Transitions.LINEAR));
 		}
 
 		protected void createButtons() {
-			GLElement spacer = new GLButton();
+			// GLElement spacer = new GLButton();
 			// spacer.setzDelta(-0.5f);
-			spacer.setRenderer(new IGLRenderer() {
+			setRenderer(new IGLRenderer() {
 
 				@Override
 				public void render(GLGraphics g, float w, float h,
@@ -486,7 +512,38 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 				}
 			});
-			this.add(spacer); // spacer
+			// this.add(spacer); // spacer
+		}
+
+		protected void onPicked(Pick pick) {
+
+			switch (pick.getPickingMode()) {
+			case DRAGGED:
+				if (!pick.isDoDragging())
+					return;
+				if (isDragged == false) {
+					allClusters.setDragedLayoutElement(parent);
+				}
+				isDragged = true;
+				parent.setLocation(parent.getLocation().x() + pick.getDx(),
+						parent.getLocation().y() + pick.getDy());
+				parent.relayout();
+				parent.repaintPick();
+				break;
+			case CLICKED:
+				if (!pick.isAnyDragging()) {
+					pick.setDoDragging(true);
+					clicked = true;
+				}
+				break;
+			case MOUSE_RELEASED:
+				pick.setDoDragging(false);
+				clicked = false;
+				break;
+			default:
+				isDragged = false;
+				allClusters.setDragedLayoutElement(null);
+			}
 		}
 
 		@Override
@@ -582,12 +639,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-	/**
-	 * a simple toolbar for the {@link ClusterElement}
-	 * 
-	 * @author Samuel Gratzl
-	 * 
-	 */
 	private class ToolBar extends GLElementContainer implements
 			ISelectionCallback {
 
@@ -596,16 +647,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		public ToolBar() {
 			super(GLLayouts.flowVertical(5));
-
-			// move to the top
 			setzDelta(-0.1f);
-
-			// create buttons
 			createButtons();
-
 			setSize(Float.NaN, 20);
-
-			// define the animation used to move this element
 			this.setLayoutData(new MoveTransitions.MoveTransitionBase(
 					Transitions.LINEAR, Transitions.NO, Transitions.LINEAR,
 					Transitions.LINEAR));
@@ -620,7 +664,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			hide.setCallback(this);
 			this.add(hide);
 			sorting = new GLButton();
-			// sorting.setRenderer(GLRenderers.fillRect(java.awt.Color.ORANGE));
 			sorting.setRenderer(GLRenderers
 					.drawText(
 							sortingButtonCaption == SortingType.probabilitySorting ? "P"
@@ -751,31 +794,26 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	@ListenTo
-	public void listenTo(ClusterHoveredElement event) {
+	private void listenTo(ClusterHoveredElement event) {
 		// System.out.println("hovered:");
+		// if (getID().contains("21"))
+		// System.out.println("Stop");
+
 		ClusterElement hoveredElement = event.getElement();
 		if (hoveredElement == this || getDimOverlap(hoveredElement).size() > 0
-				|| getRecOverlap(hoveredElement).size() > 0)
+				|| getRecOverlap(hoveredElement).size() > 0) {
 			return;
-		else if (event.isMouseOver()) {
+		} else if (event.isMouseOver()) {
 			opacityfactor = lowOpacityFactor;
-
 		} else {
 			opacityfactor = highOpacityFactor;
 		}
-		timer.restart();
-		relayout();
+		// timer.restart();
+		// repaint();
+		// for (GLElement child : this)
+		// child.repaint();
 	}
 
-	/**
-	 * @param dimIndices
-	 * @param recIndices
-	 * @param setXElements
-	 * @param id
-	 * @param maxRec
-	 * @param maxDim
-	 * @param
-	 */
 	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
 			boolean setXElements, String id, int bcNr, double maxDim,
 			double maxRec, double minDim, double minRec) {
@@ -808,7 +846,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		case bandSorting:
 			sortingType = SortingType.bandSorting;
 			bandSorting();
-
 			break;
 		default:
 		}
@@ -821,9 +858,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			if (dimBand.size() > 0)
 				nonEmptyDimBands.add(dimBand);
 		}
-
-		// if (nonEmptyDimBands.size() > 0)
-		// System.out.println(nonEmptyDimBands);
 		BandSorting dimConflicts = new BandSorting(nonEmptyDimBands);
 		for (Integer i : dimConflicts) {
 			finalDimSorting.add(i);
@@ -836,23 +870,16 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			if (recBand.size() > 0)
 				nonEmptyRecBands.add(recBand);
 		}
-
-		// if (nonEmptyRecBands.size() > 0)
-		// System.out.println(nonEmptyRecBands);
 		BandSorting recConflicts = new BandSorting(nonEmptyRecBands);
 		for (Integer i : recConflicts) {
 			finalRecSorting.add(i);
 		}
 		finalRecSorting.addAll(recProbabilitySorting);
-
 		recreateVirtualArrays(new ArrayList<Integer>(finalDimSorting),
 				new ArrayList<Integer>(finalRecSorting));
 		fireTablePerspectiveChanged();
 	}
 
-	/**
-	 *
-	 */
 	private void probabilitySorting() {
 		sortingType = SortingType.probabilitySorting;
 		recreateVirtualArrays(dimProbabilitySorting, recProbabilitySorting);

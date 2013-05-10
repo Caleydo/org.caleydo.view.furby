@@ -75,6 +75,9 @@ public abstract class BandElement extends PickableGLElement {
 	protected boolean hoverd;
 
 	private float opacityFactor = 1;
+	private float highOpacityFactor = 1;
+	private float lowOpacityFactor = 0.2f;
+	private float opacityChangeInterval = 10f;
 
 	protected BandElement(GLElement first, GLElement second,
 			List<Integer> list, SelectionManager selectionManager,
@@ -93,6 +96,26 @@ public abstract class BandElement extends PickableGLElement {
 		hoverOverlap = new ArrayList<>();
 	}
 
+	private int accu; // for animating the opacity fading
+	
+	@Override
+	public void layout(int deltaTimeMs) {
+		// duration -= delta
+		if (deltaTimeMs + accu > opacityChangeInterval) {
+
+			if (opacityFactor < curOpacityFactor)
+				curOpacityFactor -= 0.03;
+			else if (opacityFactor > curOpacityFactor)
+				curOpacityFactor += 0.03;
+
+			repaint();
+			accu = 0;
+		} else
+			accu += deltaTimeMs;
+		super.layout(deltaTimeMs);
+
+	}
+	
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		float[] bandColor;
@@ -245,19 +268,19 @@ public abstract class BandElement extends PickableGLElement {
 	private float opacityDelta=0.02f;
 	private float curOpacityFactor = 1;
 
-	Timer timer = new Timer(10, new ActionListener() {
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			if (opacityFactor < curOpacityFactor)
-				curOpacityFactor -= opacityDelta;
-			else if (opacityFactor > curOpacityFactor)
-				curOpacityFactor += opacityDelta;
-			else timer.stop();
-			relayout();
-			repaint();
-		}
-	});
+//	Timer timer = new Timer(10, new ActionListener() {
+//
+//		@Override
+//		public void actionPerformed(ActionEvent arg0) {
+//			if (opacityFactor < curOpacityFactor)
+//				curOpacityFactor -= opacityDelta;
+//			else if (opacityFactor > curOpacityFactor)
+//				curOpacityFactor += opacityDelta;
+//			else timer.stop();
+//			relayout();
+//			repaint();
+//		}
+//	});
 	
 	
 	@ListenTo
@@ -268,7 +291,6 @@ public abstract class BandElement extends PickableGLElement {
 			opacityFactor = 0.15f;
 		else
 			opacityFactor = 1f;
-		timer.restart();
 		relayout();
 	}
 

@@ -47,9 +47,9 @@ public class ProbabilityStrategy extends ASortingStrategy {
 
 			@Override
 			public int compare(Pair<Integer, Float> o1, Pair<Integer, Float> o2) {
-				int val = o1.getSecond().compareTo(o2.getSecond());
+				int val = o2.getSecond().compareTo(o1.getSecond());
 				if (val == 0)
-					val = o1.getFirst().compareTo(o2.getFirst());
+					val = o2.getFirst().compareTo(o1.getFirst());
 				return val;
 			}
 
