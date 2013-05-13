@@ -329,9 +329,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	void calculateOverlap() {
-//		if (getID().contains("27"))
-//			System.out.println("27 .. overlap calc");
-		
+		// if (getID().contains("27"))
+		// System.out.println("27 .. overlap calc");
+
 		dimOverlap = new HashMap<>();
 		recOverlap = new HashMap<>();
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
@@ -508,13 +508,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				@Override
 				public void render(GLGraphics g, float w, float h,
 						GLElement parent) {
-					g.color(SelectionType.MOUSE_OVER.getColor());
-					if (isHovered)
+					if (isFocused) {
+						g.color(SelectionType.SELECTION.getColor());
 						g.fillRoundedRect(0, 0, w, h, 2);
+					} else if (isHovered) {
+						g.color(SelectionType.MOUSE_OVER.getColor());
+						g.fillRoundedRect(0, 0, w, h, 2);
+					}
 					float[] color = { 0, 0, 0, (float) curOpacityFactor };
 					g.textColor(color);
-					g.drawText(scaleFactor ==1 ? getID() : getID() + " (" + (int)(100*scaleFactor)+"%)", 0, 0, 100, 12);
-				
+					g.drawText(scaleFactor == 1 ? getID() : getID() + " ("
+							+ (int) (100 * scaleFactor) + "%)", 0, 0, 100, 12);
+
 					float[] black = { 0, 0, 0, 1 };
 					g.textColor(black);
 
