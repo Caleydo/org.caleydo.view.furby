@@ -42,9 +42,9 @@ import org.caleydo.view.bicluster.util.Vec2d;
  */
 public class AllClustersElement extends GLElementContainer implements IGLLayout {
 	
-	float repulsion = 250000f;
-	float attractionFactor = 400f;
-	float borderForceFactor = 300f;
+	float repulsion = 100000f;
+	float attractionFactor = 100f;
+	float borderForceFactor = 200f;
 	// double aD = 0.3;
 
 	public Integer fixedElementsCount = 15;
@@ -103,7 +103,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			}
 			bringClustersBackToFrame(children, w, h);
 			clearClusterCollisions(children, w, h);
-			forceDirectedLayout(children, w, h);
+			for (int i = 0; i < 5; i++)forceDirectedLayout(children, w, h);
 
 		}
 		for (IGLLayoutElement child : children) {
