@@ -513,7 +513,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 						g.fillRoundedRect(0, 0, w, h, 2);
 					float[] color = { 0, 0, 0, (float) curOpacityFactor };
 					g.textColor(color);
-					g.drawText(getID(), 0, 0, 70, 12);
+					g.drawText(scaleFactor ==1 ? getID() : getID() + " (" + (int)(100*scaleFactor)+"%)", 0, 0, 100, 12);
+				
 					float[] black = { 0, 0, 0, 1 };
 					g.textColor(black);
 
