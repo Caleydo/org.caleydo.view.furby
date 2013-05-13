@@ -107,7 +107,6 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		bands.updateSelection();
 	}
 
-
 	int maxClusterRecSize = 150;
 	int maxClusterDimSize = 150;
 
@@ -132,10 +131,12 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		}
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
-			int recSize = (int) ((i.getNumberOfRecElements()
-					* (maxClusterRecSize) / maxRecClusterElements));
-			int dimSize = (int) ((i.getNumberOfDimElements()
-					* (maxClusterDimSize) / maxDimClusterElements));
+//			if (i.getID().contains("27"))
+//				System.out.println("stop");
+			double recSize =  (i.getNumberOfRecElements()
+					* (maxClusterRecSize) / (float)maxRecClusterElements);
+			double dimSize =  (i.getNumberOfDimElements()
+					* (maxClusterDimSize) / maxDimClusterElements);
 			// if (recSize < 50) recSize = 50;
 			// if (dimSize < 50) dimSize =50;
 			i.setClusterSize(dimSize, recSize);
@@ -168,9 +169,15 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		setClusterSizes();
 	}
 
+	int bandCount = 0;
+
 	@ListenTo
 	public void listenTo(CreateBandsEvent event) {
-		createBands();
+		bandCount++;
+		if (bandCount == clusters.size()) {
+			createBands();
+			bandCount = 0;
+		}
 	}
 
 	int count = 0;
@@ -195,8 +202,10 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	@ListenTo
 	public void listenTo(LZThresholdChangeEvent event) {
-		if (event.isFixedClusterCount()) curClusterSize = smallClusterSize;
-		else curClusterSize = largeClusterSize;
-//		setClusterSizes();
+		if (event.isFixedClusterCount())
+			curClusterSize = smallClusterSize;
+		else
+			curClusterSize = largeClusterSize;
+		// setClusterSizes();
 	}
 }

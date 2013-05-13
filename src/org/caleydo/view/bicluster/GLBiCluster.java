@@ -277,18 +277,4 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		}
 	}
 
-	// @ListenTo
-	// private void handleUpdate(LZThresholdChangeEvent event) {
-	// geneThreshold = event.getRecordThreshold();
-	// sampleThreshold = event.getDimensionThreshold();
-	// if ((x != null && l != null && z != null)
-	// || setXElements != event.isFixedClusterCount()) {
-	// setXElements = event.isFixedClusterCount();
-	// createBiClusterPerspectives(x, l, z);
-	// }
-	// rootElement
-	// .setClusterSizes(event.isFixedClusterCount() ? smallClusterSize
-	// : largeClusterSize);
-	//
-	// }
 }
