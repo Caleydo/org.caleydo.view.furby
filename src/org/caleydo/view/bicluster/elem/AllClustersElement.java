@@ -20,12 +20,14 @@
 package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
+import gleem.linalg.Vec4f;
 
 import java.awt.Rectangle;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.data.selection.delta.DeltaConverter;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
@@ -41,10 +43,14 @@ import org.caleydo.view.bicluster.util.Vec2d;
  */
 public class AllClustersElement extends GLElementContainer implements IGLLayout {
 	
-	float repulsion = 200000f;
-	float attractionFactor = 400f;
-	float borderForceFactor = 300f;
-	// double aD = 0.3;
+	private float repulsion = 100000f;
+	private float attractionFactor = 100f;
+	private float borderForceFactor = 200f;
+	private float iterationFactor = 500;
+	
+	private int deltaToLastFrame = 0;
+	
+	double damping = 1f;
 
 	public Integer fixedElementsCount = 15;
 	
@@ -74,6 +80,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z, ExecutorService executor) {
 		this.clear();
+		this.setzDelta(1);
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
@@ -86,6 +93,15 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private boolean isInitLayoutDone = false;
 	float lastW, lastH;
 
+	
+	
+	@Override
+	public void layout(int deltaTimeMs) {
+		deltaToLastFrame +=deltaTimeMs;
+		super.layout(deltaTimeMs);
+	}
+	
+	
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w,
 			float h) {
@@ -102,7 +118,9 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			}
 			bringClustersBackToFrame(children, w, h);
 			clearClusterCollisions(children, w, h);
-			forceDirectedLayout(children, w, h);
+			int iterations = (int) ((float)1/deltaToLastFrame*iterationFactor)+1 ;
+			deltaToLastFrame =0;
+			for (int i = 0; i < iterations; i++)forceDirectedLayout(children, w, h);
 
 		}
 		for (IGLLayoutElement child : children) {
@@ -114,9 +132,11 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private void bringClustersBackToFrame(
 			List<? extends IGLLayoutElement> children, float w, float h) {
 		for (IGLLayoutElement i : children) {
-			i.setLocation(i.getLocation().x() % w, i.getLocation().y() % h);
+			Rectangle frame = new Rectangle(0, 0, (int)w, (int)h);
+			Vec4f bounds = i.asElement().getBounds();
+			Rectangle cluster = new Rectangle((int)bounds.x(), (int)bounds.y(), (int)bounds.z(), (int)bounds.w());
+			if (!frame.intersects(cluster)) i.setLocation((float)(Math.random()*w), (float)(Math.random()*h));
 		}
-
 	}
 
 	private void clearClusterCollisions(
@@ -154,7 +174,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	}
 
-	double damping = 1f;
+
 
 	
 	/**
@@ -245,8 +265,8 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			Vec2d distVec = getDistance(i, toolbar);
 			double rsq = distVec.lengthSquared();
 			rsq *= distVec.length();
-			double forcex = repulsion * distVec.x() / rsq;
-			double forcey = repulsion * distVec.y() / rsq;
+			double forcex = 2*repulsion * distVec.x() / rsq;
+			double forcey = 2*repulsion * distVec.y() / rsq;
 			forcex += i.getRepForce().x();
 			forcey += i.getRepForce().y();
 			i.setRepForce(new Vec2d(forcex, forcey));
