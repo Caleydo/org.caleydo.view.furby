@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.data.selection.delta.DeltaConverter;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
@@ -45,6 +46,10 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	float repulsion = 100000f;
 	float attractionFactor = 100f;
 	float borderForceFactor = 200f;
+	
+	private int deltaToLastFrame = 0;
+	private float iterationFactor = 300;
+	
 	// double aD = 0.3;
 
 	public Integer fixedElementsCount = 15;
@@ -75,6 +80,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z, ExecutorService executor) {
 		this.clear();
+		this.setzDelta(1);
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
@@ -87,6 +93,15 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private boolean isInitLayoutDone = false;
 	float lastW, lastH;
 
+	
+	
+	@Override
+	public void layout(int deltaTimeMs) {
+		deltaToLastFrame +=deltaTimeMs;
+		super.layout(deltaTimeMs);
+	}
+	
+	
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w,
 			float h) {
@@ -103,7 +118,9 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			}
 			bringClustersBackToFrame(children, w, h);
 			clearClusterCollisions(children, w, h);
-			for (int i = 0; i < 5; i++)forceDirectedLayout(children, w, h);
+			int iterations = (int) ((float)1/deltaToLastFrame*iterationFactor)+1 ;
+			deltaToLastFrame =0;
+			for (int i = 0; i < iterations; i++)forceDirectedLayout(children, w, h);
 
 		}
 		for (IGLLayoutElement child : children) {

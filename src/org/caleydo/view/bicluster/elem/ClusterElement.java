@@ -112,7 +112,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private Vec2d repForce = new Vec2d(0, 0);
 	private Vec2d frameForce = new Vec2d(0, 0);
 	private boolean isDragged = false;
-	private boolean isHoovered = false;
+	private boolean isHovered = false;
 	private boolean isHidden = false;
 	private boolean hasContent = false;
 
@@ -205,7 +205,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
-		if (isHoovered) {
+		g.color(java.awt.Color.black);
+		if (isHovered) {
 			g.fillRect(-20, -20, w < 55 ? 80 : w + 45, h < 80 ? 130 : h + 50);
 		}
 		super.renderPickImpl(g, w, h);
@@ -243,7 +244,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		float[] color = { 0, 0, 0, (float) curOpacityFactor };
 		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
-		if (isHoovered) {
+		if (isHovered) {
 			g.color(highlightedColor);
 		}
 		g.drawRect(-1, -1, w + 2, h + 2);
@@ -271,16 +272,17 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		// break;
 		case MOUSE_OVER:
 			if (!pick.isAnyDragging()) {
-				isHoovered = true;
+				isHovered = true;
 				allClusters.setHooveredElement(this);
 				EventPublisher.trigger(new ClusterHoveredElement(this, true));
 				relayout(); // for showing the toolbar
 			}
 			break;
 		case MOUSE_OUT:
-			if (isHoovered && !headerBar.isClicked()) {
+			if (isHovered && !headerBar.isClicked()) {
 				// System.out.println("out");
-				isHoovered = false;
+				isHovered = false;
+				if (wasResizedWhileHovered) setClusterSize(newDimSize, newRecSize);
 				allClusters.setHooveredElement(null);
 				opacityfactor = highOpacityFactor;
 				// timer.restart();
@@ -446,7 +448,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		IGLLayoutElement headerbar = children.get(1);
 		IGLLayoutElement dimthreshbar = children.get(2);
 		IGLLayoutElement recthreshbar = children.get(3);
-		if (isHoovered) { // depending whether we are hovered or not, show hide
+		if (isHovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
 			toolbar.setBounds(-18, 0, 18, 80);
 			headerbar.setBounds(0, -19, w < 55 ? 75 : w + 20, 17);
@@ -501,7 +503,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				public void render(GLGraphics g, float w, float h,
 						GLElement parent) {
 					g.color(SelectionType.MOUSE_OVER.getColor());
-					if (isHoovered)
+					if (isHovered)
 						g.fillRoundedRect(0, 0, w, h, 2);
 					float[] color = { 0, 0, 0, (float) curOpacityFactor };
 					g.textColor(color);
@@ -733,10 +735,23 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
+	private boolean wasResizedWhileHovered = false;
+	private int newRecSize = 0;
+	private int newDimSize = 0;
+
 	public void setClusterSize(int x, int y) {
-		dimSize = x;
-		recSize = y;
-		resize();
+		if (isHovered) {
+			wasResizedWhileHovered = true;
+			newRecSize = y;
+			newDimSize = x;
+		} else {
+			wasResizedWhileHovered = false;
+			newRecSize = 0;
+			newDimSize = 0;
+			dimSize = x;
+			recSize = y;
+			resize();
+		}
 	}
 
 	void focusThisCluster() {
@@ -775,7 +790,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	public void hideThisCluster() {
 		isHidden = true;
 		setVisibility(EVisibility.NONE);
-		isHoovered = false;
+		isHovered = false;
 		allClusters.setHooveredElement(null);
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
 		EventPublisher.trigger(new ClusterHoveredElement(this, false));

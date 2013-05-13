@@ -271,6 +271,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			createBiClusterPerspectives(x, l, z);
 			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold,
 					maxRecThreshold));
+			EventPublisher.trigger(new LZThresholdChangeEvent(geneThreshold, sampleThreshold, false, true));
 			rootElement.createBands();
 			rootElement.setClusterSizes();
 		}
