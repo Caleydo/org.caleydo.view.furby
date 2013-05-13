@@ -758,21 +758,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-	void focusThisCluster() {
-		this.isFocused = !this.isFocused;
-		if (isFocused) {
-			scaleFactor = scaleFactor >= 4 ? 4 : 3;
-			resize();
-			EventPublisher.trigger(new FocusChangeEvent(this));
-		} else {
-			scaleFactor = 1;
-			resize();
-			EventPublisher.trigger(new FocusChangeEvent(null));
-			mouseOut();
-		}
-		repaintAll();
-	}
-
 	@ListenTo
 	public void listenTo(FocusChangeEvent e) {
 		if (e.getSender() == this)
@@ -792,13 +777,30 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		relayout();
 	}
 
-	public void hideThisCluster() {
+	private void focusThisCluster() {
+		this.isFocused = !this.isFocused;
+		if (isFocused) {
+			scaleFactor = scaleFactor >= 4 ? 4 : 3;
+			resize();
+			EventPublisher.trigger(new FocusChangeEvent(this));
+		} else {
+			scaleFactor = 1;
+			resize();
+			EventPublisher.trigger(new FocusChangeEvent(null));
+			mouseOut();
+		}
+		repaintAll();
+	}
+
+	private void hideThisCluster() {
 		isHidden = true;
 		setVisibility(EVisibility.NONE);
 		isHovered = false;
+		relayout();
 		allClusters.setHooveredElement(null);
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
 		EventPublisher.trigger(new ClusterHoveredElement(this, false));
+		repaintAll();
 	}
 
 	@ListenTo

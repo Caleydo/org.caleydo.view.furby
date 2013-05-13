@@ -46,11 +46,11 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private float repulsion = 100000f;
 	private float attractionFactor = 100f;
 	private float borderForceFactor = 200f;
-	private float iterationFactor = 300;
+	private float iterationFactor = 500;
 	
 	private int deltaToLastFrame = 0;
 	
-	// double aD = 0.3;
+	double damping = 1f;
 
 	public Integer fixedElementsCount = 15;
 	
@@ -174,7 +174,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	}
 
-	double damping = 1f;
+
 
 	
 	/**
