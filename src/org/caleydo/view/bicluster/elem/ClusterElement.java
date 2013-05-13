@@ -279,23 +279,27 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			}
 			break;
 		case MOUSE_OUT:
-			if (isHovered && !headerBar.isClicked()) {
-				// System.out.println("out");
-				isHovered = false;
-				if (wasResizedWhileHovered) setClusterSize(newDimSize, newRecSize);
-				allClusters.setHooveredElement(null);
-				opacityfactor = highOpacityFactor;
-				// timer.restart();
-				relayout(); // for showing the toolbar
-				repaintAll();
-				for (GLElement child : this)
-					child.repaint();
-				EventPublisher.trigger(new ClusterHoveredElement(this, false));
-			}
+			mouseOut();
 			break;
 		// default:
 		// isDragged = false;
 		// allClusters.setDragedLayoutElement(null);
+		}
+	}
+
+	private void mouseOut() {
+		if (isHovered && !headerBar.isClicked()) {
+			// System.out.println("out");
+			isHovered = false;
+			if (wasResizedWhileHovered) setClusterSize(newDimSize, newRecSize);
+			allClusters.setHooveredElement(null);
+			opacityfactor = highOpacityFactor;
+			// timer.restart();
+			relayout(); // for showing the toolbar
+			repaintAll();
+			for (GLElement child : this)
+				child.repaint();
+			EventPublisher.trigger(new ClusterHoveredElement(this, false));
 		}
 	}
 
@@ -764,6 +768,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			scaleFactor = 1;
 			resize();
 			EventPublisher.trigger(new FocusChangeEvent(null));
+			mouseOut();
 		}
 		repaintAll();
 	}

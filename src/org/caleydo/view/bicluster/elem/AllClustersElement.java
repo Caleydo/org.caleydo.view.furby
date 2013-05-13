@@ -43,12 +43,12 @@ import org.caleydo.view.bicluster.util.Vec2d;
  */
 public class AllClustersElement extends GLElementContainer implements IGLLayout {
 	
-	float repulsion = 100000f;
-	float attractionFactor = 100f;
-	float borderForceFactor = 200f;
+	private float repulsion = 100000f;
+	private float attractionFactor = 100f;
+	private float borderForceFactor = 200f;
+	private float iterationFactor = 300;
 	
 	private int deltaToLastFrame = 0;
-	private float iterationFactor = 300;
 	
 	// double aD = 0.3;
 
