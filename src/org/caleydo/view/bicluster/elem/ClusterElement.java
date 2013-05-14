@@ -572,9 +572,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		boolean isHorizontal;
 		GLSlider slider;
-		double maxValue;
-		double maxSliderValue;
-		double minSliderValue;
+		float globalMaxThreshold;
+		float localMaxSliderValue;
+		float localMinSliderValue;
 
 		protected ThresholdBar(boolean layout) {
 			super(layout ? GLLayouts.flowHorizontal(1) : GLLayouts
@@ -602,9 +602,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		protected void createButtons() {
 			this.remove(slider);
-			this.slider = new GLSlider(0, (float) maxValue,
-					(float) (maxValue / 2));
-			slider.setzDelta(-0.5f);
+			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue
+					: localMinSliderValue;
+			this.slider = new GLSlider(0, max, max / 2);
+//			slider.setzDelta(-0.5f);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
 			if (isHorizontal) {
@@ -623,7 +624,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				ignoreNextChange = false;
 				return;
 			}
-			if (value <= minSliderValue || value >= maxSliderValue)
+			if (value <= localMinSliderValue || value >= localMaxSliderValue)
 				return;
 			if (isHorizontal)
 				dimThreshold = value;
@@ -635,16 +636,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 
 		protected void updateSliders(double maxValue, double minValue) {
-			maxSliderValue = maxValue;
-			minSliderValue = minValue;
+			if (getID().contains("15"))
+				System.out.println("sliders updatet");
+			localMaxSliderValue = (float) maxValue;
+			localMinSliderValue = (float) minValue;
 			// createButtons();
 			relayout();
 		}
 
 		@ListenTo
 		public void listenTo(MaxThresholdChangeEvent event) {
-			maxValue = isHorizontal ? event.getDimThreshold() : event
-					.getRecThreshold();
+			globalMaxThreshold = (float) (isHorizontal ? event
+					.getDimThreshold() : event.getRecThreshold());
 			createButtons();
 		}
 
