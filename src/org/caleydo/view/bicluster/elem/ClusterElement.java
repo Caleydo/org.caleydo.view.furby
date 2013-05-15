@@ -650,9 +650,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		@ListenTo
 		public void listenTo(LZThresholdChangeEvent event) {
 			if (event.isGlobalEvent()) {
+				ignoreNextChange = true;
 				slider.setValue(isHorizontal ? event.getDimensionThreshold()
 						: event.getRecordThreshold());
-				ignoreNextChange = true;
 			}
 		}
 	}
