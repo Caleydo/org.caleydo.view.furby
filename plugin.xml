@@ -82,4 +82,10 @@
          </run>
       </application>
    </extension>
+   <extension
+         point="org.caleydo.serialize.addon">
+      <addon
+            class="org.caleydo.view.bicluster.data.SerializationAddon">
+      </addon>
+   </extension>
 </plugin>
