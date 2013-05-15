@@ -291,7 +291,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		if (isHovered && !headerBar.isClicked()) {
 			// System.out.println("out");
 			isHovered = false;
-			if (wasResizedWhileHovered) setClusterSize(newDimSize, newRecSize);
+			if (wasResizedWhileHovered)
+				setClusterSize(newDimSize, newRecSize);
 			allClusters.setHooveredElement(null);
 			opacityfactor = highOpacityFactor;
 			// timer.restart();
@@ -328,6 +329,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	void calculateOverlap() {
+		// if (getID().contains("27"))
+		// System.out.println("27 .. overlap calc");
+
 		dimOverlap = new HashMap<>();
 		recOverlap = new HashMap<>();
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
@@ -428,8 +432,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	// int overallOverlapSize;
 	int dimensionOverlapSize;
 	int recordOverlapSize;
-	private int dimSize;
-	private int recSize;
+	private double dimSize;
+	private double recSize;
 	private boolean isFocused = false;
 
 	public int getDimensionOverlapSize() {
@@ -499,25 +503,28 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 
 		protected void createButtons() {
-			// GLElement spacer = new GLButton();
-			// spacer.setzDelta(-0.5f);
 			setRenderer(new IGLRenderer() {
 
 				@Override
 				public void render(GLGraphics g, float w, float h,
 						GLElement parent) {
-					g.color(SelectionType.MOUSE_OVER.getColor());
-					if (isHovered)
+					if (isFocused) {
+						g.color(SelectionType.SELECTION.getColor());
 						g.fillRoundedRect(0, 0, w, h, 2);
+					} else if (isHovered) {
+						g.color(SelectionType.MOUSE_OVER.getColor());
+						g.fillRoundedRect(0, 0, w, h, 2);
+					}
 					float[] color = { 0, 0, 0, (float) curOpacityFactor };
 					g.textColor(color);
-					g.drawText(getID(), 0, 0, 70, 12);
+					g.drawText(scaleFactor == 1 ? getID() : getID() + " ("
+							+ (int) (100 * scaleFactor) + "%)", 0, 0, 100, 12);
+
 					float[] black = { 0, 0, 0, 1 };
 					g.textColor(black);
 
 				}
 			});
-			// this.add(spacer); // spacer
 		}
 
 		protected void onPicked(Pick pick) {
@@ -565,9 +572,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		boolean isHorizontal;
 		GLSlider slider;
-		double maxValue;
-		double maxSliderValue;
-		double minSliderValue;
+		float globalMaxThreshold;
+		float localMaxSliderValue;
+		float localMinSliderValue;
 
 		protected ThresholdBar(boolean layout) {
 			super(layout ? GLLayouts.flowHorizontal(1) : GLLayouts
@@ -594,11 +601,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 
 		protected void createButtons() {
-			// this.slider = new GLButton();
 			this.remove(slider);
-			this.slider = new GLSlider(0, (float) maxValue,
-					(float) (maxValue / 2));
-			slider.setzDelta(-0.5f);
+			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue
+					: localMinSliderValue;
+			this.slider = new GLSlider(0, max, max / 2);
+//			slider.setzDelta(-0.5f);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
 			if (isHorizontal) {
@@ -617,7 +624,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				ignoreNextChange = false;
 				return;
 			}
-			if (value <= minSliderValue || value >= maxSliderValue)
+			if (value <= localMinSliderValue || value >= localMaxSliderValue)
 				return;
 			if (isHorizontal)
 				dimThreshold = value;
@@ -629,16 +636,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 
 		protected void updateSliders(double maxValue, double minValue) {
-			maxSliderValue = maxValue;
-			minSliderValue = minValue;
+			if (getID().contains("15"))
+				System.out.println("sliders updatet");
+			localMaxSliderValue = (float) maxValue;
+			localMinSliderValue = (float) minValue;
 			// createButtons();
 			relayout();
 		}
 
 		@ListenTo
 		public void listenTo(MaxThresholdChangeEvent event) {
-			maxValue = isHorizontal ? event.getDimThreshold() : event
-					.getRecThreshold();
+			globalMaxThreshold = (float) (isHorizontal ? event
+					.getDimThreshold() : event.getRecThreshold());
 			createButtons();
 		}
 
@@ -740,10 +749,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	private boolean wasResizedWhileHovered = false;
-	private int newRecSize = 0;
-	private int newDimSize = 0;
+	private double newRecSize = 0;
+	private double newDimSize = 0;
 
-	public void setClusterSize(int x, int y) {
+	public void setClusterSize(double x, double y) {
 		if (isHovered) {
 			wasResizedWhileHovered = true;
 			newRecSize = y;
@@ -804,7 +813,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	@ListenTo
-	public void listenTo(UnhidingClustersEvent event) {
+	private void listenTo(UnhidingClustersEvent event) {
 		isHidden = false;
 		if (hasContent) {
 			setVisibility(EVisibility.PICKABLE);
@@ -812,7 +821,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	@ListenTo
-	public void listenTo(SortingChangeEvent e) {
+	private void listenTo(SortingChangeEvent e) {
 		if (e.getSender() instanceof ClusterElement && e.getSender() == this) {
 			// only local change
 		} else {
@@ -824,10 +833,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@ListenTo
 	private void listenTo(ClusterHoveredElement event) {
-		// System.out.println("hovered:");
-		// if (getID().contains("21"))
-		// System.out.println("Stop");
-
 		ClusterElement hoveredElement = event.getElement();
 		if (hoveredElement == this || getDimOverlap(hoveredElement).size() > 0
 				|| getRecOverlap(hoveredElement).size() > 0) {
@@ -837,10 +842,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		} else {
 			opacityfactor = highOpacityFactor;
 		}
-		// timer.restart();
-		// repaint();
-		// for (GLElement child : this)
-		// child.repaint();
+	}
+
+	@ListenTo
+	private void listenTo(LZThresholdChangeEvent event) {
+		if (!event.isGlobalEvent())
+			return;
+		if (event.getRecordThreshold() != recThreshold
+				|| event.getDimensionThreshold() != dimThreshold
+				|| setOnlyShowXElements != event.isFixedClusterCount()) {
+			recThreshold = event.getRecordThreshold();
+			dimThreshold = event.getDimensionThreshold();
+			setOnlyShowXElements = event.isFixedClusterCount();
+			rebuildMyData(event.isGlobalEvent());
+		}
 	}
 
 	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
@@ -963,20 +978,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return getRecordVirtualArray().indexOf(value);
 	}
 
-	@ListenTo
-	public void listenTo(LZThresholdChangeEvent event) {
-		if (!event.isGlobalEvent())
-			return;
-		if (event.getRecordThreshold() != recThreshold
-				|| event.getDimensionThreshold() != dimThreshold
-				|| setOnlyShowXElements != event.isFixedClusterCount()) {
-			recThreshold = event.getRecordThreshold();
-			dimThreshold = event.getDimensionThreshold();
-			setOnlyShowXElements = event.isFixedClusterCount();
-			rebuildMyData(event.isGlobalEvent());
-		}
-	}
-
 	private void rebuildMyData(boolean isGlobal) {
 		Table L = l.getDataDomain().getTable();
 		Table Z = z.getDataDomain().getTable();
@@ -992,7 +993,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			dimIndices = dimList.get().getIndices();
 			recIndices = recList.get().getIndices();
 		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		setData(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr,
