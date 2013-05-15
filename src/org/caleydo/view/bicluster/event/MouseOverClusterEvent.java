@@ -3,11 +3,11 @@ package org.caleydo.view.bicluster.event;
 import org.caleydo.core.event.AEvent;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
-public class ClusterHoveredElement extends AEvent {
+public class MouseOverClusterEvent extends AEvent {
 
 	private boolean in;
 
-	public ClusterHoveredElement(ClusterElement hoveredElement, boolean b) {
+	public MouseOverClusterEvent(ClusterElement hoveredElement, boolean b) {
 		setSender(hoveredElement);
 		in = b;
 	}

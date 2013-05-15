@@ -70,7 +70,7 @@ import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
-import org.caleydo.view.bicluster.event.ClusterHoveredElement;
+import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
@@ -274,7 +274,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			if (!pick.isAnyDragging()) {
 				isHovered = true;
 				allClusters.setHooveredElement(this);
-				EventPublisher.trigger(new ClusterHoveredElement(this, true));
+				EventPublisher.trigger(new MouseOverClusterEvent(this, true));
 				relayout(); // for showing the toolbar
 			}
 			break;
@@ -300,7 +300,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			repaintAll();
 			for (GLElement child : this)
 				child.repaint();
-			EventPublisher.trigger(new ClusterHoveredElement(this, false));
+			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
 		}
 	}
 
@@ -630,14 +630,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				dimThreshold = value;
 			else
 				recThreshold = value;
-
 			rebuildMyData(false);
 
 		}
 
 		protected void updateSliders(double maxValue, double minValue) {
-			if (getID().contains("15"))
-				System.out.println("sliders updatet");
+//			if (getID().contains("15"))
+//				System.out.println("sliders updatet");
 			localMaxSliderValue = (float) maxValue;
 			localMinSliderValue = (float) minValue;
 			// createButtons();
@@ -808,7 +807,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		relayout();
 		allClusters.setHooveredElement(null);
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
-		EventPublisher.trigger(new ClusterHoveredElement(this, false));
+		EventPublisher.trigger(new MouseOverClusterEvent(this, false));
 		repaintAll();
 	}
 
@@ -826,16 +825,16 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			// only local change
 		} else {
 			sort(e.getType());
-
 		}
 		toolBar.setSortingCaption(e.getType());
 	}
 
 	@ListenTo
-	private void listenTo(ClusterHoveredElement event) {
+	private void listenTo(MouseOverClusterEvent event) {
 		ClusterElement hoveredElement = event.getElement();
 		if (hoveredElement == this || getDimOverlap(hoveredElement).size() > 0
 				|| getRecOverlap(hoveredElement).size() > 0) {
+			opacityfactor = highOpacityFactor;
 			return;
 		} else if (event.isMouseOver()) {
 			opacityfactor = lowOpacityFactor;
@@ -846,8 +845,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@ListenTo
 	private void listenTo(LZThresholdChangeEvent event) {
-		if (!event.isGlobalEvent())
+		if (!event.isGlobalEvent()){
 			return;
+		}
 		if (event.getRecordThreshold() != recThreshold
 				|| event.getDimensionThreshold() != dimThreshold
 				|| setOnlyShowXElements != event.isFixedClusterCount()) {
@@ -998,6 +998,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		setData(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr,
 				-1, -1, -1, -1);
 		EventPublisher.trigger(new ClusterScaleEvent(this));
+		EventPublisher.trigger(new MouseOverClusterEvent(this, true));
 		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal));
 		EventPublisher.trigger(new CreateBandsEvent(this));
 

@@ -39,7 +39,7 @@ import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.spline.Band;
-import org.caleydo.view.bicluster.event.ClusterHoveredElement;
+import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 
 /**
  * @author Michael Gillhofer
@@ -261,7 +261,7 @@ public abstract class BandElement extends PickableGLElement {
 
 	
 	@ListenTo
-	public void listenTo(ClusterHoveredElement event) {
+	public void listenTo(MouseOverClusterEvent event) {
 		isAnyClusterHovered = event.isMouseOver();
 		if (event.getElement() == first || event.getElement() == second)
 			return;
