@@ -144,7 +144,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.add(headerBar);
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
-		final HeatMapElement heatmapImpl = new HeatMapElement(data, this, EDetailLevel.HIGH);
+		final HeatMapElement heatmapImpl = new HeatMapElement(data, this,
+				EDetailLevel.HIGH);
 		// heatmapImpl.setShowRecordLabels(true);
 		// heatmap = new ScrollingDecorator(heatmapImpl, new ScrollBar(true),
 		// new ScrollBar(false), 5);
@@ -603,7 +604,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue
 					: localMinSliderValue;
 			this.slider = new GLSlider(0, max, max / 2);
-//			slider.setzDelta(-0.5f);
+			// slider.setzDelta(-0.5f);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
 			if (isHorizontal) {
@@ -614,7 +615,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			this.add(slider);
 		}
 
-		boolean ignoreNextChange = false;
+		boolean ignoreNextChange = true;
 
 		@Override
 		public void onSelectionChanged(GLSlider slider, float value) {
@@ -633,8 +634,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 
 		protected void updateSliders(double maxValue, double minValue) {
-//			if (getID().contains("15"))
-//				System.out.println("sliders updatet");
+			// if (getID().contains("15"))
+			// System.out.println("sliders updatet");
 			localMaxSliderValue = (float) maxValue;
 			localMinSliderValue = (float) minValue;
 			// createButtons();
@@ -843,7 +844,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@ListenTo
 	private void listenTo(LZThresholdChangeEvent event) {
-		if (!event.isGlobalEvent()){
+		if (!event.isGlobalEvent()) {
 			return;
 		}
 		if (event.getRecordThreshold() != recThreshold
@@ -996,7 +997,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		setData(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr,
 				-1, -1, -1, -1);
 		EventPublisher.trigger(new ClusterScaleEvent(this));
-		EventPublisher.trigger(new MouseOverClusterEvent(this, true));
+		if (!isGlobal)
+			EventPublisher.trigger(new MouseOverClusterEvent(this, true));
 		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal));
 		EventPublisher.trigger(new CreateBandsEvent(this));
 

@@ -34,6 +34,7 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 
 /**
  * @author Michael Gillhofer
@@ -57,7 +58,7 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	 * @param view
 	 */
 	public AllBandsElement(TablePerspective tablePerspective) {
-		setzDelta(-1);
+//		setzDelta(-3);
 		if (tablePerspective != null)
 			this.selectionMixin = new TablePerspectiveSelectionMixin(tablePerspective, this);
 		else
@@ -110,6 +111,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	public BandElement getSelection() {
 		return this.selection;
 	}
-	
+
 
 }
