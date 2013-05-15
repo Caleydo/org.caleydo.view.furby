@@ -205,7 +205,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		g.color(java.awt.Color.black);
 		if (isHovered) {
-			g.fillRect(-20, -20, w < 55 ? 80 : w + 45, h < 80 ? 130 : h + 50);
+			g.fillRect(-20, -20, w < 55 ? 120 : w + 65, h < 80 ? 150 : h + 70);
 		}
 		super.renderPickImpl(g, w, h);
 	}
@@ -634,8 +634,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 
 		protected void updateSliders(double maxValue, double minValue) {
-			// if (getID().contains("15"))
-			// System.out.println("sliders updatet");
 			localMaxSliderValue = (float) maxValue;
 			localMinSliderValue = (float) minValue;
 			// createButtons();
