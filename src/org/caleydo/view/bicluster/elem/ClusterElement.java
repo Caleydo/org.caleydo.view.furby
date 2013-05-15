@@ -19,8 +19,6 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -31,11 +29,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import javax.swing.Timer;
-
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
-import org.caleydo.core.data.datadomain.event.CreateClusteringEvent;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
@@ -52,14 +47,12 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
-import org.caleydo.core.view.opengl.layout2.IGLElementVisitor;
-import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
 import org.caleydo.core.view.opengl.layout2.animation.MoveTransitions;
 import org.caleydo.core.view.opengl.layout2.animation.Transitions;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
-import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
+import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
@@ -151,7 +144,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.add(headerBar);
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
-		heatmap = new HeatMapElement(data, this, EDetailLevel.HIGH);
+		final HeatMapElement heatmapImpl = new HeatMapElement(data, this, EDetailLevel.HIGH);
+		// heatmapImpl.setShowRecordLabels(true);
+		// heatmap = new ScrollingDecorator(heatmapImpl, new ScrollBar(true),
+		// new ScrollBar(false), 5);
+		heatmap = heatmapImpl;
 		heatmap.setzDelta(0.5f);
 		// setzDelta(f);
 		this.add(heatmap);
@@ -172,7 +169,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		Color color = BasicBlockColorer.INSTANCE.apply(recordID, dimensionID,
 				dataDomain, deSelected);
 
-		color.a = (float) (color.a * curOpacityFactor);
+		color.a = color.a * curOpacityFactor;
 		return color;
 	}
 
@@ -241,7 +238,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		// System.out.println("stop");
 		// }
 
-		float[] color = { 0, 0, 0, (float) curOpacityFactor };
+		float[] color = { 0, 0, 0, curOpacityFactor };
 		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
 		if (isHovered) {
@@ -515,7 +512,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 						g.color(SelectionType.MOUSE_OVER.getColor());
 						g.fillRoundedRect(0, 0, w, h, 2);
 					}
-					float[] color = { 0, 0, 0, (float) curOpacityFactor };
+					float[] color = { 0, 0, 0, curOpacityFactor };
 					g.textColor(color);
 					g.drawText(scaleFactor == 1 ? getID() : getID() + " ("
 							+ (int) (100 * scaleFactor) + "%)", 0, 0, 100, 12);
@@ -527,6 +524,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			});
 		}
 
+		@Override
 		protected void onPicked(Pick pick) {
 
 			switch (pick.getPickingMode()) {
