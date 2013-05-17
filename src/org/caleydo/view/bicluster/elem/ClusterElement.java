@@ -79,6 +79,7 @@ import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
+import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
 
 /**
@@ -473,7 +474,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			recthreshbar.setBounds(-20, -1, 0, 0);
 		}
 		IGLLayoutElement content = children.get(4);
-		content.setBounds(0, 0, w, h);
+		if (isFocused) {
+			content.setBounds(0, 0, w+79, h+79);
+		} else {
+			content.setBounds(0, 0, w, h);
+		}
 	}
 
 	private class HeaderBar extends GLButton implements ISelectionCallback {
@@ -787,12 +792,17 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	private void focusThisCluster() {
 		this.isFocused = !this.isFocused;
+		HeatMapElement hm = (HeatMapElement)heatmap;
 		if (isFocused) {
 			scaleFactor = scaleFactor >= 4 ? 4 : 3;
+			hm.setDimensionLabels(EShowLabels.RIGHT);
+			hm.setRecordLabels(EShowLabels.RIGHT);
 			resize();
 			EventPublisher.trigger(new FocusChangeEvent(this));
 		} else {
 			scaleFactor = 1;
+			hm.setDimensionLabels(EShowLabels.NONE);
+			hm.setRecordLabels(EShowLabels.NONE);
 			resize();
 			EventPublisher.trigger(new FocusChangeEvent(null));
 			mouseOut();
