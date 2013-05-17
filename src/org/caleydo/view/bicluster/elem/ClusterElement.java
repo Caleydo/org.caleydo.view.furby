@@ -63,12 +63,12 @@ import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
-import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
+import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
@@ -79,6 +79,7 @@ import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
+import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
 
 /**
@@ -146,7 +147,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.add(recThreshBar);
 		final HeatMapElement heatmapImpl = new HeatMapElement(data, this,
 				EDetailLevel.HIGH);
-		// heatmapImpl.setShowRecordLabels(true);
+		heatmapImpl.setRecordLabels(EShowLabels.RIGHT);
+		// heatmapImpl.setDimensionLabels(EShowLabels.RIGHT);
 		// heatmap = new ScrollingDecorator(heatmapImpl, new ScrollBar(true),
 		// new ScrollBar(false), 5);
 		heatmap = heatmapImpl;
