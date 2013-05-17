@@ -79,7 +79,6 @@ import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
-import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
 
 /**
@@ -147,7 +146,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.add(recThreshBar);
 		final HeatMapElement heatmapImpl = new HeatMapElement(data, this,
 				EDetailLevel.HIGH);
-		heatmapImpl.setRecordLabels(EShowLabels.RIGHT);
+		// heatmapImpl.setRecordLabels(EShowLabels.RIGHT);
 		// heatmapImpl.setDimensionLabels(EShowLabels.RIGHT);
 		// heatmap = new ScrollingDecorator(heatmapImpl, new ScrollBar(true),
 		// new ScrollBar(false), 5);
