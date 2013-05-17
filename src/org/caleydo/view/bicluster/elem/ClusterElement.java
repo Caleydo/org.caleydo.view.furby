@@ -148,7 +148,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				EDetailLevel.HIGH);
 
 		// heatmapImpl.setRecordLabels(EShowLabels.RIGHT);
-		// let's use a fish-eye spacing strategy where selected lines have a height of at least 16 pixels
+		// let's use a fish-eye spacing strategy where selected lines have a
+		// height of at least 16 pixels
 		// heatmapImpl.setRecordSpacingStrategy(SpacingStrategies.fishEye(16));
 		// heatmapImpl.setDimensionLabels(EShowLabels.RIGHT);
 		// heatmap = new ScrollingDecorator(heatmapImpl, new ScrollBar(true),
@@ -460,18 +461,16 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		IGLLayoutElement recthreshbar = children.get(3);
 		if (isHovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
-			toolbar.setBounds(-18, 0, 18, 80);
-			headerbar.setBounds(0, -19, w < 55 ? 75 : w + 20, 17);
-			dimthreshbar.setBounds(-1, h < 60 ? 61 : h + 1,
-					w < 55 ? 56 : w + 1, 20);
-			recthreshbar.setBounds(w < 57 ? 56 : w + 1, -1, 17, h < 60 ? 61
-					: h + 1);
+			toolbar.setBounds(-38, 0, 18, 80);
+			headerbar.setBounds(0, -39, w < 55 ? 57 : w + 2, 20);
+			dimthreshbar.setBounds(-1, -20, w < 55 ? 56 : w + 1, 20);
+			recthreshbar.setBounds(-20, -1, 20, h < 60 ? 61 : h + 1);
 
 		} else {
 			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
 			headerbar.setBounds(0, -18, w < 50 ? 50 : w, 17);
-			dimthreshbar.setBounds(-1, h, 0, 0);
-			recthreshbar.setBounds(w, 0, 0, 0);
+			dimthreshbar.setBounds(-1, -20, 0, 0);
+			recthreshbar.setBounds(-20, -1, 0, 0);
 		}
 		IGLLayoutElement content = children.get(4);
 		content.setBounds(0, 0, w, h);
