@@ -680,7 +680,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		protected void createButtons() {
 			hide = new GLButton();
 			hide.setRenderer(GLRenderers
-					.fillImage("./resources/icons/dialog_close.png"));
+.fillImage("resources/icons/dialog_close.png"));
 			hide.setTooltip("Close");
 			hide.setSize(16, Float.NaN);
 			hide.setCallback(this);
@@ -704,14 +704,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			enlarge.setSize(16, Float.NaN);
 			enlarge.setTooltip("Enlarge");
 			enlarge.setRenderer(GLRenderers
-					.fillImage("./resources/icons/zoom_in.png"));
+.fillImage("resources/icons/zoom_in.png"));
 			enlarge.setCallback(this);
 			this.add(enlarge);
 			smaller = new GLButton();
 			smaller.setTooltip("Reduce");
 			smaller.setSize(16, Float.NaN);
 			smaller.setRenderer(GLRenderers
-					.fillImage("./resources/icons/zoom_out.png"));
+.fillImage("resources/icons/zoom_out.png"));
 			smaller.setCallback(this);
 			this.add(smaller);
 		}
