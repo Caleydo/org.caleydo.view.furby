@@ -218,6 +218,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@Override
 	public void layout(int deltaTimeMs) {
+		// duration -= delta
 		if (deltaTimeMs + accu > opacityChangeInterval) {
 
 			if (opacityfactor < curOpacityFactor)
@@ -238,6 +239,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
+		// if (getID().contains("24")){
+		// System.out.println("stop");
+		// }
+
 		float[] color = { 0, 0, 0, curOpacityFactor };
 		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
@@ -250,6 +255,23 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	protected void onPicked(Pick pick) {
 		switch (pick.getPickingMode()) {
+		// case DRAGGED:
+		// if (!pick.isDoDragging()) return;
+		// if (isDragged == false) {
+		// allClusters.setDragedLayoutElement(this);
+		// }
+		// isDragged = true;
+		// setLocation(getLocation().x() + pick.getDx(), getLocation().y()
+		// + pick.getDy());
+		// relayoutParent();
+		// repaintPick();
+		// break;
+		// case CLICKED:
+		// if (!pick.isAnyDragging())pick.setDoDragging(true);
+		// break;
+		// case MOUSE_RELEASED:
+		// pick.setDoDragging(false);
+		// break;
 		case MOUSE_OVER:
 			if (!pick.isAnyDragging()) {
 				isHovered = true;
@@ -261,18 +283,21 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		case MOUSE_OUT:
 			mouseOut();
 			break;
-		default:
-			break;
+		// default:
+		// isDragged = false;
+		// allClusters.setDragedLayoutElement(null);
 		}
 	}
 
 	private void mouseOut() {
 		if (isHovered && !headerBar.isClicked()) {
+			// System.out.println("out");
 			isHovered = false;
 			if (wasResizedWhileHovered)
 				setClusterSize(newDimSize, newRecSize);
 			allClusters.setHooveredElement(null);
 			opacityfactor = highOpacityFactor;
+			// timer.restart();
 			relayout(); // for showing the toolbar
 			repaintAll();
 			for (GLElement child : this)
@@ -306,6 +331,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	void calculateOverlap() {
+		// if (getID().contains("27"))
+		// System.out.println("27 .. overlap calc");
+
 		dimOverlap = new HashMap<>();
 		recOverlap = new HashMap<>();
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
@@ -403,6 +431,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return recOverlap.get(jElement);
 	}
 
+	// int overallOverlapSize;
 	int dimensionOverlapSize;
 	int recordOverlapSize;
 	private double dimSize;
@@ -424,6 +453,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w,
 			float h) {
+		// if (isHidden) return;
 		IGLLayoutElement toolbar = children.get(0);
 		IGLLayoutElement headerbar = children.get(1);
 		IGLLayoutElement dimthreshbar = children.get(2);
@@ -458,13 +488,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		ClusterElement parent;
 
 		public HeaderBar(ClusterElement parent) {
+			// super(GLLayouts.flowHorizontal(1));
 			// move to the top
 			this.parent = parent;
 			setzDelta(0.5f);
 
 			// create buttons
 			createButtons();
+
 			setSize(Float.NaN, 20);
+
+			// define the animation used to move this element
+			// this.setLayoutData(new MoveTransitions.MoveTransitionBase(
+			// Transitions.NO, Transitions.LINEAR, Transitions.NO,
+			// Transitions.LINEAR));
 		}
 
 		protected void createButtons() {
@@ -571,6 +608,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue
 					: localMinSliderValue;
 			this.slider = new GLSlider(0, max, max / 2);
+			// slider.setzDelta(-0.5f);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
 			if (isHorizontal) {
@@ -602,6 +640,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		protected void updateSliders(double maxValue, double minValue) {
 			localMaxSliderValue = (float) maxValue;
 			localMinSliderValue = (float) minValue;
+			// createButtons();
 			relayout();
 		}
 
