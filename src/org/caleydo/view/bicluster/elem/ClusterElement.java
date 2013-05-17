@@ -81,6 +81,7 @@ import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
+import org.caleydo.view.heatmap.v2.SpacingStrategies;
 
 /**
  * e.g. a class for representing a cluster
@@ -797,12 +798,16 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			scaleFactor = scaleFactor >= 4 ? 4 : 3;
 			hm.setDimensionLabels(EShowLabels.RIGHT);
 			hm.setRecordLabels(EShowLabels.RIGHT);
+			hm.setRecordSpacingStrategy(SpacingStrategies.fishEye(18));
+			hm.setDimensionSpacingStrategy(SpacingStrategies.fishEye(18));
 			resize();
 			EventPublisher.trigger(new FocusChangeEvent(this));
 		} else {
 			scaleFactor = 1;
 			hm.setDimensionLabels(EShowLabels.NONE);
 			hm.setRecordLabels(EShowLabels.NONE);
+			hm.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
+			hm.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
 			resize();
 			EventPublisher.trigger(new FocusChangeEvent(null));
 			mouseOut();
