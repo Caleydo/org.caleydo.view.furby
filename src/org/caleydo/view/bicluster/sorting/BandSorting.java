@@ -55,7 +55,7 @@ public class BandSorting implements Iterable<Integer> {
 		}
 		for (BandConflict bc : conflicts) {
 			List<Integer> firstWithoutConflicts = new ArrayList<>(bc.getFirst());
-			if (bc.getConflict().size() > 0)
+			if (!bc.getConflict().isEmpty())
 				firstWithoutConflicts.removeAll(bc.getConflict());
 			finalSorting.addAll(firstWithoutConflicts);
 			finalSorting.addAll(bc.getConflict());
@@ -68,7 +68,7 @@ public class BandSorting implements Iterable<Integer> {
 		return finalSorting.iterator();
 	}
 
-	
+
 
 
 	/**
@@ -76,10 +76,15 @@ public class BandSorting implements Iterable<Integer> {
 	 *
 	 */
 	public class BandConflict implements Comparable<BandConflict> {
-		List<Integer> first;
-		List<Integer> second;
-		List<Integer> conflict;
+		private final List<Integer> first;
+		private final List<Integer> second;
+		private final List<Integer> conflict;
 
+		public BandConflict(List<Integer> first, List<Integer> second, List<Integer> conflict) {
+			this.first = first;
+			this.second = second;
+			this.conflict = conflict;
+		}
 		/**
 		 * @return the first, see {@link #first}
 		 */
@@ -104,15 +109,6 @@ public class BandSorting implements Iterable<Integer> {
 		@Override
 		public int compareTo(BandConflict o) {
 			return new Integer(conflict.size()).compareTo(o.conflict.size());
-		}
-
-		/**
-		 *
-		 */
-		public BandConflict(List<Integer> first, List<Integer> second, List<Integer> conflict) {
-			this.first = first;
-			this.second = second;
-			this.conflict = conflict;
 		}
 
 	}

@@ -17,41 +17,20 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.caleydo.view.bicluster.concurrent;
+package org.caleydo.view.bicluster.loading;
 
-import java.util.List;
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
 
 /**
- * @author user
+ * @author Samuel Gratzl
  *
  */
-public class ScanResult {
-
-	private final List<Integer> indices;
-	private final double max;
-	private final double min;
-
-	public ScanResult(List<Integer> indices, double max, double min) {
-		this.indices = indices;
-		this.max = max;
-		this.min = min;
-	}
-
-	/**
-	 * @return the indices, see {@link #indices}
-	 */
-	public List<Integer> getIndices() {
-		return indices;
-	}
-
-	/**
-	 * @return the max, see {@link #max}
-	 */
-	public double getMax() {
-		return max;
-	}
-
-	public double getMin(){
-		return min;
+public class ImportXLZHandler extends AbstractHandler {
+	@Override
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+		new ImportXLZCommand().run();
+		return null;
 	}
 }

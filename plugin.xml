@@ -38,6 +38,16 @@
                </command>
             </menu>
          </menu>
+         <menu
+               id="org.caleydo.menu.file"
+               label="File">
+            <command
+                  commandId="org.caleydo.view.bicluster.import"
+                  icon="resources/icons/icon.png"
+                  label="Import XLZ Data"
+                  style="push">
+            </command>
+         </menu>
       </menuContribution>
    </extension>
    <extension
@@ -46,6 +56,11 @@
             defaultHandler="org.caleydo.view.bicluster.OpenViewHandler"
             id="org.caleydo.view.bicluster.command.opentemplate"
             name="BiCluster">
+      </command>
+      <command
+            defaultHandler="org.caleydo.view.bicluster.loading.ImportXLZHandler"
+            id="org.caleydo.view.bicluster.import"
+            name="Import XLZ Data">
       </command>
    </extension>
    <extension
