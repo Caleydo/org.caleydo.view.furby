@@ -65,11 +65,12 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	public void setData(List<TablePerspective> list, TablePerspective x,
 			TablePerspective l, TablePerspective z, ExecutorService executor) {
+
+		if (clusters.size() > 0)
+			clusters.clear();
 		this.clear();
 		bands = new AllBandsElement(x);
 		this.add(bands);
-		if (clusters.size() > 0)
-			clusters.clear();
 		this.add(clusters);
 
 		if (list != null) {
