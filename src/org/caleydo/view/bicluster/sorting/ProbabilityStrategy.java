@@ -28,14 +28,16 @@ import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.collection.Pair.ComparablePair;
 
+import com.google.common.collect.Iterators;
+
 /**
  * @author Michael Gillhofer
  *
  */
 public class ProbabilityStrategy extends ASortingStrategy {
 
-	private int bcNr;
-	protected Table t;
+	private final int bcNr;
+	protected final Table t;
 
 	/**
 	 *
@@ -72,35 +74,10 @@ public class ProbabilityStrategy extends ASortingStrategy {
 		// System.out.println(pair.hashCode());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Iterable#iterator()
-	 */
+
 	@Override
 	public Iterator<Integer> iterator() {
-		return new Iterator<Integer>() {
-			final private Iterator<Pair<Integer, Float>> superIter = indices.iterator();
-
-			@Override
-			public boolean hasNext() {
-
-				return superIter.hasNext();
-			}
-
-			@Override
-			public Integer next() {
-				Pair<Integer, Float> next = superIter.next();
-				// System.out.println(next.getFirst());
-				return next.getFirst();
-			}
-
-			@Override
-			public void remove() {
-				superIter.remove();
-
-			}
-		};
+		return Iterators.transform(indices.iterator(), Pair.<Integer, Float> mapFirst());
 	}
 
 }

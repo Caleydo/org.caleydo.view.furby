@@ -37,8 +37,6 @@ import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 
-;
-
 /**
  * @author user
  * 

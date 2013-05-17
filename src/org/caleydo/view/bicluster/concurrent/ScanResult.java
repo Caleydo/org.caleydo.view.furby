@@ -27,9 +27,15 @@ import java.util.List;
  */
 public class ScanResult {
 
-	List<Integer> indices;
-	double max;
-	double min;
+	private final List<Integer> indices;
+	private final double max;
+	private final double min;
+
+	public ScanResult(List<Integer> indices, double max, double min) {
+		this.indices = indices;
+		this.max = max;
+		this.min = min;
+	}
 
 	/**
 	 * @return the indices, see {@link #indices}
@@ -48,11 +54,4 @@ public class ScanResult {
 	public double getMin(){
 		return min;
 	}
-	
-	public ScanResult(List<Integer> indices, double max, double min) {
-		this.indices = indices;
-		this.max = max;
-		this.min = min;
-	}
-
 }

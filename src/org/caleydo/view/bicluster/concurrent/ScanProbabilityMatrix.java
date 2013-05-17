@@ -21,21 +21,20 @@ package org.caleydo.view.bicluster.concurrent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import org.caleydo.core.data.collection.table.Table;
+import org.caleydo.core.util.execution.SafeCallable;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 
 /**
  * @author user
  * 
  */
-public class ScanProbabilityMatrix implements Callable<ScanResult> {
-
-	private float threshold;
-	private Table table;
-	private int bcNr;
-	private ASortingStrategy strategy;
+public class ScanProbabilityMatrix implements SafeCallable<ScanResult> {
+	private final float threshold;
+	private final Table table;
+	private final int bcNr;
+	private final ASortingStrategy strategy;
 
 	public ScanProbabilityMatrix(float threshold, Table t, int bcNr,
 			ASortingStrategy strat) {
@@ -69,13 +68,8 @@ public class ScanProbabilityMatrix implements Callable<ScanResult> {
 		return new ScanResult(indices, max, min);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.util.concurrent.Callable#call()
-	 */
 	@Override
-	public ScanResult call() throws Exception {
+	public ScanResult call() {
 		return scanProbTable();
 
 	}
