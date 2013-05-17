@@ -146,7 +146,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.add(recThreshBar);
 		final HeatMapElement heatmapImpl = new HeatMapElement(data, this,
 				EDetailLevel.HIGH);
+
 		// heatmapImpl.setRecordLabels(EShowLabels.RIGHT);
+		// let's use a fish-eye spacing strategy where selected lines have a height of at least 16 pixels
+		// heatmapImpl.setRecordSpacingStrategy(SpacingStrategies.fishEye(16));
 		// heatmapImpl.setDimensionLabels(EShowLabels.RIGHT);
 		// heatmap = new ScrollingDecorator(heatmapImpl, new ScrollBar(true),
 		// new ScrollBar(false), 5);
