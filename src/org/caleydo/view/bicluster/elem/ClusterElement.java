@@ -496,20 +496,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		ClusterElement parent;
 
 		public HeaderBar(ClusterElement parent) {
-			// super(GLLayouts.flowHorizontal(1));
-			// move to the top
 			this.parent = parent;
 			setzDelta(0.5f);
-
-			// create buttons
 			createButtons();
-
 			setSize(Float.NaN, 20);
-
-			// define the animation used to move this element
-			// this.setLayoutData(new MoveTransitions.MoveTransitionBase(
-			// Transitions.NO, Transitions.LINEAR, Transitions.NO,
-			// Transitions.LINEAR));
 		}
 
 		protected void createButtons() {
@@ -527,7 +517,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 					}
 					float[] color = { 0, 0, 0, curOpacityFactor };
 					g.textColor(color);
-					g.drawText(scaleFactor == 1 ? getID() : getID() + " ("
+					if (isHovered)g.drawText(" "+ (scaleFactor == 1 ? getID() : getID()) + " ("
+							+ (int) (100 * scaleFactor) + "%)", 0, 0, 100, 12);
+					else g.drawText(scaleFactor == 1 ? getID() : getID() + " ("
 							+ (int) (100 * scaleFactor) + "%)", 0, 0, 100, 12);
 
 					float[] black = { 0, 0, 0, 1 };
