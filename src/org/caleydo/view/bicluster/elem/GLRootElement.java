@@ -132,18 +132,12 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				: maxDimClusterElements;
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
-			// if (i.getID().contains("27"))
-			// System.out.println("stop");
-			System.out.println(i.getID() + " " + i.getNumberOfRecElements() + " " + i.getNumberOfDimElements());
 			double recSize = i.getNumberOfRecElements() * maxClusterRecSize / maxRecClusterElements;
 			double dimSize = i.getNumberOfDimElements() * maxClusterDimSize / maxDimClusterElements;
-			// if (recSize < 50) recSize = 50;
-			// if (dimSize < 50) dimSize =50;
 			i.setClusterSize(dimSize, recSize, maxSize);
 			i.setVisibility();
 			i.relayout();
 		}
-
 	}
 
 	public AllClustersElement getClusters() {

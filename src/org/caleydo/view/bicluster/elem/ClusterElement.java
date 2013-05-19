@@ -833,9 +833,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@ListenTo
 	private void listenTo(UnhidingClustersEvent event) {
 		isHidden = false;
-		if (hasContent) {
-			setVisibility(EVisibility.PICKABLE);
-		}
+		setVisibility();
 	}
 
 	@ListenTo
