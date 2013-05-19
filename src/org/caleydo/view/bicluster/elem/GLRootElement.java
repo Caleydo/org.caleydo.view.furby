@@ -59,7 +59,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		super.init(context);
 		// show the global toolbar as a popup
 		context.getPopupLayer().show(globalToolBar,
-				new Vec4f(Float.NaN, 0, 200, 200),
+				new Vec4f(Float.NaN, 0, 200, 240),
 				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE);
 	}
 
@@ -128,17 +128,19 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				maxRecClusterElements = i.getNumberOfRecElements();
 			}
 		}
+		double maxSize = maxDimClusterElements < maxRecClusterElements ? maxRecClusterElements
+				: maxDimClusterElements;
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
-//			if (i.getID().contains("27"))
-//				System.out.println("stop");
-			double recSize =  (i.getNumberOfRecElements()
-					* (maxClusterRecSize) / (float)maxRecClusterElements);
-			double dimSize =  (i.getNumberOfDimElements()
-					* (maxClusterDimSize) / maxDimClusterElements);
+			// if (i.getID().contains("27"))
+			// System.out.println("stop");
+			System.out.println(i.getID() + " " + i.getNumberOfRecElements() + " " + i.getNumberOfDimElements());
+			double recSize = i.getNumberOfRecElements() * maxClusterRecSize / maxRecClusterElements;
+			double dimSize = i.getNumberOfDimElements() * maxClusterDimSize / maxDimClusterElements;
 			// if (recSize < 50) recSize = 50;
 			// if (dimSize < 50) dimSize =50;
-			i.setClusterSize(dimSize, recSize);
+			i.setClusterSize(dimSize, recSize, maxSize);
+			i.setVisibility();
 			i.relayout();
 		}
 

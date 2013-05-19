@@ -68,6 +68,7 @@ import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
+import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
@@ -127,6 +128,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private GLElement heatmap;
 	private float opacityfactor = 1;
 	private float curOpacityFactor = 1f;
+	
+	private double clusterSizeThreshold, elementCountBiggestCluster;
 
 	public ClusterElement(TablePerspective data, AllClustersElement root,
 			TablePerspective x, TablePerspective l, TablePerspective z,
@@ -297,7 +300,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			// System.out.println("out");
 			isHovered = false;
 			if (wasResizedWhileHovered)
-				setClusterSize(newDimSize, newRecSize);
+				setClusterSize(newDimSize, newRecSize, elementCountBiggestCluster);
 			allClusters.setHooveredElement(null);
 			opacityfactor = highOpacityFactor;
 			// timer.restart();
@@ -757,7 +760,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private double newRecSize = 0;
 	private double newDimSize = 0;
 
-	public void setClusterSize(double x, double y) {
+	public void setClusterSize(double x, double y, double maxClusterSize) {
 		if (isHovered) {
 			wasResizedWhileHovered = true;
 			newRecSize = y;
@@ -767,20 +770,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			newRecSize = 0;
 			newDimSize = 0;
 			dimSize = x;
-			recSize = y;
+			recSize = y; 
 			resize();
 		}
-	}
-
-	@ListenTo
-	public void listenTo(FocusChangeEvent e) {
-		if (e.getSender() == this)
-			return;
-		if (!isFocused)
-			return;
-		scaleFactor = 1;
-		resize();
-		this.isFocused = false;
+		elementCountBiggestCluster = maxClusterSize;
 	}
 
 	private double scaleFactor = 1;
@@ -824,6 +817,17 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
 		EventPublisher.trigger(new MouseOverClusterEvent(this, false));
 		repaintAll();
+	}
+
+	@ListenTo
+	private void listenTo(FocusChangeEvent e) {
+		if (e.getSender() == this)
+			return;
+		if (!isFocused)
+			return;
+		scaleFactor = 1;
+		resize();
+		this.isFocused = false;
 	}
 
 	@ListenTo
@@ -871,6 +875,23 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			setOnlyShowXElements = event.isFixedClusterCount();
 			rebuildMyData(event.isGlobalEvent());
 		}
+	}
+	
+	@ListenTo
+	private void listenTo(MinClusterSizeThresholdChangeEvent event) {
+		this.clusterSizeThreshold = event.getMinClusterSize();
+		setVisibility();
+	}
+
+	public void setVisibility() {
+		if (isHidden || !hasContent)
+			setVisibility(EVisibility.NONE);
+		else if (getDimensionVirtualArray().size() / elementCountBiggestCluster > clusterSizeThreshold)
+			setVisibility(EVisibility.PICKABLE);
+		else if (getRecordVirtualArray().size() / elementCountBiggestCluster > clusterSizeThreshold)
+			setVisibility(EVisibility.PICKABLE);
+		else
+			setVisibility(EVisibility.NONE);
 	}
 
 	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
