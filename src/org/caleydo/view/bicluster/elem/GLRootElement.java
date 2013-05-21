@@ -59,7 +59,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		super.init(context);
 		// show the global toolbar as a popup
 		context.getPopupLayer().show(globalToolBar,
-				new Vec4f(Float.NaN, 0, 200, 240),
+				new Vec4f(Float.NaN, 0, 200, 280),
 				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE);
 	}
 
@@ -84,9 +84,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		clusters.setToolbar(globalToolBar);
 	}
 
-	/**
-	 *
-	 */
+
 	public void createBands() {
 		if (bands == null)
 			return;
@@ -152,9 +150,9 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	}
 
-	public void recalculateOverlap() {
+	public void recalculateOverlap(boolean dimBands, boolean recBands) {
 		for (GLElement iGL : clusters) {
-			((ClusterElement) iGL).calculateOverlap();
+			((ClusterElement) iGL).calculateOverlap(dimBands, recBands);
 		}
 
 	}
@@ -182,12 +180,12 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		if (event.isGlobal())
 			count++;
 		else {
-			recalculateOverlap();
+			recalculateOverlap(event.isDimBandEnabled(), event.isRecBandEnabled());
 			count = 0;
 			return;
 		}
 		if (count == clusters.size()) {
-			recalculateOverlap();
+			recalculateOverlap(event.isDimBandEnabled(), event.isRecBandEnabled());
 			count = 0;
 		}
 	}

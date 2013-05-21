@@ -6,14 +6,26 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 public class RecalculateOverlapEvent extends AEvent {
 
 	final boolean isGlobal;
+	final boolean dimBands;
+	final boolean recBands;
 	
 	public boolean isGlobal(){
 		return isGlobal;
 	}
 
-	public RecalculateOverlapEvent(GLElement sender, boolean isGlobal) {
+	public boolean isDimBandEnabled() {
+		return dimBands;
+	}
+	
+	public boolean isRecBandEnabled() {
+		return recBands;
+	}
+	
+	public RecalculateOverlapEvent(GLElement sender, boolean isGlobal, boolean dimBands, boolean recBands) {
 		this.setSender(sender);
 		this.isGlobal = isGlobal;
+		this.dimBands = dimBands;
+		this.recBands = recBands;
 	}
 
 	@Override
@@ -22,4 +34,5 @@ public class RecalculateOverlapEvent extends AEvent {
 		return true;
 	}
 
+	
 }

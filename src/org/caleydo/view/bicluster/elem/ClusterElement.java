@@ -113,10 +113,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private boolean isHidden = false;
 	private boolean isLocked = false;
 	private boolean hasContent = false;
+	private boolean dimBandsEnabled, recBandsEnabled;
 	protected ClusterElement cluster;
 
-	private Map<GLElement, List<Integer>> dimOverlap;
-	private Map<GLElement, List<Integer>> recOverlap;
+	private Map<GLElement, List<Integer>> dimOverlap, recOverlap;
 
 	private SortingType sortingType = SortingType.probabilitySorting;
 	private List<Integer> dimProbabilitySorting;
@@ -341,10 +341,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-	void calculateOverlap() {
-		// if (getID().contains("27"))
-		// System.out.println("27 .. overlap calc");
-
+	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
+		this.dimBandsEnabled = dimBandsEnabled;
+		this.recBandsEnabled = recBandsEnabled;
 		dimOverlap = new HashMap<>();
 		recOverlap = new HashMap<>();
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
@@ -355,16 +354,23 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			if (element == this)
 				continue;
 			ClusterElement e = (ClusterElement) element;
-			List<Integer> eIndizes = new ArrayList<Integer>(myDimIndizes);
-
-			eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
-			dimOverlap.put(element, eIndizes);
-			dimensionOverlapSize += eIndizes.size();
-
-			eIndizes = new ArrayList<Integer>(myRecIndizes);
-			eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
-			recOverlap.put(element, eIndizes);
-			recordOverlapSize += eIndizes.size();
+			List<Integer> eIndizes = null;
+			if (dimBandsEnabled) {
+				eIndizes = new ArrayList<Integer>(myDimIndizes);
+				eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
+				dimOverlap.put(element, eIndizes);
+				dimensionOverlapSize += eIndizes.size();
+			} else {
+				dimOverlap.put(element, new ArrayList<Integer>());
+			}
+			if (recBandsEnabled) {
+				eIndizes = new ArrayList<Integer>(myRecIndizes);
+				eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
+				recOverlap.put(element, eIndizes);
+				recordOverlapSize += eIndizes.size();
+			} else {
+				recOverlap.put(element, new ArrayList<Integer>());
+			}
 		}
 		if (getVisibility() == EVisibility.PICKABLE)
 			sort(sortingType);
@@ -886,14 +892,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		if (!event.isGlobalEvent()) {
 			return;
 		}
-		if (event.getRecordThreshold() != recThreshold
-				|| event.getDimensionThreshold() != dimThreshold
-				|| setOnlyShowXElements != event.isFixedClusterCount()) {
-			recThreshold = event.getRecordThreshold();
-			dimThreshold = event.getDimensionThreshold();
-			setOnlyShowXElements = event.isFixedClusterCount();
-			rebuildMyData(event.isGlobalEvent());
-		}
+		recThreshold = event.getRecordThreshold();
+		dimThreshold = event.getDimensionThreshold();
+		setOnlyShowXElements = event.isFixedClusterCount();
+		rebuildMyData(event.isGlobalEvent());
+
 	}
 
 	@ListenTo
@@ -1057,7 +1060,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		EventPublisher.trigger(new ClusterScaleEvent(this));
 		if (!isGlobal)
 			EventPublisher.trigger(new MouseOverClusterEvent(this, true));
-		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal));
+		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal,
+				dimBandsEnabled, recBandsEnabled));
 		EventPublisher.trigger(new CreateBandsEvent(this));
 
 	}

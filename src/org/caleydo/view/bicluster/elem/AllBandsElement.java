@@ -35,6 +35,7 @@ import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
+import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 
 /**
  * @author Michael Gillhofer
@@ -76,12 +77,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		relayout();
 	}
 
-	public void updateSelection() {
-		if (selection == null)
-			return;
-		selection.recalculateSelection();
-	}
-
 	@Override
 	public void onSelectionUpdate(SelectionManager manager) {
 		SelectionDelta selectionDelta = manager.getDelta();
@@ -112,5 +107,15 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		return this.selection;
 	}
 
+	public void updateSelection() {
+		if (selection == null)
+			return;
+		selection.recalculateSelection();
+	}
+
+	@ListenTo
+	private void listenTo(RecalculateOverlapEvent event) {
+		relayout();
+	}
 
 }

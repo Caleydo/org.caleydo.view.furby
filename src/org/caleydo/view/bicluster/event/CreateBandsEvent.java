@@ -7,8 +7,10 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 
 public class CreateBandsEvent extends AEvent {
 
+	
+	
 	public CreateBandsEvent(GLElement sender) {
-	this.setSender(sender);
+		this.setSender(sender);
 	}
 	
 	@Override
