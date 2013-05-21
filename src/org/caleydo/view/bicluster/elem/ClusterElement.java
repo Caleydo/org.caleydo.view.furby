@@ -111,6 +111,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private boolean isDragged = false;
 	private boolean isHovered = false;
 	private boolean isHidden = false;
+	private boolean isLocked = false;
 	private boolean hasContent = false;
 	protected ClusterElement cluster;
 
@@ -130,7 +131,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private GLElement heatmap;
 	private float opacityfactor = 1;
 	private float curOpacityFactor = 1f;
-	
+
 	private double clusterSizeThreshold, elementCountBiggestCluster;
 
 	public ClusterElement(TablePerspective data, AllClustersElement root,
@@ -303,7 +304,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			// System.out.println("out");
 			isHovered = false;
 			if (wasResizedWhileHovered)
-				setClusterSize(newDimSize, newRecSize, elementCountBiggestCluster);
+				setClusterSize(newDimSize, newRecSize,
+						elementCountBiggestCluster);
 			allClusters.setHooveredElement(null);
 			opacityfactor = highOpacityFactor;
 			// timer.restart();
@@ -469,7 +471,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		IGLLayoutElement recthreshbar = children.get(3);
 		if (isHovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
-			toolbar.setBounds(-38, 0, 18, 80);
+			toolbar.setBounds(-38, 0, 18, 100);
 			headerbar.setBounds(0, -39, w < 55 ? 57 : w + 2, 20);
 			dimthreshbar.setBounds(-1, -20, w < 55 ? 56 : w + 1, 20);
 			recthreshbar.setBounds(-20, -1, 20, h < 60 ? 61 : h + 1);
@@ -482,7 +484,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 		IGLLayoutElement content = children.get(4);
 		if (isFocused) {
-			content.setBounds(0, 0, w+79, h+79);
+			content.setBounds(0, 0, w + 79, h + 79);
 		} else {
 			content.setBounds(0, 0, w, h);
 		}
@@ -517,10 +519,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 					}
 					float[] color = { 0, 0, 0, curOpacityFactor };
 					g.textColor(color);
-					if (isHovered)g.drawText(" "+ (scaleFactor == 1 ? getID() : getID()) + " ("
-							+ (int) (100 * scaleFactor) + "%)", 0, 0, 100, 12);
-					else g.drawText(scaleFactor == 1 ? getID() : getID() + " ("
-							+ (int) (100 * scaleFactor) + "%)", 0, 0, 100, 12);
+					if (isHovered)
+						g.drawText(" " + (scaleFactor == 1 ? getID() : getID())
+								+ " (" + (int) (100 * scaleFactor) + "%)", 0,
+								0, 100, 12);
+					else
+						g.drawText(scaleFactor == 1 ? getID() : getID() + " ("
+								+ (int) (100 * scaleFactor) + "%)", 0, 0, 100,
+								12);
 
 					float[] black = { 0, 0, 0, 1 };
 					g.textColor(black);
@@ -665,11 +671,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private class ToolBar extends GLElementContainer implements
 			ISelectionCallback {
 
-		GLButton hide, sorting, enlarge, smaller, focus;
+		GLButton hide, sorting, enlarge, smaller, focus, lock;
 		SortingType sortingButtonCaption = SortingType.probabilitySorting;
 
 		public ToolBar() {
-			super(GLLayouts.flowVertical(5));
+			super(GLLayouts.flowVertical(6));
 			setzDelta(-0.1f);
 			createButtons();
 			setSize(Float.NaN, 20);
@@ -681,7 +687,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		protected void createButtons() {
 			hide = new GLButton();
 			hide.setRenderer(GLRenderers
-.fillImage("resources/icons/dialog_close.png"));
+					.fillImage("resources/icons/dialog_close.png"));
 			hide.setTooltip("Close");
 			hide.setSize(16, Float.NaN);
 			hide.setCallback(this);
@@ -701,20 +707,38 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			focus.setTooltip("Focus this Cluster");
 			focus.setCallback(this);
 			this.add(focus);
+			lock = new GLButton();
+			lock.setTooltip("Lock this cluster. It will not recieve threshold updates.");
+			lock.setSize(16, Float.NaN);
+			lock.setRenderer(new IGLRenderer() {
+
+				@Override
+				public void render(GLGraphics g, float w, float h,
+						GLElement parent) {
+					if (isLocked)
+						g.fillImage("resources/icons/lock_open.png", 0, 0, w, h);
+					else
+						g.fillImage("resources/icons/lock.png", 0, 0, w, h);
+				}
+
+			});
+			lock.setCallback(this);
+			this.add(lock);
 			enlarge = new GLButton();
 			enlarge.setSize(16, Float.NaN);
 			enlarge.setTooltip("Enlarge");
 			enlarge.setRenderer(GLRenderers
-.fillImage("resources/icons/zoom_in.png"));
+					.fillImage("resources/icons/zoom_in.png"));
 			enlarge.setCallback(this);
 			this.add(enlarge);
 			smaller = new GLButton();
 			smaller.setTooltip("Reduce");
 			smaller.setSize(16, Float.NaN);
 			smaller.setRenderer(GLRenderers
-.fillImage("resources/icons/zoom_out.png"));
+					.fillImage("resources/icons/zoom_out.png"));
 			smaller.setCallback(this);
 			this.add(smaller);
+
 		}
 
 		void setSortingCaption(SortingType caption) {
@@ -745,6 +769,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				EventPublisher.trigger(new FocusChangeEvent(null));
 			} else if (button == focus) {
 				focusThisCluster();
+			} else if (button == lock) {
+				isLocked = !isLocked;
+				lock.setTooltip(isLocked ? "UnLock this cluster. It will again recieve threshold updates."
+						: "Lock this cluster. It will not recieve threshold updates.");
 			}
 		}
 	}
@@ -763,7 +791,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			newRecSize = 0;
 			newDimSize = 0;
 			dimSize = x;
-			recSize = y; 
+			recSize = y;
 			resize();
 		}
 		elementCountBiggestCluster = maxClusterSize;
@@ -779,7 +807,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	private void focusThisCluster() {
 		this.isFocused = !this.isFocused;
-		HeatMapElement hm = (HeatMapElement)heatmap;
+		HeatMapElement hm = (HeatMapElement) heatmap;
 		if (isFocused) {
 			scaleFactor = scaleFactor >= 4 ? 4 : 3;
 			hm.setDimensionLabels(EShowLabels.RIGHT);
@@ -867,7 +895,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			rebuildMyData(event.isGlobalEvent());
 		}
 	}
-	
+
 	@ListenTo
 	private void listenTo(MinClusterSizeThresholdChangeEvent event) {
 		this.clusterSizeThreshold = event.getMinClusterSize();
@@ -1006,6 +1034,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	private void rebuildMyData(boolean isGlobal) {
+		if (isLocked)
+			return;
 		Table L = l.getDataDomain().getTable();
 		Table Z = z.getDataDomain().getTable();
 		Future<ScanResult> recList = null, dimList = null;

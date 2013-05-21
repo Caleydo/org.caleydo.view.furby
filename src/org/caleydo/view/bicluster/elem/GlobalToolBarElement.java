@@ -223,7 +223,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		recordThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(recordThresholdSlider);
 		
-		
+
 		this.remove(clusterMinSizeLabel);
 		this.clusterMinSizeLabel = new GLElement();
 		clusterMinSizeLabel.setSize(Float.NaN, 16);
