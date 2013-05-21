@@ -788,7 +788,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private double newDimSize = 0;
 
 	public void setClusterSize(double x, double y, double maxClusterSize) {
-		if (isHovered) {
+		if (isHovered || isLocked) {
 			wasResizedWhileHovered = true;
 			newRecSize = y;
 			newDimSize = x;
