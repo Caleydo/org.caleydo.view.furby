@@ -32,6 +32,7 @@ import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.EButtonMode;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
+import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.layout.GLFlowLayout;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
@@ -207,6 +208,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		this.dimensionThresholdSlider = new GLSlider(0, maxDimensionValue, 4.5f);
 		dimensionThresholdSlider.setCallback(this);
 		dimensionThresholdSlider.setSize(Float.NaN, 18);
+		dimensionThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(dimensionThresholdSlider);
 
 		this.remove(recordLabel);
@@ -218,6 +220,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		this.recordThresholdSlider = new GLSlider(0, maxRecordValue, 0.08f);
 		recordThresholdSlider.setCallback(this);
 		recordThresholdSlider.setSize(Float.NaN, 18);
+		recordThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(recordThresholdSlider);
 		
 		

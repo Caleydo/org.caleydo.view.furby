@@ -53,6 +53,7 @@ import org.caleydo.core.view.opengl.layout2.animation.Transitions;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
+import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
@@ -111,6 +112,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private boolean isHovered = false;
 	private boolean isHidden = false;
 	private boolean hasContent = false;
+	protected ClusterElement cluster;
 
 	private Map<GLElement, List<Integer>> dimOverlap;
 	private Map<GLElement, List<Integer>> recOverlap;
@@ -142,7 +144,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.z = z;
 		this.executor = executor;
 		toolBar = new ToolBar();
-		headerBar = new HeaderBar(this);
+		headerBar = new HeaderBar();
 		dimThreshBar = new ThresholdBar(true);
 		recThreshBar = new ThresholdBar(false);
 		this.add(toolBar); // add a element toolbar
@@ -172,6 +174,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			}
 		});
 		this.setLayoutData(MoveTransitions.MOVE_AND_GROW_LINEAR);
+		this.cluster = this;
 	}
 
 	@Override
@@ -493,10 +496,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			return clicked;
 		}
 
-		ClusterElement parent;
-
-		public HeaderBar(ClusterElement parent) {
-			this.parent = parent;
+		public HeaderBar() {
 			setzDelta(0.5f);
 			createButtons();
 			setSize(Float.NaN, 20);
@@ -537,13 +537,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				if (!pick.isDoDragging())
 					return;
 				if (isDragged == false) {
-					allClusters.setDragedLayoutElement(parent);
+					allClusters.setDragedLayoutElement(cluster);
 				}
 				isDragged = true;
-				parent.setLocation(parent.getLocation().x() + pick.getDx(),
-						parent.getLocation().y() + pick.getDy());
-				parent.relayout();
-				parent.repaintPick();
+				cluster.setLocation(cluster.getLocation().x() + pick.getDx(),
+						cluster.getLocation().y() + pick.getDy());
+				cluster.relayout();
+				cluster.repaintPick();
 				break;
 			case CLICKED:
 				if (!pick.isAnyDragging()) {
@@ -616,6 +616,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			} else {
 				slider.setSize(18, Float.NaN);
 			}
+			slider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 			this.add(slider);
 		}
 
