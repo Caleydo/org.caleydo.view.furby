@@ -152,10 +152,10 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				Vec2f iLoc = i.asElement().getLocation();
 				Vec2f jSize = j.asElement().getSize();
 				Vec2f jLoc = j.asElement().getLocation();
-				Rectangle iRec = new Rectangle((int) iLoc.x(), (int) iLoc.y(),
-						(int) iSize.x(), (int) iSize.y());
-				Rectangle jRec = new Rectangle((int) jLoc.x(), (int) jLoc.y(),
-						(int) jSize.x(), (int) jSize.y());
+				Rectangle iRec = new Rectangle((int) iLoc.x()-10, (int) iLoc.y()-10,
+						(int) iSize.x()+20, (int) iSize.y()+20);
+				Rectangle jRec = new Rectangle((int) jLoc.x()-10, (int) jLoc.y()-10,
+						(int) jSize.x()+20, (int) jSize.y()+20);
 				if (iRec.intersects(jRec)) {
 					setLocation((ClusterElement) j.asElement(),
 							(jLoc.x() + 200) % w, (jLoc.y() + 200) % h, w, h);
@@ -273,7 +273,9 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 		for (IGLLayoutElement iGLL : children) {
 			ClusterElement i = (ClusterElement) iGLL.asElement();
-			Vec2d force = i.getAttForce().plus(i.getRepForce())
+			Vec2d attForce = i.getAttForce();
+			if (xOverlapSize < 3) attForce = attForce.times(0.2); 
+			Vec2d force = attForce.plus(i.getRepForce())
 					.plus(i.getFrameForce());
 			while (force.length() > 20)
 				force.scale(0.1);
