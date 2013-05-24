@@ -23,6 +23,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
@@ -70,6 +71,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 	private GLElement clusterMinSizeLabel;
 	private GLButton clearHiddenClusterButton;
 	private List<String> clearHiddenButtonTooltipList = new ArrayList<>();
+	private TablePerspective x;
 
 	public GlobalToolBarElement() {
 		setLayout(new GLFlowLayout(false, 5, new GLPadding(10)));
@@ -133,7 +135,6 @@ public class GlobalToolBarElement extends GLElementContainer implements
 	private void setText(GLElement elem, String text) {
 		elem.setRenderer(GLRenderers.drawText(text, VAlign.LEFT, new GLPadding(
 				1)));
-
 	}
 
 	@Override
@@ -173,15 +174,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 			clearHiddenButtonTooltipList = new ArrayList<>();
 			clearHiddenClusterButton
 					.setTooltip("Currently no Clusters are hidden");
-			clearHiddenClusterButton.setRenderer(new IGLRenderer() {
-
-				@Override
-				public void render(GLGraphics g, float w, float h,
-						GLElement parent) {
-					g.drawText("Show all clusters", 18, 5, w, 14);
-
-				}
-			});
+			setClearHiddenButtonRenderer();
 			EventPublisher.trigger(new UnhidingClustersEvent());
 		}
 		boolean isBandSorting = bandSortingModeButton.isSelected();
@@ -197,6 +190,29 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		initSliders();
 	}
 
+	private void setClearHiddenButtonRenderer() {
+		if (clearHiddenButtonTooltipList.size() == 0) {
+			clearHiddenClusterButton.setRenderer(new IGLRenderer() {
+
+				@Override
+				public void render(GLGraphics g, float w, float h,
+						GLElement parent) {
+					g.drawText("Show all clusters", 18, 4, w, 13);
+				}
+			});
+		} else
+			clearHiddenClusterButton.setRenderer(new IGLRenderer() {
+
+				@Override
+				public void render(GLGraphics g, float w, float h,
+						GLElement parent) {
+					g.drawText("Show all clusters (+"
+							+ clearHiddenButtonTooltipList.size() + ")", 18, 4,
+							w, 13);
+				}
+			});
+	}
+
 	@ListenTo
 	public void listenTo(ClusterGetsHiddenEvent event) {
 		clearHiddenButtonTooltipList.add(event.getClusterID());
@@ -206,16 +222,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 			tooltip.append(s);
 		}
 		clearHiddenClusterButton.setTooltip(tooltip.toString());
-		clearHiddenClusterButton.setRenderer(new IGLRenderer() {
-
-			@Override
-			public void render(GLGraphics g, float w, float h, GLElement parent) {
-				g.drawText("Show all clusters (+"
-						+ clearHiddenButtonTooltipList.size() + ")", 18, 5, w,
-						14);
-
-			}
-		});
+		setClearHiddenButtonRenderer();
 	}
 
 	/**
@@ -258,11 +265,32 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		clusterMinSizeThresholdSlider.setCallback(this);
 		clusterMinSizeThresholdSlider.setSize(Float.NaN, 18);
 		this.add(clusterMinSizeThresholdSlider);
-
-		setText(dimensionLabel, "Sample Threshold");
-		setText(recordLabel, "Gene Threshold");
+		if (x == null) {
+			setText(dimensionLabel, "Dimension Threshold");
+			setText(recordLabel, "Record Threshold");
+		} else {
+			setText(dimensionLabel, x.getDataDomain().getDimensionIDCategory()
+					.toString()
+					+ " Threshold");
+			setText(recordLabel, x.getDataDomain().getRecordIDCategory()
+					.toString()
+					+ " Threshold");
+		}
 		setText(clusterMinSizeLabel, "Minumum Cluster Size (%)");
+	}
 
+	public void setXTablePerspective(TablePerspective x) {
+		if (x == null)
+			return;
+		else
+			this.x = x;
+		initSliders();
+		recBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(x
+				.getDataDomain().getRecordIDCategory().toString()
+				+ " Bands"));
+		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(x
+				.getDataDomain().getDimensionIDCategory().toString()
+				+ " Bands"));
 	}
 
 }

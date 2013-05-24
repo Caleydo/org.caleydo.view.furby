@@ -65,7 +65,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	public void setData(List<TablePerspective> list, TablePerspective x,
 			TablePerspective l, TablePerspective z, ExecutorService executor) {
-
+		globalToolBar.setXTablePerspective(x);
 		if (clusters.size() > 0)
 			clusters.clear();
 		this.clear();
