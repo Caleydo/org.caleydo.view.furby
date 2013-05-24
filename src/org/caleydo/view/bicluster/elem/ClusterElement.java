@@ -708,7 +708,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			sorting.setCallback(this);
 			this.add(sorting);
 			focus = new GLButton();
-			focus.setRenderer(GLRenderers.drawText(" F"));
+			focus.setRenderer(GLRenderers
+					.fillImage("resources/icons/target.png"));
 			focus.setSize(16, Float.NaN);
 			focus.setTooltip("Focus this Cluster");
 			focus.setCallback(this);
