@@ -93,46 +93,55 @@ import org.caleydo.view.heatmap.v2.SpacingStrategies;
  */
 public class ClusterElement extends AnimatedGLElementContainer implements
 		IBlockColorer, IGLLayout {
-	private float highOpacityFactor = 1;
-	private float lowOpacityFactor = 0.2f;
-	private float opacityChangeInterval = 10f;
+	protected static final float highOpacityFactor = 1;
+	protected static final float lowOpacityFactor = 0.2f;
+	protected static final float opacityChangeInterval = 10f;
 
-	private final TablePerspective data;
-	private final TablePerspective x;
-	private final TablePerspective l;
-	private final TablePerspective z;
-	private final AllClustersElement allClusters;
-	private final ExecutorService executor;
-	private float recThreshold = 0.08f;
-	private float dimThreshold = 4.5f;
-	private Vec2d attForce = new Vec2d(0, 0);
-	private Vec2d repForce = new Vec2d(0, 0);
-	private Vec2d frameForce = new Vec2d(0, 0);
-	private boolean isDragged = false;
-	private boolean isHovered = false;
-	private boolean isHidden = false;
-	private boolean isLocked = false;
-	private boolean hasContent = false;
-	private boolean dimBandsEnabled, recBandsEnabled;
+	protected final TablePerspective data;
+	protected final TablePerspective x;
+	protected final TablePerspective l;
+	protected final TablePerspective z;
+	protected final AllClustersElement allClusters;
+	protected final ExecutorService executor;
+	protected Vec2d attForce = new Vec2d(0, 0);
+	protected Vec2d repForce = new Vec2d(0, 0);
+	protected Vec2d frameForce = new Vec2d(0, 0);
+	protected boolean isDragged = false;
+	protected boolean isHovered = false;
+	protected boolean isHidden = false;
+	protected boolean isLocked = false;
+	protected boolean hasContent = false;
+	protected boolean dimBandsEnabled, recBandsEnabled;
 	protected ClusterElement cluster;
+	protected float curOpacityFactor = 1f;
+	protected float opacityfactor = 1;
 
-	private Map<GLElement, List<Integer>> dimOverlap, recOverlap;
+	protected Map<GLElement, List<Integer>> dimOverlap, recOverlap;
 
-	private SortingType sortingType = SortingType.probabilitySorting;
-	private List<Integer> dimProbabilitySorting;
-	private List<Integer> recProbabilitySorting;
+	protected SortingType sortingType = SortingType.probabilitySorting;
+	protected List<Integer> dimProbabilitySorting;
+	protected List<Integer> recProbabilitySorting;
 
-	private boolean setOnlyShowXElements;
-	private int bcNr;
-	private ToolBar toolBar;
-	private HeaderBar headerBar;
-	private ThresholdBar dimThreshBar;
-	private ThresholdBar recThreshBar;
-	private GLElement heatmap;
-	private float opacityfactor = 1;
-	private float curOpacityFactor = 1f;
+	protected boolean setOnlyShowXElements;
+	protected int bcNr;
+	protected ToolBar toolBar;
+	protected HeaderBar headerBar;
+	protected ThresholdBar dimThreshBar;
+	protected ThresholdBar recThreshBar;
+	protected GLElement heatmap;
 
-	private double clusterSizeThreshold, elementCountBiggestCluster;
+	protected float recThreshold = 0.08f;
+	protected float dimThreshold = 4.5f;
+	protected double clusterSizeThreshold;
+	protected double elementCountBiggestCluster;
+	
+	int dimensionOverlapSize;
+	int recordOverlapSize;
+	private double dimSize;
+	private double recSize;
+	protected double scaleFactor = 1;
+	protected boolean isFocused = false;
+
 
 	public ClusterElement(TablePerspective data, AllClustersElement root,
 			TablePerspective x, TablePerspective l, TablePerspective z,
@@ -299,7 +308,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-	private void mouseOut() {
+	protected void mouseOut() {
 		if (isHovered && !headerBar.isClicked()) {
 			// System.out.println("out");
 			isHovered = false;
@@ -317,7 +326,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-	private void recreateVirtualArrays(List<Integer> dimIndices,
+	protected void recreateVirtualArrays(List<Integer> dimIndices,
 			List<Integer> recIndices) {
 		VirtualArray dimArray = getDimensionVirtualArray();
 		VirtualArray recArray = getRecordVirtualArray();
@@ -406,7 +415,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		data.getRecordPerspective().setLabel(recordName);
 	}
 
-	private void fireTablePerspectiveChanged() {
+	protected void fireTablePerspectiveChanged() {
 		EventPublisher.trigger(new RecordVAUpdateEvent(data.getDataDomain()
 				.getDataDomainID(), data.getRecordPerspective()
 				.getPerspectiveID(), this));
@@ -416,11 +425,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		repaintAll();
 	}
 
-	private VirtualArray getDimensionVirtualArray() {
+	protected VirtualArray getDimensionVirtualArray() {
 		return data.getDimensionPerspective().getVirtualArray();
 	}
 
-	private VirtualArray getRecordVirtualArray() {
+	protected VirtualArray getRecordVirtualArray() {
 		return data.getRecordPerspective().getVirtualArray();
 	}
 
@@ -448,12 +457,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return recOverlap.get(jElement);
 	}
 
-	// int overallOverlapSize;
-	int dimensionOverlapSize;
-	int recordOverlapSize;
-	private double dimSize;
-	private double recSize;
-	private boolean isFocused = false;
+
 
 	public int getDimensionOverlapSize() {
 		return dimensionOverlapSize;
@@ -496,7 +500,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-	private class HeaderBar extends GLButton implements ISelectionCallback {
+	protected class HeaderBar extends GLButton implements ISelectionCallback {
 
 		private boolean clicked = false;
 
@@ -581,7 +585,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	}
 
-	private class ThresholdBar extends GLElementContainer
+	protected class ThresholdBar extends GLElementContainer
 			implements
 			org.caleydo.core.view.opengl.layout2.basic.GLSlider.ISelectionCallback {
 
@@ -674,7 +678,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-	private class ToolBar extends GLElementContainer implements
+	protected class ToolBar extends GLElementContainer implements
 			ISelectionCallback {
 
 		GLButton hide, sorting, enlarge, smaller, focus, lock;
@@ -804,15 +808,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		elementCountBiggestCluster = maxClusterSize;
 	}
 
-	private double scaleFactor = 1;
 
-	private void resize() {
+
+	protected void resize() {
 		setSize((float) (dimSize * scaleFactor),
 				(float) (recSize * scaleFactor));
 		relayout();
 	}
 
-	private void focusThisCluster() {
+	protected void focusThisCluster() {
 		this.isFocused = !this.isFocused;
 		HeatMapElement hm = (HeatMapElement) heatmap;
 		if (isFocused) {
@@ -940,7 +944,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-	private void sort(SortingType type) {
+	protected void sort(SortingType type) {
 		switch (type) {
 		case probabilitySorting:
 			sortingType = SortingType.probabilitySorting;
@@ -1037,7 +1041,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return getRecordVirtualArray().indexOf(value);
 	}
 
-	private void rebuildMyData(boolean isGlobal) {
+	protected void rebuildMyData(boolean isGlobal) {
 		if (isLocked)
 			return;
 		Table L = l.getDataDomain().getTable();
