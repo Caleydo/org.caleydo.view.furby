@@ -45,6 +45,7 @@ import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
+import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 
 /**
@@ -70,6 +71,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 	private GLElement recordLabel;
 	private GLElement clusterMinSizeLabel;
 	private GLButton clearHiddenClusterButton;
+	private GLButton specialDimButton;
 	private List<String> clearHiddenButtonTooltipList = new ArrayList<>();
 	private TablePerspective x;
 
@@ -103,7 +105,19 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		clearHiddenClusterButton.setCallback(this);
 		clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
 		this.add(clearHiddenClusterButton);
+		specialDimButton = new GLButton(EButtonMode.BUTTON);
+		specialDimButton.setRenderer(new IGLRenderer() {
 
+			@Override
+			public void render(GLGraphics g, float w, float h, GLElement parent) {
+				g.drawText("Add Special Dim Elements", 18, 5, w, 14);
+
+			}
+		});
+		specialDimButton.setCallback(this);
+		specialDimButton.setTooltip("Add special Elements");
+		this.add(specialDimButton);
+		
 		this.dimBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
 		dimBandVisibilityButton.setRenderer(GLButton
 				.createCheckRenderer("Dimension Bands"));
@@ -176,6 +190,16 @@ public class GlobalToolBarElement extends GLElementContainer implements
 					.setTooltip("Currently no Clusters are hidden");
 			setClearHiddenButtonRenderer();
 			EventPublisher.trigger(new UnhidingClustersEvent());
+		} else if (button == specialDimButton) {
+			List<Integer> list= new ArrayList<>();
+			list.add(1);
+			list.add(2);
+			list.add(3);
+			list.add(4);
+			list.add(5);
+			list.add(6);
+			list.add(57);
+			EventPublisher.trigger(new SpecialClusterAddedEvent(list, true));
 		}
 		boolean isBandSorting = bandSortingModeButton.isSelected();
 		EventPublisher.trigger(new SortingChangeEvent(

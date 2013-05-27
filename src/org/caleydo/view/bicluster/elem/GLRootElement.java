@@ -21,6 +21,7 @@ package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec4f;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -36,6 +37,7 @@ import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
+import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 
 /**
  * @author user
@@ -47,9 +49,9 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	private GlobalToolBarElement globalToolBar = new GlobalToolBarElement();
 
-	/**
-	 *
-	 */
+	private TablePerspective x, l, z;
+	private ExecutorService executor;
+
 	public GLRootElement() {
 		setLayout(this);
 	}
@@ -59,12 +61,16 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		super.init(context);
 		// show the global toolbar as a popup
 		context.getPopupLayer().show(globalToolBar,
-				new Vec4f(Float.NaN, 0, 200, 280),
+				new Vec4f(Float.NaN, 0, 200, 310),
 				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE);
 	}
 
 	public void setData(List<TablePerspective> list, TablePerspective x,
 			TablePerspective l, TablePerspective z, ExecutorService executor) {
+		this.x = x;
+		this.l = l;
+		this.z = z;
+		this.executor = executor;
 		globalToolBar.setXTablePerspective(x);
 		if (clusters.size() > 0)
 			clusters.clear();
@@ -83,7 +89,6 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		}
 		clusters.setToolbar(globalToolBar);
 	}
-
 
 	public void createBands() {
 		if (bands == null)
@@ -130,8 +135,10 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				: maxDimClusterElements;
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
-			double recSize = i.getNumberOfRecElements() * maxClusterRecSize / maxRecClusterElements;
-			double dimSize = i.getNumberOfDimElements() * maxClusterDimSize / maxDimClusterElements;
+			double recSize = i.getNumberOfRecElements() * maxClusterRecSize
+					/ maxRecClusterElements;
+			double dimSize = i.getNumberOfDimElements() * maxClusterDimSize
+					/ maxDimClusterElements;
 			i.setClusterSize(dimSize, recSize, maxSize);
 			i.setVisibility();
 			i.relayout();
@@ -151,6 +158,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	}
 
 	public void recalculateOverlap(boolean dimBands, boolean recBands) {
+		this.dimBands = dimBands;
+		this.recBands = recBands;
 		for (GLElement iGL : clusters) {
 			((ClusterElement) iGL).calculateOverlap(dimBands, recBands);
 		}
@@ -164,8 +173,15 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	int bandCount = 0;
 
+	int count = 0;
+
+	private int smallClusterSize = 100;
+	private int largeClusterSize = 150;
+
+	boolean dimBands, recBands;
+	
 	@ListenTo
-	public void listenTo(CreateBandsEvent event) {
+	private void listenTo(CreateBandsEvent event) {
 		bandCount++;
 		if (bandCount == clusters.size()) {
 			createBands();
@@ -173,32 +189,39 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		}
 	}
 
-	int count = 0;
-
 	@ListenTo
-	public void listenTo(RecalculateOverlapEvent event) {
+	private void listenTo(RecalculateOverlapEvent event) {
 		if (event.isGlobal())
 			count++;
 		else {
-			recalculateOverlap(event.isDimBandEnabled(), event.isRecBandEnabled());
+			recalculateOverlap(event.isDimBandEnabled(),
+					event.isRecBandEnabled());
 			count = 0;
 			return;
 		}
 		if (count == clusters.size()) {
-			recalculateOverlap(event.isDimBandEnabled(), event.isRecBandEnabled());
+			recalculateOverlap(event.isDimBandEnabled(),
+					event.isRecBandEnabled());
 			count = 0;
 		}
 	}
 
-	private int smallClusterSize = 100;
-	private int largeClusterSize = 150;
-
 	@ListenTo
-	public void listenTo(LZThresholdChangeEvent event) {
+	private void listenTo(LZThresholdChangeEvent event) {
 		if (event.isFixedClusterCount())
 			curClusterSize = smallClusterSize;
 		else
 			curClusterSize = largeClusterSize;
 		// setClusterSizes();
+	}
+
+	@ListenTo
+	private void listenTo(SpecialClusterAddedEvent event) {
+		ClusterElement specialCluster = new SpecialGeneClusterElement(x, clusters, x, l, z, executor,
+				event.getElements());
+		specialCluster.setLocation(1000, 1000);
+		clusters.add(specialCluster);
+		setClusterSizes();
+		recalculateOverlap(dimBands, recBands);
 	}
 }

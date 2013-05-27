@@ -128,7 +128,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	protected HeaderBar headerBar;
 	protected ThresholdBar dimThreshBar;
 	protected ThresholdBar recThreshBar;
-	protected GLElement heatmap;
+	protected GLElement content;
 
 	protected float recThreshold = 0.08f;
 	protected float dimThreshold = 4.5f;
@@ -139,7 +139,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	int recordOverlapSize;
 	private double dimSize;
 	private double recSize;
-	protected double scaleFactor = 1;
+	protected double scaleFactor;
 	protected boolean isFocused = false;
 
 
@@ -161,6 +161,21 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.add(headerBar);
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
+		initContent();
+		setVisibility();
+		resetScaleFactor();
+		this.onPick(new IPickingListener() {
+
+			@Override
+			public void pick(Pick pick) {
+				onPicked(pick);
+			}
+		});
+		this.setLayoutData(MoveTransitions.MOVE_AND_GROW_LINEAR);
+		this.cluster = this;
+	}
+
+	protected void initContent() {
 		final HeatMapElement heatmapImpl = new HeatMapElement(data, this,
 				EDetailLevel.HIGH);
 
@@ -171,20 +186,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		// heatmapImpl.setDimensionLabels(EShowLabels.RIGHT);
 		// heatmap = new ScrollingDecorator(heatmapImpl, new ScrollBar(true),
 		// new ScrollBar(false), 5);
-		heatmap = heatmapImpl;
-		heatmap.setzDelta(0.5f);
+		content = heatmapImpl;
+		content.setzDelta(0.5f);
 		// setzDelta(f);
-		this.add(heatmap);
-		setVisibility(EVisibility.PICKABLE);
-		this.onPick(new IPickingListener() {
-
-			@Override
-			public void pick(Pick pick) {
-				onPicked(pick);
-			}
-		});
-		this.setLayoutData(MoveTransitions.MOVE_AND_GROW_LINEAR);
-		this.cluster = this;
+		this.add(content);
 	}
 
 	@Override
@@ -227,6 +232,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		g.color(java.awt.Color.black);
+//		if (getID().contains("Special")){
+//			System.out.println("stop");
+//		}
 		if (isHovered) {
 			g.fillRect(-20, -20, w < 55 ? 120 : w + 65, h < 80 ? 150 : h + 70);
 		}
@@ -351,6 +359,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
+		if (getID().contains("10")) {
+			System.out.println("stzop");
+		}
 		this.dimBandsEnabled = dimBandsEnabled;
 		this.recBandsEnabled = recBandsEnabled;
 		dimOverlap = new HashMap<>();
@@ -368,6 +379,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				eIndizes = new ArrayList<Integer>(myDimIndizes);
 				eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
 				dimOverlap.put(element, eIndizes);
+				if (getID().contains("10") && eIndizes.size() > 0)
+					System.out.println("halt");
 				dimensionOverlapSize += eIndizes.size();
 			} else {
 				dimOverlap.put(element, new ArrayList<Integer>());
@@ -375,6 +388,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			if (recBandsEnabled) {
 				eIndizes = new ArrayList<Integer>(myRecIndizes);
 				eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
+				if (getID().contains("10") && eIndizes.size() > 0)
+					System.out.println("halt");
 				recOverlap.put(element, eIndizes);
 				recordOverlapSize += eIndizes.size();
 			} else {
@@ -407,6 +422,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	public void setFrameForce(Vec2d frameForce) {
+//		if (frameForce.x() > 100) {
+//			System.out.println(getID() + ": Frame Force X zu stark");
+//			frameForce.setX(100);
+//		} 
+//		if ( frameForce.y() > 100){
+//			System.out.println(getID() +  ": Frame Force Y zu stark");
+//			frameForce.setY(100);
+//		}
 		this.frameForce = frameForce;
 	}
 
@@ -492,11 +515,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			dimthreshbar.setBounds(-1, -20, 0, 0);
 			recthreshbar.setBounds(-20, -1, 0, 0);
 		}
-		IGLLayoutElement content = children.get(4);
+		IGLLayoutElement igllContent = children.get(4);
 		if (isFocused) {
-			content.setBounds(0, 0, w + 79, h + 79);
+			igllContent.setBounds(0, 0, w + 79, h + 79);
 		} else {
-			content.setBounds(0, 0, w, h);
+			igllContent.setBounds(0, 0, w, h);
 		}
 	}
 
@@ -770,12 +793,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				sort(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
 						: SortingType.probabilitySorting);
 			} else if (button == enlarge) {
-				scaleFactor += 0.6;
-				heatmap.setzDelta(1f);
+				upscale();
+				content.setzDelta(1f);
 				resize();
 			} else if (button == smaller) {
-				scaleFactor = 1;
-				heatmap.setzDelta(0.5f);
+				resetScaleFactor();
+				content.setzDelta(0.5f);
 				resize();
 				EventPublisher.trigger(new FocusChangeEvent(null));
 			} else if (button == focus) {
@@ -786,6 +809,16 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 						: "Lock this cluster. It will not recieve threshold updates.");
 			}
 		}
+
+
+	}
+
+	protected void upscale() {
+		scaleFactor += 0.6;
+	}
+
+	protected void resetScaleFactor() {
+		scaleFactor = 1;
 	}
 
 	private boolean wasResizedWhileHovered = false;
@@ -818,7 +851,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	protected void focusThisCluster() {
 		this.isFocused = !this.isFocused;
-		HeatMapElement hm = (HeatMapElement) heatmap;
+		HeatMapElement hm = (HeatMapElement) content;
 		if (isFocused) {
 			scaleFactor = scaleFactor >= 4 ? 4 : 3;
 			hm.setDimensionLabels(EShowLabels.RIGHT);
@@ -828,7 +861,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			resize();
 			EventPublisher.trigger(new FocusChangeEvent(this));
 		} else {
-			scaleFactor = 1;
+			resetScaleFactor();
 			hm.setDimensionLabels(EShowLabels.NONE);
 			hm.setRecordLabels(EShowLabels.NONE);
 			hm.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
@@ -842,7 +875,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	private void hideThisCluster() {
 		isHidden = true;
-		setVisibility(EVisibility.NONE);
+		setVisibility();
 		isHovered = false;
 		relayout();
 		allClusters.setHooveredElement(null);
@@ -857,7 +890,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			return;
 		if (!isFocused)
 			return;
-		scaleFactor = 1;
+		resetScaleFactor();
 		resize();
 		this.isFocused = false;
 	}
@@ -894,6 +927,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@ListenTo
 	private void listenTo(LZThresholdChangeEvent event) {
+		if (getID().contains("Special")) {
+			System.out.println("Threshold Change");
+		}
 		if (!event.isGlobalEvent()) {
 			return;
 		}
@@ -924,7 +960,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
 			boolean setXElements, String id, int bcNr, double maxDim,
 			double maxRec, double minDim, double minRec) {
-		data.setLabel(id);
+		setLabel(id);
 		if (maxDim >= 0 && maxRec >= 0) {
 			dimThreshBar.updateSliders(maxDim, minDim);
 			recThreshBar.updateSliders(maxRec, minRec);
@@ -933,13 +969,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		recProbabilitySorting = new ArrayList<Integer>(recIndices);
 		this.bcNr = bcNr;
 		this.setOnlyShowXElements = setXElements;
+		setHasContent(dimIndices, recIndices);
+		setVisibility();
+	}
+
+	protected void setLabel(String id) {
+		data.setLabel(id);
+	}
+
+	protected void setHasContent(List<Integer> dimIndices,
+			List<Integer> recIndices) {
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
 			hasContent = true;
-			if (!isHidden)
-				setVisibility(EVisibility.PICKABLE);
 			recreateVirtualArrays(dimIndices, recIndices);
 		} else {
-			setVisibility(EVisibility.NONE);
 			hasContent = false;
 		}
 	}
