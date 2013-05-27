@@ -223,5 +223,14 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		clusters.add(specialCluster);
 		setClusterSizes();
 		recalculateOverlap(dimBands, recBands);
+		for (GLElement start : clusters) {
+			if (start == specialCluster) continue;
+			if (!event.isDimensionCluster())
+				bands.add(new RecBandElement(start, specialCluster, bands));
+			else
+				bands.add(new DimBandElement(start, specialCluster, bands));
+		}
+		bands.updateSelection();
+		relayout();
 	}
 }
