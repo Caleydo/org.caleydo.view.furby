@@ -1,5 +1,6 @@
 package org.caleydo.view.bicluster.elem;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -8,6 +9,10 @@ import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.view.bicluster.elem.ClusterElement.HeaderBar;
+import org.caleydo.view.bicluster.elem.ClusterElement.ThresholdBar;
+import org.caleydo.view.bicluster.elem.ClusterElement.ToolBar;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
@@ -41,11 +46,49 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 
 	@Override
 	protected void initContent() {
+		toolBar = new ToolBar();
+		headerBar = new HeaderBar();
+		this.add(toolBar); // add a element toolbar
+		this.add(headerBar);
 		content = new SpecialClusterContent();
 		content.setzDelta(0.5f);
 		this.add(content);
 	}
 
+	public void doLayout(List<? extends IGLLayoutElement> children, float w,
+			float h) {
+		// if (isHidden) return;
+		IGLLayoutElement toolbar = children.get(0);
+		IGLLayoutElement headerbar = children.get(1);
+		if (isHovered) { // depending whether we are hovered or not, show hide
+							// the toolbar's
+			toolbar.setBounds(-18, 0, 18, 70);
+			headerbar.setBounds(0, -19, w < 55 ? 57 : w + 2, 20);
+		} else {
+			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
+			headerbar.setBounds(0, -18, w < 50 ? 50 : w, 17);
+		}
+		IGLLayoutElement igllContent = children.get(2);
+		if (isFocused) {
+			igllContent.setBounds(0, 0, w + 79, h + 79);
+		} else {
+			igllContent.setBounds(0, 0, w, h);
+		}
+	}
+	
+	
+	@Override
+	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
+			boolean setXElements, String id, int bcNr, double maxDim,
+			double maxRec, double minDim, double minRec) {
+		setLabel(id);
+		recProbabilitySorting = new ArrayList<Integer>(recIndices);
+		this.bcNr = bcNr;
+		this.setOnlyShowXElements = setXElements;
+		setHasContent(dimIndices, recIndices);
+		setVisibility();
+	}
+	
 	@Override
 	public void setClusterSize(double x, double y, double maxClusterSize) {
 		x = 30;
@@ -87,6 +130,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 			List<Integer> recIndices) {
 		this.elements = new VirtualArray(x.getDataDomain()
 				.getRecordGroupIDType(), recIndices);
+		((SpecialClusterContent)content).update();
 	}
 
 	@Override
@@ -162,14 +206,25 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 
 	private class SpecialClusterContent extends AnimatedGLElementContainer {
 
+		List<String> recordNames;
+		int width = 10;
+		
 		@Override
 		protected void renderImpl(GLGraphics g, float w, float h) {
-			g.fillRect(0, 0, w, h);
+			int last = recordNames.size();
+			int i = last;
+			for (String s: recordNames) {
+				g.drawText(s, 1, (last-i)*width, w, width);
+				i--;
+			}
 			super.renderImpl(g, w, h);
 		}
 
 		void update() {
-
+			recordNames = new ArrayList<String>();
+			for (Integer i: elements) {
+				recordNames.add(x.getDataDomain().getRecordLabel(i));
+			}
 		}
 
 		@Override

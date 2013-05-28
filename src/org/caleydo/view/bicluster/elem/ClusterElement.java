@@ -153,14 +153,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.l = l;
 		this.z = z;
 		this.executor = executor;
-		toolBar = new ToolBar();
-		headerBar = new HeaderBar();
-		dimThreshBar = new ThresholdBar(true);
-		recThreshBar = new ThresholdBar(false);
-		this.add(toolBar); // add a element toolbar
-		this.add(headerBar);
-		this.add(dimThreshBar);
-		this.add(recThreshBar);
 		initContent();
 		setVisibility();
 		resetScaleFactor();
@@ -176,6 +168,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	protected void initContent() {
+		toolBar = new ToolBar();
+		headerBar = new HeaderBar();
+		dimThreshBar = new ThresholdBar(true);
+		recThreshBar = new ThresholdBar(false);
+		this.add(toolBar); // add a element toolbar
+		this.add(headerBar);
+		this.add(dimThreshBar);
+		this.add(recThreshBar);
+		
 		final HeatMapElement heatmapImpl = new HeatMapElement(data, this,
 				EDetailLevel.HIGH);
 
@@ -359,9 +360,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
-		if (getID().contains("10")) {
-			System.out.println("stzop");
-		}
 		this.dimBandsEnabled = dimBandsEnabled;
 		this.recBandsEnabled = recBandsEnabled;
 		dimOverlap = new HashMap<>();
@@ -379,8 +377,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				eIndizes = new ArrayList<Integer>(myDimIndizes);
 				eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
 				dimOverlap.put(element, eIndizes);
-				if (getID().contains("10") && eIndizes.size() > 0)
-					System.out.println("halt");
 				dimensionOverlapSize += eIndizes.size();
 			} else {
 				dimOverlap.put(element, new ArrayList<Integer>());
@@ -388,8 +384,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			if (recBandsEnabled) {
 				eIndizes = new ArrayList<Integer>(myRecIndizes);
 				eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
-				if (getID().contains("10") && eIndizes.size() > 0)
-					System.out.println("halt");
 				recOverlap.put(element, eIndizes);
 				recordOverlapSize += eIndizes.size();
 			} else {
