@@ -94,14 +94,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		this.add(probabilitySortingModeButton);
 
 		clearHiddenClusterButton = new GLButton(EButtonMode.BUTTON);
-		clearHiddenClusterButton.setRenderer(new IGLRenderer() {
-
-			@Override
-			public void render(GLGraphics g, float w, float h, GLElement parent) {
-				g.drawText("Show all Clusters", 18, 5, w, 14);
-
-			}
-		});
+		setClearHiddenButtonRenderer();
 		clearHiddenClusterButton.setCallback(this);
 		clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
 		this.add(clearHiddenClusterButton);
@@ -110,10 +103,11 @@ public class GlobalToolBarElement extends GLElementContainer implements
 
 			@Override
 			public void render(GLGraphics g, float w, float h, GLElement parent) {
-				g.drawText("Add Special Dim Elements", 18, 5, w, 14);
-
+				g.drawText("Add dim Element", 18, 4, w, 13);
 			}
 		});
+		
+		
 		specialDimButton.setCallback(this);
 		specialDimButton.setTooltip("Add special Elements");
 		this.add(specialDimButton);
@@ -299,11 +293,12 @@ public class GlobalToolBarElement extends GLElementContainer implements
 			setText(recordLabel, x.getDataDomain().getRecordIDCategory()
 					.toString()
 					+ " Threshold");
+			
 		}
 		setText(clusterMinSizeLabel, "Minumum Cluster Size (%)");
 	}
 
-	public void setXTablePerspective(TablePerspective x) {
+	public void setXTablePerspective(final TablePerspective x) {
 		if (x == null)
 			return;
 		else
@@ -315,6 +310,15 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(x
 				.getDataDomain().getDimensionIDCategory().toString()
 				+ " Bands"));
+		specialDimButton.setRenderer(new IGLRenderer() {
+
+			@Override
+			public void render(GLGraphics g, float w, float h, GLElement parent) {
+				g.drawText("Add " + x.getDataDomain().getRecordIDCategory()
+						.toString() + " Elements", 18, 4, w, 13);
+			}
+		});
+
 	}
 
 }

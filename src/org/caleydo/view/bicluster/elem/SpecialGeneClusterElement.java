@@ -5,27 +5,22 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
-import org.caleydo.view.bicluster.elem.ClusterElement.HeaderBar;
-import org.caleydo.view.bicluster.elem.ClusterElement.ThresholdBar;
-import org.caleydo.view.bicluster.elem.ClusterElement.ToolBar;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
-import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
-import org.caleydo.view.heatmap.v2.HeatMapElement;
-import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
-import org.caleydo.view.heatmap.v2.SpacingStrategies;
 
 public final class SpecialGeneClusterElement extends ClusterElement {
 
 	private VirtualArray elements;
+	private float width = 10f;
 
 	public SpecialGeneClusterElement(TablePerspective data,
 			AllClustersElement root, TablePerspective x, TablePerspective l,
@@ -35,6 +30,11 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 		content.setzDelta(0.5f);
 		toolBar.remove(3);
 		toolBar.remove(1);
+		toolBar.remove(1);
+		toolBar.remove(1);
+		toolBar.remove(1);
+		standardScaleFactor = 3;
+		resetScaleFactor();
 	}
 
 	private SpecialGeneClusterElement(TablePerspective data,
@@ -62,7 +62,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 		IGLLayoutElement headerbar = children.get(1);
 		if (isHovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
-			toolbar.setBounds(-18, 0, 18, 70);
+			toolbar.setBounds(-18, 0, 18, 20);
 			headerbar.setBounds(0, -19, w < 55 ? 57 : w + 2, 20);
 		} else {
 			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
@@ -78,6 +78,19 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 	
 	
 	@Override
+	protected void renderImpl(GLGraphics g, float w, float h) {
+		super.renderImpl(g, w, h);
+		float[] color = { 0, 0, 0, curOpacityFactor };
+		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
+		g.color(color);
+		if (isHovered) {
+			g.color(highlightedColor);
+		}
+		g.drawRect(-1, -1, w + 2, h + 3);
+
+	}
+	
+	@Override
 	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
 			boolean setXElements, String id, int bcNr, double maxDim,
 			double maxRec, double minDim, double minRec) {
@@ -91,7 +104,8 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 	
 	@Override
 	public void setClusterSize(double x, double y, double maxClusterSize) {
-		x = 30;
+		x = 100f/scaleFactor;
+		y = width*elements.size()/scaleFactor;
 		super.setClusterSize(x, y, maxClusterSize);
 	}
 
@@ -156,27 +170,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 	@Override
 	protected void focusThisCluster() {
 		// TODO
-		this.isFocused = !this.isFocused;
-		HeatMapElement hm = (HeatMapElement) content;
-		if (isFocused) {
-			scaleFactor = scaleFactor >= 4 ? 4 : 3;
-			hm.setDimensionLabels(EShowLabels.RIGHT);
-			hm.setRecordLabels(EShowLabels.RIGHT);
-			hm.setRecordSpacingStrategy(SpacingStrategies.fishEye(18));
-			hm.setDimensionSpacingStrategy(SpacingStrategies.fishEye(18));
-			resize();
-			EventPublisher.trigger(new FocusChangeEvent(this));
-		} else {
-			scaleFactor = 1;
-			hm.setDimensionLabels(EShowLabels.NONE);
-			hm.setRecordLabels(EShowLabels.NONE);
-			hm.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
-			hm.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
-			resize();
-			EventPublisher.trigger(new FocusChangeEvent(null));
-			mouseOut();
-		}
-		repaintAll();
+
 	}
 
 	@Override
@@ -195,27 +189,22 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 	}
 
 	@Override
-	protected void resetScaleFactor() {
-		scaleFactor = 3;
-	}
-
-	@Override
 	protected void upscale() {
 		scaleFactor += 1.2;
 	}
 
+
 	private class SpecialClusterContent extends AnimatedGLElementContainer {
 
 		List<String> recordNames;
-		int width = 10;
+
 		
 		@Override
 		protected void renderImpl(GLGraphics g, float w, float h) {
-			int last = recordNames.size();
-			int i = last;
+			int i = 0;
 			for (String s: recordNames) {
-				g.drawText(s, 1, (last-i)*width, w, width);
-				i--;
+				g.drawText(s, 1, i*width-2, w, width);
+				i++;
 			}
 			super.renderImpl(g, w, h);
 		}

@@ -134,14 +134,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	protected float dimThreshold = 4.5f;
 	protected double clusterSizeThreshold;
 	protected double elementCountBiggestCluster;
-	
+
 	int dimensionOverlapSize;
 	int recordOverlapSize;
 	private double dimSize;
 	private double recSize;
 	protected double scaleFactor;
+	protected double standardScaleFactor;
 	protected boolean isFocused = false;
-
 
 	public ClusterElement(TablePerspective data, AllClustersElement root,
 			TablePerspective x, TablePerspective l, TablePerspective z,
@@ -153,6 +153,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.l = l;
 		this.z = z;
 		this.executor = executor;
+		standardScaleFactor = 1;
 		initContent();
 		setVisibility();
 		resetScaleFactor();
@@ -176,7 +177,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.add(headerBar);
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
-		
+
 		final HeatMapElement heatmapImpl = new HeatMapElement(data, this,
 				EDetailLevel.HIGH);
 
@@ -233,9 +234,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		g.color(java.awt.Color.black);
-//		if (getID().contains("Special")){
-//			System.out.println("stop");
-//		}
+		// if (getID().contains("Special")){
+		// System.out.println("stop");
+		// }
 		if (isHovered) {
 			g.fillRect(-20, -20, w < 55 ? 120 : w + 65, h < 80 ? 150 : h + 70);
 		}
@@ -416,14 +417,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	public void setFrameForce(Vec2d frameForce) {
-//		if (frameForce.x() > 100) {
-//			System.out.println(getID() + ": Frame Force X zu stark");
-//			frameForce.setX(100);
-//		} 
-//		if ( frameForce.y() > 100){
-//			System.out.println(getID() +  ": Frame Force Y zu stark");
-//			frameForce.setY(100);
-//		}
+		// if (frameForce.x() > 100) {
+		// System.out.println(getID() + ": Frame Force X zu stark");
+		// frameForce.setX(100);
+		// }
+		// if ( frameForce.y() > 100){
+		// System.out.println(getID() + ": Frame Force Y zu stark");
+		// frameForce.setY(100);
+		// }
 		this.frameForce = frameForce;
 	}
 
@@ -473,8 +474,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	public List<Integer> getRecOverlap(GLElement jElement) {
 		return recOverlap.get(jElement);
 	}
-
-
 
 	public int getDimensionOverlapSize() {
 		return dimensionOverlapSize;
@@ -546,14 +545,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 					}
 					float[] color = { 0, 0, 0, curOpacityFactor };
 					g.textColor(color);
-					if (isHovered)
-						g.drawText(" " + (scaleFactor == 1 ? getID() : getID())
-								+ " (" + (int) (100 * scaleFactor) + "%)", 0,
-								0, 100, 12);
-					else
-						g.drawText(scaleFactor == 1 ? getID() : getID() + " ("
-								+ (int) (100 * scaleFactor) + "%)", 0, 0, 100,
+					if (isHovered) {
+//						System.out.println(scaleFactor);
+//						System.out.println(standardScaleFactor);
+						g.drawText(" "
+								+ (scaleFactor == standardScaleFactor ? getID()
+										: getID()) + " ("
+								+ (int) (100 * scaleFactor) + "%)", 0, 0, 120,
 								12);
+					} else
+						g.drawText(scaleFactor == standardScaleFactor ? getID()
+								: getID() + " (" + (int) (100 * scaleFactor)
+										+ "%)", 0, 0, 120, 12);
 
 					float[] black = { 0, 0, 0, 1 };
 					g.textColor(black);
@@ -804,7 +807,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			}
 		}
 
-
 	}
 
 	protected void upscale() {
@@ -812,7 +814,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	protected void resetScaleFactor() {
-		scaleFactor = 1;
+		System.out.println("Scale Factor set from "  + scaleFactor + " to " + standardScaleFactor);
+		scaleFactor = standardScaleFactor;
 	}
 
 	private boolean wasResizedWhileHovered = false;
@@ -834,8 +837,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 		elementCountBiggestCluster = maxClusterSize;
 	}
-
-
 
 	protected void resize() {
 		setSize((float) (dimSize * scaleFactor),
