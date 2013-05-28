@@ -67,12 +67,9 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 	public void setVisibility() {
 		if (isHidden || !hasContent)
 			setVisibility(EVisibility.NONE);
-		else if (getDimensionVirtualArray().size() / elementCountBiggestCluster > clusterSizeThreshold)
-			setVisibility(EVisibility.PICKABLE);
-		else if (getRecordVirtualArray().size() / elementCountBiggestCluster > clusterSizeThreshold)
-			setVisibility(EVisibility.PICKABLE);
 		else
-			setVisibility(EVisibility.NONE);
+			setVisibility(EVisibility.PICKABLE);
+
 	}
 
 	@Override
@@ -180,7 +177,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 			return "special clusterContent";
 		}
 	}
-	
+
 	@Override
 	protected void sort(SortingType type) {
 		// Nothing to do here

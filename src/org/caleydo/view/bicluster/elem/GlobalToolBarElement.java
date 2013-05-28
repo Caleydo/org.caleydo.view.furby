@@ -199,7 +199,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 			list.add(5);
 			list.add(6);
 			list.add(57);
-			EventPublisher.trigger(new SpecialClusterAddedEvent(list, true));
+			EventPublisher.trigger(new SpecialClusterAddedEvent(list, false));
 		}
 		boolean isBandSorting = bandSortingModeButton.isSelected();
 		EventPublisher.trigger(new SortingChangeEvent(
