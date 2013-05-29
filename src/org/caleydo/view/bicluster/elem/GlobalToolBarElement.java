@@ -22,6 +22,9 @@ package org.caleydo.view.bicluster.elem;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
@@ -47,6 +50,13 @@ import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * 
@@ -106,12 +116,11 @@ public class GlobalToolBarElement extends GLElementContainer implements
 				g.drawText("Add dim Element", 18, 4, w, 13);
 			}
 		});
-		
-		
+
 		specialDimButton.setCallback(this);
 		specialDimButton.setTooltip("Add special Elements");
 		this.add(specialDimButton);
-		
+
 		this.dimBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
 		dimBandVisibilityButton.setRenderer(GLButton
 				.createCheckRenderer("Dimension Bands"));
@@ -185,20 +194,69 @@ public class GlobalToolBarElement extends GLElementContainer implements
 			setClearHiddenButtonRenderer();
 			EventPublisher.trigger(new UnhidingClustersEvent());
 		} else if (button == specialDimButton) {
-			List<Integer> list= new ArrayList<>();
-			list.add(1);
-			list.add(2);
-			list.add(3);
-			list.add(4);
-			list.add(5);
-			list.add(6);
-			list.add(57);
-			EventPublisher.trigger(new SpecialClusterAddedEvent(list, false));
+			addSpecialRecords();
 		}
 		boolean isBandSorting = bandSortingModeButton.isSelected();
 		EventPublisher.trigger(new SortingChangeEvent(
 				isBandSorting ? SortingType.bandSorting
 						: SortingType.probabilitySorting, this));
+	}
+
+	private void addSpecialRecords() {
+		ExecutorService thread = Executors.newFixedThreadPool(1);
+		thread.submit(new Runnable() {
+
+			@Override
+			public void run() {
+				Display display = new Display();
+				Shell shell = new Shell(display, SWT.NO_TRIM | SWT.ON_TOP);
+				InputDialog dialog = new InputDialog(shell, "Adding special "
+						+ x.getDataDomain().getRecordIDCategory().toString()
+						+ " elements:", "User ',' as a seperator", "",
+						new IInputValidator() {
+
+							@Override
+							public String isValid(String newText) {
+								// TODO Auto-generated method stub
+								return null;
+							}
+
+						});
+				if (dialog.open() == Window.OK) {
+
+					List<String> listNames = new ArrayList<String>();
+					List<Integer> listIndices = new ArrayList<Integer>();
+					String s = dialog.getValue();
+					String[] records = s.split(",");
+					for (String r : records) {
+						listNames.add(r);
+					}
+					int length = x.getDataDomain().getTable().getRowIDList()
+							.size();
+					for (int i = 0; i < length; i++) {
+						for (String r : records) {
+							if (x.getDataDomain().getRecordLabel(i)
+									.compareToIgnoreCase(r) == 0)
+								listIndices.add(i);
+						}
+
+					}
+					if (listIndices.size() != 0)
+						EventPublisher.trigger(new SpecialClusterAddedEvent(
+								listIndices, false));
+					else
+						new MessageDialog(shell, "Adding special "
+								+ x.getDataDomain().getRecordIDCategory()
+										.toString() + " elements:", null,
+								"No mathching elements found. \nMake sure to use ',' as a seperator",
+								MessageDialog.ERROR, new String[] { "OK"}, 0).open();
+
+				}
+
+			}
+
+		});
+
 	}
 
 	@ListenTo
@@ -293,7 +351,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 			setText(recordLabel, x.getDataDomain().getRecordIDCategory()
 					.toString()
 					+ " Threshold");
-			
+
 		}
 		setText(clusterMinSizeLabel, "Minumum Cluster Size (%)");
 	}
@@ -314,8 +372,9 @@ public class GlobalToolBarElement extends GLElementContainer implements
 
 			@Override
 			public void render(GLGraphics g, float w, float h, GLElement parent) {
-				g.drawText("Add " + x.getDataDomain().getRecordIDCategory()
-						.toString() + " Elements", 18, 4, w, 13);
+				g.drawText("Add "
+						+ x.getDataDomain().getRecordIDCategory().toString()
+						+ " Elements", 18, 4, w, 13);
 			}
 		});
 
