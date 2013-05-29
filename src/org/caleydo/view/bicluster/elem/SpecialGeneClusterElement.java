@@ -1,5 +1,6 @@
 package org.caleydo.view.bicluster.elem;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -202,10 +203,13 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 		@Override
 		protected void renderImpl(GLGraphics g, float w, float h) {
 			int i = 0;
+			float[] color = { 0, 0, 0, curOpacityFactor };
+			g.textColor(color);
 			for (String s: recordNames) {
 				g.drawText(s, 1, i*width-2, w, width);
 				i++;
 			}
+			g.textColor(Color.black);
 			super.renderImpl(g, w, h);
 		}
 
