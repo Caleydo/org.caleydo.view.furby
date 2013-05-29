@@ -223,14 +223,9 @@ public class GlobalToolBarElement extends GLElementContainer implements
 
 						});
 				if (dialog.open() == Window.OK) {
-
-					List<String> listNames = new ArrayList<String>();
 					List<Integer> listIndices = new ArrayList<Integer>();
 					String s = dialog.getValue();
 					String[] records = s.split(",");
-					for (String r : records) {
-						listNames.add(r);
-					}
 					int length = x.getDataDomain().getTable().getRowIDList()
 							.size();
 					for (int i = 0; i < length; i++) {
@@ -311,7 +306,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		this.add(dimensionLabel);
 
 		this.remove(dimensionThresholdSlider);
-		this.dimensionThresholdSlider = new GLSlider(0, maxDimensionValue, 4.5f);
+		this.dimensionThresholdSlider = new GLSlider(0.05f, maxDimensionValue, 4.5f);
 		dimensionThresholdSlider.setCallback(this);
 		dimensionThresholdSlider.setSize(Float.NaN, 18);
 		dimensionThresholdSlider
@@ -324,7 +319,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		this.add(recordLabel);
 
 		this.remove(recordThresholdSlider);
-		this.recordThresholdSlider = new GLSlider(0, maxRecordValue, 0.08f);
+		this.recordThresholdSlider = new GLSlider(0.02f, maxRecordValue, 0.08f);
 		recordThresholdSlider.setCallback(this);
 		recordThresholdSlider.setSize(Float.NaN, 18);
 		recordThresholdSlider

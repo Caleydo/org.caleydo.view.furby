@@ -268,10 +268,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
-		// if (getID().contains("24")){
-		// System.out.println("stop");
-		// }
-
 		float[] color = { 0, 0, 0, curOpacityFactor };
 		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
