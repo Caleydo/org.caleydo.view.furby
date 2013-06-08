@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>
  *******************************************************************************/
-package org.caleydo.view.bicluster.elem;
+package org.caleydo.view.bicluster.elem.band;
 
 import java.util.List;
 
@@ -56,7 +56,7 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	}
 
 	/**
-	 * @param view
+	 * @param savedData
 	 */
 	public AllBandsElement(TablePerspective tablePerspective) {
 //		setzDelta(-3);
@@ -70,7 +70,7 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (GLElement b : this) {
-			((BandElement) b).updatePosition();
+			((BandElement) b).update();
 			b.setSize(w, h);
 			b.setLocation(0, 0);
 		}

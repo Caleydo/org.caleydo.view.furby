@@ -37,7 +37,7 @@ public class RcpGLBiClusterView extends ARcpGLViewPart {
 	public void createPartControl(Composite parent) {
 		super.createPartControl(parent);
 
-		view = new GLBiCluster(glCanvas);
+		view = new GLBiCluster(glCanvas, serializedView);
 		initializeView();
 
 		createPartControlGL();

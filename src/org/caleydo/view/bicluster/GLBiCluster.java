@@ -79,14 +79,16 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	private float sampleThreshold = 4.5f;
 	private float geneThreshold = 0.08f;
 	double maxDimThreshold = 0, maxRecThreshold = 0;
+	ASerializedView view;
 
 	private ASortingStrategy strategy;
 
 	GLRootElement rootElement;
 	private boolean setXElements = false;
 
-	public GLBiCluster(IGLCanvas glCanvas) {
+	public GLBiCluster(IGLCanvas glCanvas, ASerializedView serializedView) {
 		super(glCanvas, VIEW_TYPE, VIEW_NAME);
+		this.view = serializedView;
 	}
 
 	private List<TablePerspective> initTablePerspectives() {
@@ -271,10 +273,17 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			createBiClusterPerspectives(x, l, z);
 			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold,
 					maxRecThreshold));
-			EventPublisher.trigger(new LZThresholdChangeEvent(geneThreshold, sampleThreshold, false, true));
+			EventPublisher.trigger(new LZThresholdChangeEvent(geneThreshold,
+					sampleThreshold, false, true));
 			rootElement.createBands();
 			rootElement.setClusterSizes();
 		}
 	}
 
+	@Override
+	public void initFromSerializableRepresentation(
+			ASerializedView serializedView) {
+		// TODO Auto-generated method stub
+		super.initFromSerializableRepresentation(serializedView);
+	}
 }

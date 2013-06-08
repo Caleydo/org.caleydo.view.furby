@@ -280,23 +280,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	protected void onPicked(Pick pick) {
 		switch (pick.getPickingMode()) {
-		// case DRAGGED:
-		// if (!pick.isDoDragging()) return;
-		// if (isDragged == false) {
-		// allClusters.setDragedLayoutElement(this);
-		// }
-		// isDragged = true;
-		// setLocation(getLocation().x() + pick.getDx(), getLocation().y()
-		// + pick.getDy());
-		// relayoutParent();
-		// repaintPick();
-		// break;
-		// case CLICKED:
-		// if (!pick.isAnyDragging())pick.setDoDragging(true);
-		// break;
-		// case MOUSE_RELEASED:
-		// pick.setDoDragging(false);
-		// break;
 		case MOUSE_OVER:
 			if (!pick.isAnyDragging()) {
 				isHovered = true;
@@ -308,9 +291,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		case MOUSE_OUT:
 			mouseOut();
 			break;
-		// default:
-		// isDragged = false;
-		// allClusters.setDragedLayoutElement(null);
+		default:
+			break;
+
 		}
 	}
 
@@ -542,8 +525,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 					float[] color = { 0, 0, 0, curOpacityFactor };
 					g.textColor(color);
 					if (isHovered) {
-//						System.out.println(scaleFactor);
-//						System.out.println(standardScaleFactor);
+						// System.out.println(scaleFactor);
+						// System.out.println(standardScaleFactor);
 						g.drawText(" "
 								+ (scaleFactor == standardScaleFactor ? getID()
 										: getID()) + " ("
@@ -810,7 +793,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	protected void resetScaleFactor() {
-		System.out.println("Scale Factor set from "  + scaleFactor + " to " + standardScaleFactor);
+		System.out.println("Scale Factor set from " + scaleFactor + " to "
+				+ standardScaleFactor);
 		scaleFactor = standardScaleFactor;
 	}
 
@@ -1027,52 +1011,52 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		fireTablePerspectiveChanged();
 	}
 
-	public boolean isContinuousRecSequenze(List<Integer> overlap) {
-		List<Integer> recordArray = getRecordVirtualArray().getIDs();
-		int index = 0;
-		for (Integer i : recordArray) {
-			if (overlap.contains(i))
-				break;
-			index++;
-		}
-		if (index > recordArray.size() - overlap.size())
-			return false;
-		int done = 1;
-		for (Integer i : recordArray.subList(index, recordArray.size() - 1)) {
-			if (done++ >= overlap.size())
-				break;
-			if (!overlap.contains(i))
-				return false;
-		}
-		return true;
+
+
+	public List<List<Integer>> getListOfContinousRecSequenzes(
+			List<Integer> overlap) {
+		return getListOfContinousIDs(overlap, getRecordVirtualArray().getIDs());
 	}
 
-	public boolean isContinuousDimSequenze(List<Integer> overlap) {
-		List<Integer> recordArray = getDimensionVirtualArray().getIDs();
-		int index = 0;
-		for (Integer i : recordArray) {
-			if (overlap.contains(i))
-				break;
-			index++;
-		}
-		if (index > recordArray.size() - overlap.size())
-			return false;
-		int done = 1;
-		for (Integer i : recordArray.subList(index, recordArray.size() - 1)) {
-			if (done++ >= overlap.size())
-				break;
-			if (!overlap.contains(i))
-				return false;
-		}
-		return true;
+	public List<List<Integer>> getListOfContinousDimSequenzes(
+			List<Integer> overlap) {
+		return getListOfContinousIDs(overlap, getDimensionVirtualArray()
+				.getIDs());
 	}
 
-	public int getDimIndexOf(int value) {
-		return getDimensionVirtualArray().indexOf(value);
+	private List<List<Integer>> getListOfContinousIDs(List<Integer> overlap,
+			List<Integer> indices) {
+		List<List<Integer>> sequences = new ArrayList<List<Integer>>();
+		List<Integer> accu = new ArrayList<Integer>();
+		for (Integer i : indices) {
+			if (overlap.contains(i)) {
+				accu.add(i);
+			} else if (accu.size() > 0) { //don't add empty lists
+				sequences.add(accu);
+				accu = new ArrayList<>();
+			}
+		}
+		sequences.add(accu);
+		return sequences;
 	}
 
-	public int getRecIndexOf(int value) {
-		return getRecordVirtualArray().indexOf(value);
+//	public int getDimIndexOf(int value) {
+//		return getDimensionVirtualArray().indexOf(value);
+//	}
+//
+//	public int getRecIndexOf(int value) {
+//		return getRecordVirtualArray().indexOf(value);
+//	}
+
+	public float getDimPosOf(int index) {
+		return ((HeatMapElement) content).getDimensionCellSpace(index)
+				.getPosition();
+	}
+
+	public float getRecPosOf(int index) {
+		return ((HeatMapElement) content).getRecordCellSpace(index)
+				.getPosition();
+
 	}
 
 	protected void rebuildMyData(boolean isGlobal) {
@@ -1103,5 +1087,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				dimBandsEnabled, recBandsEnabled));
 		EventPublisher.trigger(new CreateBandsEvent(this));
 
+	}
+	
+	public int getDimIndexOf(int value) {
+		return getDimensionVirtualArray().indexOf(value);
+	}
+
+	public int getRecIndexOf(int value) {
+		return getRecordVirtualArray().indexOf(value);
 	}
 }

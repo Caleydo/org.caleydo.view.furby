@@ -33,6 +33,9 @@ import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.IPopupLayer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.view.bicluster.elem.band.AllBandsElement;
+import org.caleydo.view.bicluster.elem.band.DimensionBandElement;
+import org.caleydo.view.bicluster.elem.band.RecordBandElement;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
@@ -100,8 +103,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 						clusters.asList().size())) {
 					if (start == end)
 						continue;
-					bands.add(new RecBandElement(start, end, bands));
-					bands.add(new DimBandElement(start, end, bands));
+					bands.add(new RecordBandElement(start, end, bands));
+					bands.add(new DimensionBandElement(start, end, bands));
 				}
 				i++;
 			}
@@ -226,9 +229,9 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		for (GLElement start : clusters) {
 			if (start == specialCluster) continue;
 			if (!event.isDimensionCluster())
-				bands.add(new RecBandElement(start, specialCluster, bands));
+				bands.add(new RecordBandElement(start, specialCluster, bands));
 			else
-				bands.add(new DimBandElement(start, specialCluster, bands));
+				bands.add(new DimensionBandElement(start, specialCluster, bands));
 		}
 		bands.updateSelection();
 		relayout();
