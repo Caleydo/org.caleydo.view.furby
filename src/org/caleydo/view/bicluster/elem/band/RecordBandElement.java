@@ -19,10 +19,7 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
-import java.util.List;
-
 import org.caleydo.core.view.opengl.layout2.GLElement;
-import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
 /**
@@ -45,57 +42,46 @@ public class RecordBandElement extends BandElement {
 				recBandColor);
 	}
 
-	@Override
-	public void update() {
-		overlap = first.getRecOverlap(second);
-		int overlapSize = overlap.size();
-		if (overlapSize > 0 && first.isVisible() && second.isVisible()) {
-			setVisibility(EVisibility.PICKABLE);
 
-			// add Points TODO
-
-			band = TesselatedPolygons.band(bandPoints)
-					.setDrawBandBordersOnFill(false);
-			if (highlightPoints.size() > 0)
-				highlightBand = TesselatedPolygons.band(highlightPoints)
-						.setDrawBandBordersOnFill(false);
-		} else
-			setVisibility(EVisibility.NONE);
-		repaintAll();
-	}
 
 	@Override
 	protected void fireSelectionChanged() {
 		root.getSelectionMixin().fireRecordSelectionDelta();
-
 	}
 
-	@Override
-	public String toString() {
-		return "Record Band: " + (first == null ? "null" : first.getID()) + " "
-				+ (second == null ? "null" : second.getID());
-	}
+
 
 	@Override
 	protected void initBand() {
-		List<List<Integer>> firstSubBandIndices = first
-				.getListOfContinousRecSequenzes(overlap);
-		if (firstSubBandIndices.size() > 1) {
-			firstMergeArea = new RecBandMergeArea(first, second);
-			for (List<Integer> list : firstSubBandIndices) {
-				firstSubBands.add(new RecordSubBandElement(first, this,
-						root, list, firstMergeArea));
-			}
-		}
-		List<List<Integer>> secondSubBandIndices = second
-				.getListOfContinousRecSequenzes(overlap);
-		if (secondSubBandIndices.size() > 1) {
-			secondMergeArea = new RecBandMergeArea(second, first);
-			for (List<Integer> list : secondSubBandIndices) {
-				secondSubBands.add(new RecordSubBandElement(second, this,
-						root, list, secondMergeArea));
-			}
-		}
-
+		// TODO Auto-generated method stub
+		
 	}
+
+
+
+
+
+	@Override
+	public void updateStructure() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+	@Override
+	public void updatePosition() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+	@Override
+	public void updateSelection() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
 }

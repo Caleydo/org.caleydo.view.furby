@@ -80,6 +80,7 @@ import org.caleydo.view.bicluster.sorting.BandSorting;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
+import org.caleydo.view.heatmap.v2.CellSpace;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
@@ -1011,14 +1012,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		fireTablePerspectiveChanged();
 	}
 
-
-
 	public List<List<Integer>> getListOfContinousRecSequenzes(
 			List<Integer> overlap) {
 		return getListOfContinousIDs(overlap, getRecordVirtualArray().getIDs());
 	}
 
-	public List<List<Integer>> getListOfContinousDimSequenzes(
+	public List<List<Integer>> getListOfContinousDimSequences(
 			List<Integer> overlap) {
 		return getListOfContinousIDs(overlap, getDimensionVirtualArray()
 				.getIDs());
@@ -1027,30 +1026,41 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private List<List<Integer>> getListOfContinousIDs(List<Integer> overlap,
 			List<Integer> indices) {
 		List<List<Integer>> sequences = new ArrayList<List<Integer>>();
+		if (overlap.size() == 0)
+			return sequences;
 		List<Integer> accu = new ArrayList<Integer>();
+//		if (getID().contains("17"))
+//			System.out.println("Test");
 		for (Integer i : indices) {
 			if (overlap.contains(i)) {
 				accu.add(i);
-			} else if (accu.size() > 0) { //don't add empty lists
+			} else if (accu.size() > 0) { // don't add empty lists
 				sequences.add(accu);
 				accu = new ArrayList<>();
 			}
 		}
-		sequences.add(accu);
+		if (accu.size() > 0)
+			sequences.add(accu);
 		return sequences;
 	}
 
-//	public int getDimIndexOf(int value) {
-//		return getDimensionVirtualArray().indexOf(value);
-//	}
-//
-//	public int getRecIndexOf(int value) {
-//		return getRecordVirtualArray().indexOf(value);
-//	}
+	// public int getDimIndexOf(int value) {
+	// return getDimensionVirtualArray().indexOf(value);
+	// }
+	//
+	// public int getRecIndexOf(int value) {
+	// return getRecordVirtualArray().indexOf(value);
+	// }
 
 	public float getDimPosOf(int index) {
-		return ((HeatMapElement) content).getDimensionCellSpace(index)
-				.getPosition();
+		if (isFocused) {
+			int ind = getDimensionVirtualArray().indexOf(index);
+			CellSpace space = ((HeatMapElement) content)
+					.getDimensionCellSpace(ind);
+			return space.getPosition();
+		} else {
+			return getDimIndexOf(index)*getSize().x()/getDimensionVirtualArray().size();
+		}
 	}
 
 	public float getRecPosOf(int index) {
@@ -1088,12 +1098,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		EventPublisher.trigger(new CreateBandsEvent(this));
 
 	}
-	
+
 	public int getDimIndexOf(int value) {
 		return getDimensionVirtualArray().indexOf(value);
 	}
 
 	public int getRecIndexOf(int value) {
 		return getRecordVirtualArray().indexOf(value);
+	}
+	
+	public float getDimensionElementSize() {
+		return getSize().x() / getDimensionVirtualArray().size();
+	}
+	
+	public float getRecordElementSize() {
+		return getSize().y() / getRecordVirtualArray().size();
 	}
 }

@@ -21,7 +21,6 @@ package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec4f;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -103,7 +102,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 						clusters.asList().size())) {
 					if (start == end)
 						continue;
-					bands.add(new RecordBandElement(start, end, bands));
+//					bands.add(new RecordBandElement(start, end, bands));
 					bands.add(new DimensionBandElement(start, end, bands));
 				}
 				i++;
@@ -182,7 +181,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private int largeClusterSize = 150;
 
 	boolean dimBands, recBands;
-	
+
 	@ListenTo
 	private void listenTo(CreateBandsEvent event) {
 		bandCount++;
@@ -215,19 +214,20 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 			curClusterSize = smallClusterSize;
 		else
 			curClusterSize = largeClusterSize;
-		// setClusterSizes();
+		bands.updateStructure();
 	}
 
 	@ListenTo
 	private void listenTo(SpecialClusterAddedEvent event) {
-		ClusterElement specialCluster = new SpecialGeneClusterElement(x, clusters, x, l, z, executor,
-				event.getElements());
+		ClusterElement specialCluster = new SpecialGeneClusterElement(x,
+				clusters, x, l, z, executor, event.getElements());
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);
 		setClusterSizes();
 		recalculateOverlap(dimBands, recBands);
 		for (GLElement start : clusters) {
-			if (start == specialCluster) continue;
+			if (start == specialCluster)
+				continue;
 			if (!event.isDimensionCluster())
 				bands.add(new RecordBandElement(start, specialCluster, bands));
 			else

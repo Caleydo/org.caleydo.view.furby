@@ -70,11 +70,10 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (GLElement b : this) {
-			((BandElement) b).update();
+			((BandElement) b).updatePosition();
 			b.setSize(w, h);
 			b.setLocation(0, 0);
 		}
-		relayout();
 	}
 
 	@Override
@@ -115,7 +114,15 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 
 	@ListenTo
 	private void listenTo(RecalculateOverlapEvent event) {
+		updateStructure();
+	}
+
+	public void updateStructure() {
+		for (GLElement b : this) {
+			((BandElement) b).updateStructure();
+		}
 		relayout();
+		
 	}
 
 }

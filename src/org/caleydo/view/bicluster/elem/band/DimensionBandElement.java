@@ -19,10 +19,16 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
+import gleem.linalg.Vec2f;
+import gleem.linalg.Vec3f;
+
+import java.util.ArrayList;
 import java.util.List;
 
+import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
@@ -33,38 +39,12 @@ import org.caleydo.view.bicluster.elem.ClusterElement;
 public class DimensionBandElement extends BandElement {
 
 	private static float[] dimBandColor = Colors.NEUTRAL_GREY.getRGBA();
-	protected float leftBandClusterPos, rightBandClusterPos;
-	protected DimBandMergeArea secondMergeArea, firstMergeArea;
 
-
-	/**
-	 * @param savedData
-	 */
 	public DimensionBandElement(GLElement first, GLElement second,
 			AllBandsElement root) {
 		super(first, second, ((ClusterElement) first).getDimOverlap(second),
 				root.getSelectionMixin().getDimensionSelectionManager(), root,
 				dimBandColor);
-	}
-
-	@Override
-	public void update() {
-		overlap = first.getDimOverlap(second);
-		int overlapSize = overlap.size();
-		if (overlapSize > 0 && first.isVisible() && second.isVisible()) {
-			setVisibility(EVisibility.PICKABLE);
-
-			// TODO Add Points to Band
-
-			band = TesselatedPolygons.band(bandPoints)
-					.setDrawBandBordersOnFill(false);
-			if (highlightPoints.size() > 0)
-				highlightBand = TesselatedPolygons.band(highlightPoints)
-						.setDrawBandBordersOnFill(false);
-		} else
-			setVisibility(EVisibility.NONE);
-		repaintAll();
-
 	}
 
 	@Override
@@ -74,24 +54,55 @@ public class DimensionBandElement extends BandElement {
 
 	@Override
 	protected void initBand() {
-		List<List<Integer>> firstSubBandIndices = first
-				.getListOfContinousDimSequenzes(overlap);
-		if (firstSubBandIndices.size() > 1) {
-			DimBandMergeArea firstMergeArea = new DimBandMergeArea(first, second);
-			for (List<Integer> list : firstSubBandIndices) {
-				firstSubBands.add(new DimensionSubBandElement(first, this,
-						root, list, firstMergeArea));
-			}
+		updateStructure();
+	}
+
+	@Override
+	public void updateStructure() {
+		overlap = first.getDimOverlap(second);
+		firstSubIndices = first.getListOfContinousDimSequences(overlap);
+		firstMergeArea = new DimBandMergeArea(first, second, firstSubIndices);
+		for (List<Integer> subBand : firstSubIndices) {
+			subBands.put(subBand, firstMergeArea.getBand(subBand));
 		}
-		List<List<Integer>> secondSubBandIndices = second
-				.getListOfContinousDimSequenzes(overlap);
-		if (secondSubBandIndices.size() > 1) {
-			secondMergeArea = new DimBandMergeArea(second, first);
-			for (List<Integer> list : secondSubBandIndices) {
-				secondSubBands.add(new DimensionSubBandElement(second, this,
-						root, list, secondMergeArea));
-			}
+
+		secondSubIndices = first.getListOfContinousDimSequences(overlap);
+		secondMergeArea = new DimBandMergeArea(second, first, secondSubIndices);
+		for (List<Integer> subBand : secondSubIndices) {
+			subBands.put(subBand, secondMergeArea.getBand(subBand));
 		}
+		createBand();
+		updatePosition();
+	}
+
+	private void createBand() {
+		List<Pair<Vec3f, Vec3f>> bandPoints = new ArrayList<>();
+		Vec2f[] firstAnchor = firstMergeArea.getConnectionFromBand();
+		Vec2f[] secondAnchor = secondMergeArea.getConnectionFromBand();
+		bandPoints.add(pair((float) (firstAnchor[0].x()),
+				(float) (firstAnchor[0].y()), (float) (firstAnchor[1].x()),
+				(float) (firstAnchor[1].y())));
+		bandPoints.add(pair((float) (firstAnchor[2].x()),
+				(float) (firstAnchor[2].y()), (float) (firstAnchor[3].x()),
+				(float) (firstAnchor[3].y())));
+		bandPoints.add(pair((float) (secondAnchor[0].x()),
+				(float) (secondAnchor[0].y()), (float) (secondAnchor[1].x()),
+				(float) (secondAnchor[1].y())));
+		bandPoints.add(pair((float) (secondAnchor[2].x()),
+				(float) (secondAnchor[2].y()), (float) (secondAnchor[3].x()),
+				(float) (secondAnchor[3].y())));
+		this.band = TesselatedPolygons.band(bandPoints);
+	}
+
+	@Override
+	public void updatePosition() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void updateSelection() {
+		// TODO Auto-generated method stub
 
 	}
 

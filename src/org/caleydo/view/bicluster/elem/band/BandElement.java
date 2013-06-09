@@ -23,6 +23,7 @@ import gleem.linalg.Vec3f;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
@@ -62,9 +63,11 @@ public abstract class BandElement extends PickableGLElement {
 	protected SelectionManager selectionManager;
 	protected AllBandsElement root;
 
-	protected List<Pair<Vec3f, Vec3f>> bandPoints;
+	protected BandMergeArea secondMergeArea, firstMergeArea;
 	protected Band band;
-	protected List<BandElement> firstSubBands, secondSubBands;
+	protected Map<List<Integer>, Band> subBands, highlightedSubBands;
+	protected List<List<Integer>> firstSubIndices;
+	protected List<List<Integer>> secondSubIndices;
 	protected List<Pair<Vec3f, Vec3f>> highlightPoints;
 	protected Band highlightBand;
 	protected float[] highlightColor;
@@ -121,12 +124,6 @@ public abstract class BandElement extends PickableGLElement {
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		float[] bandColor;
 		if (isVisible()) {
-			if (firstSubBands != null)
-				for (BandElement b : firstSubBands)
-					b.renderImpl(g, w, h);
-			if (secondSubBands != null)
-				for (BandElement b : secondSubBands)
-					b.renderImpl(g, w, h);
 			if (isHighlighted())
 				bandColor = highlightColor;
 			else if (isHovered())
@@ -137,22 +134,46 @@ public abstract class BandElement extends PickableGLElement {
 				g.color(bandColor[0], bandColor[1], bandColor[2],
 						0.8f * curOpacityFactor);
 				g.drawPath(band);
+				if (subBands != null)
+					for (Band b : subBands.values()) {
+						g.drawPath(b);
+					}
 				g.color(bandColor[0], bandColor[1], bandColor[2],
 						0.5f * curOpacityFactor);
 				g.fillPolygon(band);
+				if (subBands != null)
+					for (Band b : subBands.values()) {
+						g.fillPolygon(b);
+					}
 			}
 			if (highlightOverlap.size() > 0) {
 				g.color(highlightColor[0], highlightColor[1],
 						highlightColor[2], 0.8f);
 				g.drawPath(highlightBand);
+				if (subBands != null)
+					for (Band b : highlightedSubBands.values()) {
+						g.drawPath(b);
+					}
 				g.color(highlightColor[0], highlightColor[1],
 						highlightColor[2], 0.5f);
 				g.fillPolygon(highlightBand);
+				if (subBands != null)
+					for (Band b : highlightedSubBands.values()) {
+						g.fillPolygon(b);
+					}
 			} else if (hoverOverlap.size() > 0) {
 				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
 				g.drawPath(highlightBand);
+				if (subBands != null)
+					for (Band b : highlightedSubBands.values()) {
+						g.drawPath(b);
+					}
 				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
 				g.fillPolygon(highlightBand);
+				if (subBands != null)
+					for (Band b : highlightedSubBands.values()) {
+						g.fillPolygon(b);
+					}
 			}
 		}
 	}
@@ -174,13 +195,10 @@ public abstract class BandElement extends PickableGLElement {
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (isVisible() && !isAnyClusterHovered) {
-			if (firstSubBands != null)
-				for (BandElement b : firstSubBands)
-					b.renderPickImpl(g, w, h);
-			if (secondSubBands != null)
-				for (BandElement b : secondSubBands)
-					b.renderPickImpl(g, w, h);
 			g.color(defaultColor);
+			if (subBands != null)
+				for (Band b : subBands.values())
+					g.fillPolygon(b);
 			if (highlightBand != null)
 				g.fillPolygon(highlightBand);
 			if (band != null)
@@ -214,7 +232,7 @@ public abstract class BandElement extends PickableGLElement {
 
 	public void deselect() {
 		highlightOverlap = new ArrayList<>();
-		update();
+		updateSelection();
 		repaint();
 	}
 
@@ -251,7 +269,11 @@ public abstract class BandElement extends PickableGLElement {
 		selectElement();
 	}
 
-	public abstract void update();
+	public abstract void updateStructure();
+
+	public abstract void updatePosition();
+
+	public abstract void updateSelection();
 
 	protected abstract void fireSelectionChanged();
 
@@ -263,7 +285,7 @@ public abstract class BandElement extends PickableGLElement {
 		highlightOverlap = new ArrayList<>(
 				selectionManager.getElements(selectionType));
 		highlightOverlap.retainAll(overlap);
-		update();
+		updateSelection();
 	}
 
 	protected float curOpacityFactor = 1;
