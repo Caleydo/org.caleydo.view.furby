@@ -1,10 +1,12 @@
 package org.caleydo.view.bicluster.elem.band;
 
 import gleem.linalg.Vec2f;
+import gleem.linalg.Vec3f;
 
 import java.util.List;
 
 import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
@@ -55,7 +57,7 @@ public class RecBandMergeArea extends BandMergeArea {
 	}
 
 	@Override
-	protected Vec2f[] getConnectionFromBand() {
+	protected List<Pair<Vec3f, Vec3f>> getConnectionFromBand() {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -1,9 +1,11 @@
 package org.caleydo.view.bicluster.elem.band;
 
 import gleem.linalg.Vec2f;
+import gleem.linalg.Vec3f;
 
 import java.util.List;
 
+import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
@@ -17,7 +19,7 @@ public abstract class BandMergeArea {
 	protected List<List<Integer>> allIndices;
 	protected ClusterElement cluster, other;
 	protected Vec2f[] points;
-	protected Vec2f direction, normalDirection;
+	protected Vec2f areaCenter;
 
 	public BandMergeArea(ClusterElement cluster, ClusterElement other,
 			List<List<Integer>> mergedIndices, double elementSize) {
@@ -32,5 +34,5 @@ public abstract class BandMergeArea {
 	}
 
 	protected abstract Band getBand(List<Integer> subBandIndices);
-	protected abstract Vec2f[] getConnectionFromBand();
+	protected abstract List<Pair<Vec3f, Vec3f>> getConnectionFromBand();
 }

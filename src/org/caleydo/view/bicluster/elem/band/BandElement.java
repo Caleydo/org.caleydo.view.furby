@@ -179,7 +179,7 @@ public abstract class BandElement extends PickableGLElement {
 	}
 
 	protected boolean isVisible() {
-		return getVisibility() == EVisibility.PICKABLE;
+		return first.isVisible() && second.isVisible() && overlap != null && overlap.size() > 0;
 	}
 
 	protected boolean isHighlighted() {

@@ -1029,8 +1029,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		if (overlap.size() == 0)
 			return sequences;
 		List<Integer> accu = new ArrayList<Integer>();
-//		if (getID().contains("17"))
-//			System.out.println("Test");
+		// if (getID().contains("17"))
+		// System.out.println("Test");
 		for (Integer i : indices) {
 			if (overlap.contains(i)) {
 				accu.add(i);
@@ -1059,7 +1059,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 					.getDimensionCellSpace(ind);
 			return space.getPosition();
 		} else {
-			return getDimIndexOf(index)*getSize().x()/getDimensionVirtualArray().size();
+			return getDimIndexOf(index) * getSize().x()
+					/ getDimensionVirtualArray().size();
 		}
 	}
 
@@ -1106,11 +1107,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	public int getRecIndexOf(int value) {
 		return getRecordVirtualArray().indexOf(value);
 	}
-	
+
 	public float getDimensionElementSize() {
 		return getSize().x() / getDimensionVirtualArray().size();
 	}
-	
+
 	public float getRecordElementSize() {
 		return getSize().y() / getRecordVirtualArray().size();
 	}

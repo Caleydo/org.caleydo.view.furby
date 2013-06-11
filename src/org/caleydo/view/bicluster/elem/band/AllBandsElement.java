@@ -70,10 +70,10 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (GLElement b : this) {
+			b.setBounds(0,0,w, h);
 			((BandElement) b).updatePosition();
-			b.setSize(w, h);
-			b.setLocation(0, 0);
 		}
+		relayout();
 	}
 
 	@Override

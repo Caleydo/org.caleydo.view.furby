@@ -189,7 +189,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			}
 		}
 		rootElement.recalculateOverlap(true, true);
-		rootElement.createBands();
 	}
 
 	/**
@@ -275,7 +274,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 					maxRecThreshold));
 			EventPublisher.trigger(new LZThresholdChangeEvent(geneThreshold,
 					sampleThreshold, false, true));
-			rootElement.createBands();
+//			rootElement.createBands();
 			rootElement.setClusterSizes();
 		}
 	}

@@ -28,11 +28,13 @@ import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.util.Vec2d;
 
@@ -389,6 +391,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			setLocation((ClusterElement) child, pos.x(), pos.y(), w, h);
 			i++;
 		}
+		EventPublisher.trigger(new CreateBandsEvent(this));
 	}
 
 	/**

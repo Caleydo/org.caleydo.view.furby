@@ -78,8 +78,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 			clusters.clear();
 		this.clear();
 		bands = new AllBandsElement(x);
-		this.add(bands);
 		this.add(clusters);
+		this.add(bands);
 
 		if (list != null) {
 			System.out.println("List size: " + list.size());
@@ -91,6 +91,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		}
 		clusters.setToolbar(globalToolBar);
 	}
+
 
 	public void createBands() {
 		if (bands == null)
@@ -109,6 +110,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 			}
 		}
 		bands.updateSelection();
+		bands.updateStructure();
 	}
 
 	int maxClusterRecSize = 150;
@@ -154,9 +156,10 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w,
 			float h) {
-		for (IGLLayoutElement child : children)
+		for (IGLLayoutElement child : children){
 			child.setBounds(0, 0, w, h);
-
+			child.asElement().relayout();
+		}
 	}
 
 	public void recalculateOverlap(boolean dimBands, boolean recBands) {
@@ -184,6 +187,10 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	@ListenTo
 	private void listenTo(CreateBandsEvent event) {
+		if (!(event.getSender() instanceof ClusterElement)){
+			createBands();
+			return;
+		}
 		bandCount++;
 		if (bandCount == clusters.size()) {
 			createBands();
