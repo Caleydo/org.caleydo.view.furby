@@ -21,6 +21,7 @@ package org.caleydo.view.bicluster.elem.band;
 
 import gleem.linalg.Vec3f;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.List;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Colors;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
@@ -58,20 +60,31 @@ public class DimensionBandElement extends BandElement {
 
 	@Override
 	public void updateStructure() {
+		if (!isVisible())
+			return;
 		overlap = first.getDimOverlap(second);
-		subBands = new HashMap<>();
-//		if (first.getID().contains("bicluster19")
-//				&& second.getID().contains("bicluster3"))
-//			System.out.println("halt -  DimensionBandELement - updateStructure");
+		if (overlap.size() > 0)
+			setVisibility(EVisibility.PICKABLE);
+		else
+			setVisibility(EVisibility.NONE);
+		firstSubBands = new HashMap<>();
+		secondSubBands = new HashMap<>();
+		// if (first.getID().contains("bicluster19")
+		// && second.getID().contains("bicluster3"))
+		// System.out.println("halt -  DimensionBandELement - updateStructure");
 		firstSubIndices = first.getListOfContinousDimSequences(overlap);
+		if (firstSubIndices.size() == 0)
+			return;
 		firstMergeArea = new DimBandMergeArea(first, second, firstSubIndices);
 		for (List<Integer> subBand : firstSubIndices) {
-			subBands.put(subBand, firstMergeArea.getBand(subBand));
+			firstSubBands.put(subBand, firstMergeArea.getBand(subBand));
 		}
-		secondSubIndices = first.getListOfContinousDimSequences(overlap);
+		secondSubIndices = second.getListOfContinousDimSequences(overlap);
+		if (secondSubIndices.size() == 0)
+			return;
 		secondMergeArea = new DimBandMergeArea(second, first, secondSubIndices);
 		for (List<Integer> subBand : secondSubIndices) {
-			subBands.put(subBand, secondMergeArea.getBand(subBand));
+			secondSubBands.put(subBand, secondMergeArea.getBand(subBand));
 		}
 		createBand();
 	}
@@ -98,6 +111,27 @@ public class DimensionBandElement extends BandElement {
 	public void updateSelection() {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	protected void renderImpl(GLGraphics g, float w, float h) {
+//		if (!isVisible()) return; 
+//		g.incZ();
+//		 g.color(Color.black);
+//		 if (firstMergeArea != null) {
+//		 g.drawPath(true,
+//		 ((DimBandMergeArea) firstMergeArea).getPrintablePoints());
+//		 // g.drawPath(true, ((DimBandMergeArea) firstMergeArea)
+//		 // .getPrintablePointsNonRotated());
+//		 }
+//		 if (secondMergeArea != null) {
+//		 g.drawPath(true,
+//		 ((DimBandMergeArea) secondMergeArea).getPrintablePoints());
+//		 // g.drawPath(true, ((DimBandMergeArea) secondMergeArea)
+//		 // .getPrintablePointsNonRotated());
+//		 }
+//		 g.decZ();
+		super.renderImpl(g, w, h);
 	}
 
 }

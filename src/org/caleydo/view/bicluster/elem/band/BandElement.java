@@ -65,7 +65,7 @@ public abstract class BandElement extends PickableGLElement {
 
 	protected BandMergeArea secondMergeArea, firstMergeArea;
 	protected Band band;
-	protected Map<List<Integer>, Band> subBands, highlightedSubBands;
+	protected Map<List<Integer>, Band> firstSubBands, secondSubBands, highlightedSubBands;
 	protected List<List<Integer>> firstSubIndices;
 	protected List<List<Integer>> secondSubIndices;
 	protected List<Pair<Vec3f, Vec3f>> highlightPoints;
@@ -134,52 +134,60 @@ public abstract class BandElement extends PickableGLElement {
 				g.color(bandColor[0], bandColor[1], bandColor[2],
 						0.8f * curOpacityFactor);
 				g.drawPath(band);
-				if (subBands != null)
-					for (Band b : subBands.values()) {
+				if (firstSubBands != null)
+					for (Band b : firstSubBands.values()) {
+						g.drawPath(b);
+					}
+				if (secondSubBands != null)
+					for (Band b : secondSubBands.values()) {
 						g.drawPath(b);
 					}
 				g.color(bandColor[0], bandColor[1], bandColor[2],
 						0.5f * curOpacityFactor);
 				g.fillPolygon(band);
-				if (subBands != null)
-					for (Band b : subBands.values()) {
+				if (firstSubBands != null)
+					for (Band b : firstSubBands.values()) {
+						g.fillPolygon(b);
+					}
+				if (secondSubBands != null)
+					for (Band b : secondSubBands.values()) {
 						g.fillPolygon(b);
 					}
 			}
-			if (highlightOverlap.size() > 0) {
-				g.color(highlightColor[0], highlightColor[1],
-						highlightColor[2], 0.8f);
-				g.drawPath(highlightBand);
-				if (subBands != null)
-					for (Band b : highlightedSubBands.values()) {
-						g.drawPath(b);
-					}
-				g.color(highlightColor[0], highlightColor[1],
-						highlightColor[2], 0.5f);
-				g.fillPolygon(highlightBand);
-				if (subBands != null)
-					for (Band b : highlightedSubBands.values()) {
-						g.fillPolygon(b);
-					}
-			} else if (hoverOverlap.size() > 0) {
-				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
-				g.drawPath(highlightBand);
-				if (subBands != null)
-					for (Band b : highlightedSubBands.values()) {
-						g.drawPath(b);
-					}
-				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
-				g.fillPolygon(highlightBand);
-				if (subBands != null)
-					for (Band b : highlightedSubBands.values()) {
-						g.fillPolygon(b);
-					}
-			}
+//			if (highlightOverlap.size() > 0) {
+//				g.color(highlightColor[0], highlightColor[1],
+//						highlightColor[2], 0.8f);
+//				g.drawPath(highlightBand);
+//				if (subBands != null)
+//					for (Band b : highlightedSubBands.values()) {
+//						g.drawPath(b);
+//					}
+//				g.color(highlightColor[0], highlightColor[1],
+//						highlightColor[2], 0.5f);
+//				g.fillPolygon(highlightBand);
+//				if (subBands != null)
+//					for (Band b : highlightedSubBands.values()) {
+//						g.fillPolygon(b);
+//					}
+//			} else if (hoverOverlap.size() > 0) {
+//				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
+//				g.drawPath(highlightBand);
+//				if (subBands != null)
+//					for (Band b : highlightedSubBands.values()) {
+//						g.drawPath(b);
+//					}
+//				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
+//				g.fillPolygon(highlightBand);
+//				if (subBands != null)
+//					for (Band b : highlightedSubBands.values()) {
+//						g.fillPolygon(b);
+//					}
+//			}
 		}
 	}
 
 	protected boolean isVisible() {
-		return first.isVisible() && second.isVisible() && overlap != null && overlap.size() > 0;
+		return first.isVisible() && second.isVisible() && overlap != null;
 	}
 
 	protected boolean isHighlighted() {
@@ -194,16 +202,16 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
-		if (isVisible() && !isAnyClusterHovered) {
-			g.color(defaultColor);
-			if (subBands != null)
-				for (Band b : subBands.values())
-					g.fillPolygon(b);
-			if (highlightBand != null)
-				g.fillPolygon(highlightBand);
-			if (band != null)
-				g.fillPolygon(band);
-		}
+//				if (isVisible() && !isAnyClusterHovered) {
+//			g.color(defaultColor);
+//			if (subBands != null)
+//				for (Band b : subBands.values())
+//					g.fillPolygon(b);
+//			if (highlightBand != null)
+//				g.fillPolygon(highlightBand);
+//			if (band != null)
+//				g.fillPolygon(band);
+//		}
 	}
 
 	@Override

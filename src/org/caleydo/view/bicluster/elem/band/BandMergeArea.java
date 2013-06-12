@@ -11,10 +11,10 @@ import org.caleydo.view.bicluster.elem.ClusterElement;
 
 public abstract class BandMergeArea {
 
-	protected static final float MERGING_AREA_LENGHT = 30;
+	protected static final float MERGING_AREA_LENGHT = 20;
 
 
-	protected double elementSize=20;
+	protected double elementSize=5;
 	protected int nrOfIndices;
 	protected List<List<Integer>> allIndices;
 	protected ClusterElement cluster, other;

@@ -13,9 +13,9 @@ import org.caleydo.view.bicluster.elem.ClusterElement;
 
 public class DimBandMergeArea extends BandMergeArea {
 
-	private static final float ROTATION_RADIUS = 100; 
+	private static final float ROTATION_RADIUS = 70;
 	private static final float NEAREST_POINT_Y_DISTANCE = 10;
-	private static final float BAND_CLUSTER_OFFSET = 15;
+	private static final float BAND_CLUSTER_OFFSET = 20;
 	double[] rotationMatrix = new double[4];
 	private Vec2f centerDirection;
 	private double centerAngle;
@@ -31,20 +31,57 @@ public class DimBandMergeArea extends BandMergeArea {
 	private void calcClusterDirectionVectorsAndAngle() {
 		Vec2f cLoc, oLoc;
 		Vec2f cSize, oSize;
-		cLoc = cluster.getLocation();
-		oLoc = other.getLocation();
+		cLoc = cluster.getAbsoluteLocation();
+		oLoc = other.getAbsoluteLocation();
 		cSize = cluster.getSize();
 		oSize = other.getSize();
 		Vec2f cCenter = cLoc.addScaled(0.5f, cSize);
 		Vec2f oCenter = oLoc.addScaled(0.5f, oSize);
 		centerDirection = oCenter.minus(cCenter);
-//		if (cluster.getID().contains("22") && other.getID().contains("24"));
-//			System.out.println("halt -  dimbandmergeArea");
+		// if (cluster.getID().contains("bicluster3")
+		// && other.getID().contains("bicluster19")) {
+		// // System.out.println("halt -  dimbandmergeArea");
+		// System.out.println(cLoc + " " + oLoc);
+		// // System.out.println(cluster.getID() + " " + other.getID());
+		// }
 		centerDirection.normalize();
-		centerAngle = Math.atan(centerDirection.y() / centerDirection.x());
+		// calcAngle();
+		centerAngle = Math.atan(centerDirection.x() / -centerDirection.y());
+		if (centerDirection.y() > 0)
+			centerAngle = centerAngle + Math.PI;
+
+	}
+
+	private void calcAngle() {
+		if (centerDirection.x() > 0) {
+			if (centerDirection.y() < 0) {
+				// 1
+				centerAngle = -Math.atan(-centerDirection.y()
+						/ centerDirection.x())
+						+ 3 * Math.PI / 2;
+			} else {
+				// 2
+				centerAngle = -Math.atan(centerDirection.x()
+						/ centerDirection.y())
+						+ Math.PI;
+			}
+		} else {
+			if (centerDirection.y() < 0) {
+				// 3
+				centerAngle = Math.atan(-centerDirection.x()
+						/ -centerDirection.y());
+			} else {
+				// 4
+				centerAngle = -Math.atan(centerDirection.y()
+						/ -centerDirection.x())
+						+ Math.PI / 2;
+			}
+		}
+
 	}
 
 	private void calculateRotationMatrix() {
+
 		rotationMatrix[0] = Math.cos(centerAngle);
 		rotationMatrix[1] = Math.sin(centerAngle);
 		rotationMatrix[2] = -Math.sin(centerAngle);
@@ -53,11 +90,11 @@ public class DimBandMergeArea extends BandMergeArea {
 
 	protected void setMergingAreaPoints() {
 		points = new Vec2f[4];
-		points[0] = new Vec2f((float) -elementSize * nrOfIndices / 2, 0f);
-		points[1] = new Vec2f((float) +elementSize * nrOfIndices / 2, 0f);
-		points[2] = new Vec2f((float) -elementSize * nrOfIndices / 2,
+		points[2] = new Vec2f((float) -elementSize * nrOfIndices / 2, 0f);
+		points[3] = new Vec2f((float) +elementSize * nrOfIndices / 2, 0f);
+		points[0] = new Vec2f((float) -elementSize * nrOfIndices / 2,
 				MERGING_AREA_LENGHT);
-		points[3] = new Vec2f((float) +elementSize * nrOfIndices / 2,
+		points[1] = new Vec2f((float) +elementSize * nrOfIndices / 2,
 				MERGING_AREA_LENGHT);
 	}
 
@@ -66,27 +103,39 @@ public class DimBandMergeArea extends BandMergeArea {
 		List<Pair<Vec3f, Vec3f>> bandPoints = new ArrayList<>();
 		findLeftestAndRightest(subBandIndices);
 		boolean startsOnTop = isStartsOnTop();
-		bandPoints.add(pair((float) (leftest), (float) (startsOnTop ? 0
-				: cluster.getSize().x()), (float) (rightest),
-				(float) (startsOnTop ? 0 : cluster.getSize().x())));
-		bandPoints.add(pair((float) (leftest),
-				(float) (startsOnTop ? -BAND_CLUSTER_OFFSET : cluster.getSize()
-						.x() + BAND_CLUSTER_OFFSET), (float) (rightest),
-				(float) (startsOnTop ? -BAND_CLUSTER_OFFSET : cluster.getSize()
-						.x() + BAND_CLUSTER_OFFSET)));
-
+		if (isStartsOnTop()) {
+			bandPoints.add(pair((float) (leftest), (float) (startsOnTop ? 0
+					: cluster.getSize().y()), (float) (rightest),
+					(float) (startsOnTop ? 0 : cluster.getSize().y())));
+			bandPoints.add(pair((float) (leftest),
+					(float) (startsOnTop ? -BAND_CLUSTER_OFFSET : cluster
+							.getSize().y() + BAND_CLUSTER_OFFSET),
+					(float) (rightest),
+					(float) (startsOnTop ? -BAND_CLUSTER_OFFSET : cluster
+							.getSize().y() + BAND_CLUSTER_OFFSET)));
+		} else {
+			bandPoints.add(pair((float) (rightest),
+					(float) (startsOnTop ? 0 : cluster.getSize().y()),(float) (leftest), (float) (startsOnTop ? 0
+							: cluster.getSize().y())));
+			bandPoints.add(pair((float) (rightest),
+					(float) (startsOnTop ? -BAND_CLUSTER_OFFSET : cluster
+							.getSize().y() + BAND_CLUSTER_OFFSET),(float) (leftest),
+							(float) (startsOnTop ? -BAND_CLUSTER_OFFSET : cluster
+									.getSize().y() + BAND_CLUSTER_OFFSET)));
+		}
 		int startIndex = getIndexOf(subBandIndices);
 		int size = subBandIndices.size();
 		List<Pair<Vec3f, Vec3f>> mergeAreaPoints = new ArrayList<>();
 		mergeAreaPoints.add(pair((float) (points[0].x() + startIndex
+				* elementSize),
+				(float) (points[0].y() + MERGING_AREA_LENGHT / 2),
+				(float) (points[0].x() + (startIndex + size) * elementSize),
+				(float) (points[0].y() + MERGING_AREA_LENGHT / 2)));
+		mergeAreaPoints.add(pair((float) (points[0].x() + startIndex
 				* elementSize), (float) (points[0].y()),
 				(float) (points[0].x() + (startIndex + size) * elementSize),
 				(float) (points[0].y())));
-		mergeAreaPoints.add(pair((float) (points[0].x() + startIndex
-				* elementSize),
-				(float) (points[0].y() - MERGING_AREA_LENGHT / 2),
-				(float) (points[0].x() + (startIndex + size) * elementSize),
-				(float) (points[0].y() - MERGING_AREA_LENGHT / 2)));
+//		mergeAreaPoints = mirrorOnY(mergeAreaPoints);
 		mergeAreaPoints = translateForRotation(mergeAreaPoints);
 		mergeAreaPoints = rotate(mergeAreaPoints);
 		mergeAreaPoints = translateToClusterRelativeCoordinates(mergeAreaPoints);
@@ -96,21 +145,47 @@ public class DimBandMergeArea extends BandMergeArea {
 		return TesselatedPolygons.band(bandPoints);
 	}
 
+
 	private int getIndexOf(List<Integer> subBandIndices) {
 		int index = 0;
 		int stopIndex = allIndices.indexOf(subBandIndices);
 		int i = 0;
-		for (List<Integer> list: allIndices) {
-			if (i++ >=stopIndex) break;
-			index+=list.size();
+		for (List<Integer> list : allIndices) {
+			if (i++ >= stopIndex)
+				break;
+			index += list.size();
 		}
 		return index;
+	}
+
+	// for debugging
+	public Vec2f[] getPrintablePoints() {
+		List<Pair<Vec3f, Vec3f>> pointPairs = new ArrayList<>();
+		pointPairs.add(pair((float) (points[0].x()), (float) (points[0].y()),
+				(float) (points[1].x()), (float) (points[1].y())));
+		pointPairs.add(pair((float) (points[2].x()), (float) (points[2].y()),
+				(float) (points[3].x()), (float) (points[3].y())));
+		pointPairs = translateForRotation(pointPairs);
+		pointPairs = rotate(pointPairs);
+		pointPairs = translateToClusterRelativeCoordinates(pointPairs);
+		pointPairs = translateToClusterAbsoluteCoordinates(pointPairs);
+		Vec2f[] points = new Vec2f[4];
+		points[0] = new Vec2f(pointPairs.get(0).getFirst().x(), pointPairs
+				.get(0).getFirst().y());
+		points[1] = new Vec2f(pointPairs.get(0).getSecond().x(), pointPairs
+				.get(0).getSecond().y());
+		points[2] = new Vec2f(pointPairs.get(1).getFirst().x(), pointPairs
+				.get(1).getFirst().y());
+		points[3] = new Vec2f(pointPairs.get(1).getSecond().x(), pointPairs
+				.get(1).getSecond().y());
+		return points;
 	}
 
 	// delivers indicator whether the bands directly leaving a cluster are
 	// starting at the top or the bottom
 	private boolean isStartsOnTop() {
-		return true;
+		return centerDirection.y() < 0;
+		// return true;
 	}
 
 	private float leftest;
@@ -132,13 +207,22 @@ public class DimBandMergeArea extends BandMergeArea {
 	@Override
 	protected List<Pair<Vec3f, Vec3f>> getConnectionFromBand() {
 		List<Pair<Vec3f, Vec3f>> subBandPoints = new ArrayList<>();
-		Vec2f direction = new Vec2f(0, -1);
-		Vec2f zero = points[0].addScaled(MERGING_AREA_LENGHT / 2, direction);
-		Vec2f one = points[1].addScaled(MERGING_AREA_LENGHT / 2, direction);
+		Vec2f direction = new Vec2f(0, 1);
+		// Vec2f zero = points[0].addScaled(MERGING_AREA_LENGHT/2, direction);
+		// Vec2f one = points[1].addScaled(MERGING_AREA_LENGHT/2, direction);
+		Vec2f zero = points[0];
+		Vec2f one = points[1];
 
-		subBandPoints.add(pair(zero.x(), zero.y(), one.x(), one.y()));
-		subBandPoints.add(pair(points[2].x(), points[2].y(), points[3].x(),
-				points[3].y()));
+		if (isStartsOnTop()) {
+			subBandPoints.add(pair(zero.x(), zero.y(), one.x(), one.y()));
+			subBandPoints.add(pair(points[2].x(), points[2].y(), points[3].x(),
+					points[3].y()));
+		} else {
+			subBandPoints.add(pair(one.x(), one.y(), zero.x(), zero.y()));
+			subBandPoints.add(pair(points[3].x(), points[3].y(), points[2].x(),
+					points[2].y()));
+		}
+
 		subBandPoints = translateForRotation(subBandPoints);
 		subBandPoints = rotate(subBandPoints);
 		subBandPoints = translateToClusterRelativeCoordinates(subBandPoints);
@@ -146,6 +230,18 @@ public class DimBandMergeArea extends BandMergeArea {
 		return subBandPoints;
 	}
 
+	private List<Pair<Vec3f, Vec3f>> mirrorOnY(
+			List<Pair<Vec3f, Vec3f>> toMirror) {
+		List<Pair<Vec3f, Vec3f>> newPoints = new ArrayList<>();
+		for (Pair<Vec3f, Vec3f> p : toMirror) {
+			p.getFirst().setX(-p.getFirst().x());
+			p.getSecond().setX(-p.getSecond().x());
+			newPoints.add(p);
+		}
+		return newPoints;
+	}
+
+	
 	private List<Pair<Vec3f, Vec3f>> translateToClusterRelativeCoordinates(
 			List<Pair<Vec3f, Vec3f>> toTranslate) {
 		List<Pair<Vec3f, Vec3f>> newAreaPoints = new ArrayList<>();
@@ -193,9 +289,11 @@ public class DimBandMergeArea extends BandMergeArea {
 	private List<Pair<Vec3f, Vec3f>> translateForRotation(
 			List<Pair<Vec3f, Vec3f>> mergeAreaPoints) {
 		List<Pair<Vec3f, Vec3f>> newPoints = new ArrayList<>();
+		float translateAmount = isStartsOnTop() ? +ROTATION_RADIUS : +cluster
+				.getSize().y() + ROTATION_RADIUS;
 		for (Pair<Vec3f, Vec3f> p : mergeAreaPoints) {
-			p.getFirst().setY(p.getFirst().y() - ROTATION_RADIUS);
-			p.getSecond().setY(p.getSecond().y() - ROTATION_RADIUS);
+			p.getFirst().setY(p.getFirst().y() - translateAmount);
+			p.getSecond().setY(p.getSecond().y() - translateAmount);
 			newPoints.add(p);
 		}
 		return newPoints;
