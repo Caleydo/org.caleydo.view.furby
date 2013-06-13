@@ -203,14 +203,11 @@ public class GlobalToolBarElement extends GLElementContainer implements
 	}
 
 	private void addSpecialRecords() {
-		ExecutorService thread = Executors.newFixedThreadPool(1);
-		thread.submit(new Runnable() {
-
+		Display.getDefault().asyncExec(new Runnable() {
+			
 			@Override
 			public void run() {
-				Display display = new Display();
-				Shell shell = new Shell(display, SWT.NO_TRIM | SWT.ON_TOP);
-				InputDialog dialog = new InputDialog(shell, "Adding special "
+				InputDialog dialog = new InputDialog(new Shell(), "Adding special "
 						+ x.getDataDomain().getRecordIDCategory().toString()
 						+ " elements:", "User ',' as a seperator", "",
 						new IInputValidator() {
@@ -240,18 +237,15 @@ public class GlobalToolBarElement extends GLElementContainer implements
 						EventPublisher.trigger(new SpecialClusterAddedEvent(
 								listIndices, false));
 					else
-						new MessageDialog(shell, "Adding special "
+						new MessageDialog(new Shell(), "Adding special "
 								+ x.getDataDomain().getRecordIDCategory()
 										.toString() + " elements:", null,
 								"No mathching elements found. \nMake sure to use ',' as a seperator",
 								MessageDialog.ERROR, new String[] { "OK"}, 0).open();
 
 				}
-
 			}
-
 		});
-
 	}
 
 	@ListenTo
