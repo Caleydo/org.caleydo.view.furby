@@ -22,9 +22,6 @@ package org.caleydo.view.bicluster.elem;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
@@ -48,15 +45,7 @@ import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
-import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
-import org.eclipse.jface.dialogs.IInputValidator;
-import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.window.Window;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 
 /**
  * 
@@ -203,53 +192,11 @@ public class GlobalToolBarElement extends GLElementContainer implements
 	}
 
 	private void addSpecialRecords() {
-		Display.getDefault().asyncExec(new Runnable() {
-			
-			@Override
-			public void run() {
-				InputDialog dialog = new InputDialog(new Shell(), "Adding special "
-						+ x.getDataDomain().getRecordIDCategory().toString()
-						+ " elements:", "User ',' as a seperator", "",
-						new IInputValidator() {
-
-							@Override
-							public String isValid(String newText) {
-								// TODO Auto-generated method stub
-								return null;
-							}
-
-						});
-				if (dialog.open() == Window.OK) {
-					List<Integer> listIndices = new ArrayList<Integer>();
-					String s = dialog.getValue();
-					String[] records = s.split(",");
-					int length = x.getDataDomain().getTable().getRowIDList()
-							.size();
-					for (int i = 0; i < length; i++) {
-						for (String r : records) {
-							if (x.getDataDomain().getRecordLabel(i)
-									.compareToIgnoreCase(r) == 0)
-								listIndices.add(i);
-						}
-
-					}
-					if (listIndices.size() != 0)
-						EventPublisher.trigger(new SpecialClusterAddedEvent(
-								listIndices, false));
-					else
-						new MessageDialog(new Shell(), "Adding special "
-								+ x.getDataDomain().getRecordIDCategory()
-										.toString() + " elements:", null,
-								"No mathching elements found. \nMake sure to use ',' as a seperator",
-								MessageDialog.ERROR, new String[] { "OK"}, 0).open();
-
-				}
-			}
-		});
+		ImportExternalDialog.open(this.x.getRecordPerspective().getIdType());
 	}
 
 	@ListenTo
-	public void listenTo(MaxThresholdChangeEvent e) {
+	private void listenTo(MaxThresholdChangeEvent e) {
 		maxRecordValue = (float) e.getRecThreshold();
 		maxDimensionValue = (float) e.getDimThreshold();
 		initSliders();
