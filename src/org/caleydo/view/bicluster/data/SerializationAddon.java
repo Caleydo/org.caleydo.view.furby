@@ -52,6 +52,11 @@ public class SerializationAddon implements ISerializationAddon {
 	}
 
 	@Override
+	public void deserialize(String dirName, Unmarshaller unmarshaller) {
+
+	}
+
+	@Override
 	public void serialize(Collection<? extends IDataDomain> toSave, Marshaller marshaller, String dirName) {
 		BiClusterSerializationData data = new BiClusterSerializationData();
 		// TODO

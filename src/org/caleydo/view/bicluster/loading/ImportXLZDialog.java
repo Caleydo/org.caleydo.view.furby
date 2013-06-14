@@ -27,6 +27,7 @@ import org.caleydo.core.io.DataSetDescription;
 import org.caleydo.core.io.DataSetDescription.ECreateDefaultProperties;
 import org.caleydo.core.io.IDSpecification;
 import org.caleydo.core.io.ParsingRule;
+import org.caleydo.datadomain.genetic.TCGADefinitions;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
@@ -189,7 +190,8 @@ public class ImportXLZDialog extends Dialog {
 	 * @return
 	 */
 	public List<DataSetDescription> getDataSetDescriptions() {
-		final IDSpecification geneNames = genes ? IDSpecification.createGene() : new IDSpecification("GENE_SAMPLES",
+		final IDSpecification geneNames = genes ? TCGADefinitions.createGeneIDSpecificiation() : new IDSpecification(
+				"GENE_SAMPLES",
 				"GENE_SAMPLES");
 		final IDSpecification sample = new IDSpecification("SAMPLE", "SAMPLE");
 		final IDSpecification bicluster = new IDSpecification("BICLUSTER", "BICLUSTER");

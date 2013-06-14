@@ -234,7 +234,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
-		g.color(java.awt.Color.black);
+		g.color(Color.BLACK);
 		// if (getID().contains("Special")){
 		// System.out.println("stop");
 		// }
@@ -270,7 +270,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
 		float[] color = { 0, 0, 0, curOpacityFactor };
-		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
+		Color highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
 		if (isHovered) {
 			g.color(highlightedColor);

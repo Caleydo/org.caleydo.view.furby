@@ -43,6 +43,7 @@ import org.caleydo.core.io.ParsingRule;
 import org.caleydo.core.io.ProjectDescription;
 import org.caleydo.core.manager.GeneralManager;
 import org.caleydo.core.serialize.ProjectManager;
+import org.caleydo.core.serialize.ProjectMetaData;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -127,7 +128,7 @@ public class PackageGenerator implements IApplication {
 
 		// Iterate over data type sets and trigger processing
 		for (DataSetDescription dataSetDescription : project.getDataSetDescriptionCollection()) {
-			ATableBasedDataDomain dataDomain = DataLoader.loadData(dataSetDescription);
+			ATableBasedDataDomain dataDomain = DataLoader.loadData(dataSetDescription, new NullProgressMonitor());
 			if (dataDomain == null)
 				continue;
 			dataDomains.add(dataDomain);
@@ -136,7 +137,8 @@ public class PackageGenerator implements IApplication {
 
 
 		try {
-			ProjectManager.save(output + ".tmp", true, dataDomains).run(new NullProgressMonitor());
+			ProjectManager.save(output + ".tmp", true, dataDomains, ProjectMetaData.createDefault()).run(
+					new NullProgressMonitor());
 		} catch (InvocationTargetException | InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

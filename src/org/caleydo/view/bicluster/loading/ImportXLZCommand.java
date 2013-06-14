@@ -29,6 +29,7 @@ import org.caleydo.core.io.DataLoader;
 import org.caleydo.core.io.DataSetDescription;
 import org.caleydo.view.bicluster.GLBiCluster;
 import org.caleydo.view.bicluster.RcpGLBiClusterView;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
@@ -60,7 +61,7 @@ public class ImportXLZCommand extends SimpleAction {
 		// 1. load data
 		List<ATableBasedDataDomain> dd = new ArrayList<>();
 		for (DataSetDescription ri : r)
-			dd.add(DataLoader.loadData(ri));
+			dd.add(DataLoader.loadData(ri, new NullProgressMonitor()));
 
 		// 2. show Bicluster View
 		IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();

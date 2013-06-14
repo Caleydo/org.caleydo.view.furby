@@ -1,6 +1,5 @@
 package org.caleydo.view.bicluster.elem;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -9,6 +8,7 @@ import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventPublisher;
+import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
@@ -56,6 +56,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 		this.add(content);
 	}
 
+	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w,
 			float h) {
 		// if (isHidden) return;
@@ -76,13 +77,12 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 			igllContent.setBounds(0, 0, w, h);
 		}
 	}
-	
-	
+
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
 		float[] color = { 0, 0, 0, curOpacityFactor };
-		float[] highlightedColor = SelectionType.MOUSE_OVER.getColor();
+		Color highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
 		if (isHovered) {
 			g.color(highlightedColor);
@@ -90,7 +90,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 		g.drawRect(-1, -1, w + 2, h + 3);
 
 	}
-	
+
 	@Override
 	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
 			boolean setXElements, String id, int bcNr, double maxDim,
@@ -102,7 +102,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 		setHasContent(dimIndices, recIndices);
 		setVisibility();
 	}
-	
+
 	@Override
 	public void setClusterSize(double x, double y, double maxClusterSize) {
 		x = 100f/scaleFactor;
@@ -199,7 +199,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 
 		List<String> recordNames;
 
-		
+
 		@Override
 		protected void renderImpl(GLGraphics g, float w, float h) {
 			int i = 0;
@@ -209,7 +209,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 				g.drawText(s, 1, i*width-2, w, width);
 				i++;
 			}
-			g.textColor(Color.black);
+			g.textColor(Color.BLACK);
 			super.renderImpl(g, w, h);
 		}
 

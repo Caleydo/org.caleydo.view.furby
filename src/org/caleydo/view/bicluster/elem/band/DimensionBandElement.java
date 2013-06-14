@@ -21,13 +21,12 @@ package org.caleydo.view.bicluster.elem.band;
 
 import gleem.linalg.Vec3f;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.caleydo.core.util.collection.Pair;
-import org.caleydo.core.util.color.Colors;
+import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
@@ -39,7 +38,7 @@ import org.caleydo.view.bicluster.elem.ClusterElement;
  */
 public class DimensionBandElement extends BandElement {
 
-	private static float[] dimBandColor = Colors.NEUTRAL_GREY.getRGBA();
+	private static float[] dimBandColor = Color.NEUTRAL_GREY.getRGBA();
 
 	public DimensionBandElement(GLElement first, GLElement second,
 			AllBandsElement root) {
@@ -115,7 +114,7 @@ public class DimensionBandElement extends BandElement {
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-//		if (!isVisible()) return; 
+		// if (!isVisible()) return;
 //		g.incZ();
 //		 g.color(Color.black);
 //		 if (firstMergeArea != null) {

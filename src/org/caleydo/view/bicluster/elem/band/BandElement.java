@@ -31,6 +31,7 @@ import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.data.SelectionUpdateEvent;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.collection.Pair;
+import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
@@ -70,9 +71,9 @@ public abstract class BandElement extends PickableGLElement {
 	protected List<List<Integer>> secondSubIndices;
 	protected List<Pair<Vec3f, Vec3f>> highlightPoints;
 	protected Band highlightBand;
-	protected float[] highlightColor;
-	protected float[] hoveredColor;
-	protected float[] defaultColor;
+	protected Color highlightColor;
+	protected Color hoveredColor;
+	protected Color defaultColor;
 	protected boolean hoverd;
 	protected boolean isAnyClusterHovered = false;
 
@@ -89,7 +90,7 @@ public abstract class BandElement extends PickableGLElement {
 		this.overlap = list;
 		this.root = root;
 		this.selectionManager = selectionManager;
-		this.defaultColor = defaultColor;
+		this.defaultColor = new Color(defaultColor);
 		selectionType = selectionManager.getSelectionType();
 		highlightPoints = new ArrayList<>();
 		highlightOverlap = new ArrayList<>();
@@ -122,7 +123,7 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		float[] bandColor;
+		Color bandColor;
 		if (isVisible()) {
 			if (isHighlighted())
 				bandColor = highlightColor;
@@ -131,7 +132,7 @@ public abstract class BandElement extends PickableGLElement {
 			else
 				bandColor = defaultColor;
 			if (band != null) {
-				g.color(bandColor[0], bandColor[1], bandColor[2],
+				g.color(bandColor.r, bandColor.g, bandColor.b,
 						0.8f * curOpacityFactor);
 				g.drawPath(band);
 				if (firstSubBands != null)
@@ -142,7 +143,7 @@ public abstract class BandElement extends PickableGLElement {
 					for (Band b : secondSubBands.values()) {
 						g.drawPath(b);
 					}
-				g.color(bandColor[0], bandColor[1], bandColor[2],
+				g.color(bandColor.r, bandColor.g, bandColor.b,
 						0.5f * curOpacityFactor);
 				g.fillPolygon(band);
 				if (firstSubBands != null)
