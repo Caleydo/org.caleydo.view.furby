@@ -64,13 +64,10 @@ public abstract class BandElement extends PickableGLElement {
 	protected SelectionManager selectionManager;
 	protected AllBandsElement root;
 
-	protected BandMergeArea secondMergeArea, firstMergeArea;
-	protected Band band;
-	protected Map<List<Integer>, Band> firstSubBands, secondSubBands, highlightedSubBands;
+	protected BandFactory secondMergeArea, bandFactory;
+	protected Map<List<Integer>, Band> bands;
 	protected List<List<Integer>> firstSubIndices;
 	protected List<List<Integer>> secondSubIndices;
-	protected List<Pair<Vec3f, Vec3f>> highlightPoints;
-	protected Band highlightBand;
 	protected Color highlightColor;
 	protected Color hoveredColor;
 	protected Color defaultColor;
@@ -92,7 +89,7 @@ public abstract class BandElement extends PickableGLElement {
 		this.selectionManager = selectionManager;
 		this.defaultColor = new Color(defaultColor);
 		selectionType = selectionManager.getSelectionType();
-		highlightPoints = new ArrayList<>();
+//		highlightPoints = new ArrayList<>();
 		highlightOverlap = new ArrayList<>();
 		highlightColor = selectionType.getColor();
 		hoveredColor = SelectionType.MOUSE_OVER.getColor();
@@ -131,29 +128,17 @@ public abstract class BandElement extends PickableGLElement {
 				bandColor = hoveredColor;
 			else
 				bandColor = defaultColor;
-			if (band != null) {
+			if (bands != null) {
 				g.color(bandColor.r, bandColor.g, bandColor.b,
 						0.8f * curOpacityFactor);
-				g.drawPath(band);
-				if (firstSubBands != null)
-					for (Band b : firstSubBands.values()) {
-						g.drawPath(b);
-					}
-				if (secondSubBands != null)
-					for (Band b : secondSubBands.values()) {
-						g.drawPath(b);
-					}
+				for (Band b: bands.values())  {
+					g.drawPath(b);
+				}
 				g.color(bandColor.r, bandColor.g, bandColor.b,
 						0.5f * curOpacityFactor);
-				g.fillPolygon(band);
-				if (firstSubBands != null)
-					for (Band b : firstSubBands.values()) {
-						g.fillPolygon(b);
-					}
-				if (secondSubBands != null)
-					for (Band b : secondSubBands.values()) {
-						g.fillPolygon(b);
-					}
+				for (Band b: bands.values()) {
+					g.fillPolygon(b);
+				}
 			}
 //			if (highlightOverlap.size() > 0) {
 //				g.color(highlightColor[0], highlightColor[1],

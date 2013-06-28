@@ -1,5 +1,6 @@
 package org.caleydo.view.bicluster.util;
 
+import gleem.linalg.Vec2f;
 import gleem.linalg.Vec3f;
 
 import java.util.ArrayList;
@@ -76,17 +77,27 @@ public class SimpleBandTest extends GLElement {
 		band3.setDrawBandBordersOnly(true).setDrawBandBordersOnFill(false);
 		
 		
+		List<Vec2f> anchorPoints = new ArrayList<>();
+		anchorPoints.add(new Vec2f(300, 300));
+		anchorPoints.add(new Vec2f(300, 350));
+		anchorPoints.add(new Vec2f(340, 400));
+		anchorPoints.add(new Vec2f(380, 400));
+		
+		Band band4 = TesselatedPolygons.band(anchorPoints, 1, 10, 10);
+		
 		
 		g.color(0, 0, 1, 1.f);
 		g.drawPath(band);
 		g.drawPath(band2);
 		g.drawPath(band3);
 		g.drawPath(band0);
+		g.drawPath(band4);
 		g.color(0, 0, 1, 0.5f);
 		g.fillPolygon(band);
 		g.fillPolygon(band2);
 		g.fillPolygon(band3);
 		g.fillPolygon(band0);
+		g.fillPolygon(band4);
 	}
 
 	private Pair<Vec3f, Vec3f> pair(float x1, float y1, float x2, float y2) {

@@ -30,7 +30,7 @@ public class RecordBandElement extends BandElement {
 
 	private static float[] recBandColor = { 0.862f, 0.862f, 1f, 1f };
 	protected float topBandClusterPos, bottomBandClusterPos;
-	protected RecBandMergeArea secondMergeArea, firstMergeArea;
+	protected RecordBandFactory secondMergeArea, firstMergeArea;
 
 	/**
 	 * @param savedData

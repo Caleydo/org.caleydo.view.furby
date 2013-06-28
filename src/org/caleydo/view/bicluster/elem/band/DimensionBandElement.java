@@ -19,17 +19,9 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
-import gleem.linalg.Vec3f;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
-import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
 /**
@@ -66,40 +58,18 @@ public class DimensionBandElement extends BandElement {
 			setVisibility(EVisibility.PICKABLE);
 		else
 			setVisibility(EVisibility.NONE);
-		firstSubBands = new HashMap<>();
-		secondSubBands = new HashMap<>();
 		// if (first.getID().contains("bicluster19")
 		// && second.getID().contains("bicluster3"))
 		// System.out.println("halt -  DimensionBandELement - updateStructure");
 		firstSubIndices = first.getListOfContinousDimSequences(overlap);
+		secondSubIndices = second.getListOfContinousDimSequences(overlap);
 		if (firstSubIndices.size() == 0)
 			return;
-		firstMergeArea = new DimBandMergeArea(first, second, firstSubIndices);
-		for (List<Integer> subBand : firstSubIndices) {
-			firstSubBands.put(subBand, firstMergeArea.getBand(subBand));
-		}
-		secondSubIndices = second.getListOfContinousDimSequences(overlap);
-		if (secondSubIndices.size() == 0)
-			return;
-		secondMergeArea = new DimBandMergeArea(second, first, secondSubIndices);
-		for (List<Integer> subBand : secondSubIndices) {
-			secondSubBands.put(subBand, secondMergeArea.getBand(subBand));
-		}
-		createBand();
+		bandFactory = new DimensionBandFactory(first, second, firstSubIndices, secondSubIndices, overlap);
+		bands = bandFactory.getBands();
 	}
 
-	private void createBand() {
-		List<Pair<Vec3f, Vec3f>> bandPoints = new ArrayList<>();
-		List<Pair<Vec3f, Vec3f>> firstAnchor = firstMergeArea
-				.getConnectionFromBand();
-		List<Pair<Vec3f, Vec3f>> secondAnchor = secondMergeArea
-				.getConnectionFromBand();
-		bandPoints.add(firstAnchor.get(0));
-		bandPoints.add(firstAnchor.get(1));
-		bandPoints.add(secondAnchor.get(1));
-		bandPoints.add(secondAnchor.get(0));
-		this.band = TesselatedPolygons.band(bandPoints);
-	}
+
 
 	@Override
 	public void updatePosition() {
