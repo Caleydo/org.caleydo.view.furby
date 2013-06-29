@@ -23,8 +23,7 @@ public abstract class BandFactory {
 	 * singleElementIndices --> contains all Indices of SubBands with
 	 * subBand.size == 1
 	 */
-	protected List<List<Integer>> firstIndices, secondIndices,
-			singleElementIndices;
+	protected List<List<Integer>> firstIndices, secondIndices;
 	protected ClusterElement first, second;
 	protected List<Integer> allIndices;
 
@@ -35,21 +34,10 @@ public abstract class BandFactory {
 		this.first = cluster;
 		this.second = other;
 		this.firstIndices = firstSubIndices;
+		this.secondIndices = secondSubIndices;
 		this.elementSize = elementSize;
 		this.allIndices = overlap;
-		singleElementIndices = new ArrayList<>();
-		firstIndices = new ArrayList<>();
-		for (List<Integer> subBand : firstSubIndices) {
-			if (subBand.size() == 1) {
-				singleElementIndices.add(subBand);
-			} else
-				firstIndices.add(subBand);
-		}
-		secondIndices = new ArrayList<>();
-		for (List<Integer> subBand : secondSubIndices) {
-			if (subBand.size() > 1)
-				secondIndices.add(subBand);
-		}
+;
 	}
 
 	protected abstract Map<List<Integer>, Band> getBands();

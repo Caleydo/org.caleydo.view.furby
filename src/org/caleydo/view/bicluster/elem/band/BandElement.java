@@ -122,6 +122,7 @@ public abstract class BandElement extends PickableGLElement {
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		Color bandColor;
 		if (isVisible()) {
+			g.decZ();
 			if (isHighlighted())
 				bandColor = highlightColor;
 			else if (isHovered())
@@ -169,6 +170,7 @@ public abstract class BandElement extends PickableGLElement {
 //						g.fillPolygon(b);
 //					}
 //			}
+			g.incZ();
 		}
 	}
 
