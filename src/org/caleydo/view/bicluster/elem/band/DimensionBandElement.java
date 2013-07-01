@@ -19,10 +19,6 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
-import gleem.linalg.Vec2f;
-
-import java.util.List;
-
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;

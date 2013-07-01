@@ -141,7 +141,7 @@ public class DimensionBandFactory extends BandFactory {
 
 	@Override
 	protected Map<List<Integer>, Band> getBands() {
-		// testMyFunctions();
+
 
 		Map<List<Integer>, Band> bandsMap = new IdentityHashMap<>();
 		List<Vec2f> bandPoints = new ArrayList<>(4);

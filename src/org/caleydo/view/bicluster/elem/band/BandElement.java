@@ -190,16 +190,12 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
-//				if (isVisible() && !isAnyClusterHovered) {
-//			g.color(defaultColor);
-//			if (subBands != null)
-//				for (Band b : subBands.values())
-//					g.fillPolygon(b);
-//			if (highlightBand != null)
-//				g.fillPolygon(highlightBand);
-//			if (band != null)
-//				g.fillPolygon(band);
-//		}
+		if (isVisible() && !isAnyClusterHovered) {
+			g.color(defaultColor);
+			if (bands != null)
+				for (Band b : bands.values())
+					g.fillPolygon(b);
+		}
 	}
 
 	@Override
