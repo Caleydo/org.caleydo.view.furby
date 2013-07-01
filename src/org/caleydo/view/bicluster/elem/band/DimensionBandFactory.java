@@ -140,9 +140,50 @@ public class DimensionBandFactory extends BandFactory {
 	}
 
 	@Override
-	protected Map<List<Integer>, Band> getBands() {
+	protected Map<List<Integer>, Band> getNonSplitableBands() {
+		Map<List<Integer>, Band> bandsMap = new IdentityHashMap<>();
+		List<Vec2f> bandPoints = new ArrayList<>(4);
 
+		// there is only one band from first cluster to the second cluster
+		// area.
+		// setUp the BandPoints variable with clusterAbsoluteCoordinates, so
+		// it can be filled with the coordinates of the other cluster in the
+		// other if statement.
+		List<Vec2f> firstPoints = new ArrayList<>(2);
+		findLeftestAndRightestFirst(allIndices);
+		float middle = (firstLeftest + firstRightest) / 2;
+		float yPos = isStartsOnTopFirst() ? 0 : first.getSize().y();
+		firstPoints.add(new Vec2f(middle, yPos));
+		yPos = isStartsOnTopFirst() ? -BAND_CLUSTER_OFFSET : first.getSize()
+				.y() + BAND_CLUSTER_OFFSET;
+		firstPoints.add(new Vec2f(middle, yPos));
+		bandPoints = translateToClusterAbsoluteCoordinates(firstPoints, first);
 
+		float mainBandWidth = (float) (allIndices.size() / 2f * elementSize);
+
+		// there is only one band from the second cluster to the first
+		// cluster area.
+		// use coordinates provided in bandPoints from the first Cluster for
+		// creating the band.
+		List<Vec2f> secondPoints = new ArrayList<>(2);
+		findLeftestAndRightestSecond(allIndices);
+		middle = (secondLeftest + secondRightest) / 2;
+		yPos = isStartsOnTopSecond() ? -BAND_CLUSTER_OFFSET : second.getSize()
+				.y() + BAND_CLUSTER_OFFSET;
+		secondPoints.add(new Vec2f(middle, yPos));
+		yPos = isStartsOnTopSecond() ? 0 : second.getSize().y();
+		secondPoints.add(new Vec2f(middle, yPos));
+		secondPoints = translateToClusterAbsoluteCoordinates(secondPoints,
+				second);
+		bandPoints.addAll(secondPoints);
+		bandsMap.put(allIndices, TesselatedPolygons.band(bandPoints, 0,
+				mainBandWidth, MAINBAND_POLYGONS));
+
+		return bandsMap;
+	}
+
+	@Override
+	protected Map<List<Integer>, Band> getSplitableBands() {
 		Map<List<Integer>, Band> bandsMap = new IdentityHashMap<>();
 		List<Vec2f> bandPoints = new ArrayList<>(4);
 		if (firstIndices.size() == 1) {
@@ -167,7 +208,6 @@ public class DimensionBandFactory extends BandFactory {
 			// clusterAbsoluteCoordinates, so it can be
 			// filled with the coordinates of the other cluster.
 
-			
 			// to make sure bands are created in correct order
 			if (isStartsOnTopFirst()) {
 				int mainBandIndex = allIndices.size();

@@ -21,7 +21,14 @@ public class RecordBandFactory extends BandFactory {
 
 
 	@Override
-	protected Map<List<Integer>, Band> getBands() {
+	protected Map<List<Integer>, Band> getSplitableBands() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	protected Map<List<Integer>, Band> getNonSplitableBands() {
 		// TODO Auto-generated method stub
 		return null;
 	}

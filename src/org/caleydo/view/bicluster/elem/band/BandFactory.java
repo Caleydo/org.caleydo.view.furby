@@ -40,5 +40,7 @@ public abstract class BandFactory {
 ;
 	}
 
-	protected abstract Map<List<Integer>, Band> getBands();
+	protected abstract Map<List<Integer>, Band> getSplitableBands();
+
+	protected abstract Map<List<Integer>, Band> getNonSplitableBands();
 }

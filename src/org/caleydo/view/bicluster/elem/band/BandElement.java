@@ -22,6 +22,7 @@ package org.caleydo.view.bicluster.elem.band;
 import gleem.linalg.Vec3f;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -65,13 +66,13 @@ public abstract class BandElement extends PickableGLElement {
 	protected AllBandsElement root;
 
 	protected BandFactory secondMergeArea, bandFactory;
-	protected Map<List<Integer>, Band> bands;
+	protected Map<List<Integer>, Band> splittedBands, nonSplittedBands;
 	protected List<List<Integer>> firstSubIndices;
 	protected List<List<Integer>> secondSubIndices;
 	protected Color highlightColor;
 	protected Color hoveredColor;
 	protected Color defaultColor;
-	protected boolean hoverd;
+	protected boolean isMouseOver=false;
 	protected boolean isAnyClusterHovered = false;
 
 	private float opacityFactor = 1;
@@ -129,15 +130,18 @@ public abstract class BandElement extends PickableGLElement {
 				bandColor = hoveredColor;
 			else
 				bandColor = defaultColor;
-			if (bands != null) {
+			Map<List<Integer>, Band> bandsToDraw = null;
+			if (isMouseOver == true)  bandsToDraw = splittedBands;
+			else bandsToDraw = nonSplittedBands;
+			if (bandsToDraw != null) {
 				g.color(bandColor.r, bandColor.g, bandColor.b,
 						0.8f * curOpacityFactor);
-				for (Band b: bands.values())  {
+				for (Band b: bandsToDraw.values())  {
 					g.drawPath(b);
 				}
 				g.color(bandColor.r, bandColor.g, bandColor.b,
 						0.5f * curOpacityFactor);
-				for (Band b: bands.values()) {
+				for (Band b: bandsToDraw.values()) {
 					g.fillPolygon(b);
 				}
 			}
@@ -192,8 +196,8 @@ public abstract class BandElement extends PickableGLElement {
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (isVisible() && !isAnyClusterHovered) {
 			g.color(defaultColor);
-			if (bands != null)
-				for (Band b : bands.values())
+			if (splittedBands != null)
+				for (Band b : splittedBands.values())
 					g.fillPolygon(b);
 		}
 	}
@@ -230,14 +234,14 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	protected void onMouseOver(Pick pick) {
-		hoverd = true;
+		isMouseOver = true;
 		hoverElement();
 		super.onMouseOver(pick);
 	}
 
 	@Override
 	protected void onMouseOut(Pick pick) {
-		hoverd = false;
+		isMouseOver = false;
 		hoverElement();
 		repaint();
 		super.onMouseOut(pick);
@@ -247,7 +251,7 @@ public abstract class BandElement extends PickableGLElement {
 		if (selectionManager == null)
 			return;
 		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
-		if (hoverd) {
+		if (isMouseOver) {
 			selectionManager.addToType(SelectionType.MOUSE_OVER, overlap);
 		}
 		fireSelectionChanged();
