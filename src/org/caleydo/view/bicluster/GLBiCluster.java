@@ -35,8 +35,8 @@ import org.caleydo.core.data.datadomain.IDataSupportDefinition;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.perspective.variable.Perspective;
 import org.caleydo.core.data.perspective.variable.PerspectiveInitializationData;
-import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
+import org.caleydo.core.event.data.DataDomainUpdateEvent;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.serialize.ASerializedView;
@@ -50,8 +50,8 @@ import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.elem.GLRootElement;
-import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
+import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 
@@ -60,8 +60,8 @@ import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
  * Sample GL2 view.
  * </p>
  * <p>
- * This Template is derived from {@link ATableBasedView}, but if the view does
- * not use a table, changing that to {@link AGLView} is necessary.
+ * This Template is derived from {@link ATableBasedView}, but if the view does not use a table, changing that to
+ * {@link AGLView} is necessary.
  * </p>
  * 
  * @author Michael Gillhofer
@@ -192,8 +192,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	}
 
 	/**
-	 * determines which of the given {@link TablePerspective} is L and Z, given
-	 * the known X table
+	 * determines which of the given {@link TablePerspective} is L and Z, given the known X table
 	 * 
 	 * @param a
 	 * @param b
@@ -268,6 +267,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			findXLZ();
 			rootElement.setData(initTablePerspectives(), x, l, z,
 					executorService);
+			// signal that we now use that data domain
+			EventPublisher.trigger(new DataDomainUpdateEvent(x.getDataDomain()));
 			createBiClusterPerspectives(x, l, z);
 			createBiClusterPerspectives(x, l, z);
 			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold,
