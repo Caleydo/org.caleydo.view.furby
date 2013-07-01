@@ -19,6 +19,10 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
+import gleem.linalg.Vec2f;
+
+import java.util.List;
+
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
@@ -65,11 +69,10 @@ public class DimensionBandElement extends BandElement {
 		secondSubIndices = second.getListOfContinousDimSequences(overlap);
 		if (firstSubIndices.size() == 0)
 			return;
-		bandFactory = new DimensionBandFactory(first, second, firstSubIndices, secondSubIndices, overlap);
+		bandFactory = new DimensionBandFactory(first, second, firstSubIndices,
+				secondSubIndices, overlap);
 		bands = bandFactory.getBands();
 	}
-
-
 
 	@Override
 	public void updatePosition() {
@@ -84,22 +87,30 @@ public class DimensionBandElement extends BandElement {
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		// if (!isVisible()) return;
+		if (!isVisible())
+			return;
 //		g.incZ();
-//		 g.color(Color.black);
-//		 if (firstMergeArea != null) {
-//		 g.drawPath(true,
-//		 ((DimBandMergeArea) firstMergeArea).getPrintablePoints());
-//		 // g.drawPath(true, ((DimBandMergeArea) firstMergeArea)
-//		 // .getPrintablePointsNonRotated());
-//		 }
-//		 if (secondMergeArea != null) {
-//		 g.drawPath(true,
-//		 ((DimBandMergeArea) secondMergeArea).getPrintablePoints());
-//		 // g.drawPath(true, ((DimBandMergeArea) secondMergeArea)
-//		 // .getPrintablePointsNonRotated());
-//		 }
-//		 g.decZ();
+//		List<Vec2f> points = ((DimensionBandFactory)bandFactory).getTestPointsFirst();
+//		g.color(Color.BLACK);
+//		g.drawLine(points.get(0).x(), points.get(0).y(), points.get(1).x(),
+//				points.get(1).y());
+//		g.drawLine(points.get(2).x(), points.get(2).y(), points.get(3).x(),
+//				points.get(3).y());
+//		g.drawLine(points.get(4).x(), points.get(4).y(), points.get(5).x(),
+//				points.get(5).y());
+//
+//		points = ((DimensionBandFactory)bandFactory).getTestPointsSecond();
+//		g.color(Color.RED);
+//		g.drawLine(points.get(0).x(), points.get(0).y(), points.get(1).x(),
+//				points.get(1).y());
+//		g.drawLine(points.get(2).x(), points.get(2).y(), points.get(3).x(),
+//				points.get(3).y());
+//		g.drawLine(points.get(4).x(), points.get(4).y(), points.get(5).x(),
+//				points.get(5).y());
+////		points = ((DimensionBandFactory)bandFactory).getTestPointsSecond();
+////		g.drawLine(points.get(0).x(), points.get(0).y(), points.get(1).x(),
+////				points.get(1).y());
+//		g.decZ();
 		super.renderImpl(g, w, h);
 	}
 
