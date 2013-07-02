@@ -7,6 +7,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.caleydo.core.util.logging.Logger;
 import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 import org.caleydo.view.bicluster.elem.ClusterElement;
@@ -17,6 +18,8 @@ public class DimensionBandFactory extends BandFactory {
 	private static final float BAND_CLUSTER_OFFSET = 10;
 	private static final int SUBBAND_POLYGONS = 30;
 	private static final int MAINBAND_POLYGONS = 50;
+	private static final int SPLINE_POLYGONS = 20;
+	private static final float SPLINE_RADIUS = 0.2f;
 
 	private float[] rotationMatrixFirst = new float[4];
 	private float[] rotationMatrixSecond = new float[4];
@@ -78,18 +81,6 @@ public class DimensionBandFactory extends BandFactory {
 		rotationMatrixSecond[1] = (float) Math.sin(secondAngle);
 		rotationMatrixSecond[2] = (float) -Math.sin(secondAngle);
 		rotationMatrixSecond[3] = (float) Math.cos(secondAngle);
-	}
-
-	private int getIndexOf(List<List<Integer>> source, List<Integer> subBand) {
-		int index = 0;
-		int stopIndex = source.indexOf(subBand);
-		int i = 0;
-		for (List<Integer> list : source) {
-			if (i++ >= stopIndex)
-				break;
-			index += list.size();
-		}
-		return index;
 	}
 
 	// delivers indicator whether the bands directly leaving a cluster are
@@ -463,6 +454,186 @@ public class DimensionBandFactory extends BandFactory {
 			v.add(xOffset);
 		}
 		return toTranslate;
+	}
+
+	@Override
+	protected Map<Integer, Band> getConnectionsSplines() {
+		Map<Integer, Band> bandsMap = new IdentityHashMap<>();
+		if (allIndices.size() == 1)
+			return bandsMap;
+		int firstIndex = 0;
+		int secondIndex = 0;
+		for (List<Integer> list : firstIndices) {
+			for (Integer i : list) {
+				secondIndex =  getIndex(secondIndices, i);
+				secondIndex = isStartsOnTopSecond() ? allIndices.size()-secondIndex-1: secondIndex;
+				int firstDelivery = isStartsOnTopFirst() ? allIndices.size()-firstIndex-1 : firstIndex;
+				bandsMap.put(i, createBSplineBandFromIndex(i, firstDelivery, secondIndex));
+				firstIndex++;
+			}
+		}
+		return bandsMap;
+	}
+
+	private int getIndex(List<List<Integer>> source, int target) {
+		int index = 0;
+		for (List<Integer> list : source) {
+			for (Integer i: list) { 
+				if (target == i) return index;
+				index++;
+			}
+		}
+		//shouldn't be executed
+		return index;
+	}
+
+	private Band createBSplineBandFromIndex(Integer i, int firstIndex, int secondIndex) {
+		List<Vec2f> finalPoints = new ArrayList<>();
+		if (firstIndices.size() == 1) {
+			List<Vec2f> firstPoints = new ArrayList<>(4);
+			firstLeftest = first.getDimPosOf(i);
+			firstRightest = firstLeftest + (float) elementSize;
+			float middle = (firstLeftest + firstRightest) / 2;
+			float yPos = isStartsOnTopFirst() ? 0 : first.getSize().y();
+			firstPoints.add(new Vec2f(middle, yPos));
+			yPos = isStartsOnTopFirst() ? -BAND_CLUSTER_OFFSET : first
+					.getSize().y() + BAND_CLUSTER_OFFSET;
+			firstPoints.add(new Vec2f(middle, yPos));
+			finalPoints = translateToClusterAbsoluteCoordinates(firstPoints,
+					first);
+		} else {
+
+			firstLeftest = first.getDimPosOf(i);
+			firstRightest = firstLeftest + (float) elementSize;
+			float startPosX = (firstLeftest + firstRightest) / 2;
+			List<Vec2f> bandPointsClusterRelative = new ArrayList<>();
+			float yPos = isStartsOnTopFirst() ? 0 : first.getSize().y();
+			bandPointsClusterRelative.add(new Vec2f(startPosX, yPos));
+			yPos = isStartsOnTopFirst() ? -BAND_CLUSTER_OFFSET : first
+					.getSize().y() + BAND_CLUSTER_OFFSET;
+			bandPointsClusterRelative.add(new Vec2f(startPosX, yPos));
+
+			List<Vec2f> bandPoints = new ArrayList<>(2);
+			startPosX = (float) ((firstIndex + 0.5f - allIndices
+					.size() / 2f) * elementSize);
+			bandPoints.add(new Vec2f(startPosX, 0));
+			bandPoints.add(new Vec2f(startPosX, MERGING_AREA_LENGHT / 2));
+			bandPoints = translateForRotation(bandPoints);
+			bandPoints = rotate(bandPoints, rotationMatrixFirst);
+			if (!isStartsOnTopFirst())
+				bandPoints = translateToBottom(bandPoints, first);
+			findLeftestAndRightestFirst(allIndices);
+			bandPoints = translateForCenteringTheBand(bandPoints,
+					(firstLeftest + firstRightest) / 2f);
+			// now bandPoints contains cluster relative coordinates
+
+			bandPointsClusterRelative.addAll(bandPoints);
+			finalPoints = translateToClusterAbsoluteCoordinates(
+					bandPointsClusterRelative, first);
+
+			// Points on the main band
+			List<Vec2f> mainPointsFirst = new ArrayList<>(4);
+			mainPointsFirst.add(new Vec2f(startPosX, MERGING_AREA_LENGHT / 2));
+			mainPointsFirst.add(new Vec2f(startPosX, MERGING_AREA_LENGHT));
+			mainPointsFirst = translateForRotation(mainPointsFirst);
+			mainPointsFirst = rotate(mainPointsFirst, rotationMatrixFirst);
+			if (!isStartsOnTopFirst())
+				mainPointsFirst = translateToBottom(mainPointsFirst, first);
+			findLeftestAndRightestFirst(allIndices);
+			mainPointsFirst = translateForCenteringTheBand(mainPointsFirst,
+					(firstLeftest + firstRightest) / 2);
+			mainPointsFirst = translateToClusterAbsoluteCoordinates(
+					mainPointsFirst, first);
+			finalPoints.addAll(mainPointsFirst);
+
+		}
+
+		// TODO add the central crossing point
+
+		if (secondIndices.size() == 1) {
+			// there is only one band from the second cluster to the first
+			// cluster area.
+			// use coordinates provided in bandPoints from the first Cluster for
+			// creating the band.
+			List<Vec2f> secondPoints = new ArrayList<>(2);
+			secondLeftest = second.getDimPosOf(i);
+			secondRightest = secondLeftest + (float) elementSize;
+			float middle = (secondLeftest + secondRightest) / 2;
+			float yPos = isStartsOnTopSecond() ? -BAND_CLUSTER_OFFSET : second
+					.getSize().y() + BAND_CLUSTER_OFFSET;
+			secondPoints.add(new Vec2f(middle, yPos));
+			yPos = isStartsOnTopSecond() ? 0 : second.getSize().y();
+			secondPoints.add(new Vec2f(middle, yPos));
+			secondPoints = translateToClusterAbsoluteCoordinates(secondPoints,
+					second);
+			finalPoints.addAll(secondPoints);
+			return TesselatedPolygons.band(finalPoints, 0, SPLINE_RADIUS,
+					SPLINE_POLYGONS);
+		} else {
+
+			float startPosX = (float) ((secondIndex + 0.5f - allIndices
+					.size() / 2f) * elementSize);
+
+			List<Vec2f> mainPointsSecond = new ArrayList<>();
+			mainPointsSecond.add(new Vec2f(startPosX, MERGING_AREA_LENGHT));
+			mainPointsSecond.add(new Vec2f(startPosX, MERGING_AREA_LENGHT / 2));
+			mainPointsSecond = translateForRotation(mainPointsSecond);
+			mainPointsSecond = rotate(mainPointsSecond, rotationMatrixSecond);
+			if (!isStartsOnTopSecond())
+				mainPointsSecond = translateToBottom(mainPointsSecond, second);
+			findLeftestAndRightestSecond(allIndices);
+			mainPointsSecond = translateForCenteringTheBand(mainPointsSecond,
+					(secondLeftest + secondRightest) / 2);
+			mainPointsSecond = translateToClusterAbsoluteCoordinates(
+					mainPointsSecond, second);
+			finalPoints.addAll(mainPointsSecond);
+
+			// List<Vec2f> bandPoints = new ArrayList<>(2);
+			// startPosX = (float) ((startIndex + subBand.size() / 2f -
+			// allIndices
+			// .size() / 2f) * elementSize);
+			// bandPoints.add(new Vec2f(startPosX, 0));
+			// bandPoints.add(new Vec2f(startPosX, MERGING_AREA_LENGHT / 2));
+			// bandPoints = translateForRotation(bandPoints);
+			// bandPoints = rotate(bandPoints, rotationMatrixSecond);
+			// if (!isStartsOnTopSecond())
+			// bandPoints = translateToBottom(bandPoints, second);
+			// findLeftestAndRightestSecond(allIndices);
+			// bandPoints = translateForCenteringTheBand(bandPoints,
+			// (secondLeftest + secondRightest) / 2f);
+
+			secondLeftest = second.getDimPosOf(i);
+			secondRightest = secondLeftest + (float) elementSize;
+			startPosX = (secondLeftest + secondRightest) / 2;
+			List<Vec2f> bandPointsClusterRelative = new ArrayList<>(4);
+			float yPos = isStartsOnTopSecond() ? -BAND_CLUSTER_OFFSET : second
+					.getSize().y() + BAND_CLUSTER_OFFSET;
+			bandPointsClusterRelative.add(new Vec2f(startPosX, yPos));
+			yPos = isStartsOnTopSecond() ? 0 : second.getSize().y();
+			bandPointsClusterRelative.add(new Vec2f(startPosX, yPos));
+
+			List<Vec2f> bandPoints = new ArrayList<>(2);
+			startPosX = (float) ((secondIndex + 0.5f - allIndices
+					.size() / 2f) * elementSize);
+			bandPoints.add(new Vec2f(startPosX, MERGING_AREA_LENGHT / 2));
+			bandPoints.add(new Vec2f(startPosX, 0));
+			bandPoints = translateForRotation(bandPoints);
+			bandPoints = rotate(bandPoints, rotationMatrixSecond);
+			if (!isStartsOnTopSecond())
+				bandPoints = translateToBottom(bandPoints, second);
+			findLeftestAndRightestSecond(allIndices);
+			bandPoints = translateForCenteringTheBand(bandPoints,
+					(secondLeftest + secondRightest) / 2f);
+			// now bandPoints contains cluster relative coordinates
+
+			bandPoints.addAll(bandPointsClusterRelative);
+			bandPoints = translateToClusterAbsoluteCoordinates(bandPoints,
+					second);
+			finalPoints.addAll(bandPoints);
+			return TesselatedPolygons.band(finalPoints, 0, SPLINE_RADIUS,
+					SPLINE_POLYGONS);
+		}
+
 	}
 
 }

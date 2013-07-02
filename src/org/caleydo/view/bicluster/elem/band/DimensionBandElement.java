@@ -69,6 +69,7 @@ public class DimensionBandElement extends BandElement {
 				secondSubIndices, overlap);
 		splittedBands = bandFactory.getSplitableBands();
 		nonSplittedBands = bandFactory.getNonSplitableBands();
+		splines = bandFactory.getConnectionsSplines();
 	}
 
 	@Override

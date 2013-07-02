@@ -37,10 +37,11 @@ public abstract class BandFactory {
 		this.secondIndices = secondSubIndices;
 		this.elementSize = elementSize;
 		this.allIndices = overlap;
-;
 	}
 
 	protected abstract Map<List<Integer>, Band> getSplitableBands();
 
 	protected abstract Map<List<Integer>, Band> getNonSplitableBands();
+	
+	protected abstract Map<Integer, Band> getConnectionsSplines(); 
 }

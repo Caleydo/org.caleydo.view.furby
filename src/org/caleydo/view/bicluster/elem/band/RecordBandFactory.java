@@ -34,6 +34,13 @@ public class RecordBandFactory extends BandFactory {
 	}
 
 
+	@Override
+	protected Map<Integer, Band> getConnectionsSplines() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
 
 	
 }

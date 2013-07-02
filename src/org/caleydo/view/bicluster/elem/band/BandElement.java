@@ -67,12 +67,13 @@ public abstract class BandElement extends PickableGLElement {
 
 	protected BandFactory secondMergeArea, bandFactory;
 	protected Map<List<Integer>, Band> splittedBands, nonSplittedBands;
+	protected Map<Integer, Band> splines;
 	protected List<List<Integer>> firstSubIndices;
 	protected List<List<Integer>> secondSubIndices;
 	protected Color highlightColor;
 	protected Color hoveredColor;
 	protected Color defaultColor;
-	protected boolean isMouseOver=false;
+	protected boolean isMouseOver = false;
 	protected boolean isAnyClusterHovered = false;
 
 	private float opacityFactor = 1;
@@ -90,7 +91,7 @@ public abstract class BandElement extends PickableGLElement {
 		this.selectionManager = selectionManager;
 		this.defaultColor = new Color(defaultColor);
 		selectionType = selectionManager.getSelectionType();
-//		highlightPoints = new ArrayList<>();
+		// highlightPoints = new ArrayList<>();
 		highlightOverlap = new ArrayList<>();
 		highlightColor = selectionType.getColor();
 		hoveredColor = SelectionType.MOUSE_OVER.getColor();
@@ -130,50 +131,63 @@ public abstract class BandElement extends PickableGLElement {
 				bandColor = hoveredColor;
 			else
 				bandColor = defaultColor;
-			Map<List<Integer>, Band> bandsToDraw = null;
-			if (isMouseOver == true)  bandsToDraw = splittedBands;
-			else bandsToDraw = nonSplittedBands;
-			if (bandsToDraw != null) {
+			if (isMouseOver == true) {
 				g.color(bandColor.r, bandColor.g, bandColor.b,
 						0.8f * curOpacityFactor);
-				for (Band b: bandsToDraw.values())  {
+				for (Band b : splittedBands.values()) {
 					g.drawPath(b);
 				}
 				g.color(bandColor.r, bandColor.g, bandColor.b,
 						0.5f * curOpacityFactor);
-				for (Band b: bandsToDraw.values()) {
+				for (Band b : splittedBands.values()) {
+					g.fillPolygon(b);
+				}
+				g.color(bandColor.r, bandColor.g, bandColor.b,
+						0.25f * curOpacityFactor);
+				for (Band b : splines.values()) {
+					g.fillPolygon(b);
+				}
+			} else {
+				g.color(bandColor.r, bandColor.g, bandColor.b,
+						0.8f * curOpacityFactor);
+				for (Band b : nonSplittedBands.values()) {
+					g.drawPath(b);
+				}
+				g.color(bandColor.r, bandColor.g, bandColor.b,
+						0.5f * curOpacityFactor);
+				for (Band b : nonSplittedBands.values()) {
 					g.fillPolygon(b);
 				}
 			}
-//			if (highlightOverlap.size() > 0) {
-//				g.color(highlightColor[0], highlightColor[1],
-//						highlightColor[2], 0.8f);
-//				g.drawPath(highlightBand);
-//				if (subBands != null)
-//					for (Band b : highlightedSubBands.values()) {
-//						g.drawPath(b);
-//					}
-//				g.color(highlightColor[0], highlightColor[1],
-//						highlightColor[2], 0.5f);
-//				g.fillPolygon(highlightBand);
-//				if (subBands != null)
-//					for (Band b : highlightedSubBands.values()) {
-//						g.fillPolygon(b);
-//					}
-//			} else if (hoverOverlap.size() > 0) {
-//				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
-//				g.drawPath(highlightBand);
-//				if (subBands != null)
-//					for (Band b : highlightedSubBands.values()) {
-//						g.drawPath(b);
-//					}
-//				g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
-//				g.fillPolygon(highlightBand);
-//				if (subBands != null)
-//					for (Band b : highlightedSubBands.values()) {
-//						g.fillPolygon(b);
-//					}
-//			}
+			// if (highlightOverlap.size() > 0) {
+			// g.color(highlightColor[0], highlightColor[1],
+			// highlightColor[2], 0.8f);
+			// g.drawPath(highlightBand);
+			// if (subBands != null)
+			// for (Band b : highlightedSubBands.values()) {
+			// g.drawPath(b);
+			// }
+			// g.color(highlightColor[0], highlightColor[1],
+			// highlightColor[2], 0.5f);
+			// g.fillPolygon(highlightBand);
+			// if (subBands != null)
+			// for (Band b : highlightedSubBands.values()) {
+			// g.fillPolygon(b);
+			// }
+			// } else if (hoverOverlap.size() > 0) {
+			// g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
+			// g.drawPath(highlightBand);
+			// if (subBands != null)
+			// for (Band b : highlightedSubBands.values()) {
+			// g.drawPath(b);
+			// }
+			// g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
+			// g.fillPolygon(highlightBand);
+			// if (subBands != null)
+			// for (Band b : highlightedSubBands.values()) {
+			// g.fillPolygon(b);
+			// }
+			// }
 			g.incZ();
 		}
 	}
@@ -196,8 +210,13 @@ public abstract class BandElement extends PickableGLElement {
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (isVisible() && !isAnyClusterHovered) {
 			g.color(defaultColor);
-			if (splittedBands != null)
-				for (Band b : splittedBands.values())
+			Map<List<Integer>, Band> bandsToDraw = null;
+			if (isMouseOver == true)
+				bandsToDraw = splittedBands;
+			else
+				bandsToDraw = nonSplittedBands;
+			if (bandsToDraw != null)
+				for (Band b : bandsToDraw.values())
 					g.fillPolygon(b);
 		}
 	}
