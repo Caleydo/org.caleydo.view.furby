@@ -104,7 +104,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 					if (start == end)
 						continue;
 //					bands.add(new RecordBandElement(start, end, bands));
-					bands.add(new DimensionBandElement(start, end, bands, context));
+					bands.add(new DimensionBandElement(start, end, bands));
 				}
 				i++;
 			}
@@ -236,9 +236,9 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 			if (start == specialCluster)
 				continue;
 			if (!event.isDimensionCluster())
-				bands.add(new RecordBandElement(start, specialCluster, bands, context));
+				bands.add(new RecordBandElement(start, specialCluster, bands));
 			else
-				bands.add(new DimensionBandElement(start, specialCluster, bands, context));
+				bands.add(new DimensionBandElement(start, specialCluster, bands));
 		}
 		bands.updateSelection();
 		relayout();

@@ -29,7 +29,6 @@ public class DimensionBandFactory extends BandFactory {
 	private float firstLeftest, secondLeftest;
 	private float firstRightest, secondRightest;
 
-
 	public DimensionBandFactory(ClusterElement cluster, ClusterElement other,
 			List<List<Integer>> firstSubIndices,
 			List<List<Integer>> secondSubIndices, List<Integer> overlap) {
@@ -38,8 +37,6 @@ public class DimensionBandFactory extends BandFactory {
 		calcClusterDirectionVectorsAndAngle();
 		calculateRotationMatrixFirst();
 		calculateRotationMatrixSecond();
-		firstElementSize = first.getDimensionElementSize();
-		secondElementSize = second.getDimensionElementSize();
 	}
 
 	private void calcClusterDirectionVectorsAndAngle() {
