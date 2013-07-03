@@ -19,9 +19,12 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
+import java.util.HashMap;
+
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
 /**
@@ -70,6 +73,9 @@ public class DimensionBandElement extends BandElement {
 		splittedBands = bandFactory.getSplitableBands();
 		nonSplittedBands = bandFactory.getNonSplitableBands();
 		splines = bandFactory.getConnectionsSplines();
+		if (pickingPool != null){
+			pickingPool.clear();
+			splinesPickingMap = new HashMap<>();}
 	}
 
 	@Override
@@ -87,28 +93,31 @@ public class DimensionBandElement extends BandElement {
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		if (!isVisible())
 			return;
-//		g.incZ();
-//		List<Vec2f> points = ((DimensionBandFactory)bandFactory).getTestPointsFirst();
-//		g.color(Color.BLACK);
-//		g.drawLine(points.get(0).x(), points.get(0).y(), points.get(1).x(),
-//				points.get(1).y());
-//		g.drawLine(points.get(2).x(), points.get(2).y(), points.get(3).x(),
-//				points.get(3).y());
-//		g.drawLine(points.get(4).x(), points.get(4).y(), points.get(5).x(),
-//				points.get(5).y());
-//
-//		points = ((DimensionBandFactory)bandFactory).getTestPointsSecond();
-//		g.color(Color.RED);
-//		g.drawLine(points.get(0).x(), points.get(0).y(), points.get(1).x(),
-//				points.get(1).y());
-//		g.drawLine(points.get(2).x(), points.get(2).y(), points.get(3).x(),
-//				points.get(3).y());
-//		g.drawLine(points.get(4).x(), points.get(4).y(), points.get(5).x(),
-//				points.get(5).y());
-////		points = ((DimensionBandFactory)bandFactory).getTestPointsSecond();
-////		g.drawLine(points.get(0).x(), points.get(0).y(), points.get(1).x(),
-////				points.get(1).y());
-//		g.decZ();
+		// g.incZ();
+		// List<Vec2f> points =
+		// ((DimensionBandFactory)bandFactory).getTestPointsFirst();
+		// g.color(Color.BLACK);
+		// g.drawLine(points.get(0).x(), points.get(0).y(), points.get(1).x(),
+		// points.get(1).y());
+		// g.drawLine(points.get(2).x(), points.get(2).y(), points.get(3).x(),
+		// points.get(3).y());
+		// g.drawLine(points.get(4).x(), points.get(4).y(), points.get(5).x(),
+		// points.get(5).y());
+		//
+		// points = ((DimensionBandFactory)bandFactory).getTestPointsSecond();
+		// g.color(Color.RED);
+		// g.drawLine(points.get(0).x(), points.get(0).y(), points.get(1).x(),
+		// points.get(1).y());
+		// g.drawLine(points.get(2).x(), points.get(2).y(), points.get(3).x(),
+		// points.get(3).y());
+		// g.drawLine(points.get(4).x(), points.get(4).y(), points.get(5).x(),
+		// points.get(5).y());
+		// // points =
+		// ((DimensionBandFactory)bandFactory).getTestPointsSecond();
+		// // g.drawLine(points.get(0).x(), points.get(0).y(),
+		// points.get(1).x(),
+		// // points.get(1).y());
+		// g.decZ();
 		super.renderImpl(g, w, h);
 	}
 

@@ -19,7 +19,11 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
+import java.util.List;
+
+import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
 /**
@@ -28,28 +32,14 @@ import org.caleydo.view.bicluster.elem.ClusterElement;
  */
 public class RecordBandElement extends BandElement {
 
-	private static float[] recBandColor = { 0.862f, 0.862f, 1f, 1f };
-	protected float topBandClusterPos, bottomBandClusterPos;
-	protected RecordBandFactory secondMergeArea, firstMergeArea;
+	private static float[] dimBandColor;
 
-	/**
-	 * @param savedData
-	 */
 	public RecordBandElement(GLElement first, GLElement second,
 			AllBandsElement root) {
-		super(first, second, ((ClusterElement) first).getRecOverlap(second),
-				root.getSelectionMixin().getRecordSelectionManager(), root,
-				recBandColor);
+		super(first, second, ((ClusterElement) first).getDimOverlap(second),
+				root.getSelectionMixin().getDimensionSelectionManager(), root,
+				dimBandColor);
 	}
-
-
-
-	@Override
-	protected void fireSelectionChanged() {
-		root.getSelectionMixin().fireRecordSelectionDelta();
-	}
-
-
 
 	@Override
 	protected void initBand() {
@@ -57,17 +47,11 @@ public class RecordBandElement extends BandElement {
 		
 	}
 
-
-
-
-
 	@Override
 	public void updateStructure() {
 		// TODO Auto-generated method stub
 		
 	}
-
-
 
 	@Override
 	public void updatePosition() {
@@ -75,13 +59,19 @@ public class RecordBandElement extends BandElement {
 		
 	}
 
-
-
 	@Override
 	public void updateSelection() {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	protected void fireSelectionChanged() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
 
 
 }
