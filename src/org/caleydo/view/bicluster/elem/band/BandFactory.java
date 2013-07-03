@@ -1,7 +1,5 @@
 package org.caleydo.view.bicluster.elem.band;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +10,7 @@ public abstract class BandFactory {
 
 	protected static final float MERGING_AREA_LENGHT = 20;
 
-	protected double elementSize = 5;
+//	protected double elementSize = 5;
 	/*
 	 * firstIndices contains all Indices of SubBands from the first cluster with
 	 * subBand.size > 1
@@ -35,7 +33,7 @@ public abstract class BandFactory {
 		this.second = other;
 		this.firstIndices = firstSubIndices;
 		this.secondIndices = secondSubIndices;
-		this.elementSize = elementSize;
+//		this.elementSize = elementSize;
 		this.allIndices = overlap;
 	}
 
