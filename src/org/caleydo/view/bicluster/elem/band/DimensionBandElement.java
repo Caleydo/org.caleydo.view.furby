@@ -73,9 +73,11 @@ public class DimensionBandElement extends BandElement {
 		splittedBands = bandFactory.getSplitableBands();
 		nonSplittedBands = bandFactory.getNonSplitableBands();
 		splines = bandFactory.getConnectionsSplines();
-		if (pickingPool != null){
+		if (pickingPool != null) {
 			pickingPool.clear();
-			splinesPickingMap = new HashMap<>();}
+			splinesPickingMap = new HashMap<>();
+		}
+		repaintAll();
 	}
 
 	@Override

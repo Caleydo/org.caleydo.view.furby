@@ -22,7 +22,6 @@ package org.caleydo.view.bicluster.elem.band;
 import gleem.linalg.Vec3f;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
