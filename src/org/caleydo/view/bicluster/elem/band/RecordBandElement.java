@@ -20,6 +20,7 @@
 package org.caleydo.view.bicluster.elem.band;
 
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
 /**
@@ -36,10 +37,10 @@ public class RecordBandElement extends BandElement {
 	 * @param savedData
 	 */
 	public RecordBandElement(GLElement first, GLElement second,
-			AllBandsElement root) {
+			AllBandsElement root, IGLElementContext context) {
 		super(first, second, ((ClusterElement) first).getRecOverlap(second),
 				root.getSelectionMixin().getRecordSelectionManager(), root,
-				recBandColor);
+				recBandColor, context);
 	}
 
 
