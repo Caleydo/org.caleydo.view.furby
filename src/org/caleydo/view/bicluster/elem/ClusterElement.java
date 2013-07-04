@@ -759,9 +759,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		@Override
 		public void onSelectionChanged(GLButton button, boolean selected) {
-			if (button == hide) {
-				hideThisCluster();
-			} else if (button == sorting) {
+			if (button == sorting) {
 				setSortingCaption(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
 						: SortingType.probabilitySorting);
 				sort(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
@@ -1127,7 +1125,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				.fillImage("resources/icons/dialog_close.png"));
 		hide.setTooltip("Close");
 		hide.setSize(16, Float.NaN);
-		hide.setCallback(toolBar);
+//		hide.setCallback(toolBar);
+		hide.setCallback(new ISelectionCallback() {
+
+			@Override
+			public void onSelectionChanged(GLButton button, boolean selected) {
+				hideThisCluster();				
+			}
+		
+		});
 		return hide;
 	}
 }

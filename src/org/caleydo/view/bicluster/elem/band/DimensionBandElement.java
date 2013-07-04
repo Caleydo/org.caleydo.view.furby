@@ -93,11 +93,13 @@ public class DimensionBandElement extends BandElement {
 
 	@ListenTo
 	private void listenTo(SpecialClusterRemoveEvent e) {
-		if (e.isDimCluster()) return;
-		if (!(e.getSender() == first || e.getSender() == second)) return;
-		setVisibility(EVisibility.NONE);
-		overlap = null;
-		root.remove(this);		
+		if (!e.isDimCluster())
+			return;
+		if (e.getSender() == first || e.getSender() == second) {
+			setVisibility(EVisibility.NONE);
+			overlap = null;
+			root.remove(this);
+		}
 	}
 
 }

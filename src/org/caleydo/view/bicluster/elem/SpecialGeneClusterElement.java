@@ -246,7 +246,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 				EventPublisher.trigger(new SpecialClusterRemoveEvent(cluster, false));
 				cluster.isHidden = true;
 				setVisibility();
-				cluster.biclusterRoot.remove(cluster);
+				allClusters.remove(cluster);
 				cluster.mouseOut();
 			}
 			
