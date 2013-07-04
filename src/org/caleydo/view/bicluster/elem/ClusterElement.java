@@ -697,12 +697,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 
 		protected void createButtons() {
-			hide = new GLButton();
-			hide.setRenderer(GLRenderers
-					.fillImage("resources/icons/dialog_close.png"));
-			hide.setTooltip("Close");
-			hide.setSize(16, Float.NaN);
-			hide.setCallback(this);
+			hide = createHideClusterButton();
 			this.add(hide);
 			sorting = new GLButton();
 			sorting.setRenderer(GLRenderers
@@ -1124,5 +1119,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	public float getRecordElementSize() {
 		return getSize().y() / getRecordVirtualArray().size();
+	}
+
+	protected GLButton createHideClusterButton() {
+		GLButton hide = new GLButton();
+		hide.setRenderer(GLRenderers
+				.fillImage("resources/icons/dialog_close.png"));
+		hide.setTooltip("Close");
+		hide.setSize(16, Float.NaN);
+		hide.setCallback(toolBar);
+		return hide;
 	}
 }

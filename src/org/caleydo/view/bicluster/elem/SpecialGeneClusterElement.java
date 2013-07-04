@@ -7,16 +7,21 @@ import java.util.concurrent.ExecutorService;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
+import org.caleydo.core.view.opengl.layout2.basic.GLButton;
+import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
+import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
 public final class SpecialGeneClusterElement extends ClusterElement {
 
@@ -168,11 +173,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 		return elements.size();
 	}
 
-	@Override
-	protected void focusThisCluster() {
-		// TODO
 
-	}
 
 	@Override
 	protected void rebuildMyData(boolean isGlobal) {
@@ -230,5 +231,29 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 	protected void sort(SortingType type) {
 		// Nothing to do here
 	}
+	
+	@Override
+	protected GLButton createHideClusterButton() {
+		GLButton hide = new GLButton();
+		hide.setRenderer(GLRenderers
+				.fillImage("resources/icons/dialog_close.png"));
+		hide.setTooltip("Unload cluster");
+		hide.setSize(16, Float.NaN);
+		hide.setCallback(new ISelectionCallback(){
 
+			@Override
+			public void onSelectionChanged(GLButton button, boolean selected) {
+				EventPublisher.trigger(new SpecialClusterRemoveEvent(cluster, false));
+				cluster.isHidden = true;
+				setVisibility();
+				cluster.biclusterRoot.remove(cluster);
+				cluster.mouseOut();
+			}
+			
+		});
+		return hide;
+	}
+
+	
+	
 }

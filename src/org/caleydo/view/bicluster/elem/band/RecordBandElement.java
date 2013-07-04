@@ -21,9 +21,12 @@ package org.caleydo.view.bicluster.elem.band;
 
 import java.util.HashMap;
 
+import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.GLElement.EVisibility;
 import org.caleydo.view.bicluster.elem.ClusterElement;
+import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
 /**
  * @author Michael Gillhofer
@@ -92,6 +95,14 @@ public class RecordBandElement extends BandElement {
 
 	}
 
+	@ListenTo
+	private void listenTo(SpecialClusterRemoveEvent e) {
+		if (!e.isDimCluster()) return;
+		if (!(e.getSender() == first || e.getSender() == second)) return;
+		setVisibility(EVisibility.NONE);
+		overlap = null;
+		root.remove(this);		
+	}
 
 
 }

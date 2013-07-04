@@ -42,6 +42,7 @@ import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
+import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
 /**
  * @author Michael Gillhofer
@@ -382,6 +383,7 @@ public abstract class BandElement extends PickableGLElement {
 			opacityFactor = highOpacityFactor;
 		repaintAll();
 	}
+	
 
 	protected Pair<Vec3f, Vec3f> pair(float x1, float y1, float x2, float y2) {
 		Vec3f _1 = new Vec3f(x1, y1, 0);
