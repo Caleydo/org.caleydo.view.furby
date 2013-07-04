@@ -103,7 +103,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 						clusters.asList().size())) {
 					if (start == end)
 						continue;
-//					bands.add(new RecordBandElement(start, end, bands));
+					bands.add(new RecordBandElement(start, end, bands));
 					bands.add(new DimensionBandElement(start, end, bands));
 				}
 				i++;

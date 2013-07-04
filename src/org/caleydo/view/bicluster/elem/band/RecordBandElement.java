@@ -19,11 +19,10 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
-import java.util.List;
+import java.util.HashMap;
 
-import org.caleydo.core.data.selection.SelectionManager;
+import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
-import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
 /**
@@ -32,45 +31,66 @@ import org.caleydo.view.bicluster.elem.ClusterElement;
  */
 public class RecordBandElement extends BandElement {
 
-	private static float[] dimBandColor;
+//	private static float[] recBandColor = {0.6f,0.1f,0.1f,1f};
+	private static float[] recBandColor = Color.LIGHT_GRAY.getRGBA();
 
 	public RecordBandElement(GLElement first, GLElement second,
 			AllBandsElement root) {
-		super(first, second, ((ClusterElement) first).getDimOverlap(second),
-				root.getSelectionMixin().getDimensionSelectionManager(), root,
-				dimBandColor);
+		super(first, second, ((ClusterElement) first).getRecOverlap(second),
+				root.getSelectionMixin().getRecordSelectionManager(), root,
+				recBandColor);
+	}
+
+	@Override
+	protected void fireSelectionChanged() {
+		root.getSelectionMixin().fireRecordSelectionDelta();
 	}
 
 	@Override
 	protected void initBand() {
-		// TODO Auto-generated method stub
-		
+		updateStructure();
 	}
 
 	@Override
 	public void updateStructure() {
-		// TODO Auto-generated method stub
+		if (!isVisible())
+			return;
+		overlap = first.getRecOverlap(second);
+		if (overlap.size() > 0)
+			setVisibility(EVisibility.PICKABLE);
+		else
+			setVisibility(EVisibility.NONE);
+		firstSubIndices = first.getListOfContinousRecSequenzes(overlap);
+		secondSubIndices = second.getListOfContinousRecSequenzes(overlap);
+		if (firstSubIndices.size() == 0)
+			return;
+		bandFactory = new RecordBandFactory(first, second, firstSubIndices,
+				secondSubIndices, overlap);
+		nonSplittedBands = bandFactory.getNonSplitableBands();  
+//		splittedBands = bandFactory.getSplitableBands();
 		
+		// splitted bands are not looking really helpfull for records
+		splittedBands= nonSplittedBands;
+		
+//		splines = bandFactory.getConnectionsSplines();
+		splines = new HashMap<>(); // create empty hashmap .. splines are not looking very good
+		if (pickingPool != null) {
+			pickingPool.clear();
+			splinesPickingMap = new HashMap<>();
+		}
+		repaintAll();
 	}
 
 	@Override
 	public void updatePosition() {
-		// TODO Auto-generated method stub
-		
+		updateStructure();
 	}
 
 	@Override
 	public void updateSelection() {
 		// TODO Auto-generated method stub
-		
-	}
 
-	@Override
-	protected void fireSelectionChanged() {
-		// TODO Auto-generated method stub
-		
 	}
-
 
 
 

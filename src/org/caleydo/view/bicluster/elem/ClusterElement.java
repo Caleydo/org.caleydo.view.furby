@@ -1065,8 +1065,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	public float getRecPosOf(int index) {
-		return ((HeatMapElement) content).getRecordCellSpace(index)
-				.getPosition();
+		if (isFocused) {
+			int ind = getRecordVirtualArray().indexOf(index);
+			CellSpace space = ((HeatMapElement) content)
+					.getRecordCellSpace(ind);
+			return space.getPosition();
+		} else {
+			return getRecIndexOf(index) * getSize().y()
+					/ getRecordVirtualArray().size();
+		}
 
 	}
 
