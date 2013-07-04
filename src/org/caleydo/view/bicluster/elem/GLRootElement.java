@@ -35,11 +35,13 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.band.AllBandsElement;
 import org.caleydo.view.bicluster.elem.band.DimensionBandElement;
 import org.caleydo.view.bicluster.elem.band.RecordBandElement;
+import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
+import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 
 /**
  * @author user
@@ -85,7 +87,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
 				final ClusterElement el = new ClusterElement(p, clusters, x, l,
-						z, executor);
+						z, executor, this);
 				clusters.add(el);
 			}
 		}
@@ -184,7 +186,6 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private int largeClusterSize = 150;
 
 	boolean dimBands, recBands;
-
 	@ListenTo
 	private void listenTo(CreateBandsEvent event) {
 		if (!(event.getSender() instanceof ClusterElement)){
@@ -227,7 +228,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	@ListenTo
 	private void listenTo(SpecialClusterAddedEvent event) {
 		ClusterElement specialCluster = new SpecialGeneClusterElement(x,
-				clusters, x, l, z, executor, event.getElements());
+				clusters, x, l, z, executor, event.getElements(), this);
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);
 		setClusterSizes();
@@ -243,4 +244,15 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		bands.updateSelection();
 		relayout();
 	}
+	
+	@ListenTo
+	private void listenTo(ClusterGetsHiddenEvent e) {
+		setClusterSizes();
+	}
+	
+	@ListenTo
+	private void listenTo(UnhidingClustersEvent e) {
+		setClusterSizes();
+	}
+	
 }

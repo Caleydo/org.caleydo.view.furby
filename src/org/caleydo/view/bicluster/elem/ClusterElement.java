@@ -103,6 +103,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	protected final TablePerspective l;
 	protected final TablePerspective z;
 	protected final AllClustersElement allClusters;
+	protected final GLRootElement biclusterRoot;
 	protected final ExecutorService executor;
 	protected Vec2d attForce = new Vec2d(0, 0);
 	protected Vec2d repForce = new Vec2d(0, 0);
@@ -146,7 +147,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	public ClusterElement(TablePerspective data, AllClustersElement root,
 			TablePerspective x, TablePerspective l, TablePerspective z,
-			ExecutorService executor) {
+			ExecutorService executor, GLRootElement biclusterRoot) {
 		setLayout(this);
 		this.data = data;
 		this.allClusters = root;
@@ -154,6 +155,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.l = l;
 		this.z = z;
 		this.executor = executor;
+		this.biclusterRoot = biclusterRoot;
 		standardScaleFactor = 1;
 		initContent();
 		setVisibility();
@@ -875,6 +877,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	private void listenTo(UnhidingClustersEvent event) {
 		isHidden = false;
 		setVisibility();
+		biclusterRoot.setClusterSizes();
 	}
 
 	@ListenTo

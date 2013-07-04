@@ -80,14 +80,14 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	}
 
 	public void setData(List<TablePerspective> list, TablePerspective x,
-			TablePerspective l, TablePerspective z, ExecutorService executor) {
+			TablePerspective l, TablePerspective z, ExecutorService executor, GLRootElement biclusterRoot) {
 		this.clear();
 		this.setzDelta(1);
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
 				final ClusterElement el = new ClusterElement(p, this, x, l, z,
-						executor);
+						executor, biclusterRoot);
 				this.add(el);
 			}
 		}

@@ -25,8 +25,8 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 
 	public SpecialGeneClusterElement(TablePerspective data,
 			AllClustersElement root, TablePerspective x, TablePerspective l,
-			TablePerspective z, ExecutorService executor, List<Integer> elements) {
-		super(data, root, x, l, z, executor);
+			TablePerspective z, ExecutorService executor, List<Integer> elements, GLRootElement biclusterRoot) {
+		super(data, root, x, l, z, executor, biclusterRoot);
 		setHasContent(null, elements);
 		content.setzDelta(0.5f);
 		toolBar.remove(3);
@@ -40,8 +40,8 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 
 	private SpecialGeneClusterElement(TablePerspective data,
 			AllClustersElement root, TablePerspective x, TablePerspective l,
-			TablePerspective z, ExecutorService executor) {
-		super(data, root, x, l, z, executor);
+			TablePerspective z, ExecutorService executor, GLRootElement biclusterRoot) {
+		super(data, root, x, l, z, executor, biclusterRoot);
 
 	}
 
