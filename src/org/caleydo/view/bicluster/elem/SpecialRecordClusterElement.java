@@ -22,11 +22,14 @@ import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
+import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 
 public final class SpecialRecordClusterElement extends ClusterElement {
 
 	private VirtualArray elements;
 	private float width = 10f;
+	
+	private String clusterName;
 
 	public SpecialRecordClusterElement(TablePerspective data,
 			AllClustersElement root, TablePerspective x, TablePerspective l,
@@ -137,9 +140,16 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 
 	@Override
 	public String getID() {
-		return "Special " + x.getDataDomain().getRecordIDCategory().getDenominationPlural().toString();
+		return clusterName == null ? "Special " + x.getDataDomain().getRecordIDCategory().getDenominationPlural().toString() : clusterName;
 	}
 
+	@ListenTo
+	private void listenTo(ClusterRenameEvent e) {
+		if (e.getSender() == this){
+			clusterName = e.getNewName();
+		}
+	}
+	
 	@Override
 	protected void setLabel(String id) {
 		// nothing to do here
