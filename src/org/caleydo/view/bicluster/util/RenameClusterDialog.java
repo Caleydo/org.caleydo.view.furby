@@ -37,7 +37,7 @@ import org.eclipse.swt.widgets.Text;
 
 /**
  * @author Samuel Gratzl
- *
+ * 
  */
 public class RenameClusterDialog extends TitleAreaDialog {
 
@@ -50,7 +50,6 @@ public class RenameClusterDialog extends TitleAreaDialog {
 		super(shell);
 		this.cluster = clusterElement;
 	}
-
 
 	@Override
 	public void create() {
@@ -66,7 +65,6 @@ public class RenameClusterDialog extends TitleAreaDialog {
 		parent.setLayout(new GridLayout(1, false));
 		parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-		
 		Label l = new Label(parent, SWT.NONE);
 		l.setText("Input: ");
 		l.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
@@ -103,6 +101,10 @@ public class RenameClusterDialog extends TitleAreaDialog {
 			return false;
 		}
 		name = lines[0];
+		if (!(name.length() > 0)) {
+			setErrorMessage("New name must at least contain one character");
+			return false;
+		}
 		if (!(name.length() < 20)) {
 			setErrorMessage("New name must only be 20 characters long");
 			return false;
