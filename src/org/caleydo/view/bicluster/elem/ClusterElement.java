@@ -78,6 +78,8 @@ import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.BandSorting;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
+import org.caleydo.view.bicluster.util.ClusterRenameEvent;
+import org.caleydo.view.bicluster.util.RenameClusterDialog;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.CellSpace;
@@ -569,6 +571,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 					clicked = true;
 				}
 				break;
+			case DOUBLE_CLICKED:
+				renameCluster();
+				break;
 			case MOUSE_RELEASED:
 				pick.setDoDragging(false);
 				clicked = false;
@@ -788,9 +793,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		scaleFactor += 0.6;
 	}
 
+	public void renameCluster() {
+		RenameClusterDialog.open(this);		
+	}
+
+	@ListenTo
+	private void listenTo(ClusterRenameEvent e) {
+		if (e.getSender() == this){
+			setLabel(e.getNewName());
+		}
+	}
+	
 	protected void resetScaleFactor() {
-		System.out.println("Scale Factor set from " + scaleFactor + " to "
-				+ standardScaleFactor);
+//		System.out.println("Scale Factor set from " + scaleFactor + " to "
+//				+ standardScaleFactor);
 		scaleFactor = standardScaleFactor;
 	}
 
@@ -1135,5 +1151,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		
 		});
 		return hide;
+	}
+
+	public TablePerspective getTablePerspective() {
+		return data;
 	}
 }

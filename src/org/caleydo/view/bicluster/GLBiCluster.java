@@ -20,6 +20,7 @@
 package org.caleydo.view.bicluster;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,19 +118,22 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 				TablePerspective custom = xDataDomain.getTablePerspective(
 						recKey, dimKey, false);
 				custom.setLabel(l.getDataDomain().getDimensionLabel(i));
+				dim.setLabel(l.getDataDomain().getDimensionLabel(i) + " L");
+				rec.setLabel(z.getDataDomain().getDimensionLabel(i) + " Z");
 				persp.add(custom);
 			}
 		} else {
 			int i = 0;
 			int bcCount = l.getDataDomain().getTable().getColumnIDList().size();
 			for (i = 0; i < bcCount; i++) {
-				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i));
+				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i) + " L");
 			}
-			System.out.println(biClusterLabels);
+//			System.out.println(biClusterLabels);
 			for (TablePerspective p : x.getDataDomain()
 					.getAllTablePerspectives()) {
-				System.out.println(p.getLabel());
-				if (biClusterLabels.contains(p.getLabel())) {
+				String name = p.getDimensionPerspective().getLabel(); 
+//				System.out.println(name);
+				if (biClusterLabels.contains(name)) {
 					persp.add(p);
 				}
 			}
@@ -178,9 +182,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 				ClusterElement el = (ClusterElement) rootElement.getClusters()
 						.get(i);
 
-				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i));
-				el.setData(dimIndices, recIndices, setXElements, l
-						.getDataDomain().getDimensionLabel(i), i, dimResult
+				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i) + "L");
+				el.setData(dimIndices, recIndices, setXElements, el.getTablePerspective().getLabel(), i, dimResult
 						.getMax(), recResult.getMax(), dimResult.getMin(),
 						recResult.getMin());
 			} catch (InterruptedException | ExecutionException
@@ -270,7 +273,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			// signal that we now use that data domain
 			EventPublisher.trigger(new DataDomainUpdateEvent(x.getDataDomain()));
 			createBiClusterPerspectives(x, l, z);
-			createBiClusterPerspectives(x, l, z);
+//			createBiClusterPerspectives(x, l, z);
 			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold,
 					maxRecThreshold));
 			EventPublisher.trigger(new LZThresholdChangeEvent(geneThreshold,

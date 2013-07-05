@@ -84,7 +84,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		this.add(bands);
 
 		if (list != null) {
-			System.out.println("List size: " + list.size());
+			System.out.println(list.size() + " Cluster geladen.");
 			for (TablePerspective p : list) {
 				final ClusterElement el = new ClusterElement(p, clusters, x, l,
 						z, executor, this);
