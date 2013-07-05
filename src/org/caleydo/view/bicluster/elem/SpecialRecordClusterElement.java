@@ -23,12 +23,12 @@ import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
-public final class SpecialGeneClusterElement extends ClusterElement {
+public final class SpecialRecordClusterElement extends ClusterElement {
 
 	private VirtualArray elements;
 	private float width = 10f;
 
-	public SpecialGeneClusterElement(TablePerspective data,
+	public SpecialRecordClusterElement(TablePerspective data,
 			AllClustersElement root, TablePerspective x, TablePerspective l,
 			TablePerspective z, ExecutorService executor, List<Integer> elements, GLRootElement biclusterRoot) {
 		super(data, root, x, l, z, executor, biclusterRoot);
@@ -43,7 +43,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 		resetScaleFactor();
 	}
 
-	private SpecialGeneClusterElement(TablePerspective data,
+	private SpecialRecordClusterElement(TablePerspective data,
 			AllClustersElement root, TablePerspective x, TablePerspective l,
 			TablePerspective z, ExecutorService executor, GLRootElement biclusterRoot) {
 		super(data, root, x, l, z, executor, biclusterRoot);
@@ -137,7 +137,7 @@ public final class SpecialGeneClusterElement extends ClusterElement {
 
 	@Override
 	public String getID() {
-		return "Special Genes";
+		return "Special " + x.getDataDomain().getRecordIDCategory().getDenominationPlural().toString();
 	}
 
 	@Override

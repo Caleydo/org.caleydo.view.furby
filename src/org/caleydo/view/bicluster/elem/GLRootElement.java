@@ -227,7 +227,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	@ListenTo
 	private void listenTo(SpecialClusterAddedEvent event) {
-		ClusterElement specialCluster = new SpecialGeneClusterElement(x,
+		ClusterElement specialCluster = new SpecialRecordClusterElement(x,
 				clusters, x, l, z, executor, event.getElements(), this);
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);
