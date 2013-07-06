@@ -68,6 +68,9 @@ public class DimensionBandElement extends BandElement {
 		secondSubIndices = second.getListOfContinousDimSequences(overlap);
 		if (firstSubIndices.size() == 0)
 			return;
+//		if (first.getID().contains("Chemical") || second.getID().contains("Chemical")) {
+//			System.out.println("halt");
+//		}
 		bandFactory = new DimensionBandFactory(first, second, firstSubIndices,
 				secondSubIndices, overlap);
 		splittedBands = bandFactory.getSplitableBands();

@@ -1134,6 +1134,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	public float getRecordElementSize() {
 		return getSize().y() / getRecordVirtualArray().size();
 	}
+	
+	public int getNrOfElements(List<Integer> band){
+		return band.size();
+	}
 
 	protected GLButton createHideClusterButton() {
 		GLButton hide = new GLButton();

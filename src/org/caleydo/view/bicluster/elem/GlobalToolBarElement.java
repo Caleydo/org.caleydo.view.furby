@@ -46,6 +46,7 @@ import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
+import org.caleydo.view.bicluster.util.ImportChemicalClustersDialog;
 import org.caleydo.view.bicluster.util.ImportExternalDialog;
 
 /**
@@ -71,7 +72,9 @@ public class GlobalToolBarElement extends GLElementContainer implements
 	private GLElement recordLabel;
 	private GLElement clusterMinSizeLabel;
 	private GLButton clearHiddenClusterButton;
-	private GLButton specialDimButton;
+	private GLButton specialRecordButton;
+	private GLButton specialDimensionButton;
+
 	private List<String> clearHiddenButtonTooltipList = new ArrayList<>();
 	private TablePerspective x;
 
@@ -98,8 +101,8 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		clearHiddenClusterButton.setCallback(this);
 		clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
 		this.add(clearHiddenClusterButton);
-		specialDimButton = new GLButton(EButtonMode.BUTTON);
-		specialDimButton.setRenderer(new IGLRenderer() {
+		specialRecordButton = new GLButton(EButtonMode.BUTTON);
+		specialRecordButton.setRenderer(new IGLRenderer() {
 
 			@Override
 			public void render(GLGraphics g, float w, float h, GLElement parent) {
@@ -107,9 +110,21 @@ public class GlobalToolBarElement extends GLElementContainer implements
 			}
 		});
 
-		specialDimButton.setCallback(this);
-		specialDimButton.setTooltip("Add special Elements");
-		this.add(specialDimButton);
+		specialRecordButton.setCallback(this);
+		specialRecordButton.setTooltip("Add special record Elements");
+		this.add(specialRecordButton);
+
+		specialDimensionButton = new GLButton(EButtonMode.BUTTON);
+		specialDimensionButton.setRenderer(new IGLRenderer() {
+
+			@Override
+			public void render(GLGraphics g, float w, float h, GLElement parent) {
+				g.drawText("Assign Chemical clusters", 18, 4, w, 13);
+			}
+		});
+		specialDimensionButton.setCallback(this);
+		specialDimensionButton.setTooltip("Add chemical Clusters");
+		this.add(specialDimensionButton);
 
 		this.dimBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
 		dimBandVisibilityButton.setRenderer(GLButton
@@ -183,13 +198,20 @@ public class GlobalToolBarElement extends GLElementContainer implements
 					.setTooltip("Currently no Clusters are hidden");
 			setClearHiddenButtonRenderer();
 			EventPublisher.trigger(new UnhidingClustersEvent());
-		} else if (button == specialDimButton) {
+		} else if (button == specialRecordButton) {
 			addSpecialRecords();
+		} else if (button == specialDimensionButton) {
+			addChemicalClusters();
 		}
 		boolean isBandSorting = bandSortingModeButton.isSelected();
 		EventPublisher.trigger(new SortingChangeEvent(
 				isBandSorting ? SortingType.bandSorting
 						: SortingType.probabilitySorting, this));
+	}
+
+	private void addChemicalClusters() {
+		ImportChemicalClustersDialog.open(this.x.getDimensionPerspective().getIdType());
+		
 	}
 
 	private void addSpecialRecords() {
@@ -248,7 +270,8 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		this.add(dimensionLabel);
 
 		this.remove(dimensionThresholdSlider);
-		this.dimensionThresholdSlider = new GLSlider(0.05f, maxDimensionValue, 4.5f);
+		this.dimensionThresholdSlider = new GLSlider(0.05f, maxDimensionValue,
+				4.5f);
 		dimensionThresholdSlider.setCallback(this);
 		dimensionThresholdSlider.setSize(Float.NaN, 18);
 		dimensionThresholdSlider
@@ -305,7 +328,7 @@ public class GlobalToolBarElement extends GLElementContainer implements
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(x
 				.getDataDomain().getDimensionIDCategory().toString()
 				+ " Bands"));
-		specialDimButton.setRenderer(new IGLRenderer() {
+		specialRecordButton.setRenderer(new IGLRenderer() {
 
 			@Override
 			public void render(GLGraphics g, float w, float h, GLElement parent) {

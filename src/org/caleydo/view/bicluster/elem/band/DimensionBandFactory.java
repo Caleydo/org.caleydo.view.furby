@@ -62,15 +62,6 @@ public class DimensionBandFactory extends BandFactory {
 
 		secondAngle = firstAngle;
 		firstAngle = firstAngle + Math.PI;
-
-		// if (first.getID().contains("bicluster3")
-		// && second.getID().contains("bicluster17")) {
-		// System.out.println(firstAngle);
-		// // System.out.println("halt -  dimbandmergeArea");
-		// // System.out.println(cLoc + " " + oLoc);
-		// // System.out.println(cluster.getID() + " " + other.getID());
-		// }
-
 	}
 
 	private void calculateRotationMatrixFirst() {
@@ -169,8 +160,13 @@ public class DimensionBandFactory extends BandFactory {
 		secondPoints = translateToClusterAbsoluteCoordinates(secondPoints,
 				second);
 		bandPoints.addAll(secondPoints);
-		bandsMap.put(allIndices, TesselatedBiClusterPolygons.band(bandPoints, 0,
-				allIndices.size() / 2f * firstElementSize, allIndices.size() / 2f * secondElementSize, MAINBAND_POLYGONS));
+		bandsMap.put(
+				allIndices,
+				TesselatedBiClusterPolygons.band(bandPoints, 0,
+						first.getNrOfElements(allIndices) / 2f
+								* firstElementSize,
+						second.getNrOfElements(allIndices) / 2f
+								* secondElementSize, MAINBAND_POLYGONS));
 
 		return bandsMap;
 	}
@@ -232,7 +228,6 @@ public class DimensionBandFactory extends BandFactory {
 					first);
 
 		}
-		float mainBandWidth = (float) (allIndices.size() / 2f * secondElementSize);
 		if (secondIndices.size() == 1) {
 			// there is only one band from the second cluster to the first
 			// cluster area.
@@ -249,10 +244,13 @@ public class DimensionBandFactory extends BandFactory {
 			secondPoints = translateToClusterAbsoluteCoordinates(secondPoints,
 					second);
 			bandPoints.addAll(secondPoints);
-			bandsMap.put(allIndices, TesselatedBiClusterPolygons.band(
-					bandPoints, 0, allIndices.size() / 2f * firstElementSize,
-					allIndices.size() / 2f * secondElementSize,
-					MAINBAND_POLYGONS));
+			bandsMap.put(
+					allIndices,
+					TesselatedBiClusterPolygons.band(bandPoints, 0,
+							first.getNrOfElements(allIndices) / 2f
+									* firstElementSize,
+							second.getNrOfElements(allIndices) / 2f
+									* secondElementSize, MAINBAND_POLYGONS));
 		} else {
 			// band has to be split up into parts
 			// create band from the other cluster with coordinates from
@@ -289,9 +287,13 @@ public class DimensionBandFactory extends BandFactory {
 					mainPointsSecond, second);
 
 			bandPoints.addAll(mainPointsSecond);
-			bandsMap.put(allIndices, TesselatedBiClusterPolygons.band(bandPoints, 0,
-					allIndices.size() / 2f * firstElementSize,
-					allIndices.size() / 2f * secondElementSize, MAINBAND_POLYGONS));
+			bandsMap.put(
+					allIndices,
+					TesselatedBiClusterPolygons.band(bandPoints, 0,
+							first.getNrOfElements(allIndices) / 2f
+									* firstElementSize,
+							second.getNrOfElements(allIndices) / 2f
+									* secondElementSize, MAINBAND_POLYGONS));
 		}
 
 		return bandsMap;

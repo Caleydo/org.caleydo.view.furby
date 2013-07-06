@@ -35,6 +35,7 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.band.AllBandsElement;
 import org.caleydo.view.bicluster.elem.band.DimensionBandElement;
 import org.caleydo.view.bicluster.elem.band.RecordBandElement;
+import org.caleydo.view.bicluster.event.ChemicalClusterAddedEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
@@ -65,7 +66,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		super.init(context);
 		// show the global toolbar as a popup
 		context.getPopupLayer().show(globalToolBar,
-				new Vec4f(Float.NaN, 0, 200, 310),
+				new Vec4f(Float.NaN, 0, 200, 330),
 				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE);
 	}
 
@@ -93,7 +94,6 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		}
 		clusters.setToolbar(globalToolBar);
 	}
-
 
 	public void createBands() {
 		if (bands == null)
@@ -158,7 +158,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w,
 			float h) {
-		for (IGLLayoutElement child : children){
+		for (IGLLayoutElement child : children) {
 			child.setBounds(0, 0, w, h);
 			child.asElement().relayout();
 		}
@@ -186,9 +186,10 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private int largeClusterSize = 150;
 
 	boolean dimBands, recBands;
+
 	@ListenTo
 	private void listenTo(CreateBandsEvent event) {
-		if (!(event.getSender() instanceof ClusterElement)){
+		if (!(event.getSender() instanceof ClusterElement)) {
 			createBands();
 			return;
 		}
@@ -244,15 +245,33 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		bands.updateSelection();
 		relayout();
 	}
-	
+
+	@ListenTo
+	private void listenTo(ChemicalClusterAddedEvent e) {
+		ClusterElement specialCluster = new ChemicalClusterElement(x,
+				clusters, x, l, z, executor, e.getClusterList(),
+				e.getElementToClusterMap(), this);
+		specialCluster.setLocation(1000, 1000);
+		clusters.add(specialCluster);
+		setClusterSizes();
+		recalculateOverlap(dimBands, recBands);
+		for (GLElement start : clusters) {
+			if (start == specialCluster)
+				continue;
+			bands.add(new DimensionBandElement(start, specialCluster, bands));
+		}
+		bands.updateSelection();
+		relayout();
+	}
+
 	@ListenTo
 	private void listenTo(ClusterGetsHiddenEvent e) {
 		setClusterSizes();
 	}
-	
+
 	@ListenTo
 	private void listenTo(UnhidingClustersEvent e) {
 		setClusterSizes();
 	}
-	
+
 }

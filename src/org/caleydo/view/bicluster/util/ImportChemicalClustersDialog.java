@@ -22,14 +22,16 @@ package org.caleydo.view.bicluster.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.caleydo.core.data.collection.EDataType;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.id.IDMappingManagerRegistry;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
-import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
+import org.caleydo.view.bicluster.event.ChemicalClusterAddedEvent;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -48,29 +50,30 @@ import org.eclipse.swt.widgets.Text;
 
 /**
  * @author Samuel Gratzl
- *
+ * 
  */
-public class ImportExternalDialog extends TitleAreaDialog {
+public class ImportChemicalClustersDialog extends TitleAreaDialog {
 	protected IDType target;
 
 	private Text input;
 	private ComboViewer idType;
 
-	private Collection<Integer> result;
+	private List<String> clusterList;
+	private Map<Integer, String> elementToClusterMap;
 
-	public ImportExternalDialog(Shell shell, IDType target) {
+	public ImportChemicalClustersDialog(Shell shell, IDType target) {
 		super(shell);
 		assert target.getDataType() == EDataType.INTEGER;
 		this.target = target;
+		clusterList = new ArrayList<>();
+		elementToClusterMap = new HashMap<Integer, String>();
 	}
-
 
 	@Override
 	public void create() {
 		super.create();
-		setTitle("Adding special " + target.getIDCategory()
-				+ " elements: one of COMMA(,),TAB or SEMICOLON(;) as a seperator");
-		setMessage("Enter data");
+		setTitle("Adding chemical Clusters.");
+		setMessage("Every cluster in a single line starting with its name followed by ':' and its elements, seperated by ',' ';' or ' '");
 	}
 
 	@Override
@@ -92,8 +95,10 @@ public class ImportExternalDialog extends TitleAreaDialog {
 			}
 		});
 		idType.setInput(target.getIDCategory().getPublicIdTypes());
-		idType.setSelection(new StructuredSelection(target.getIDCategory().getHumanReadableIDType()));
-		idType.getControl().setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
+		idType.setSelection(new StructuredSelection(target.getIDCategory()
+				.getHumanReadableIDType()));
+		idType.getControl().setLayoutData(
+				new GridData(SWT.LEFT, SWT.TOP, false, false));
 
 		l = new Label(parent, SWT.NONE);
 		l.setText("Input: ");
@@ -124,51 +129,85 @@ public class ImportExternalDialog extends TitleAreaDialog {
 	}
 
 	protected boolean validate() {
-		IDType source = (IDType) ((StructuredSelection) idType.getSelection()).getFirstElement();
+		setErrorMessage(null);
+		IDType source = (IDType) ((StructuredSelection) idType.getSelection())
+				.getFirstElement();
 		if (source == null)
 			return false;
-		String[] values = input.getText().split("[,;\\t]");
-		if (values.length == 0)
+		String[] clusters = input.getText().split("\n");
+		if (clusters.length == 0)
 			return false;
-		IIDTypeMapper<Object, Integer> mapper = IDMappingManagerRegistry.get().getIDMappingManager(target)
-				.getIDTypeMapper(source, target);
-		List<Object> input = new ArrayList<>();
-		StringBuilder errors = new StringBuilder();
-		switch (source.getDataType()) {
-		case FLOAT:
-			for (String v : values) {
-				try {
-					input.add(Float.parseFloat(v));
-				} catch (NumberFormatException e) {
-					errors.append(v).append(", ");
-				}
+		clusterList = new ArrayList<>();
+		elementToClusterMap = new HashMap<>();
+		for (String cluster : clusters) {
+			StringBuilder errors = new StringBuilder();
+			Collection<Integer> result;
+			int index = cluster.indexOf(':');
+			if (index < 0) {
+				setErrorMessage("You have to specifiy the name for the chemical cluster followed by ':' and its elements");
+				return false;
+			} else if (index > 15) {
+				setErrorMessage("Name " + cluster.substring(0,index) + " to long. Please use only 25 characters");
+				return false;
 			}
-			break;
-		case INTEGER:
-			for (String v : values) {
-				try {
-					input.add(Integer.parseInt(v));
-				} catch (NumberFormatException e) {
-					errors.append(v).append(", ");
-				}
+			String clusterName = cluster.substring(0, index);
+			cluster = cluster.substring(index+1);
+			String[] values = cluster.split("[,;\\t]");
+			if (values.length < 1) {
+				setErrorMessage("Every cluster needs at least one element");
+				return false;
+			} else {
+				clusterList.add(clusterName); 
 			}
-			break;
-		case STRING:
-			input.addAll(Arrays.asList(values));
-			break;
-		}
-		if (errors.length() > 0) {
-			setErrorMessage("can't parse: " + errors.substring(0, errors.length() - 2) + " to " + source.getDataType());
-			return false;
-		}
-		this.result = mapper.apply(input);
-		if (this.result.isEmpty()) {
-			setErrorMessage("can't map anything");
-			return false;
-		}
-		if (this.result == null || this.result.size() < input.size()) {
-			setErrorMessage("can only map " + result.size() + " out of " + input.size());
-			return false;
+			for (int i =0; i < values.length; i++) {
+				values[i] = values[i].replaceAll("\\s","");  // remove whitespace
+			}
+			IIDTypeMapper<Object, Integer> mapper = IDMappingManagerRegistry
+					.get().getIDMappingManager(target)
+					.getIDTypeMapper(source, target);
+			List<Object> input = new ArrayList<>();
+			switch (source.getDataType()) {
+			case FLOAT:
+				for (String v : values) {
+					try {
+						input.add(Float.parseFloat(v));
+					} catch (NumberFormatException e) {
+						errors.append(v).append(", ");
+					}
+				}
+				break;
+			case INTEGER:
+				for (String v : values) {
+					try {
+						input.add(Integer.parseInt(v));
+					} catch (NumberFormatException e) {
+						errors.append(v).append(", ");
+					}
+				}
+				break;
+			case STRING:
+				input.addAll(Arrays.asList(values));
+				break;
+			}
+			if (errors.length() > 0) {
+				setErrorMessage("can't parse: "
+						+ errors.substring(0, errors.length() - 2) + " to "
+						+ source.getDataType());
+				return false;
+			}
+			result = mapper.apply(input);
+			if (result.isEmpty()) {
+				setErrorMessage("can't map anything from " + clusterName);
+				return false;
+			}
+			if (result == null || result.size() < input.size()) {
+				setErrorMessage("can only map " + result.size() + " out of "
+						+ input.size() + " from " + clusterName);
+				return false;
+			}
+			for (Integer i : result) {
+				elementToClusterMap.put(i, clusterName);
+			}
 		}
 		setMessage("Valid");
 		return true;
@@ -178,16 +217,15 @@ public class ImportExternalDialog extends TitleAreaDialog {
 	protected void okPressed() {
 		if (!validate())
 			return;
-		EventPublisher.trigger(new SpecialClusterAddedEvent(new ArrayList<>(result), false));
+		EventPublisher.trigger(new ChemicalClusterAddedEvent(clusterList, elementToClusterMap));
 		super.okPressed();
 	}
-
 
 	public static void open(final IDType target) {
 		Display.getDefault().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				new ImportExternalDialog(new Shell(), target).open();
+				new ImportChemicalClustersDialog(new Shell(), target).open();
 			}
 		});
 	}
