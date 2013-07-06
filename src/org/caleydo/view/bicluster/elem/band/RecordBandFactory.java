@@ -89,12 +89,12 @@ public class RecordBandFactory extends BandFactory {
 	// delivers indicator whether the bands directly leaving a cluster are
 	// starting at Left or right
 	private boolean isStartsLeftFirst() {
-		return firstDirection.x() < 0;
+		return firstDirection.x() < 0.3;
 		// return true;
 	}
 
 	private boolean isStartsRightSecond() {
-		return secondDirection.x() < 0;
+		return secondDirection.x() < 0.3;
 		// return true;
 	}
 

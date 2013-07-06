@@ -81,12 +81,12 @@ public class DimensionBandFactory extends BandFactory {
 	// delivers indicator whether the bands directly leaving a cluster are
 	// starting at the top or the bottom
 	private boolean isStartsOnTopFirst() {
-		return firstDirection.y() < 0;
+		return firstDirection.y() < 0.3;
 		// return true;
 	}
 
 	private boolean isStartsOnTopSecond() {
-		return secondDirection.y() < 0;
+		return secondDirection.y() < 0.3;
 		// return true;
 	}
 
