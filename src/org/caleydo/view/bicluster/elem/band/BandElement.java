@@ -42,7 +42,6 @@ import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
-import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
 /**
  * @author Michael Gillhofer
@@ -82,8 +81,7 @@ public abstract class BandElement extends PickableGLElement {
 
 	protected PickingPool pickingPool;
 	protected IPickingListener pickingListener;
-	protected Map<Integer, Band> splinesPickingMap;
-	protected Band currSelectedSpline;
+	private int currSelectedSplineID = -1;
 
 	private float opacityFactor = 1;
 	private float highOpacityFactor = 1;
@@ -190,6 +188,15 @@ public abstract class BandElement extends PickableGLElement {
 				}
 				g.color(bandColor.r, bandColor.g, bandColor.b,
 						0.25f * curOpacityFactor);
+
+				Band currSelectedSpline = null;
+				int id = currSelectedSplineID - 1;
+				currSelectedSpline = splines.get(id);
+				for (Integer i : splines.keySet()) {
+					if (id == i) {
+						currSelectedSpline = splines.get(i);
+					}
+				}
 				for (Band b : splines.values()) {
 					if (b == currSelectedSpline)
 						continue;
@@ -251,12 +258,10 @@ public abstract class BandElement extends PickableGLElement {
 
 	protected boolean isHighlighted() {
 		return highlightOverlap.size() != 0;
-		// && highlightOverlap.size() == overlap.size();
 	}
 
 	protected boolean isHovered() {
 		return hoverOverlap.size() != 0;
-		// && hoverOverlap.size() == overlap.size();
 	}
 
 	@Override
@@ -268,14 +273,10 @@ public abstract class BandElement extends PickableGLElement {
 					g.fillPolygon(b);
 
 				g.incZ();
-				int i = 0;
-				for (Band b : splines.values()) {
-					int name = pickingPool.get(i);
-					splinesPickingMap.put(i, b);
-					g.pushName(name);
-					g.fillPolygon(b);
+				for (Integer elementIndex : splines.keySet()) {
+					g.pushName(pickingPool.get(elementIndex + 1));
+					g.fillPolygon(splines.get(elementIndex));
 					g.popName();
-					i++;
 				}
 				g.decZ();
 			} else {
@@ -318,8 +319,9 @@ public abstract class BandElement extends PickableGLElement {
 	@Override
 	protected void onMouseOver(Pick pick) {
 		isMouseOver = true;
-		currSelectedSpline = splinesPickingMap.get(pick.getObjectID());
-//		System.out.println(pick.getObjectID() +"  " + currSelectedSpline);
+		// currSelectedSpline = splinesPickingMap.get(pick.getObjectID());
+		currSelectedSplineID = pick.getObjectID();
+		// System.out.println(currSelectedSplineID);
 		hoverElement();
 		repaintAll();
 	}
@@ -327,11 +329,11 @@ public abstract class BandElement extends PickableGLElement {
 	@Override
 	protected void onMouseOut(Pick pick) {
 		isMouseOver = false;
-		currSelectedSpline = null;
+		// currSelectedSpline = null;
+		currSelectedSplineID = -1;
 		hoverElement();
 		repaintAll();
 	}
-	
 
 	protected void hoverElement() {
 		if (selectionManager == null)
@@ -383,7 +385,6 @@ public abstract class BandElement extends PickableGLElement {
 			opacityFactor = highOpacityFactor;
 		repaintAll();
 	}
-	
 
 	protected Pair<Vec3f, Vec3f> pair(float x1, float y1, float x2, float y2) {
 		Vec3f _1 = new Vec3f(x1, y1, 0);

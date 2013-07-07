@@ -78,7 +78,6 @@ public class DimensionBandElement extends BandElement {
 		splines = bandFactory.getConnectionsSplines();
 		if (pickingPool != null) {
 			pickingPool.clear();
-			splinesPickingMap = new HashMap<>();
 		}
 		repaintAll();
 	}

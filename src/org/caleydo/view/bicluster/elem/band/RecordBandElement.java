@@ -79,7 +79,6 @@ public class RecordBandElement extends BandElement {
 		splines = new HashMap<>(); // create empty hashmap .. splines are not looking very good
 		if (pickingPool != null) {
 			pickingPool.clear();
-			splinesPickingMap = new HashMap<>();
 		}
 		repaintAll();
 	}
