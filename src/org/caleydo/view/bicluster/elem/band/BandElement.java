@@ -365,7 +365,7 @@ public abstract class BandElement extends PickableGLElement {
 	@ListenTo
 	public void listenTo(MouseOverClusterEvent event) {
 		isAnyClusterHovered = event.isMouseOver();
-		if (event.getElement() == first || event.getElement() == second)
+		if (event.getSender() == first || event.getSender() == second)
 			return;
 		else if (event.isMouseOver())
 			opacityFactor = lowOpacityFactor;

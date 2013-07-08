@@ -20,8 +20,10 @@ import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
+import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.util.Vec2d;
 
 /**
@@ -380,9 +382,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		this.dragedElement = element;
 	}
 
-	public void setHooveredElement(ClusterElement hooveredElement) {
-		this.hoveredElement = hooveredElement;
-	}
+
 
 	GlobalToolBarElement toolbar;
 
@@ -397,7 +397,19 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			focusedElement = null;
 		else
 			focusedElement = (GLElement) e.getSender();
-		// if (focusedElement == null)
-		// return;
 	}
+
+	@ListenTo
+	private void listenTo(ClusterGetsHiddenEvent e) {
+		this.hoveredElement = null;
+	}
+
+	@ListenTo
+	private void listenTo(MouseOverClusterEvent e) {
+		if (e.isMouseOver())
+			this.hoveredElement = (ClusterElement) e.getSender();
+		else
+			this.hoveredElement = null;
+	}
+
 }

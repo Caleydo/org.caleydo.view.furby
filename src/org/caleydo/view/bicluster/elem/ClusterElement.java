@@ -225,9 +225,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		g.color(Color.BLACK);
-		// if (getID().contains("Special")){
-		// System.out.println("stop");
-		// }
 		if (isHovered) {
 			g.fillRect(-20, -20, w < 55 ? 120 : w + 65, h < 80 ? 150 : h + 70);
 		}
@@ -274,7 +271,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		case MOUSE_OVER:
 			if (!pick.isAnyDragging()) {
 				isHovered = true;
-				allClusters.setHooveredElement(this);
 				EventPublisher.trigger(new MouseOverClusterEvent(this, true));
 				relayout(); // for showing the toolbar
 			}
@@ -290,19 +286,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	protected void mouseOut() {
 		if (isHovered && !headerBar.isClicked()) {
-			// System.out.println("out");
 			isHovered = false;
 			if (wasResizedWhileHovered)
 				setClusterSize(newDimSize, newRecSize,
 						elementCountBiggestCluster);
-			allClusters.setHooveredElement(null);
 			opacityfactor = highOpacityFactor;
-			// timer.restart();
-			relayout(); // for showing the toolbar
-			repaintAll();
 			for (GLElement child : this)
 				child.repaint();
 			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
+			relayout(); // for showing the toolbar
 		}
 	}
 
@@ -617,7 +609,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue
 					: localMinSliderValue;
 			this.slider = new GLSlider(0, max, max / 2);
-			// slider.setzDelta(-0.5f);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
 			if (isHorizontal) {
@@ -851,7 +842,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		isHidden = true;
 		isHovered = false;
 		setVisibility();
-		allClusters.setHooveredElement(null);
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
 		EventPublisher.trigger(new MouseOverClusterEvent(this, false));
 		relayout();
@@ -888,7 +878,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@ListenTo
 	private void listenTo(MouseOverClusterEvent event) {
-		ClusterElement hoveredElement = event.getElement();
+		ClusterElement hoveredElement = (ClusterElement) event.getSender();
 		if (hoveredElement == this || getDimOverlap(hoveredElement).size() > 0
 				|| getRecOverlap(hoveredElement).size() > 0) {
 			opacityfactor = highOpacityFactor;
@@ -1028,8 +1018,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		if (overlap.size() == 0)
 			return sequences;
 		List<Integer> accu = new ArrayList<Integer>();
-		// if (getID().contains("17"))
-		// System.out.println("Test");
 		for (Integer i : indices) {
 			if (overlap.contains(i)) {
 				accu.add(i);
@@ -1043,13 +1031,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return sequences;
 	}
 
-	// public int getDimIndexOf(int value) {
-	// return getDimensionVirtualArray().indexOf(value);
-	// }
-	//
-	// public int getRecIndexOf(int value) {
-	// return getRecordVirtualArray().indexOf(value);
-	// }
 
 	public float getDimPosOf(int index) {
 		if (isFocused) {
@@ -1132,7 +1113,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				.fillImage("resources/icons/dialog_close.png"));
 		hide.setTooltip("Close");
 		hide.setSize(16, Float.NaN);
-//		hide.setCallback(toolBar);
 		hide.setCallback(new ISelectionCallback() {
 
 			@Override

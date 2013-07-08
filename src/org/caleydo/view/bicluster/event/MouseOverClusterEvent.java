@@ -12,9 +12,6 @@ public class MouseOverClusterEvent extends AEvent {
 		in = b;
 	}
 
-	public ClusterElement getElement() {
-		return (ClusterElement) getSender();
-	}
 	
 	public boolean isMouseOver(){
 		return in;
