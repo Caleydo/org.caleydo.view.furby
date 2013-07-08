@@ -65,15 +65,14 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		super.init(context);
 	}
 
-	public void setData(List<TablePerspective> list, TablePerspective x,
-			TablePerspective l, TablePerspective z, ExecutorService executor, GLRootElement biclusterRoot) {
+	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z,
+			ExecutorService executor, GLRootElement biclusterRoot) {
 		this.clear();
 		this.setzDelta(1);
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(p, this, x, l, z,
-						executor, biclusterRoot);
+				final ClusterElement el = new ClusterElement(p, this, x, l, z, executor, biclusterRoot);
 				this.add(el);
 			}
 		}
@@ -89,8 +88,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	}
 
 	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w,
-			float h) {
+	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
@@ -116,25 +114,20 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		relayout();
 	}
 
-	private void bringClustersBackToFrame(
-			List<? extends IGLLayoutElement> children, float w, float h) {
+	private void bringClustersBackToFrame(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (IGLLayoutElement i : children) {
 			Vec4f bounds = i.asElement().getBounds();
 			Rectangle frame = new Rectangle(0, 0, (int) w, (int) h);
-			if (!frame.intersects(bounds.x(), bounds.y(), bounds.z(),
-					bounds.w()))
-				i.setLocation((float) (Math.random() * w),
-						(float) (Math.random() * h));
+			if (!frame.intersects(bounds.x(), bounds.y(), bounds.z(), bounds.w()))
+				i.setLocation((float) (Math.random() * w), (float) (Math.random() * h));
 		}
 	}
 
-	private void clearClusterCollisions(
-			List<? extends IGLLayoutElement> children, float w, float h) {
+	private void clearClusterCollisions(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (IGLLayoutElement i : children) {
 			Vec2f iSize = i.asElement().getSize();
 			Vec2f iLoc = i.asElement().getLocation();
-			Rectangle iRec = new Rectangle((int) iLoc.x() - 10,
-					(int) iLoc.y() - 10, (int) iSize.x() + 20,
+			Rectangle iRec = new Rectangle((int) iLoc.x() - 10, (int) iLoc.y() - 10, (int) iSize.x() + 20,
 					(int) iSize.y() + 20);
 			for (IGLLayoutElement j : children) {
 				if (j == i)
@@ -143,28 +136,24 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 					continue;
 				Vec2f jSize = j.asElement().getSize();
 				Vec2f jLoc = j.asElement().getLocation();
-				Rectangle jRec = new Rectangle((int) jLoc.x() - 10,
-						(int) jLoc.y() - 10, (int) jSize.x() + 20,
+				Rectangle jRec = new Rectangle((int) jLoc.x() - 10, (int) jLoc.y() - 10, (int) jSize.x() + 20,
 						(int) jSize.y() + 20);
 				if (iRec.intersects(jRec)) {
-					setLocation((ClusterElement) j.asElement(),
-							(jLoc.x() + 200) % w, (jLoc.y() + 200) % h, w, h);
+					setLocation((ClusterElement) j.asElement(), (jLoc.x() + 200) % w, (jLoc.y() + 200) % h, w, h);
 				}
 			}
 			Vec2f toolsLoc = toolbar.getAbsoluteLocation();
 			Vec2f toolsSiz = toolbar.getSize();
-			Rectangle toolRec = new Rectangle((int) toolsLoc.x(),
-					(int) toolsLoc.y(), (int) toolsSiz.x(), (int) toolsSiz.y());
+			Rectangle toolRec = new Rectangle((int) toolsLoc.x(), (int) toolsLoc.y(), (int) toolsSiz.x(),
+					(int) toolsSiz.y());
 			if (toolRec.intersects(iRec)) {
-				setLocation((ClusterElement) i.asElement(), (iLoc.x() - 200)
-						% w, (iLoc.y() - 200) % h, w, h);
+				setLocation((ClusterElement) i.asElement(), (iLoc.x() - 200) % w, (iLoc.y() - 200) % h, w, h);
 			}
 		}
 
 	}
 
-	private void scaleView(List<? extends IGLLayoutElement> children, float w,
-			float h) {
+	private void scaleView(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (IGLLayoutElement igllChild : children) {
 			GLElement child = igllChild.asElement();
 			Vec2f loc = child.getLocation();
@@ -178,8 +167,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	 * @param w
 	 * @param h
 	 */
-	private void forceDirectedLayout(List<? extends IGLLayoutElement> children,
-			float w, float h) {
+	private void forceDirectedLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 
 		// calculate the attraction based on the size of all overlaps
 		double xOverlapSize = 0, yOverlapSize = 0;
@@ -239,24 +227,18 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 				Vec2d distVec = getDistance(j, i);
 				double dist = distVec.length/* Squared */();
 				// counting the attraction
-				xForce += attractionX * distVec.x()
-						* (overlapSizeX + overlapSizeY) / dist;
-				yForce += attractionY * distVec.y()
-						* (overlapSizeY + overlapSizeX) / dist;
+				xForce += attractionX * distVec.x() * (overlapSizeX + overlapSizeY) / dist;
+				yForce += attractionY * distVec.y() * (overlapSizeY + overlapSizeX) / dist;
 			}
 			i.setAttForce(checkPlausibility(new Vec2d(xForce, yForce)));
 
 			// Border Force
 			Vec2d distFromTopLeft = getDistanceFromTopLeft(i, w, h);
 			Vec2d distFromBottomRight = getDistanceFromBottomRight(i, w, h);
-			xForce = Math.exp(borderForceFactor
-					/ Math.abs(distFromTopLeft.x()));
-			xForce -= Math.exp(borderForceFactor
-					/ Math.abs(distFromBottomRight.x()));
-			yForce = Math.exp(borderForceFactor
-					/ Math.abs(distFromTopLeft.y()));
-			yForce -= Math.exp(borderForceFactor
-					/ Math.abs(distFromBottomRight.y()));
+			xForce = Math.exp(borderForceFactor / Math.abs(distFromTopLeft.x()));
+			xForce -= Math.exp(borderForceFactor / Math.abs(distFromBottomRight.x()));
+			yForce = Math.exp(borderForceFactor / Math.abs(distFromTopLeft.y()));
+			yForce -= Math.exp(borderForceFactor / Math.abs(distFromBottomRight.y()));
 			i.setFrameForce(checkPlausibility(new Vec2d(xForce, yForce)));
 
 			// Toolbar force
@@ -276,8 +258,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			Vec2d attForce = i.getAttForce();
 			if (xOverlapSize < 3)
 				attForce = attForce.times(0.2);
-			Vec2d force = attForce.plus(i.getRepForce())
-					.plus(i.getFrameForce());
+			Vec2d force = attForce.plus(i.getRepForce()).plus(i.getFrameForce());
 			while (force.length() > 20)
 				force.scale(0.1);
 			Vec2d pos = getCenter(i);
@@ -287,8 +268,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			// System.out.println("  Rep: " + i.getRepForce());
 			// System.out.println("  Fra: " + i.getCenterForce());
 			// System.out.println("  Sum: " + force);
-			if (i != dragedElement && i != hoveredElement
-					&& i != focusedElement)
+			if (i != dragedElement && i != hoveredElement && i != focusedElement)
 				setLocation(i, (float) pos.x(), (float) pos.y(), w, h);
 
 		}
@@ -296,10 +276,14 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	}
 
 	private Vec2d checkPlausibility(Vec2d vec2d) {
-		if (vec2d.x()> 1e4)vec2d.setX(1e4);
-		if (vec2d.x()< -1e4)vec2d.setX(-1e4);
-		if (vec2d.y()> 1e4)vec2d.setY(1e4);
-		if (vec2d.y()< -1e4)vec2d.setY(-1e4);
+		if (vec2d.x() > 1e4)
+			vec2d.setX(1e4);
+		if (vec2d.x() < -1e4)
+			vec2d.setX(-1e4);
+		if (vec2d.y() > 1e4)
+			vec2d.setY(1e4);
+		if (vec2d.y() < -1e4)
+			vec2d.setY(-1e4);
 
 		return vec2d;
 	}
@@ -307,8 +291,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private Vec2d getDistance(ClusterElement i, GlobalToolBarElement tools) {
 		Vec2f toolsPos = tools.getAbsoluteLocation();
 		Vec2f toolsSize = tools.getSize();
-		Vec2d toolsCenter = new Vec2d(toolsPos.x() + toolsSize.x(),
-				toolsPos.y() + toolsSize.y());
+		Vec2d toolsCenter = new Vec2d(toolsPos.x() + toolsSize.x(), toolsPos.y() + toolsSize.y());
 		Vec2d distVec = getCenter(i).minus(toolsCenter);
 		double distance = distVec.length();
 		Vec2f iSize = i.getSize();
@@ -358,22 +341,18 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		return distVec;
 	}
 
-	private void setLocation(ClusterElement v, double xPos, double yPos,
-			float w, float h) {
+	private void setLocation(ClusterElement v, double xPos, double yPos, float w, float h) {
 		if (xPos > w || xPos < 0 || yPos > h || yPos < 0)
 			System.out.println(v.getID() + ": " + xPos + "/" + yPos);
-		v.setLocation((float) (xPos - v.getSize().x() / 2), (float) (yPos - v
-				.getSize().y() / 2));
+		v.setLocation((float) (xPos - v.getSize().x() / 2), (float) (yPos - v.getSize().y() / 2));
 		v.repaintPick();
 	}
 
-	private void initialLayout(List<? extends IGLLayoutElement> children,
-			float w, float h) {
+	private void initialLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		int rowCount = ((int) (Math.sqrt(children.size())) + 1);
 		int i = 0;
 		for (GLElement child : asList()) {
-			Vec2d pos = new Vec2d(i / rowCount * 250 + 200,
-					(i % rowCount) * 180 + 100);
+			Vec2d pos = new Vec2d(i / rowCount * 250 + 200, (i % rowCount) * 180 + 100);
 			setLocation((ClusterElement) child, pos.x(), pos.y(), w, h);
 			i++;
 		}
@@ -414,9 +393,11 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	@ListenTo
 	public void ListenTo(FocusChangeEvent e) {
-		focusedElement = (GLElement) e.getSender();
-		if (focusedElement == null)
-			return;
+		if (focusedElement == e.getSender())
+			focusedElement = null;
+		else
+			focusedElement = (GLElement) e.getSender();
+		// if (focusedElement == null)
+		// return;
 	}
-
 }

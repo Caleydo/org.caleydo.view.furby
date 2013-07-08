@@ -760,12 +760,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 				content.setzDelta(1f);
 				resize();
 			} else if (button == smaller) {
-				resetScaleFactor();
-				content.setzDelta(0.5f);
+				reduceScaleFactor();
+				content.setzDelta(1f);
 				resize();
-				EventPublisher.trigger(new FocusChangeEvent(null));
 			} else if (button == focus) {
-				focusThisCluster();
+				EventPublisher.trigger(new FocusChangeEvent(cluster));
 			} else if (button == lock) {
 				isLocked = !isLocked;
 				lock.setTooltip(isLocked ? "UnLock this cluster. It will again recieve threshold updates."
@@ -790,9 +789,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
+	protected void reduceScaleFactor() {
+		System.out.println(getID());
+		scaleFactor -= 0.6;
+		if (scaleFactor <= standardScaleFactor)
+			resetScaleFactor();
+	}
+
 	protected void resetScaleFactor() {
-//		System.out.println("Scale Factor set from " + scaleFactor + " to "
-//				+ standardScaleFactor);
 		scaleFactor = standardScaleFactor;
 	}
 
@@ -822,8 +826,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		relayout();
 	}
 
-	protected void focusThisCluster() {
-		this.isFocused = !this.isFocused;
+	protected void handleFocus() {
 		HeatMapElement hm = (HeatMapElement) content;
 		if (isFocused) {
 			scaleFactor = scaleFactor >= 4 ? 4 : 3;
@@ -832,7 +835,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			hm.setRecordSpacingStrategy(SpacingStrategies.fishEye(18));
 			hm.setDimensionSpacingStrategy(SpacingStrategies.fishEye(18));
 			resize();
-			EventPublisher.trigger(new FocusChangeEvent(this));
 		} else {
 			resetScaleFactor();
 			hm.setDimensionLabels(EShowLabels.NONE);
@@ -840,7 +842,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			hm.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
 			hm.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
 			resize();
-			EventPublisher.trigger(new FocusChangeEvent(null));
 			mouseOut();
 		}
 		repaintAll();
@@ -848,24 +849,24 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	private void hideThisCluster() {
 		isHidden = true;
-		setVisibility();
 		isHovered = false;
-		relayout();
+		setVisibility();
 		allClusters.setHooveredElement(null);
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
 		EventPublisher.trigger(new MouseOverClusterEvent(this, false));
-		repaintAll();
+		relayout();
 	}
 
 	@ListenTo
 	private void listenTo(FocusChangeEvent e) {
-		if (e.getSender() == this)
-			return;
-		if (!isFocused)
-			return;
-		resetScaleFactor();
-		resize();
-		this.isFocused = false;
+		if (e.getSender() == this) {
+			this.isFocused = !this.isFocused;
+		} else {
+			resetScaleFactor();
+			resize();
+			this.isFocused = false;
+		}
+		handleFocus();
 	}
 
 	@ListenTo
