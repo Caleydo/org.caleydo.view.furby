@@ -74,7 +74,8 @@ public abstract class BandElement extends PickableGLElement {
 	private float lowOpacityFactor = 0.15f;
 	private float opacityChangeInterval = 10f;
 
-	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
+	protected BandElement(GLElement first, GLElement second,
+			List<Integer> list, SelectionManager selectionManager,
 			AllBandsElement root, float[] defaultColor) {
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
@@ -162,15 +163,18 @@ public abstract class BandElement extends PickableGLElement {
 			else
 				bandColor = defaultColor;
 			if (isMouseOver == true) {
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * curOpacityFactor);
+				g.color(bandColor.r, bandColor.g, bandColor.b,
+						0.8f * curOpacityFactor);
 				for (Band b : splittedBands.values()) {
 					g.drawPath(b);
 				}
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.5f * curOpacityFactor);
+				g.color(bandColor.r, bandColor.g, bandColor.b,
+						0.5f * curOpacityFactor);
 				for (Band b : splittedBands.values()) {
 					g.fillPolygon(b);
 				}
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.25f * curOpacityFactor);
+				g.color(bandColor.r, bandColor.g, bandColor.b,
+						0.25f * curOpacityFactor);
 
 				Band currSelectedSpline = null;
 				int id = currSelectedSplineID - 1;
@@ -190,11 +194,13 @@ public abstract class BandElement extends PickableGLElement {
 					g.fillPolygon(currSelectedSpline);
 				}
 			} else {
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * curOpacityFactor);
+				g.color(bandColor.r, bandColor.g, bandColor.b,
+						0.8f * curOpacityFactor);
 				for (Band b : nonSplittedBands.values()) {
 					g.drawPath(b);
 				}
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.5f * curOpacityFactor);
+				g.color(bandColor.r, bandColor.g, bandColor.b,
+						0.5f * curOpacityFactor);
 				for (Band b : nonSplittedBands.values()) {
 					g.fillPolygon(b);
 				}
@@ -343,9 +349,11 @@ public abstract class BandElement extends PickableGLElement {
 
 	@ListenTo
 	public void listenToSelectionEvent(SelectionUpdateEvent e) {
-		hoverOverlap = new ArrayList<>(selectionManager.getElements(SelectionType.MOUSE_OVER));
+		hoverOverlap = new ArrayList<>(
+				selectionManager.getElements(SelectionType.MOUSE_OVER));
 		hoverOverlap.retainAll(overlap);
-		highlightOverlap = new ArrayList<>(selectionManager.getElements(selectionType));
+		highlightOverlap = new ArrayList<>(
+				selectionManager.getElements(selectionType));
 		highlightOverlap.retainAll(overlap);
 		updateSelection();
 	}
