@@ -733,6 +733,8 @@ Public License instead of this License.  But first, please read
       <plugin id="org.apache.batik.css"/>
       <plugin id="org.apache.batik.util"/>
       <plugin id="org.apache.batik.util.gui"/>
+      <plugin id="org.apache.commons.lang"/>
+      <plugin id="org.apache.commons.logging"/>
       <plugin id="org.caleydo.core"/>
       <plugin id="org.caleydo.data"/>
       <plugin id="org.caleydo.data.pathway.kegg"/>
@@ -742,15 +744,12 @@ Public License instead of this License.  But first, please read
       <plugin id="org.caleydo.lib.args4j"/>
       <plugin id="org.caleydo.lib.jgrapht"/>
       <plugin id="org.caleydo.lib.jogl"/>
-      <plugin id="org.caleydo.lib.jsap"/>
+      <plugin id="org.caleydo.lib.nattable"/>
       <plugin id="org.caleydo.lib.pathvisio"/>
-      <plugin id="org.caleydo.lib.tagsoup"/>
-      <plugin id="org.caleydo.lib.weka"/>
       <plugin id="org.caleydo.util.bubblesets"/>
       <plugin id="org.caleydo.util.gleem"/>
       <plugin id="org.caleydo.view.bicluster"/>
       <plugin id="org.caleydo.view.bookmark"/>
-      <plugin id="org.caleydo.view.browser"/>
       <plugin id="org.caleydo.view.dvi"/>
       <plugin id="org.caleydo.view.enroute"/>
       <plugin id="org.caleydo.view.filter"/>
@@ -772,7 +771,10 @@ Public License instead of this License.  But first, please read
       <plugin id="org.eclipse.core.expressions"/>
       <plugin id="org.eclipse.core.filesystem"/>
       <plugin id="org.eclipse.core.filesystem.aix.ppc" fragment="true"/>
-      <plugin id="org.eclipse.core.filesystem.hpux.ia64_32" fragment="true"/>
+      <plugin id="org.eclipse.core.filesystem.aix.ppc64" fragment="true"/>
+      <plugin id="org.eclipse.core.filesystem.hpux.ia64" fragment="true"/>
+      <plugin id="org.eclipse.core.filesystem.linux.ppc" fragment="true"/>
+      <plugin id="org.eclipse.core.filesystem.linux.ppc64" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.linux.x86" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.linux.x86_64" fragment="true"/>
       <plugin id="org.eclipse.core.filesystem.macosx" fragment="true"/>
@@ -781,6 +783,8 @@ Public License instead of this License.  But first, please read
       <plugin id="org.eclipse.core.filesystem.win32.x86_64" fragment="true"/>
       <plugin id="org.eclipse.core.jobs"/>
       <plugin id="org.eclipse.core.resources"/>
+      <plugin id="org.eclipse.core.resources.win32.x86" fragment="true"/>
+      <plugin id="org.eclipse.core.resources.win32.x86_64" fragment="true"/>
       <plugin id="org.eclipse.core.runtime"/>
       <plugin id="org.eclipse.core.runtime.compatibility.registry" fragment="true"/>
       <plugin id="org.eclipse.e4.core.commands"/>
@@ -799,6 +803,7 @@ Public License instead of this License.  But first, please read
       <plugin id="org.eclipse.e4.ui.workbench"/>
       <plugin id="org.eclipse.e4.ui.workbench.addons.swt"/>
       <plugin id="org.eclipse.e4.ui.workbench.renderers.swt"/>
+      <plugin id="org.eclipse.e4.ui.workbench.renderers.swt.cocoa" fragment="true"/>
       <plugin id="org.eclipse.e4.ui.workbench.swt"/>
       <plugin id="org.eclipse.e4.ui.workbench3"/>
       <plugin id="org.eclipse.emf.common"/>
@@ -823,7 +828,8 @@ Public License instead of this License.  But first, please read
       <plugin id="org.eclipse.swt.cocoa.macosx.x86_64" fragment="true"/>
       <plugin id="org.eclipse.swt.gtk.aix.ppc" fragment="true"/>
       <plugin id="org.eclipse.swt.gtk.aix.ppc64" fragment="true"/>
-      <plugin id="org.eclipse.swt.gtk.hpux.ia64_32" fragment="true"/>
+      <plugin id="org.eclipse.swt.gtk.hpux.ia64" fragment="true"/>
+      <plugin id="org.eclipse.swt.gtk.linux.ppc" fragment="true"/>
       <plugin id="org.eclipse.swt.gtk.linux.ppc64" fragment="true"/>
       <plugin id="org.eclipse.swt.gtk.linux.s390" fragment="true"/>
       <plugin id="org.eclipse.swt.gtk.linux.s390x" fragment="true"/>
@@ -836,7 +842,6 @@ Public License instead of this License.  But first, please read
       <plugin id="org.eclipse.ui"/>
       <plugin id="org.eclipse.ui.workbench"/>
       <plugin id="org.w3c.css.sac"/>
-      <plugin id="org.w3c.dom.events"/>
       <plugin id="org.w3c.dom.smil"/>
       <plugin id="org.w3c.dom.svg"/>
    </plugins>

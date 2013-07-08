@@ -1,22 +1,8 @@
 /*******************************************************************************
- * Caleydo - visualization for molecular biology - http://caleydo.org
- *
- * Copyright(C) 2005, 2012 Graz University of Technology, Marc Streit, Alexander
- * Lex, Christian Partl, Johannes Kepler University Linz </p>
- *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <http://www.gnu.org/licenses/>
- *******************************************************************************/
+ * Caleydo - Visualization for Molecular Biology - http://caleydo.org
+ * Copyright (c) The Caleydo Team. All rights reserved.
+ * Licensed under the new BSD license, available at http://caleydo.org/license
+ ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
@@ -259,7 +245,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 						* (overlapSizeY + overlapSizeX) / dist;
 			}
 			i.setAttForce(checkPlausibility(new Vec2d(xForce, yForce)));
-			
+
 			// Border Force
 			Vec2d distFromTopLeft = getDistanceFromTopLeft(i, w, h);
 			Vec2d distFromBottomRight = getDistanceFromBottomRight(i, w, h);
@@ -314,7 +300,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		if (vec2d.x()< -1e4)vec2d.setX(-1e4);
 		if (vec2d.y()> 1e4)vec2d.setY(1e4);
 		if (vec2d.y()< -1e4)vec2d.setY(-1e4);
-		
+
 		return vec2d;
 	}
 
