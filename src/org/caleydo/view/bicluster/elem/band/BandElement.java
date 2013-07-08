@@ -275,6 +275,8 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	protected void onClicked(Pick pick) {
+		if (pick.getObjectID() != 0)
+			return;
 		if (isHighlighted()) {
 			highlightOverlap = new ArrayList<>();
 			root.setSelection(null);
