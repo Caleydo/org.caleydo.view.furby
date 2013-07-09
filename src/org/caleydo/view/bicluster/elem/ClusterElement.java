@@ -80,8 +80,7 @@ import org.caleydo.view.heatmap.v2.SpacingStrategies;
  * @author Michael Gillhofer
  * @author Samuel Gratzl
  */
-public class ClusterElement extends AnimatedGLElementContainer implements
-		IBlockColorer, IGLLayout {
+public class ClusterElement extends AnimatedGLElementContainer implements IBlockColorer, IGLLayout {
 	protected static final float highOpacityFactor = 1;
 	protected static final float lowOpacityFactor = 0.2f;
 	protected static final float opacityChangeInterval = 10f;
@@ -133,9 +132,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	protected double standardScaleFactor;
 	protected boolean isFocused = false;
 
-	public ClusterElement(TablePerspective data, AllClustersElement root,
-			TablePerspective x, TablePerspective l, TablePerspective z,
-			ExecutorService executor, GLRootElement biclusterRoot) {
+	public ClusterElement(TablePerspective data, AllClustersElement root, TablePerspective x, TablePerspective l,
+			TablePerspective z, ExecutorService executor, GLRootElement biclusterRoot) {
 		setLayout(this);
 		this.data = data;
 		this.allClusters = root;
@@ -169,8 +167,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
 
-		final HeatMapElement heatmapImpl = new HeatMapElement(data, this,
-				EDetailLevel.HIGH);
+		final HeatMapElement heatmapImpl = new HeatMapElement(data, this, EDetailLevel.HIGH);
 
 		// heatmapImpl.setRecordLabels(EShowLabels.RIGHT);
 		// let's use a fish-eye spacing strategy where selected lines have a
@@ -186,12 +183,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	@Override
-	public Color apply(int recordID, int dimensionID,
-			ATableBasedDataDomain dataDomain, boolean deSelected) {
-		Color color = BasicBlockColorer.INSTANCE.apply(recordID, dimensionID,
-				dataDomain, deSelected);
+	public Color apply(int recordID, int dimensionID, ATableBasedDataDomain dataDomain, boolean deSelected) {
+		Color color = BasicBlockColorer.INSTANCE.apply(recordID, dimensionID, dataDomain, deSelected);
 
-		color.a = color.a * curOpacityFactor;
+		if (!isFocused)
+			color.a = color.a * curOpacityFactor;
 		return color;
 	}
 
@@ -256,12 +252,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
-		float[] color = { 0, 0, 0, curOpacityFactor };
-		Color highlightedColor = SelectionType.MOUSE_OVER.getColor();
+		Color color = null;
+		if (isFocused)
+			color = new Color(0, 0, 0, 1.0f);
+		else if (isHovered) {
+			color = SelectionType.MOUSE_OVER.getColor();
+		} else
+			color = new Color(0, 0, 0, curOpacityFactor);
 		g.color(color);
-		if (isHovered) {
-			g.color(highlightedColor);
-		}
 		g.drawRect(-1, -1, w + 2, h + 2);
 
 	}
@@ -288,8 +286,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		if (isHovered && !headerBar.isClicked()) {
 			isHovered = false;
 			if (wasResizedWhileHovered)
-				setClusterSize(newDimSize, newRecSize,
-						elementCountBiggestCluster);
+				setClusterSize(newDimSize, newRecSize, elementCountBiggestCluster);
 			opacityfactor = highOpacityFactor;
 			for (GLElement child : this)
 				child.repaint();
@@ -298,15 +295,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		}
 	}
 
-	protected void recreateVirtualArrays(List<Integer> dimIndices,
-			List<Integer> recIndices) {
+	protected void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices) {
 		VirtualArray dimArray = getDimensionVirtualArray();
 		VirtualArray recArray = getRecordVirtualArray();
 		dimArray.clear();
 		int count = 0;
 		for (Integer i : dimIndices) {
-			if (setOnlyShowXElements
-					&& allClusters.getFixedElementsCount() <= count)
+			if (setOnlyShowXElements && allClusters.getFixedElementsCount() <= count)
 				break;
 			dimArray.append(i);
 			count++;
@@ -314,8 +309,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		count = 0;
 		recArray.clear();
 		for (Integer i : recIndices) {
-			if (setOnlyShowXElements
-					&& allClusters.getFixedElementsCount() <= count)
+			if (setOnlyShowXElements && allClusters.getFixedElementsCount() <= count)
 				break;
 			recArray.append(i);
 			count++;
@@ -396,12 +390,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	protected void fireTablePerspectiveChanged() {
-		EventPublisher.trigger(new RecordVAUpdateEvent(data.getDataDomain()
-				.getDataDomainID(), data.getRecordPerspective()
-				.getPerspectiveID(), this));
-		EventPublisher.trigger(new DimensionVAUpdateEvent(data.getDataDomain()
-				.getDataDomainID(), data.getDimensionPerspective()
-				.getPerspectiveID(), this));
+		EventPublisher.trigger(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
+				.getRecordPerspective().getPerspectiveID(), this));
+		EventPublisher.trigger(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
+				.getDimensionPerspective().getPerspectiveID(), this));
 		repaintAll();
 	}
 
@@ -450,8 +442,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w,
-			float h) {
+	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		// if (isHidden) return;
 		IGLLayoutElement toolbar = children.get(0);
 		IGLLayoutElement headerbar = children.get(1);
@@ -496,32 +487,24 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			setRenderer(new IGLRenderer() {
 
 				@Override
-				public void render(GLGraphics g, float w, float h,
-						GLElement parent) {
+				public void render(GLGraphics g, float w, float h, GLElement parent) {
 					if (isFocused) {
 						g.color(SelectionType.SELECTION.getColor());
 						g.fillRoundedRect(0, 0, w, h, 2);
+						g.textColor(Color.BLACK);
 					} else if (isHovered) {
 						g.color(SelectionType.MOUSE_OVER.getColor());
 						g.fillRoundedRect(0, 0, w, h, 2);
-					}
-					float[] color = { 0, 0, 0, curOpacityFactor };
-					g.textColor(color);
-					if (isHovered) {
-						// System.out.println(scaleFactor);
-						// System.out.println(standardScaleFactor);
-						g.drawText(" "
-								+ (scaleFactor == standardScaleFactor ? getID()
-										: getID()) + " ("
-								+ (int) (100 * scaleFactor) + "%)", 0, 0, 120,
-								12);
 					} else
-						g.drawText(scaleFactor == standardScaleFactor ? getID()
-								: getID() + " (" + (int) (100 * scaleFactor)
-										+ "%)", 0, 0, 120, 12);
+						g.textColor(new Color(0, 0, 0, curOpacityFactor));
 
-					float[] black = { 0, 0, 0, 1 };
-					g.textColor(black);
+					if (isHovered) {
+						g.drawText(" " + (scaleFactor == standardScaleFactor ? getID() : getID()) + " ("
+								+ (int) (100 * scaleFactor) + "%)", 0, 0, 120, 12);
+					} else
+						g.drawText(scaleFactor == standardScaleFactor ? getID() : getID() + " ("
+								+ (int) (100 * scaleFactor) + "%)", 0, 0, 120, 12);
+					g.textColor(Color.BLACK);
 
 				}
 			});
@@ -538,8 +521,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 					allClusters.setDragedLayoutElement(cluster);
 				}
 				isDragged = true;
-				cluster.setLocation(cluster.getLocation().x() + pick.getDx(),
-						cluster.getLocation().y() + pick.getDy());
+				cluster.setLocation(cluster.getLocation().x() + pick.getDx(), cluster.getLocation().y() + pick.getDy());
 				cluster.relayout();
 				cluster.repaintPick();
 				break;
@@ -570,8 +552,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	}
 
-	protected class ThresholdBar extends GLElementContainer
-			implements
+	protected class ThresholdBar extends GLElementContainer implements
 			org.caleydo.core.view.opengl.layout2.basic.GLSlider.ISelectionCallback {
 
 		boolean isHorizontal;
@@ -581,8 +562,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		float localMinSliderValue;
 
 		protected ThresholdBar(boolean layout) {
-			super(layout ? GLLayouts.flowHorizontal(1) : GLLayouts
-					.flowVertical(1));
+			super(layout ? GLLayouts.flowHorizontal(1) : GLLayouts.flowVertical(1));
 			isHorizontal = layout;
 			// move to the top
 			setzDelta(+0.5f);
@@ -594,20 +574,17 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 			// define the animation used to move this element
 			if (isHorizontal) {
-				this.setLayoutData(new MoveTransitions.MoveTransitionBase(
-						Transitions.LINEAR, Transitions.LINEAR, Transitions.NO,
-						Transitions.LINEAR));
+				this.setLayoutData(new MoveTransitions.MoveTransitionBase(Transitions.LINEAR, Transitions.LINEAR,
+						Transitions.NO, Transitions.LINEAR));
 			} else {
-				this.setLayoutData(new MoveTransitions.MoveTransitionBase(
-						Transitions.LINEAR, Transitions.LINEAR,
+				this.setLayoutData(new MoveTransitions.MoveTransitionBase(Transitions.LINEAR, Transitions.LINEAR,
 						Transitions.LINEAR, Transitions.NO));
 			}
 		}
 
 		protected void createButtons() {
 			this.remove(slider);
-			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue
-					: localMinSliderValue;
+			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue : localMinSliderValue;
 			this.slider = new GLSlider(0, max, max / 2);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
@@ -647,8 +624,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		@ListenTo
 		public void listenTo(MaxThresholdChangeEvent event) {
-			globalMaxThreshold = (float) (isHorizontal ? event
-					.getDimThreshold() : event.getRecThreshold());
+			globalMaxThreshold = (float) (isHorizontal ? event.getDimThreshold() : event.getRecThreshold());
 			createButtons();
 		}
 
@@ -656,14 +632,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		public void listenTo(LZThresholdChangeEvent event) {
 			if (event.isGlobalEvent()) {
 				ignoreNextChange = true;
-				slider.setValue(isHorizontal ? event.getDimensionThreshold()
-						: event.getRecordThreshold());
+				slider.setValue(isHorizontal ? event.getDimensionThreshold() : event.getRecordThreshold());
 			}
 		}
 	}
 
-	protected class ToolBar extends GLElementContainer implements
-			ISelectionCallback {
+	protected class ToolBar extends GLElementContainer implements ISelectionCallback {
 
 		GLButton hide, sorting, enlarge, smaller, focus, lock;
 		SortingType sortingButtonCaption = SortingType.probabilitySorting;
@@ -673,26 +647,22 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			setzDelta(-0.1f);
 			createButtons();
 			setSize(Float.NaN, 20);
-			this.setLayoutData(new MoveTransitions.MoveTransitionBase(
-					Transitions.LINEAR, Transitions.NO, Transitions.LINEAR,
-					Transitions.LINEAR));
+			this.setLayoutData(new MoveTransitions.MoveTransitionBase(Transitions.LINEAR, Transitions.NO,
+					Transitions.LINEAR, Transitions.LINEAR));
 		}
 
 		protected void createButtons() {
 			hide = createHideClusterButton();
 			this.add(hide);
 			sorting = new GLButton();
-			sorting.setRenderer(GLRenderers
-					.drawText(
-							sortingButtonCaption == SortingType.probabilitySorting ? "P"
-									: "B", VAlign.CENTER));
+			sorting.setRenderer(GLRenderers.drawText(
+					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
 			sorting.setSize(16, Float.NaN);
 			sorting.setTooltip("Change sorting");
 			sorting.setCallback(this);
 			this.add(sorting);
 			focus = new GLButton();
-			focus.setRenderer(GLRenderers
-					.fillImage("resources/icons/target.png"));
+			focus.setRenderer(GLRenderers.fillImage("resources/icons/target.png"));
 			focus.setSize(16, Float.NaN);
 			focus.setTooltip("Focus this Cluster");
 			focus.setCallback(this);
@@ -703,8 +673,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			lock.setRenderer(new IGLRenderer() {
 
 				@Override
-				public void render(GLGraphics g, float w, float h,
-						GLElement parent) {
+				public void render(GLGraphics g, float w, float h, GLElement parent) {
 					if (isLocked)
 						g.fillImage("resources/icons/lock_open.png", 0, 0, w, h);
 					else
@@ -717,15 +686,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			enlarge = new GLButton();
 			enlarge.setSize(16, Float.NaN);
 			enlarge.setTooltip("Enlarge");
-			enlarge.setRenderer(GLRenderers
-					.fillImage("resources/icons/zoom_in.png"));
+			enlarge.setRenderer(GLRenderers.fillImage("resources/icons/zoom_in.png"));
 			enlarge.setCallback(this);
 			this.add(enlarge);
 			smaller = new GLButton();
 			smaller.setTooltip("Reduce");
 			smaller.setSize(16, Float.NaN);
-			smaller.setRenderer(GLRenderers
-					.fillImage("resources/icons/zoom_out.png"));
+			smaller.setRenderer(GLRenderers.fillImage("resources/icons/zoom_out.png"));
 			smaller.setCallback(this);
 			this.add(smaller);
 
@@ -733,10 +700,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 		void setSortingCaption(SortingType caption) {
 			sortingButtonCaption = caption;
-			sorting.setRenderer(GLRenderers
-					.drawText(
-							sortingButtonCaption == SortingType.probabilitySorting ? "P"
-									: "B", VAlign.CENTER));
+			sorting.setRenderer(GLRenderers.drawText(
+					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
 		}
 
 		@Override
@@ -775,7 +740,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 
 	@ListenTo
 	private void listenTo(ClusterRenameEvent e) {
-		if (e.getSender() == this){
+		if (e.getSender() == this) {
 			setLabel(e.getNewName());
 		}
 	}
@@ -812,8 +777,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 	}
 
 	protected void resize() {
-		setSize((float) (dimSize * scaleFactor),
-				(float) (recSize * scaleFactor));
+		setSize((float) (dimSize * scaleFactor), (float) (recSize * scaleFactor));
 		relayout();
 	}
 
@@ -922,9 +886,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			setVisibility(EVisibility.NONE);
 	}
 
-	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
-			boolean setXElements, String id, int bcNr, double maxDim,
-			double maxRec, double minDim, double minRec) {
+	public void setData(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements, String id, int bcNr,
+			double maxDim, double maxRec, double minDim, double minRec) {
 		setLabel(id);
 		if (maxDim >= 0 && maxRec >= 0) {
 			dimThreshBar.updateSliders(maxDim, minDim);
@@ -942,8 +905,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		data.setLabel(id);
 	}
 
-	protected void setHasContent(List<Integer> dimIndices,
-			List<Integer> recIndices) {
+	protected void setHasContent(List<Integer> dimIndices, List<Integer> recIndices) {
 		if (dimIndices.size() > 0 && recIndices.size() > 0) {
 			hasContent = true;
 			recreateVirtualArrays(dimIndices, recIndices);
@@ -990,8 +952,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 			finalRecSorting.add(i);
 		}
 		finalRecSorting.addAll(recProbabilitySorting);
-		recreateVirtualArrays(new ArrayList<Integer>(finalDimSorting),
-				new ArrayList<Integer>(finalRecSorting));
+		recreateVirtualArrays(new ArrayList<Integer>(finalDimSorting), new ArrayList<Integer>(finalRecSorting));
 		fireTablePerspectiveChanged();
 	}
 
@@ -1001,19 +962,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		fireTablePerspectiveChanged();
 	}
 
-	public List<List<Integer>> getListOfContinousRecSequenzes(
-			List<Integer> overlap) {
+	public List<List<Integer>> getListOfContinousRecSequenzes(List<Integer> overlap) {
 		return getListOfContinousIDs(overlap, getRecordVirtualArray().getIDs());
 	}
 
-	public List<List<Integer>> getListOfContinousDimSequences(
-			List<Integer> overlap) {
-		return getListOfContinousIDs(overlap, getDimensionVirtualArray()
-				.getIDs());
+	public List<List<Integer>> getListOfContinousDimSequences(List<Integer> overlap) {
+		return getListOfContinousIDs(overlap, getDimensionVirtualArray().getIDs());
 	}
 
-	private List<List<Integer>> getListOfContinousIDs(List<Integer> overlap,
-			List<Integer> indices) {
+	private List<List<Integer>> getListOfContinousIDs(List<Integer> overlap, List<Integer> indices) {
 		List<List<Integer>> sequences = new ArrayList<List<Integer>>();
 		if (overlap.size() == 0)
 			return sequences;
@@ -1031,28 +988,23 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return sequences;
 	}
 
-
 	public float getDimPosOf(int index) {
 		if (isFocused) {
 			int ind = getDimensionVirtualArray().indexOf(index);
-			CellSpace space = ((HeatMapElement) content)
-					.getDimensionCellSpace(ind);
+			CellSpace space = ((HeatMapElement) content).getDimensionCellSpace(ind);
 			return space.getPosition();
 		} else {
-			return getDimIndexOf(index) * getSize().x()
-					/ getDimensionVirtualArray().size();
+			return getDimIndexOf(index) * getSize().x() / getDimensionVirtualArray().size();
 		}
 	}
 
 	public float getRecPosOf(int index) {
 		if (isFocused) {
 			int ind = getRecordVirtualArray().indexOf(index);
-			CellSpace space = ((HeatMapElement) content)
-					.getRecordCellSpace(ind);
+			CellSpace space = ((HeatMapElement) content).getRecordCellSpace(ind);
 			return space.getPosition();
 		} else {
-			return getRecIndexOf(index) * getSize().y()
-					/ getRecordVirtualArray().size();
+			return getRecIndexOf(index) * getSize().y() / getRecordVirtualArray().size();
 		}
 
 	}
@@ -1064,11 +1016,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		Table Z = z.getDataDomain().getTable();
 		Future<ScanResult> recList = null, dimList = null;
 		ASortingStrategy strategy = new ProbabilityStrategy(L, bcNr);
-		recList = executor.submit(new ScanProbabilityMatrix(recThreshold, L,
-				bcNr, strategy));
+		recList = executor.submit(new ScanProbabilityMatrix(recThreshold, L, bcNr, strategy));
 		strategy = new ProbabilityStrategy(Z, bcNr);
-		dimList = executor.submit(new ScanProbabilityMatrix(dimThreshold, Z,
-				bcNr, strategy));
+		dimList = executor.submit(new ScanProbabilityMatrix(dimThreshold, Z, bcNr, strategy));
 		List<Integer> dimIndices = null, recIndices = null;
 		try {
 			dimIndices = dimList.get().getIndices();
@@ -1076,13 +1026,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
-		setData(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr,
-				-1, -1, -1, -1);
+		setData(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr, -1, -1, -1, -1);
 		EventPublisher.trigger(new ClusterScaleEvent(this));
 		if (!isGlobal)
 			EventPublisher.trigger(new MouseOverClusterEvent(this, true));
-		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal,
-				dimBandsEnabled, recBandsEnabled));
+		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal, dimBandsEnabled, recBandsEnabled));
 		EventPublisher.trigger(new CreateBandsEvent(this));
 
 	}
@@ -1103,14 +1051,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements
 		return getSize().y() / getRecordVirtualArray().size();
 	}
 
-	public int getNrOfElements(List<Integer> band){
+	public int getNrOfElements(List<Integer> band) {
 		return band.size();
 	}
 
 	protected GLButton createHideClusterButton() {
 		GLButton hide = new GLButton();
-		hide.setRenderer(GLRenderers
-				.fillImage("resources/icons/dialog_close.png"));
+		hide.setRenderer(GLRenderers.fillImage("resources/icons/dialog_close.png"));
 		hide.setTooltip("Close");
 		hide.setSize(16, Float.NaN);
 		hide.setCallback(new ISelectionCallback() {

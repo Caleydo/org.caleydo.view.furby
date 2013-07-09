@@ -84,7 +84,6 @@ public abstract class BandElement extends PickableGLElement {
 		this.selectionManager = selectionManager;
 		this.defaultColor = new Color(defaultColor);
 		selectionType = selectionManager.getSelectionType();
-		// highlightPoints = new ArrayList<>();
 		highlightOverlap = new ArrayList<>();
 		highlightColor = selectionType.getColor();
 		hoveredColor = SelectionType.MOUSE_OVER.getColor();
@@ -205,35 +204,6 @@ public abstract class BandElement extends PickableGLElement {
 					g.fillPolygon(b);
 				}
 			}
-			// if (highlightOverlap.size() > 0) {
-			// g.color(highlightColor[0], highlightColor[1],
-			// highlightColor[2], 0.8f);
-			// g.drawPath(highlightBand);
-			// if (subBands != null)
-			// for (Band b : highlightedSubBands.values()) {
-			// g.drawPath(b);
-			// }
-			// g.color(highlightColor[0], highlightColor[1],
-			// highlightColor[2], 0.5f);
-			// g.fillPolygon(highlightBand);
-			// if (subBands != null)
-			// for (Band b : highlightedSubBands.values()) {
-			// g.fillPolygon(b);
-			// }
-			// } else if (hoverOverlap.size() > 0) {
-			// g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
-			// g.drawPath(highlightBand);
-			// if (subBands != null)
-			// for (Band b : highlightedSubBands.values()) {
-			// g.drawPath(b);
-			// }
-			// g.color(hoveredColor[0], hoveredColor[1], hoveredColor[2], 0.8f);
-			// g.fillPolygon(highlightBand);
-			// if (subBands != null)
-			// for (Band b : highlightedSubBands.values()) {
-			// g.fillPolygon(b);
-			// }
-			// }
 			g.incZ();
 		}
 	}
@@ -307,9 +277,7 @@ public abstract class BandElement extends PickableGLElement {
 	@Override
 	protected void onMouseOver(Pick pick) {
 		isMouseOver = true;
-		// currSelectedSpline = splinesPickingMap.get(pick.getObjectID());
 		currSelectedSplineID = pick.getObjectID();
-		// System.out.println(currSelectedSplineID);
 		hoverElement();
 		repaintAll();
 	}
@@ -317,7 +285,6 @@ public abstract class BandElement extends PickableGLElement {
 	@Override
 	protected void onMouseOut(Pick pick) {
 		isMouseOver = false;
-		// currSelectedSpline = null;
 		currSelectedSplineID = -1;
 		hoverElement();
 		repaintAll();

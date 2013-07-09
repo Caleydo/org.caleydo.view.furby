@@ -126,22 +126,25 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	}
 
 	private void clearClusterCollisions(List<? extends IGLLayoutElement> children, float w, float h) {
-		for (IGLLayoutElement i : children) {
-			Vec2f iSize = i.asElement().getSize();
-			Vec2f iLoc = i.asElement().getLocation();
+		for (IGLLayoutElement iIGL : children) {
+			ClusterElement i = (ClusterElement) iIGL.asElement();
+			if (!i.isVisible())
+				continue;
+			Vec2f iSize = i.getSize();
+			Vec2f iLoc = i.getLocation();
 			Rectangle iRec = new Rectangle((int) iLoc.x() - 10, (int) iLoc.y() - 10, (int) iSize.x() + 20,
 					(int) iSize.y() + 20);
-			for (IGLLayoutElement j : children) {
-				if (j == i)
+			for (IGLLayoutElement jIGL : children) {
+				ClusterElement j = (ClusterElement) jIGL.asElement();
+				if (j == i || !j.isVisible() || (j == dragedElement || j == focusedElement))
 					continue;
-				if ((j.asElement() == dragedElement || j.asElement() == focusedElement))
-					continue;
-				Vec2f jSize = j.asElement().getSize();
-				Vec2f jLoc = j.asElement().getLocation();
+
+				Vec2f jSize = j.getSize();
+				Vec2f jLoc = j.getLocation();
 				Rectangle jRec = new Rectangle((int) jLoc.x() - 10, (int) jLoc.y() - 10, (int) jSize.x() + 20,
 						(int) jSize.y() + 20);
 				if (iRec.intersects(jRec)) {
-					setLocation((ClusterElement) j.asElement(), (jLoc.x() + 200) % w, (jLoc.y() + 200) % h, w, h);
+					setLocation(j, (jLoc.x() + 200) % w, (jLoc.y() + 200) % h, w, h);
 				}
 			}
 			Vec2f toolsLoc = toolbar.getAbsoluteLocation();
@@ -149,7 +152,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			Rectangle toolRec = new Rectangle((int) toolsLoc.x(), (int) toolsLoc.y(), (int) toolsSiz.x(),
 					(int) toolsSiz.y());
 			if (toolRec.intersects(iRec)) {
-				setLocation((ClusterElement) i.asElement(), (iLoc.x() - 200) % w, (iLoc.y() - 200) % h, w, h);
+				setLocation(i, (iLoc.x() - 200) % w, (iLoc.y() - 200) % h, w, h);
 			}
 		}
 
@@ -381,8 +384,6 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	public void setDragedLayoutElement(ClusterElement element) {
 		this.dragedElement = element;
 	}
-
-
 
 	GlobalToolBarElement toolbar;
 
