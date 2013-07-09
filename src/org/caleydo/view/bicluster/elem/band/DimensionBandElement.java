@@ -45,16 +45,10 @@ public class DimensionBandElement extends BandElement {
 			setVisibility(EVisibility.PICKABLE);
 		else
 			setVisibility(EVisibility.NONE);
-		// if (first.getID().contains("bicluster19")
-		// && second.getID().contains("bicluster3"))
-		// System.out.println("halt -  DimensionBandELement - updateStructure");
 		firstSubIndices = first.getListOfContinousDimSequences(overlap);
 		secondSubIndices = second.getListOfContinousDimSequences(overlap);
 		if (firstSubIndices.size() == 0)
 			return;
-//		if (first.getID().contains("Chemical") || second.getID().contains("Chemical")) {
-//			System.out.println("halt");
-//		}
 		bandFactory = new DimensionBandFactory(first, second, firstSubIndices,
 				secondSubIndices, overlap);
 		splittedBands = bandFactory.getSplitableBands();

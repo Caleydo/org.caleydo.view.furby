@@ -120,7 +120,6 @@ public abstract class BandElement extends PickableGLElement {
 		if (oldZ != z) {
 			setzDelta(z);
 			root.triggerResort();
-			relayout(); // for resorting in AllBandsElement
 		}
 	}
 
@@ -270,13 +269,12 @@ public abstract class BandElement extends PickableGLElement {
 			selectionManager.addToType(selectionType, overlap);
 		}
 		fireSelectionChanged();
-		relayout();
 	}
 
 	public void deselect() {
 		sharedElementsWithSelection = new ArrayList<>();
 		updateSelection();
-		repaint();
+		setZDeltaAccordingToState();
 	}
 
 	@Override
@@ -303,7 +301,6 @@ public abstract class BandElement extends PickableGLElement {
 			selectionManager.addToType(SelectionType.MOUSE_OVER, overlap);
 		}
 		fireSelectionChanged();
-		relayout();
 	}
 
 	protected void recalculateSelection() {
@@ -343,7 +340,6 @@ public abstract class BandElement extends PickableGLElement {
 		else
 			opacityFactor = HIGH_OPACITY_FACTPOR;
 		setZDeltaAccordingToState();
-		repaintAll();
 	}
 
 	protected Pair<Vec3f, Vec3f> pair(float x1, float y1, float x2, float y2) {

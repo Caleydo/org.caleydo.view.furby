@@ -287,7 +287,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			if (!pick.isAnyDragging()) {
 				isHovered = true;
 				EventPublisher.trigger(new MouseOverClusterEvent(this, true));
-				relayout(); // for showing the toolbar
+				relayout(); // for showing the bars
 			}
 			break;
 		case MOUSE_OUT:
@@ -308,7 +308,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			for (GLElement child : this)
 				child.repaint();
 			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
-			relayout(); // for showing the toolbar
+			relayout(); // for hiding the bars
 		}
 	}
 
@@ -390,14 +390,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	}
 
 	public void setFrameForce(Vec2d frameForce) {
-		// if (frameForce.x() > 100) {
-		// System.out.println(getID() + ": Frame Force X zu stark");
-		// frameForce.setX(100);
-		// }
-		// if ( frameForce.y() > 100){
-		// System.out.println(getID() + ": Frame Force Y zu stark");
-		// frameForce.setY(100);
-		// }
 		this.frameForce = frameForce;
 	}
 
@@ -411,7 +403,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 				.getRecordPerspective().getPerspectiveID(), this));
 		EventPublisher.trigger(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
 				.getDimensionPerspective().getPerspectiveID(), this));
-		repaintAll();
 	}
 
 	protected VirtualArray getDimensionVirtualArray() {
@@ -566,7 +557,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 				isDragged = false;
 				allClusters.setDragedLayoutElement(null);
 			}
-			// System.out.println(getID() + "'s toolbar hat " + toolBar.getzDelta() + " zDelta");
 			setZValuesAccordingToState();
 		}
 
@@ -664,7 +654,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		protected void updateSliders(double maxValue, double minValue) {
 			localMaxSliderValue = (float) maxValue;
 			localMinSliderValue = (float) minValue;
-			// createButtons();
 			relayout();
 		}
 
@@ -759,11 +748,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 						: SortingType.probabilitySorting);
 			} else if (button == enlarge) {
 				upscale();
-				// content.setzDelta(1f);
 				resize();
 			} else if (button == smaller) {
 				reduceScaleFactor();
-				// content.setzDelta(1f);
 				resize();
 			} else if (button == focus) {
 				EventPublisher.trigger(new FocusChangeEvent(cluster));
@@ -792,7 +779,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	}
 
 	protected void reduceScaleFactor() {
-		System.out.println(getID());
 		scaleFactor -= 0.6;
 		if (scaleFactor <= standardScaleFactor)
 			resetScaleFactor();
@@ -845,7 +831,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			resize();
 			mouseOut();
 		}
-		repaintAll();
 	}
 
 	private void hideThisCluster() {

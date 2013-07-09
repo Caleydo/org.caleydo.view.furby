@@ -44,7 +44,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	 * @param savedData
 	 */
 	public AllBandsElement(TablePerspective tablePerspective) {
-//		setzDelta(-3);
 		if (tablePerspective != null)
 			this.selectionMixin = new TablePerspectiveSelectionMixin(tablePerspective, this);
 		else
@@ -117,7 +116,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		for (GLElement b : this) {
 			((BandElement) b).updateStructure();
 		}
-		relayout();
 	}
 
 	boolean resortOnNextRun = true;
