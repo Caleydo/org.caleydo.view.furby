@@ -248,30 +248,21 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			i.setFrameForce(checkPlausibility(new Vec2d(xForce, yForce)));
 
 			// Toolbar force
-			Vec2d distVec = getDistance(i, toolbar);
-
-			Vec2f toolsPos = toolbar.getAbsoluteLocation();
-			Vec2f toolsSize = toolbar.getSize();
-			Vec2d toolsCenter = new Vec2d(toolsPos.x() + toolsSize.x(), toolsPos.y() + toolsSize.y());
-
-			distVec = getCenter(i).minus(toolsCenter);
-			double distance = distVec.length();
-			Vec2f iSize = i.getSize();
-			Vec2f toolbarSize = toolbar.getSize();
-			double r1 = iSize.x() > iSize.y() ? iSize.x() / 2 : iSize.y() / 2;
-			double r2 = toolbarSize.x() > toolbarSize.y() ? toolbarSize.x() / 2 : toolbarSize.y() / 2;
-			distance -= Math.abs(r1) + Math.abs(r2);
-			distVec.normalize();
-			distVec.scale(distance);
-
+			Vec2d distVec = getDistance(i, toolbar, true);
 			double rsq = distVec.lengthSquared();
 			rsq *= distVec.length();
-			xForce = 3 * repulsion * distVec.x() / rsq;
-			yForce = 3 * repulsion * distVec.y() / rsq;
+			xForce = 1.5f * repulsion * distVec.x() / rsq;
+			yForce = 1.5f * repulsion * distVec.y() / rsq;
+
+			distVec = getDistance(i, toolbar, false);
+			rsq = distVec.lengthSquared();
+			rsq *= distVec.length();
+			xForce += 1.5f * repulsion * distVec.x() / rsq;
+			yForce += 1.5f * repulsion * distVec.y() / rsq;
+
 			xForce += i.getRepForce().x();
 			yForce += i.getRepForce().y();
 			i.setRepForce(checkPlausibility(new Vec2d(xForce, yForce)));
-
 
 		}
 
@@ -310,10 +301,15 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		return vec2d;
 	}
 
-	private Vec2d getDistance(ClusterElement i, GlobalToolBarElement tools) {
+	private Vec2d getDistance(ClusterElement i, GlobalToolBarElement tools, boolean isTop) {
 		Vec2f toolsPos = tools.getAbsoluteLocation();
 		Vec2f toolsSize = tools.getSize();
 		Vec2d toolsCenter = new Vec2d(toolsPos.x() + toolsSize.x(), toolsPos.y() + toolsSize.y());
+		if (isTop) {
+			toolsCenter.add(new Vec2d(0, -toolsSize.y() / 4));
+		} else {
+			toolsCenter.add(new Vec2d(0, toolsSize.y() / 4));
+		}
 		Vec2d distVec = getCenter(i).minus(toolsCenter);
 		double distance = distVec.length();
 		Vec2f iSize = i.getSize();
