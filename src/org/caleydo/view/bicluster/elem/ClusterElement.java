@@ -566,7 +566,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 				isDragged = false;
 				allClusters.setDragedLayoutElement(null);
 			}
-			System.out.println(getID() + "'s toolbar hat " + toolBar.getzDelta() + " zDelta");
+			// System.out.println(getID() + "'s toolbar hat " + toolBar.getzDelta() + " zDelta");
 			setZValuesAccordingToState();
 		}
 

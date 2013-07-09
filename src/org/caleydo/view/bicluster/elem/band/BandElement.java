@@ -31,22 +31,21 @@ import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 
 /**
  * @author Michael Gillhofer
- * 
+ *
  */
 public abstract class BandElement extends PickableGLElement {
 
-	protected ClusterElement first;
-	protected ClusterElement second;
-	protected List<Integer> overlap;
-	protected List<Integer> highlightOverlap;
-	protected List<Integer> hoverOverlap;
+	private static final float HIGH_OPACITY_FACTPOR = 1;
+	private static final float LOW_OPACITY_FACTOR = 0.15f;
+	private static final float OPACITY_CHANGE_INTERVAL = 10f;
 
-	/**
-	 * @return the overlap, see {@link #overlap}
-	 */
-	public List<Integer> getOverlap() {
-		return overlap;
-	}
+	private static final float DEFAULT_Z_DELTA = -4;
+	private static final float HOVERED_BACKGROUND_Z_DELTA = -3;
+	private static final float SELECTED_Z_DELTA = -2;
+	private static final float HOVERED_Z_DELTA = -1;
+
+	protected ClusterElement first, second;
+	protected List<Integer> overlap, sharedElementsWithSelection, sharedElementsWithHover;
 
 	protected IDType idType;
 	protected String dataDomainID;
@@ -57,11 +56,8 @@ public abstract class BandElement extends PickableGLElement {
 	protected BandFactory secondMergeArea, bandFactory;
 	protected Map<List<Integer>, Band> splittedBands, nonSplittedBands;
 	protected Map<Integer, Band> splines;
-	protected List<List<Integer>> firstSubIndices;
-	protected List<List<Integer>> secondSubIndices;
-	protected Color highlightColor;
-	protected Color hoveredColor;
-	protected Color defaultColor;
+	protected List<List<Integer>> firstSubIndices, secondSubIndices;
+	protected Color highlightColor, hoveredColor, defaultColor;
 	protected boolean isMouseOver = false;
 	protected boolean isAnyClusterHovered = false;
 
@@ -70,9 +66,6 @@ public abstract class BandElement extends PickableGLElement {
 	private int currSelectedSplineID = -1;
 
 	private float opacityFactor = 1;
-	private float highOpacityFactor = 1;
-	private float lowOpacityFactor = 0.15f;
-	private float opacityChangeInterval = 10f;
 
 	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
 			AllBandsElement root, float[] defaultColor) {
@@ -83,10 +76,11 @@ public abstract class BandElement extends PickableGLElement {
 		this.selectionManager = selectionManager;
 		this.defaultColor = new Color(defaultColor);
 		selectionType = selectionManager.getSelectionType();
-		highlightOverlap = new ArrayList<>();
+		sharedElementsWithSelection = new ArrayList<>();
 		highlightColor = selectionType.getColor();
 		hoveredColor = SelectionType.MOUSE_OVER.getColor();
-		hoverOverlap = new ArrayList<>();
+		sharedElementsWithHover = new ArrayList<>();
+		setZDeltaAccordingToState();
 		initBand();
 	}
 
@@ -101,7 +95,6 @@ public abstract class BandElement extends PickableGLElement {
 		};
 
 		pickingPool = new PickingPool(context, pickingListener);
-
 		super.init(context);
 	}
 
@@ -109,6 +102,26 @@ public abstract class BandElement extends PickableGLElement {
 	protected void takeDown() {
 		pickingPool.clear();
 		super.takeDown();
+	}
+
+	public List<Integer> getOverlap() {
+		return overlap;
+	}
+
+	private void setZDeltaAccordingToState() {
+		float oldZ = getzDelta();
+		float z = DEFAULT_Z_DELTA;
+		if (hasSharedElementsWithHoveredBand())
+			z = HOVERED_BACKGROUND_Z_DELTA;
+		if (hasSharedElementsWithSelectedBand())
+			z = SELECTED_Z_DELTA;
+		if (isMouseOver)
+			z = HOVERED_Z_DELTA;
+		if (oldZ != z) {
+			setzDelta(z);
+			root.triggerResort();
+			relayout(); // for resorting in AllBandsElement
+		}
 	}
 
 	@Override
@@ -126,6 +139,7 @@ public abstract class BandElement extends PickableGLElement {
 		default:
 			break;
 		}
+		setZDeltaAccordingToState();
 	}
 
 	protected abstract void initBand();
@@ -134,13 +148,12 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	public void layout(int deltaTimeMs) {
-		if (deltaTimeMs + accu > opacityChangeInterval) {
+		if (deltaTimeMs + accu > OPACITY_CHANGE_INTERVAL) {
 
 			if (opacityFactor < curOpacityFactor)
 				curOpacityFactor -= 0.03;
 			else if (opacityFactor > curOpacityFactor)
 				curOpacityFactor += 0.03;
-
 			repaint();
 			accu = 0;
 		} else
@@ -153,10 +166,9 @@ public abstract class BandElement extends PickableGLElement {
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		Color bandColor;
 		if (isVisible()) {
-			g.decZ();
-			if (isHighlighted())
+			if (hasSharedElementsWithSelectedBand())
 				bandColor = highlightColor;
-			else if (isHovered())
+			else if (hasSharedElementsWithHoveredBand())
 				bandColor = hoveredColor;
 			else
 				bandColor = defaultColor;
@@ -198,7 +210,6 @@ public abstract class BandElement extends PickableGLElement {
 					g.fillPolygon(b);
 				}
 			}
-			g.incZ();
 		}
 	}
 
@@ -206,12 +217,12 @@ public abstract class BandElement extends PickableGLElement {
 		return first.isVisible() && second.isVisible() && overlap != null;
 	}
 
-	protected boolean isHighlighted() {
-		return highlightOverlap.size() != 0;
+	protected boolean hasSharedElementsWithSelectedBand() {
+		return sharedElementsWithSelection.size() != 0;
 	}
 
-	protected boolean isHovered() {
-		return hoverOverlap.size() != 0;
+	protected boolean hasSharedElementsWithHoveredBand() {
+		return sharedElementsWithHover.size() != 0;
 	}
 
 	@Override
@@ -241,11 +252,11 @@ public abstract class BandElement extends PickableGLElement {
 	protected void onClicked(Pick pick) {
 		if (pick.getObjectID() != 0)
 			return;
-		if (isHighlighted()) {
-			highlightOverlap = new ArrayList<>();
+		if (hasSharedElementsWithSelectedBand()) {
+			sharedElementsWithSelection = new ArrayList<>();
 			root.setSelection(null);
 		} else {
-			highlightOverlap = new ArrayList<>(overlap);
+			sharedElementsWithSelection = new ArrayList<>(overlap);
 			root.setSelection(this);
 		}
 		selectElement();
@@ -255,7 +266,7 @@ public abstract class BandElement extends PickableGLElement {
 		if (selectionManager == null)
 			return;
 		selectionManager.clearSelection(selectionType);
-		if (isHighlighted()) {
+		if (hasSharedElementsWithSelectedBand()) {
 			selectionManager.addToType(selectionType, overlap);
 		}
 		fireSelectionChanged();
@@ -263,7 +274,7 @@ public abstract class BandElement extends PickableGLElement {
 	}
 
 	public void deselect() {
-		highlightOverlap = new ArrayList<>();
+		sharedElementsWithSelection = new ArrayList<>();
 		updateSelection();
 		repaint();
 	}
@@ -298,7 +309,7 @@ public abstract class BandElement extends PickableGLElement {
 	protected void recalculateSelection() {
 		if (root.getSelection() != this)
 			return;
-		highlightOverlap = new ArrayList<>(overlap);
+		sharedElementsWithSelection = new ArrayList<>(overlap);
 		selectElement();
 	}
 
@@ -312,11 +323,12 @@ public abstract class BandElement extends PickableGLElement {
 
 	@ListenTo
 	public void listenToSelectionEvent(SelectionUpdateEvent e) {
-		hoverOverlap = new ArrayList<>(selectionManager.getElements(SelectionType.MOUSE_OVER));
-		hoverOverlap.retainAll(overlap);
-		highlightOverlap = new ArrayList<>(selectionManager.getElements(selectionType));
-		highlightOverlap.retainAll(overlap);
+		sharedElementsWithHover = new ArrayList<>(selectionManager.getElements(SelectionType.MOUSE_OVER));
+		sharedElementsWithHover.retainAll(overlap);
+		sharedElementsWithSelection = new ArrayList<>(selectionManager.getElements(selectionType));
+		sharedElementsWithSelection.retainAll(overlap);
 		updateSelection();
+		setZDeltaAccordingToState();
 	}
 
 	protected float curOpacityFactor = 1;
@@ -327,9 +339,10 @@ public abstract class BandElement extends PickableGLElement {
 		if (event.getSender() == first || event.getSender() == second)
 			return;
 		else if (event.isMouseOver())
-			opacityFactor = lowOpacityFactor;
+			opacityFactor = LOW_OPACITY_FACTOR;
 		else
-			opacityFactor = highOpacityFactor;
+			opacityFactor = HIGH_OPACITY_FACTPOR;
+		setZDeltaAccordingToState();
 		repaintAll();
 	}
 

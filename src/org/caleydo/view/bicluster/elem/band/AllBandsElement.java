@@ -5,6 +5,7 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
+import java.util.Comparator;
 import java.util.List;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
@@ -57,6 +58,17 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 			b.setBounds(0,0,w, h);
 			((BandElement) b).updatePosition();
 		}
+		if (resortOnNextRun) {
+			sortBy(new Comparator<GLElement>() {
+
+				@Override
+				public int compare(GLElement o1, GLElement o2) {
+					return new Float(o1.getzDelta()).compareTo(o2.getzDelta());
+				}
+
+			});
+			resortOnNextRun = false;
+		}
 		relayout();
 	}
 
@@ -106,7 +118,13 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 			((BandElement) b).updateStructure();
 		}
 		relayout();
-
 	}
+
+	boolean resortOnNextRun = true;
+
+	public void triggerResort() {
+		resortOnNextRun = true;
+	}
+
 
 }
