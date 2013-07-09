@@ -23,6 +23,7 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
+import org.caleydo.view.bicluster.event.ForceChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.util.Vec2d;
 
@@ -35,7 +36,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private float repulsion = 100000f;
 	private float attractionFactor = 100f;
 	private float borderForceFactor = 200f;
-	private float iterationFactor = 500;
+	private float iterationFactor = 1000;
 
 	private int deltaToLastFrame = 0;
 
@@ -248,6 +249,21 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 			// Toolbar force
 			Vec2d distVec = getDistance(i, toolbar);
+
+			Vec2f toolsPos = toolbar.getAbsoluteLocation();
+			Vec2f toolsSize = toolbar.getSize();
+			Vec2d toolsCenter = new Vec2d(toolsPos.x() + toolsSize.x(), toolsPos.y() + toolsSize.y());
+
+			distVec = getCenter(i).minus(toolsCenter);
+			double distance = distVec.length();
+			Vec2f iSize = i.getSize();
+			Vec2f toolbarSize = toolbar.getSize();
+			double r1 = iSize.x() > iSize.y() ? iSize.x() / 2 : iSize.y() / 2;
+			double r2 = toolbarSize.x() > toolbarSize.y() ? toolbarSize.x() / 2 : toolbarSize.y() / 2;
+			distance -= Math.abs(r1) + Math.abs(r2);
+			distVec.normalize();
+			distVec.scale(distance);
+
 			double rsq = distVec.lengthSquared();
 			rsq *= distVec.length();
 			xForce = 3 * repulsion * distVec.x() / rsq;
@@ -255,6 +271,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			xForce += i.getRepForce().x();
 			yForce += i.getRepForce().y();
 			i.setRepForce(checkPlausibility(new Vec2d(xForce, yForce)));
+
 
 		}
 
@@ -411,6 +428,13 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			this.hoveredElement = (ClusterElement) e.getSender();
 		else
 			this.hoveredElement = null;
+	}
+
+	@ListenTo
+	private void listenTo(ForceChangeEvent e) {
+		repulsion = e.getRepulsionForce();
+		attractionFactor = e.getAttractionForce();
+		borderForceFactor = e.getBoarderForce();
 	}
 
 }

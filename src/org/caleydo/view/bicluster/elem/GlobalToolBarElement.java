@@ -25,6 +25,7 @@ import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
+import org.caleydo.view.bicluster.event.ForceChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
@@ -44,11 +45,24 @@ import org.caleydo.view.bicluster.util.ImportExternalDialog;
 public class GlobalToolBarElement extends GLElementContainer implements GLButton.ISelectionCallback,
 		GLSlider.ISelectionCallback {
 
-
 	private static final float MIN_DIMENSION_SIZE = 50;
 	private static final float MIN_RECORD_SIZE = 50;
 	private static final float MAX_DIMENSION_SIZE = 250;
 	private static final float MAX_RECORD_SIZE = 250;
+
+	private static final float MIN_REPULSION = 0;
+	private static final float MIN_ATTRACTION = 0;
+	private static final float MAX_REPULSION = 150000f;
+	private static final float MAX_ATTRACTION = 150f;
+	private static final float MIN_BORDER_FORCE = 0;
+	private static final float MAX_BORDER_FORCE = 300f;
+	private static final float DEFAULT_REPULSION = 100000f;
+	private static final float DEFAULT_ATTRACTION = 100f;
+	private static final float DEFAULT_BORDERFACTOR = 200f;
+
+	private static final float LABEL_WIDTH = 14;
+	private static final float SLIDER_WIDH = 16;
+	private static final float BUTTON_WIDTH = 16;
 
 	float MAX_RECORD_VALUE = 0.2f;
 	float MAX_DIMENSION_VALUE = 5f;
@@ -62,7 +76,10 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 	private GLSlider dimensionThresholdSlider;
 	private GLSlider clusterMinSizeThresholdSlider;
 	private GLSlider clusterDimSizeSlider, clusterRecSizeSlider;
+	private GLSlider repulsionSlider, attractionSlider, borderForceSlider;
+	private GLElement repulsionLabel, attractionLabel, borderForceLabel;
 	private GLElement clusterDimSizeLabel, clusterRecSizeLabel;
+
 	private GLElement dimensionLabel;
 	private GLElement recordLabel;
 	private GLElement clusterMinSizeLabel;
@@ -79,14 +96,14 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		bandSortingModeButton.setRenderer(GLButton.createRadioRenderer("Sort by Bands"));
 		bandSortingModeButton.setSelected(false);
 		bandSortingModeButton.setCallback(this);
-		bandSortingModeButton.setSize(Float.NaN, 16);
+		bandSortingModeButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(bandSortingModeButton);
 
 		this.probabilitySortingModeButton = new GLButton(EButtonMode.CHECKBOX);
 		probabilitySortingModeButton.setRenderer(GLButton.createRadioRenderer("Sort by Probability"));
 		probabilitySortingModeButton.setSelected(true);
 		probabilitySortingModeButton.setCallback(this);
-		probabilitySortingModeButton.setSize(Float.NaN, 16);
+		probabilitySortingModeButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(probabilitySortingModeButton);
 
 		clearHiddenClusterButton = new GLButton(EButtonMode.BUTTON);
@@ -123,21 +140,21 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer("Dimension Bands"));
 		dimBandVisibilityButton.setSelected(true);
 		dimBandVisibilityButton.setCallback(this);
-		dimBandVisibilityButton.setSize(Float.NaN, 16);
+		dimBandVisibilityButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(dimBandVisibilityButton);
 
 		this.recBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
 		recBandVisibilityButton.setRenderer(GLButton.createCheckRenderer("Record Bands"));
 		recBandVisibilityButton.setSelected(true);
 		recBandVisibilityButton.setCallback(this);
-		recBandVisibilityButton.setSize(Float.NaN, 16);
+		recBandVisibilityButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(recBandVisibilityButton);
 
 		this.fixedClusterButton = new GLButton(EButtonMode.CHECKBOX);
 		fixedClusterButton.setRenderer(GLButton.createCheckRenderer("Show only 15 Elements"));
 		fixedClusterButton.setSelected(false);
 		fixedClusterButton.setCallback(this);
-		fixedClusterButton.setSize(Float.NaN, 16);
+		fixedClusterButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(fixedClusterButton);
 
 		initSliders();
@@ -154,9 +171,14 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 			updateGeneSampleThresholds();
 		if (slider == clusterMinSizeThresholdSlider)
 			EventPublisher.trigger(new MinClusterSizeThresholdChangeEvent(slider.getValue() / 100f));
-		if (slider == clusterDimSizeSlider || slider == clusterRecSizeSlider) {
+		if (slider == clusterDimSizeSlider || slider == clusterRecSizeSlider)
 			EventPublisher.trigger(new MaxClusterSizeChangeEvent(clusterDimSizeSlider.getValue(), clusterRecSizeSlider
 					.getValue()));
+		if (slider == borderForceSlider || slider == repulsionSlider || slider == attractionSlider) {
+			float att = attractionSlider.getValue();
+			float rep = repulsionSlider.getValue();
+			float bord = borderForceSlider.getValue();
+			EventPublisher.trigger(new ForceChangeEvent(att, rep, bord));
 		}
 	}
 
@@ -248,41 +270,104 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 	 *
 	 */
 	private void initSliders() {
-		this.remove(dimensionLabel);
-		this.dimensionLabel = new GLElement();
-		dimensionLabel.setSize(Float.NaN, 16);
-		this.add(dimensionLabel);
+		createThresholdSlider();
+		createMinimumClusterSizeSlider();
+		createClusterSizeSlider();
+		createForceSliders();
+	}
 
-		this.remove(dimensionThresholdSlider);
-		this.dimensionThresholdSlider = new GLSlider(0.05f, MAX_DIMENSION_VALUE, 4.5f);
-		dimensionThresholdSlider.setCallback(this);
-		dimensionThresholdSlider.setSize(Float.NaN, 18);
-		dimensionThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
-		this.add(dimensionThresholdSlider);
+	/**
+	 *
+	 */
+	private void createForceSliders() {
+		this.remove(repulsionLabel);
+		this.repulsionLabel = new GLElement();
+		this.repulsionLabel.setSize(Float.NaN, LABEL_WIDTH);
+		this.add(repulsionLabel);
 
-		this.remove(recordLabel);
-		this.recordLabel = new GLElement();
-		recordLabel.setSize(Float.NaN, 16);
-		this.add(recordLabel);
+		this.remove(repulsionSlider);
+		this.repulsionSlider = new GLSlider(MIN_REPULSION, MAX_REPULSION, DEFAULT_REPULSION);
+		this.repulsionSlider.setCallback(this);
+		this.repulsionSlider.setSize(Float.NaN, SLIDER_WIDH);
+		this.repulsionSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
+		this.add(repulsionSlider);
 
-		this.remove(recordThresholdSlider);
-		this.recordThresholdSlider = new GLSlider(0.02f, MAX_RECORD_VALUE, 0.08f);
-		recordThresholdSlider.setCallback(this);
-		recordThresholdSlider.setSize(Float.NaN, 18);
-		recordThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
-		this.add(recordThresholdSlider);
+		this.remove(attractionLabel);
+		this.attractionLabel = new GLElement();
+		this.attractionLabel.setSize(Float.NaN, LABEL_WIDTH);
+		this.add(attractionLabel);
 
+		this.remove(attractionSlider);
+		this.attractionSlider = new GLSlider(MIN_ATTRACTION, MAX_ATTRACTION, DEFAULT_ATTRACTION);
+		this.attractionSlider.setCallback(this);
+		this.attractionSlider.setSize(Float.NaN, SLIDER_WIDH);
+		this.attractionSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
+		this.add(attractionSlider);
+
+		this.remove(borderForceLabel);
+		this.borderForceLabel = new GLElement();
+		this.borderForceLabel.setSize(Float.NaN, LABEL_WIDTH);
+		this.add(borderForceLabel);
+
+		this.remove(borderForceSlider);
+		this.borderForceSlider = new GLSlider(MIN_BORDER_FORCE, MAX_BORDER_FORCE, DEFAULT_BORDERFACTOR);
+		this.borderForceSlider.setCallback(this);
+		this.borderForceSlider.setSize(Float.NaN, SLIDER_WIDH);
+		this.borderForceSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
+		this.add(borderForceSlider);
+
+		setText(this.repulsionLabel, "Repulsion between Clusters");
+		setText(this.attractionLabel, "Attraction between Clusters");
+		setText(this.borderForceLabel, "Force from the Windowborder");
+
+	}
+
+	/**
+	 *
+	 */
+	private void createMinimumClusterSizeSlider() {
 		this.remove(clusterMinSizeLabel);
 		this.clusterMinSizeLabel = new GLElement();
-		clusterMinSizeLabel.setSize(Float.NaN, 16);
+		clusterMinSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterMinSizeLabel);
 
 		this.remove(clusterMinSizeThresholdSlider);
 		this.clusterMinSizeThresholdSlider = new GLSlider(0, 100, 0f);
 		clusterMinSizeThresholdSlider.setCallback(this);
-		clusterMinSizeThresholdSlider.setSize(Float.NaN, 18);
+		clusterMinSizeThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
 		clusterMinSizeThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(clusterMinSizeThresholdSlider);
+		setText(clusterMinSizeLabel, "Minumum Cluster Size (%)");
+	}
+
+	/**
+	 *
+	 */
+	private void createThresholdSlider() {
+		this.remove(dimensionLabel);
+		this.dimensionLabel = new GLElement();
+		dimensionLabel.setSize(Float.NaN, LABEL_WIDTH);
+		this.add(dimensionLabel);
+
+		this.remove(dimensionThresholdSlider);
+		this.dimensionThresholdSlider = new GLSlider(0.05f, MAX_DIMENSION_VALUE, 4.5f);
+		dimensionThresholdSlider.setCallback(this);
+		dimensionThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
+		dimensionThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
+		this.add(dimensionThresholdSlider);
+
+		this.remove(recordLabel);
+		this.recordLabel = new GLElement();
+		recordLabel.setSize(Float.NaN, LABEL_WIDTH);
+		this.add(recordLabel);
+
+		this.remove(recordThresholdSlider);
+		this.recordThresholdSlider = new GLSlider(0.02f, MAX_RECORD_VALUE, 0.08f);
+		recordThresholdSlider.setCallback(this);
+		recordThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
+		recordThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
+		this.add(recordThresholdSlider);
+
 		if (x == null) {
 			setText(dimensionLabel, "Dimension Threshold");
 			setText(recordLabel, "Record Threshold");
@@ -291,30 +376,35 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 			setText(recordLabel, x.getDataDomain().getRecordIDCategory().toString() + " Threshold");
 
 		}
-		setText(clusterMinSizeLabel, "Minumum Cluster Size (%)");
 
+	}
+
+	/**
+	 *
+	 */
+	private void createClusterSizeSlider() {
 		this.remove(clusterDimSizeLabel);
 		this.clusterDimSizeLabel = new GLElement();
-		this.clusterDimSizeLabel.setSize(Float.NaN, 16);
+		this.clusterDimSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterDimSizeLabel);
 
 		this.remove(clusterDimSizeSlider);
 		this.clusterDimSizeSlider = new GLSlider(MIN_DIMENSION_SIZE, MAX_DIMENSION_SIZE, 110f);
 		this.clusterDimSizeSlider.setCallback(this);
-		this.clusterDimSizeSlider.setSize(Float.NaN, 18);
+		this.clusterDimSizeSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.clusterDimSizeSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(clusterDimSizeSlider);
 
 		this.remove(clusterRecSizeLabel);
 		this.clusterRecSizeLabel = new GLElement();
-		this.clusterRecSizeLabel.setSize(Float.NaN, 16);
+		this.clusterRecSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterRecSizeLabel);
 
 		this.remove(clusterRecSizeSlider);
 		this.clusterRecSizeSlider = new GLSlider(MIN_RECORD_SIZE, MAX_RECORD_SIZE, 110f);
 		this.clusterRecSizeSlider.setValue(150);
 		this.clusterRecSizeSlider.setCallback(this);
-		this.clusterRecSizeSlider.setSize(Float.NaN, 18);
+		this.clusterRecSizeSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.clusterRecSizeSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(clusterRecSizeSlider);
 
@@ -328,7 +418,6 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 					+ " Size (pxl)");
 
 		}
-
 	}
 
 	public void setXTablePerspective(final TablePerspective x) {
