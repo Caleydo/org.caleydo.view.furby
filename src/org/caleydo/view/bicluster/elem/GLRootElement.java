@@ -26,6 +26,7 @@ import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
+import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
@@ -51,13 +52,12 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	protected void init(IGLElementContext context) {
 		super.init(context);
 		// show the global toolbar as a popup
-		context.getPopupLayer().show(globalToolBar,
-				new Vec4f(Float.NaN, 0, 200, 330),
+		context.getPopupLayer().show(globalToolBar, new Vec4f(Float.NaN, 0, 200, 410),
 				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE);
 	}
 
-	public void setData(List<TablePerspective> list, TablePerspective x,
-			TablePerspective l, TablePerspective z, ExecutorService executor) {
+	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z,
+			ExecutorService executor) {
 		this.x = x;
 		this.l = l;
 		this.z = z;
@@ -73,8 +73,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		if (list != null) {
 			System.out.println(list.size() + " Cluster geladen.");
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(p, clusters, x, l,
-						z, executor, this);
+				final ClusterElement el = new ClusterElement(p, clusters, x, l, z, executor, this);
 				clusters.add(el);
 			}
 		}
@@ -87,8 +86,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		if (bands.size() == 0) {
 			int i = 1;
 			for (GLElement start : clusters) {
-				for (GLElement end : clusters.asList().subList(i,
-						clusters.asList().size())) {
+				for (GLElement end : clusters.asList().subList(i, clusters.asList().size())) {
 					if (start == end)
 						continue;
 					bands.add(new RecordBandElement(start, end, bands));
@@ -101,16 +99,12 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		bands.updateStructure();
 	}
 
-	int maxClusterRecSize = 150;
-	int maxClusterDimSize = 150;
 
-	private int curClusterSize = 150;
+
 
 	public void setClusterSizes() {
 		double maxDimClusterElements = 1;
 		double maxRecClusterElements = 1;
-		maxClusterDimSize = curClusterSize;
-		maxClusterRecSize = curClusterSize;
 
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
@@ -123,14 +117,11 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				maxRecClusterElements = i.getNumberOfRecElements();
 			}
 		}
-		double maxSize = maxDimClusterElements < maxRecClusterElements ? maxRecClusterElements
-				: maxDimClusterElements;
+		double maxSize = maxDimClusterElements < maxRecClusterElements ? maxRecClusterElements : maxDimClusterElements;
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
-			double recSize = i.getNumberOfRecElements() * maxClusterRecSize
-					/ maxRecClusterElements;
-			double dimSize = i.getNumberOfDimElements() * maxClusterDimSize
-					/ maxDimClusterElements;
+			double recSize = i.getNumberOfRecElements() * maxRecClusterSize / maxRecClusterElements;
+			double dimSize = i.getNumberOfDimElements() * maxDimClusterSize / maxDimClusterElements;
 			i.setClusterSize(dimSize, recSize, maxSize);
 			i.setVisibility();
 			i.relayout();
@@ -142,8 +133,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	}
 
 	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w,
-			float h) {
+	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (IGLLayoutElement child : children) {
 			child.setBounds(0, 0, w, h);
 			child.asElement().relayout();
@@ -165,11 +155,17 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	}
 
 	int bandCount = 0;
-
 	int count = 0;
 
-	private int smallClusterSize = 100;
-	private int largeClusterSize = 150;
+	private int maxDimClusterSize = 150;
+	private int maxRecClusterSize = 150;
+
+	@ListenTo
+	private void listenTo(MaxClusterSizeChangeEvent e) {
+		maxDimClusterSize = (int) e.getMaxDimensionSize() + 1;
+		maxRecClusterSize = (int) e.getMaxRecordSize() + 1;
+		setClusterSizes();
+	}
 
 	boolean dimBands, recBands;
 
@@ -191,31 +187,25 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		if (event.isGlobal())
 			count++;
 		else {
-			recalculateOverlap(event.isDimBandEnabled(),
-					event.isRecBandEnabled());
+			recalculateOverlap(event.isDimBandEnabled(), event.isRecBandEnabled());
 			count = 0;
 			return;
 		}
 		if (count == clusters.size()) {
-			recalculateOverlap(event.isDimBandEnabled(),
-					event.isRecBandEnabled());
+			recalculateOverlap(event.isDimBandEnabled(), event.isRecBandEnabled());
 			count = 0;
 		}
 	}
 
 	@ListenTo
 	private void listenTo(LZThresholdChangeEvent event) {
-		if (event.isFixedClusterCount())
-			curClusterSize = smallClusterSize;
-		else
-			curClusterSize = largeClusterSize;
 		bands.updateStructure();
 	}
 
 	@ListenTo
 	private void listenTo(SpecialClusterAddedEvent event) {
-		ClusterElement specialCluster = new SpecialRecordClusterElement(x,
-				clusters, x, l, z, executor, event.getElements(), this);
+		ClusterElement specialCluster = new SpecialRecordClusterElement(x, clusters, x, l, z, executor,
+				event.getElements(), this);
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);
 		setClusterSizes();
@@ -234,8 +224,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	@ListenTo
 	private void listenTo(ChemicalClusterAddedEvent e) {
-		ClusterElement specialCluster = new ChemicalClusterElement(x,
-				clusters, x, l, z, executor, e.getClusterList(),
+		ClusterElement specialCluster = new ChemicalClusterElement(x, clusters, x, l, z, executor, e.getClusterList(),
 				e.getElementToClusterMap(), this);
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);

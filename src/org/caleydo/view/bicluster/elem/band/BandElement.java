@@ -231,7 +231,6 @@ public abstract class BandElement extends PickableGLElement {
 			if (isMouseOver == true) {
 				for (Band b : splittedBands.values())
 					g.fillPolygon(b);
-
 				g.incZ();
 				for (Integer elementIndex : splines.keySet()) {
 					g.pushName(pickingPool.get(elementIndex + 1));
@@ -240,10 +239,10 @@ public abstract class BandElement extends PickableGLElement {
 				}
 				g.decZ();
 			} else {
-				for (Band b : nonSplittedBands.values())
-					g.fillPolygon(b);
+				if (nonSplittedBands != null)
+					for (Band b : nonSplittedBands.values())
+						g.fillPolygon(b);
 			}
-
 		}
 	}
 
