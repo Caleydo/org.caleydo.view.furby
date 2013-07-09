@@ -5,6 +5,9 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import gleem.linalg.Vec2f;
+
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -84,6 +87,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	protected static final float highOpacityFactor = 1;
 	protected static final float lowOpacityFactor = 0.2f;
 	protected static final float opacityChangeInterval = 10f;
+	protected static final float DEFAULT_Z_DELTA = 0;
+	protected static final float FOCUSED_Z_DELTA = 1;
+	protected static final float HOVERED_NOT_FOCUSED_Z_DELTA = 2;
+	protected static final float DRAGGING_Z_DELTA = 4;
 
 	protected final TablePerspective data;
 	protected final TablePerspective x;
@@ -177,8 +184,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		// heatmap = new ScrollingDecorator(heatmapImpl, new ScrollBar(true),
 		// new ScrollBar(false), 5);
 		content = heatmapImpl;
-		content.setzDelta(0.5f);
-		// setzDelta(f);
+		setZValuesAccordingToState();
 		this.add(content);
 	}
 
@@ -216,6 +222,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	 */
 	public String getID() {
 		return data.getLabel();
+	}
+
+	private void setZValuesAccordingToState() {
+		if (isDragged) {
+			setzDelta(DRAGGING_Z_DELTA);
+		} else if (isFocused) {
+			setzDelta(FOCUSED_Z_DELTA);
+		} else if (isHovered) {
+			setzDelta(HOVERED_NOT_FOCUSED_Z_DELTA);
+		} else {
+			setzDelta(DEFAULT_Z_DELTA);
+		}
 	}
 
 	@Override
@@ -261,7 +279,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			color = new Color(0, 0, 0, curOpacityFactor);
 		g.color(color);
 		g.drawRect(-1, -1, w + 2, h + 2);
-
 	}
 
 	protected void onPicked(Pick pick) {
@@ -478,7 +495,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		}
 
 		public HeaderBar() {
-			setzDelta(0.5f);
+			setzDelta(DEFAULT_Z_DELTA);
 			createButtons();
 			setSize(Float.NaN, 20);
 		}
@@ -512,7 +529,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 		@Override
 		protected void onPicked(Pick pick) {
-
 			switch (pick.getPickingMode()) {
 			case DRAGGED:
 				if (!pick.isDoDragging())
@@ -521,6 +537,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 					allClusters.setDragedLayoutElement(cluster);
 				}
 				isDragged = true;
+				setzDelta(DRAGGING_Z_DELTA);
 				cluster.setLocation(cluster.getLocation().x() + pick.getDx(), cluster.getLocation().y() + pick.getDy());
 				cluster.relayout();
 				cluster.repaintPick();
@@ -537,11 +554,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			case MOUSE_RELEASED:
 				pick.setDoDragging(false);
 				clicked = false;
+				isDragged = false;
+				allClusters.setDragedLayoutElement(null);
+				setzDelta(DEFAULT_Z_DELTA);
+				if (isClusterCollision())
+					mouseOut();
 				break;
 			default:
+				if (!pick.isDoDragging())
+					return;
 				isDragged = false;
 				allClusters.setDragedLayoutElement(null);
 			}
+			System.out.println(getID() + "'s toolbar hat " + toolBar.getzDelta() + " zDelta");
+			setZValuesAccordingToState();
 		}
 
 		@Override
@@ -550,6 +576,26 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 		}
 
+	}
+
+	private boolean isClusterCollision() {
+		Vec2f mySize = getSize();
+		Vec2f myLoc = getLocation();
+		Rectangle myRec = new Rectangle((int) myLoc.x() - 10, (int) myLoc.y() - 10, (int) mySize.x() + 20,
+				(int) mySize.y() + 20);
+		for (GLElement jGLE : allClusters) {
+			ClusterElement j = (ClusterElement) jGLE;
+			if (j == this)
+				continue;
+			Vec2f jSize = j.getSize();
+			Vec2f jLoc = j.getLocation();
+			Rectangle jRec = new Rectangle((int) jLoc.x() - 10, (int) jLoc.y() - 10, (int) jSize.x() + 20,
+					(int) jSize.y() + 20);
+			if (myRec.intersects(jRec)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	protected class ThresholdBar extends GLElementContainer implements
@@ -565,7 +611,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			super(layout ? GLLayouts.flowHorizontal(1) : GLLayouts.flowVertical(1));
 			isHorizontal = layout;
 			// move to the top
-			setzDelta(+0.5f);
+			setzDelta(DEFAULT_Z_DELTA);
 
 			// create buttons
 			createButtons();
@@ -713,11 +759,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 						: SortingType.probabilitySorting);
 			} else if (button == enlarge) {
 				upscale();
-				content.setzDelta(1f);
+				// content.setzDelta(1f);
 				resize();
 			} else if (button == smaller) {
 				reduceScaleFactor();
-				content.setzDelta(1f);
+				// content.setzDelta(1f);
 				resize();
 			} else if (button == focus) {
 				EventPublisher.trigger(new FocusChangeEvent(cluster));
