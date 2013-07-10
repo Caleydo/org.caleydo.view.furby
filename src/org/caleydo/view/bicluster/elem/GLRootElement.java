@@ -5,8 +5,6 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import gleem.linalg.Vec4f;
-
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -53,8 +51,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	protected void init(IGLElementContext context) {
 		super.init(context);
 		// show the global toolbar as a popup
-		context.getPopupLayer().show(globalToolBar, new Vec4f(Float.NaN, 0, 200, 510),
-				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE);
+		context.getPopupLayer().show(globalToolBar, globalToolBar.getPreferredBounds(),
+				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE | IPopupLayer.FLAG_COLLAPSABLE);
 	}
 
 	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z,

@@ -5,6 +5,8 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import gleem.linalg.Vec4f;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,8 +64,8 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 	private static final float SLIDER_WIDH = 16;
 	private static final float BUTTON_WIDTH = 16;
 
-	float MAX_RECORD_VALUE = 0.2f;
-	float MAX_DIMENSION_VALUE = 5f;
+	float maxRecordValue = 0.2f;
+	float maxDimensionValue = 5f;
 
 	private GLButton fixedClusterButton;
 	private GLButton dimBandVisibilityButton;
@@ -189,8 +191,8 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 
 	@ListenTo
 	private void listenTo(MaxThresholdChangeEvent e) {
-		MAX_RECORD_VALUE = (float) e.getRecThreshold();
-		MAX_DIMENSION_VALUE = (float) e.getDimThreshold();
+		maxRecordValue = (float) e.getRecThreshold();
+		maxDimensionValue = (float) e.getDimThreshold();
 		initSliders();
 	}
 
@@ -309,7 +311,7 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		this.add(dimensionLabel);
 
 		this.remove(dimensionThresholdSlider);
-		this.dimensionThresholdSlider = new GLSlider(0.05f, MAX_DIMENSION_VALUE, 4.5f);
+		this.dimensionThresholdSlider = new GLSlider(0.05f, maxDimensionValue, 4.5f);
 		dimensionThresholdSlider.setCallback(this);
 		dimensionThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
 		dimensionThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
@@ -321,7 +323,7 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 		this.add(recordLabel);
 
 		this.remove(recordThresholdSlider);
-		this.recordThresholdSlider = new GLSlider(0.02f, MAX_RECORD_VALUE, 0.08f);
+		this.recordThresholdSlider = new GLSlider(0.02f, maxRecordValue, 0.08f);
 		recordThresholdSlider.setCallback(this);
 		recordThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
 		recordThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
@@ -390,6 +392,13 @@ public class GlobalToolBarElement extends GLElementContainer implements GLButton
 				+ " Bands"));
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(x.getDataDomain().getDimensionIDCategory()
 				.toString()));
+	}
+
+	/**
+	 * @return
+	 */
+	public Vec4f getPreferredBounds() {
+		return new Vec4f(Float.NaN, 0, 200, 510);
 	}
 
 }
