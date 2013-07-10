@@ -14,6 +14,7 @@ public class SpecialClusterRemoveEvent extends ADirectedEvent {
 
 
 	public SpecialClusterRemoveEvent(ClusterElement sender, boolean isDimCluster) {
+		setSender(sender);
 		this.isDimCluster = isDimCluster;
 	}
 
