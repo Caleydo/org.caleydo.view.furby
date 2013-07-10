@@ -34,9 +34,9 @@ public class RcpGLBiClusterView extends ARcpGLViewPart {
 	@Override
 	public void addToolBarContent() {
 		super.addToolBarContent();
-		toolBarManager.add(new SimpleEventAction("Show Parameter Settings", "resources/icons/setting_tools.png",
+		toolBarManager.add(new SimpleEventAction("Show Parameter Settings", BiClusterRenderStyle.ICON_TOOLS,
 				Activator.getResourceLoader(), new ShowToolBarEvent(true)));
-		toolBarManager.add(new SimpleEventAction("Show Layout Settings", "resources/icons/gear_in.png", Activator
+		toolBarManager.add(new SimpleEventAction("Show Layout Settings", BiClusterRenderStyle.ICON_LAYOUT, Activator
 				.getResourceLoader(),
 				new ShowToolBarEvent(false)));
 	}

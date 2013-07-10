@@ -52,6 +52,7 @@ import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
@@ -699,7 +700,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			sorting.setCallback(this);
 			this.add(sorting);
 			focus = new GLButton();
-			focus.setRenderer(GLRenderers.fillImage("resources/icons/target.png"));
+			focus.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_FOCUS));
 			focus.setSize(16, Float.NaN);
 			focus.setTooltip("Focus this Cluster");
 			focus.setCallback(this);
@@ -712,9 +713,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 				@Override
 				public void render(GLGraphics g, float w, float h, GLElement parent) {
 					if (isLocked)
-						g.fillImage("resources/icons/lock_open.png", 0, 0, w, h);
+						g.fillImage(BiClusterRenderStyle.ICON_UNLOCK, 0, 0, w, h);
 					else
-						g.fillImage("resources/icons/lock.png", 0, 0, w, h);
+						g.fillImage(BiClusterRenderStyle.ICON_LOCK, 0, 0, w, h);
 				}
 
 			});
@@ -723,13 +724,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			enlarge = new GLButton();
 			enlarge.setSize(16, Float.NaN);
 			enlarge.setTooltip("Enlarge");
-			enlarge.setRenderer(GLRenderers.fillImage("resources/icons/zoom_in.png"));
+			enlarge.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_IN));
 			enlarge.setCallback(this);
 			this.add(enlarge);
 			smaller = new GLButton();
 			smaller.setTooltip("Reduce");
 			smaller.setSize(16, Float.NaN);
-			smaller.setRenderer(GLRenderers.fillImage("resources/icons/zoom_out.png"));
+			smaller.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_OUT));
 			smaller.setCallback(this);
 			this.add(smaller);
 
@@ -1101,7 +1102,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 	protected GLButton createHideClusterButton() {
 		GLButton hide = new GLButton();
-		hide.setRenderer(GLRenderers.fillImage("resources/icons/dialog_close.png"));
+		hide.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_CLOSE));
 		hide.setTooltip("Close");
 		hide.setSize(16, Float.NaN);
 		hide.setCallback(new ISelectionCallback() {

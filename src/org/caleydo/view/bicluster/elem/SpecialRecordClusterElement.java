@@ -20,6 +20,7 @@ import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
@@ -242,7 +243,7 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 	protected GLButton createHideClusterButton() {
 		GLButton hide = new GLButton();
 		hide.setRenderer(GLRenderers
-				.fillImage("resources/icons/dialog_close.png"));
+.fillImage(BiClusterRenderStyle.ICON_CLOSE));
 		hide.setTooltip("Unload cluster");
 		hide.setSize(16, Float.NaN);
 		hide.setCallback(new ISelectionCallback(){
