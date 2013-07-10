@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.id.IDType;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
@@ -237,6 +238,14 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		}
 		bands.updateSelection();
 		relayout();
+	}
+
+	/**
+	 * @param idType
+	 * @param group
+	 */
+	public void addSpecialCluster(IDType idType, TablePerspective group) {
+		// TODO group either the record or dimension perspective has the right given IDType, which is one of the X table
 	}
 
 	@ListenTo

@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,10 @@ import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 /**
  * <p>
  * Sample GL2 view.
@@ -59,6 +64,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	public static final String VIEW_NAME = "BiCluster Visualization";
 
 	private TablePerspective x, l, z;
+	private List<TablePerspective> recordClusters = new ArrayList<>(1);
+	private List<TablePerspective> dimensionClusters = new ArrayList<>(1);
 
 	private ExecutorService executorService = Executors.newFixedThreadPool(4);
 
@@ -66,8 +73,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	private float geneThreshold = 0.08f;
 	double maxDimThreshold = 0, maxRecThreshold = 0;
 	ASerializedView view;
-
-	private ASortingStrategy strategy;
 
 	GLRootElement rootElement;
 	private boolean setXElements = false;
@@ -185,7 +190,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	 * @param a
 	 * @param b
 	 */
-	private Pair<TablePerspective, TablePerspective> findLZ(TablePerspective x,
+	private static Pair<TablePerspective, TablePerspective> findLZ(TablePerspective x,
 			TablePerspective a, TablePerspective b) {
 		// row: gene, row: gene
 		if (a.getDataDomain().getRecordIDCategory()
@@ -200,14 +205,18 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	 * infers the X,L,Z tables from the dimension and record ID categories, as L
 	 * and Z has the same Dimension ID Category, the remaining one will be X
 	 */
-	private void findXLZ() {
-		TablePerspective a = tablePerspectives.get(0);
-		TablePerspective b = tablePerspectives.get(1);
-		TablePerspective c = tablePerspectives.get(2);
+	private static List<TablePerspective> findXLZ(List<TablePerspective> perspectives) {
+		if (perspectives.size() != 3)
+			return null;
+		TablePerspective a = perspectives.get(0);
+		TablePerspective b = perspectives.get(1);
+		TablePerspective c = perspectives.get(2);
 		IDCategory a_d = a.getDataDomain().getDimensionIDCategory();
 		IDCategory b_d = b.getDataDomain().getDimensionIDCategory();
 		IDCategory c_d = c.getDataDomain().getDimensionIDCategory();
 		Pair<TablePerspective, TablePerspective> lz;
+
+		TablePerspective x, l, z;
 		if (a_d.equals(b_d)) {
 			x = c;
 			lz = findLZ(x, a, b);
@@ -220,6 +229,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		}
 		l = lz.getFirst();
 		z = lz.getSecond();
+		return Arrays.asList(x, l, z);
 	}
 
 	@Override
@@ -249,23 +259,65 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			rootElement = new GLRootElement();
 			root.setContent(rootElement);
 		}
-		if (all.size() < 3)
+		List<TablePerspective> numerical = Lists.newArrayList(Iterables.filter(all,
+				DataSupportDefinitions.numericalTables.asTablePerspectivePredicate()));
+
+		if (numerical.size() != 3) { // abort on on data
 			rootElement.setData(null, null, null, null, executorService);
-		else if (all.size() == 3) {
-			findXLZ();
+			return;
+		}
+
+		List<TablePerspective> xlz = findXLZ(numerical);
+		TablePerspective x2 = xlz.get(0);
+		TablePerspective l2 = xlz.get(1);
+		TablePerspective z2 = xlz.get(2);
+
+		if (x2 != x || l2 != l || z2 != z) { // update x l z tables
+			this.x = x2;
+			this.l = l2;
+			this.z = z2;
 			rootElement.setData(initTablePerspectives(), x, l, z,
 					executorService);
-			// signal that we now use that data domain
 			EventPublisher.trigger(new DataDomainUpdateEvent(x.getDataDomain()));
+			// signal that we now use that data domain
 			createBiClusterPerspectives(x, l, z);
-//			createBiClusterPerspectives(x, l, z);
+			// createBiClusterPerspectives(x, l, z);
 			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold,
 					maxRecThreshold));
 			EventPublisher.trigger(new LZThresholdChangeEvent(geneThreshold,
 					sampleThreshold, false, true));
-//			rootElement.createBands();
+			// rootElement.createBands();
 			rootElement.setClusterSizes();
 		}
+
+		// search within the categorical table perspectives the chemical clusters
+		List<TablePerspective> categorical = Lists.newArrayList(Iterables.filter(all,
+				Predicates.not(DataSupportDefinitions.numericalTables.asTablePerspectivePredicate())));
+		assert this.x != null;
+
+		for (TablePerspective t : categorical) {
+			if (findGroupings(t.getRecordPerspective())) {
+				for (TablePerspective group : t.getRecordSubTablePerspectives())
+					rootElement.addSpecialCluster(t.getRecordPerspective().getIdType(), group);
+			}
+			if (findGroupings(t.getDimensionPerspective())) {
+				for (TablePerspective group : t.getDimensionSubTablePerspectives())
+					rootElement.addSpecialCluster(t.getDimensionPerspective().getIdType(), group);
+			}
+		}
+	}
+
+	/**
+	 * @param p
+	 * @return
+	 */
+	private boolean findGroupings(Perspective p) {
+		final IDType record = this.x.getRecordPerspective().getIdType();
+		final IDType dimension = this.x.getDimensionPerspective().getIdType();
+		final IDType idtype = p.getIdType();
+		if ((!idtype.equals(record) && !idtype.equals(dimension)))
+			return false;
+		return true;
 	}
 
 	@Override

@@ -27,8 +27,10 @@ import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
 import org.caleydo.core.data.virtualarray.events.RecordVAUpdateEvent;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
+import org.caleydo.core.gui.util.RenameNameDialog;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
+import org.caleydo.core.util.base.ILabeled;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
@@ -68,7 +70,6 @@ import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.BandSorting;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
-import org.caleydo.view.bicluster.util.RenameClusterDialog;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.CellSpace;
@@ -76,6 +77,7 @@ import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
+import org.eclipse.swt.widgets.Display;
 
 /**
  * e.g. a class for representing a cluster
@@ -83,7 +85,7 @@ import org.caleydo.view.heatmap.v2.SpacingStrategies;
  * @author Michael Gillhofer
  * @author Samuel Gratzl
  */
-public class ClusterElement extends AnimatedGLElementContainer implements IBlockColorer, IGLLayout {
+public class ClusterElement extends AnimatedGLElementContainer implements IBlockColorer, IGLLayout, ILabeled {
 	protected static final float highOpacityFactor = 1;
 	protected static final float lowOpacityFactor = 0.2f;
 	protected static final float opacityChangeInterval = 10f;
@@ -767,15 +769,21 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		scaleFactor += 0.6;
 	}
 
-	public void renameCluster() {
-		RenameClusterDialog.open(this);
+	public final void renameCluster() {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				String label = getLabel();
+				String newlabel = RenameNameDialog.show(null, "Rename Cluster: " + label, label);
+				if (newlabel != null && !label.equals(newlabel))
+					EventPublisher.trigger(new ClusterRenameEvent(newlabel).to(ClusterElement.this));
+			}
+		});
 	}
 
-	@ListenTo
+	@ListenTo(sendToMe = true)
 	private void listenTo(ClusterRenameEvent e) {
-		if (e.getSender() == this) {
-			setLabel(e.getNewName());
-		}
+		setLabel(e.getNewName());
 	}
 
 	protected void reduceScaleFactor() {
@@ -934,6 +942,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 	protected void setLabel(String id) {
 		data.setLabel(id);
+	}
+
+	@Override
+	public String getLabel() {
+		return getID();
 	}
 
 	protected void setHasContent(List<Integer> dimIndices, List<Integer> recIndices) {

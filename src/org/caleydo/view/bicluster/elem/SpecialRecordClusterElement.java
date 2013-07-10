@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutorService;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
-import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
@@ -22,13 +21,12 @@ import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
-import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 
 public final class SpecialRecordClusterElement extends ClusterElement {
 
 	private VirtualArray elements;
 	private float width = 10f;
-	
+
 	private String clusterName;
 
 	public SpecialRecordClusterElement(TablePerspective data,
@@ -143,16 +141,9 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 		return clusterName == null ? "Special " + x.getDataDomain().getRecordIDCategory().getDenominationPlural().toString() : clusterName;
 	}
 
-	@ListenTo
-	private void listenTo(ClusterRenameEvent e) {
-		if (e.getSender() == this){
-			clusterName = e.getNewName();
-		}
-	}
-	
 	@Override
 	protected void setLabel(String id) {
-		// nothing to do here
+		this.clusterName = id;
 	}
 
 	@Override
@@ -241,7 +232,7 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 	protected void sort(SortingType type) {
 		// Nothing to do here
 	}
-	
+
 	@Override
 	protected GLButton createHideClusterButton() {
 		GLButton hide = new GLButton();
@@ -259,11 +250,11 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 				allClusters.remove(cluster);
 				cluster.mouseOut();
 			}
-			
+
 		});
 		return hide;
 	}
 
-	
-	
+
+
 }

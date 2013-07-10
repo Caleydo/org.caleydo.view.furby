@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutorService;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
-import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
@@ -25,7 +24,6 @@ import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
-import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 
 public final class ChemicalClusterElement extends ClusterElement {
 
@@ -157,16 +155,9 @@ public final class ChemicalClusterElement extends ClusterElement {
 		return clusterName == null ? "Chemical clusters" : clusterName;
 	}
 
-	@ListenTo
-	private void listenTo(ClusterRenameEvent e) {
-		if (e.getSender() == this) {
-			clusterName = e.getNewName();
-		}
-	}
-
 	@Override
 	protected void setLabel(String id) {
-		// nothing to do here
+		this.clusterName = id;
 	}
 
 	@Override
@@ -259,7 +250,7 @@ public final class ChemicalClusterElement extends ClusterElement {
 //				/ getDimensionVirtualArray().size();
 		return getDimIndexOf(id)*TEXT_SIZE;
 	}
-	
+
 	@Override
 	public List<List<Integer>> getListOfContinousDimSequences(
 			List<Integer> overlap) {
@@ -268,17 +259,17 @@ public final class ChemicalClusterElement extends ClusterElement {
 		return sequences;
 	}
 
-	
+
 	@Override
 	public float getDimensionElementSize() {
 		return getSize().x() / clusterList.size();
 	}
-	
+
 	@Override
 	public int getDimIndexOf(int value) {
 		return clusterList.indexOf(elementToClusterMap.get(value));
 	}
-	
+
 	@Override
 	public int getNrOfElements(List<Integer> band){
 		Set<String> usedElements = new HashSet<>();
