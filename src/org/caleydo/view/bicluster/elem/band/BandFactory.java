@@ -1,3 +1,8 @@
+/*******************************************************************************
+ * Caleydo - Visualization for Molecular Biology - http://caleydo.org
+ * Copyright (c) The Caleydo Team. All rights reserved.
+ * Licensed under the new BSD license, available at http://caleydo.org/license
+ ******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
 import java.util.List;
@@ -14,10 +19,10 @@ public abstract class BandFactory {
 	/*
 	 * firstIndices contains all Indices of SubBands from the first cluster with
 	 * subBand.size > 1
-	 * 
+	 *
 	 * secondIndices contains all Indices of SubBands from the second cluster
 	 * with subBand.size > 1
-	 * 
+	 *
 	 * singleElementIndices --> contains all Indices of SubBands with
 	 * subBand.size == 1
 	 */
@@ -40,6 +45,6 @@ public abstract class BandFactory {
 	protected abstract Map<List<Integer>, Band> getSplitableBands();
 
 	protected abstract Map<List<Integer>, Band> getNonSplitableBands();
-	
-	protected abstract Map<Integer, Band> getConnectionsSplines(); 
+
+	protected abstract Map<Integer, Band> getConnectionsSplines();
 }

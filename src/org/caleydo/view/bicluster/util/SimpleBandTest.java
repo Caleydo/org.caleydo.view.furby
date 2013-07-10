@@ -1,3 +1,8 @@
+/*******************************************************************************
+ * Caleydo - Visualization for Molecular Biology - http://caleydo.org
+ * Copyright (c) The Caleydo Team. All rights reserved.
+ * Licensed under the new BSD license, available at http://caleydo.org/license
+ ******************************************************************************/
 package org.caleydo.view.bicluster.util;
 
 import gleem.linalg.Vec2f;
@@ -34,11 +39,11 @@ public class SimpleBandTest extends GLElement {
 		// can be stored :)
 		Band band0 = TesselatedPolygons.band(points0);
 		band0.setDrawBandBordersOnly(true).setDrawBandBordersOnFill(false);
-		
-		
-		
-		
-		
+
+
+
+
+
 		List<Pair<Vec3f, Vec3f>> points = new ArrayList<>();
 		// point pairs defining line segments
 		points.add(pair(200, 150, 205, 150));
@@ -65,7 +70,7 @@ public class SimpleBandTest extends GLElement {
 
 		List<Pair<Vec3f, Vec3f>> points3 = new ArrayList<>();
 		// point pairs defining line segments
-		
+
 		points3.add(pair(300, 195, 300, 210));
 		points3.add(pair(350, 195, 350, 210));
 		points3.add(pair(415, 260, 400, 260));
@@ -75,17 +80,17 @@ public class SimpleBandTest extends GLElement {
 		// can be stored :)
 		Band band3 = TesselatedPolygons.band(points3);
 		band3.setDrawBandBordersOnly(true).setDrawBandBordersOnFill(false);
-		
-		
+
+
 		List<Vec2f> anchorPoints = new ArrayList<>();
 		anchorPoints.add(new Vec2f(300, 300));
 		anchorPoints.add(new Vec2f(300, 350));
 		anchorPoints.add(new Vec2f(340, 400));
 		anchorPoints.add(new Vec2f(380, 400));
-		
+
 		Band band4 = TesselatedPolygons.band(anchorPoints, 1, 10, 10);
-		
-		
+
+
 		g.color(0, 0, 1, 1.f);
 		g.drawPath(band);
 		g.drawPath(band2);

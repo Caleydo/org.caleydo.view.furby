@@ -1,3 +1,8 @@
+/*******************************************************************************
+ * Caleydo - Visualization for Molecular Biology - http://caleydo.org
+ * Copyright (c) The Caleydo Team. All rights reserved.
+ * Licensed under the new BSD license, available at http://caleydo.org/license
+ ******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
 import gleem.linalg.Vec2f;
@@ -306,8 +311,8 @@ public class RecordBandFactory extends BandFactory {
 		bandPointsClusterRelative.add(new Vec2f(xPos, startPosY));
 
 		List<Vec2f> bandPoints = new ArrayList<>(2);
-		startPosY = (float) ((startIndex + subBand.size() / 2f - allIndices
-				.size() / 2f) * secondElementSize);
+		startPosY = (startIndex + subBand.size() / 2f - allIndices
+				.size() / 2f) * secondElementSize;
 		bandPoints.add(new Vec2f(0,startPosY));
 		bandPoints.add(new Vec2f(MERGING_AREA_LENGHT / 2,startPosY));
 		bandPoints = translateForRotation(bandPoints);
@@ -323,7 +328,7 @@ public class RecordBandFactory extends BandFactory {
 		bandPointsClusterRelative = translateToClusterAbsoluteCoordinates(
 				bandPointsClusterRelative, second);
 		return TesselatedPolygons.band(bandPointsClusterRelative, 0,
-				(float) subBand.size() * (float) secondElementSize / 2f,
+				subBand.size() * secondElementSize / 2f,
 				SUBBAND_POLYGONS);
 	}
 
@@ -331,14 +336,14 @@ public class RecordBandFactory extends BandFactory {
 		List<Vec2f> mainPointsSecond = new ArrayList<>(6);
 		mainPointsSecond.add(new Vec2f(0, MERGING_AREA_LENGHT / 2));
 		mainPointsSecond.add(new Vec2f(0, MERGING_AREA_LENGHT));
-		mainPointsSecond.add(new Vec2f((float) (allIndices.size()
-				* secondElementSize / -2f), MERGING_AREA_LENGHT / 2));
-		mainPointsSecond.add(new Vec2f((float) (allIndices.size()
-				* secondElementSize / 2f), MERGING_AREA_LENGHT / 2));
-		mainPointsSecond.add(new Vec2f((float) (allIndices.size()
-				* secondElementSize / -2f), MERGING_AREA_LENGHT));
-		mainPointsSecond.add(new Vec2f((float) (allIndices.size()
-				* secondElementSize / 2f), MERGING_AREA_LENGHT));
+		mainPointsSecond.add(new Vec2f(allIndices.size()
+				* secondElementSize / -2f, MERGING_AREA_LENGHT / 2));
+		mainPointsSecond.add(new Vec2f(allIndices.size()
+				* secondElementSize / 2f, MERGING_AREA_LENGHT / 2));
+		mainPointsSecond.add(new Vec2f(allIndices.size()
+				* secondElementSize / -2f, MERGING_AREA_LENGHT));
+		mainPointsSecond.add(new Vec2f(allIndices.size()
+				* secondElementSize / 2f, MERGING_AREA_LENGHT));
 		mainPointsSecond = translateForRotation(mainPointsSecond);
 		mainPointsSecond = rotate(mainPointsSecond, rotationMatrixSecond);
 		if (!isStartsRightSecond())
@@ -356,14 +361,14 @@ public class RecordBandFactory extends BandFactory {
 		List<Vec2f> mainPointsFirst = new ArrayList<>(6);
 		mainPointsFirst.add(new Vec2f(0, MERGING_AREA_LENGHT / 2));
 		mainPointsFirst.add(new Vec2f(0, MERGING_AREA_LENGHT));
-		mainPointsFirst.add(new Vec2f((float) (allIndices.size()
-				* firstElementSize / -2f), MERGING_AREA_LENGHT / 2));
-		mainPointsFirst.add(new Vec2f((float) (allIndices.size()
-				* firstElementSize / 2f), MERGING_AREA_LENGHT / 2));
-		mainPointsFirst.add(new Vec2f((float) (allIndices.size()
-				* firstElementSize / -2f), MERGING_AREA_LENGHT));
-		mainPointsFirst.add(new Vec2f((float) (allIndices.size()
-				* firstElementSize / 2f), MERGING_AREA_LENGHT));
+		mainPointsFirst.add(new Vec2f(allIndices.size()
+				* firstElementSize / -2f, MERGING_AREA_LENGHT / 2));
+		mainPointsFirst.add(new Vec2f(allIndices.size()
+				* firstElementSize / 2f, MERGING_AREA_LENGHT / 2));
+		mainPointsFirst.add(new Vec2f(allIndices.size()
+				* firstElementSize / -2f, MERGING_AREA_LENGHT));
+		mainPointsFirst.add(new Vec2f(allIndices.size()
+				* firstElementSize / 2f, MERGING_AREA_LENGHT));
 		mainPointsFirst = translateForRotation(mainPointsFirst);
 		mainPointsFirst = rotate(mainPointsFirst, rotationMatrixFirst);
 		if (!isStartsLeftFirst())
@@ -388,8 +393,8 @@ public class RecordBandFactory extends BandFactory {
 		bandPointsClusterRelative.add(new Vec2f(xPos, middle));
 
 		List<Vec2f> bandPoints = new ArrayList<>(2);
-		middle = (float) ((startIndex + subBand.size() / 2f - allIndices
-				.size() / 2f) * firstElementSize);
+		middle = (startIndex + subBand.size() / 2f - allIndices
+				.size() / 2f) * firstElementSize;
 		bandPoints.add(new Vec2f(0,middle));
 		bandPoints.add(new Vec2f(MERGING_AREA_LENGHT / 2,middle ));
 		bandPoints = translateForRotation(bandPoints);
@@ -405,7 +410,7 @@ public class RecordBandFactory extends BandFactory {
 		bandPointsClusterRelative = translateToClusterAbsoluteCoordinates(
 				bandPointsClusterRelative, first);
 		return TesselatedPolygons.band(bandPointsClusterRelative, 0,
-				(float) subBand.size() * (float) firstElementSize / 2f,
+				subBand.size() * firstElementSize / 2f,
 				SUBBAND_POLYGONS);
 
 	}
@@ -495,7 +500,7 @@ public class RecordBandFactory extends BandFactory {
 		if (firstIndices.size() == 1) {
 			List<Vec2f> firstPoints = new ArrayList<>(4);
 			firstAtTop = first.getRecPosOf(i);
-			firstAtBottom = firstAtTop + (float) firstElementSize;
+			firstAtBottom = firstAtTop + firstElementSize;
 			float middle = (firstAtTop + firstAtBottom) / 2;
 			float yPos = isStartsLeftFirst() ? 0 : first.getSize().y();
 			firstPoints.add(new Vec2f(middle, yPos));
@@ -507,7 +512,7 @@ public class RecordBandFactory extends BandFactory {
 		} else {
 
 			firstAtTop = first.getRecPosOf(i);
-			firstAtBottom = firstAtTop + (float) firstElementSize;
+			firstAtBottom = firstAtTop + firstElementSize;
 			float startPosX = (firstAtTop + firstAtBottom) / 2;
 			List<Vec2f> bandPointsClusterRelative = new ArrayList<>();
 			float yPos = isStartsLeftFirst() ? 0 : first.getSize().y();
@@ -517,7 +522,7 @@ public class RecordBandFactory extends BandFactory {
 			bandPointsClusterRelative.add(new Vec2f(startPosX, yPos));
 
 			List<Vec2f> bandPoints = new ArrayList<>(2);
-			startPosX = (float) ((firstIndex + 0.5f - allIndices.size() / 2f) * firstElementSize);
+			startPosX = (firstIndex + 0.5f - allIndices.size() / 2f) * firstElementSize;
 			bandPoints.add(new Vec2f(startPosX, 0));
 			bandPoints.add(new Vec2f(startPosX, MERGING_AREA_LENGHT / 2));
 			bandPoints = translateForRotation(bandPoints);
@@ -559,7 +564,7 @@ public class RecordBandFactory extends BandFactory {
 			// creating the band.
 			List<Vec2f> secondPoints = new ArrayList<>(2);
 			secondLeftest = second.getRecPosOf(i);
-			secondRightest = secondLeftest + (float) secondElementSize;
+			secondRightest = secondLeftest + secondElementSize;
 			float middle = (secondLeftest + secondRightest) / 2;
 			float yPos = isStartsRightSecond() ? -BAND_CLUSTER_OFFSET : second
 					.getSize().y() + BAND_CLUSTER_OFFSET;
@@ -573,7 +578,7 @@ public class RecordBandFactory extends BandFactory {
 					SPLINE_POLYGONS);
 		} else {
 
-			float startPosX = (float) ((secondIndex + 0.5f - allIndices.size() / 2f) * secondElementSize);
+			float startPosX = (secondIndex + 0.5f - allIndices.size() / 2f) * secondElementSize;
 
 			List<Vec2f> mainPointsSecond = new ArrayList<>();
 			mainPointsSecond.add(new Vec2f(startPosX, MERGING_AREA_LENGHT));
@@ -590,7 +595,7 @@ public class RecordBandFactory extends BandFactory {
 			finalPoints.addAll(mainPointsSecond);
 
 			secondLeftest = second.getRecPosOf(i);
-			secondRightest = secondLeftest + (float) secondElementSize;
+			secondRightest = secondLeftest + secondElementSize;
 			startPosX = (secondLeftest + secondRightest) / 2;
 			List<Vec2f> bandPointsClusterRelative = new ArrayList<>(4);
 			float yPos = isStartsRightSecond() ? -BAND_CLUSTER_OFFSET : second
@@ -600,7 +605,7 @@ public class RecordBandFactory extends BandFactory {
 			bandPointsClusterRelative.add(new Vec2f(startPosX, yPos));
 
 			List<Vec2f> bandPoints = new ArrayList<>(2);
-			startPosX = (float) ((secondIndex + 0.5f - allIndices.size() / 2f) * secondElementSize);
+			startPosX = (secondIndex + 0.5f - allIndices.size() / 2f) * secondElementSize;
 			bandPoints.add(new Vec2f(startPosX, MERGING_AREA_LENGHT / 2));
 			bandPoints.add(new Vec2f(startPosX, 0));
 			bandPoints = translateForRotation(bandPoints);
