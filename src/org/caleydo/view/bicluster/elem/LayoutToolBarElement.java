@@ -174,7 +174,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 	 */
 	@Override
 	public Vec4f getPreferredBounds() {
-		return new Vec4f(Float.NaN, 280, 200, 230);
+		return new Vec4f(Float.NaN, 340, 200, 230);
 	}
 
 }
