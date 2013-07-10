@@ -257,14 +257,16 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			i.setFrameForce(checkPlausibility(new Vec2d(xForce, yForce)));
 
 			// Toolbar force
+			xForce = 0;
+			yForce = 0;
 			for (AToolBarElement toolbar : toolbars) {
 				if (!toolbar.isVisible()) // no parent not visible
 					continue;
 				Vec2d distVec = getDistance(i, toolbar, true);
 				double rsq = distVec.lengthSquared();
 				rsq *= distVec.length();
-				xForce = 1.5f * repulsion * distVec.x() / rsq;
-				yForce = 1.5f * repulsion * distVec.y() / rsq;
+				xForce += 1.5f * repulsion * distVec.x() / rsq;
+				yForce += 1.5f * repulsion * distVec.y() / rsq;
 
 				distVec = getDistance(i, toolbar, false);
 				rsq = distVec.lengthSquared();
