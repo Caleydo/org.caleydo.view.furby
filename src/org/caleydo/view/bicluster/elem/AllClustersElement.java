@@ -9,6 +9,8 @@ import gleem.linalg.Vec2f;
 import gleem.linalg.Vec4f;
 
 import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -43,6 +45,9 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	double damping = 1f;
 
 	public Integer fixedElementsCount = 15;
+
+	private final List<AToolBarElement> toolbars = new ArrayList<>();
+
 
 	/**
 	 * @return the fixedElementsCount, see {@link #fixedElementsCount}
@@ -148,12 +153,16 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 					setLocation(j, (jLoc.x() + 200) % w, (jLoc.y() + 200) % h, w, h);
 				}
 			}
-			Vec2f toolsLoc = toolbar.getAbsoluteLocation();
-			Vec2f toolsSiz = toolbar.getSize();
-			Rectangle toolRec = new Rectangle((int) toolsLoc.x(), (int) toolsLoc.y(), (int) toolsSiz.x(),
-					(int) toolsSiz.y());
-			if (toolRec.intersects(iRec)) {
-				setLocation(i, (iLoc.x() - 200) % w, (iLoc.y() - 200) % h, w, h);
+			for (AToolBarElement toolbar : toolbars) {
+				if (!toolbar.isVisible()) // no parent not visible
+					continue;
+				Vec2f toolsLoc = toolbar.getAbsoluteLocation();
+				Vec2f toolsSiz = toolbar.getSize();
+				Rectangle toolRec = new Rectangle((int) toolsLoc.x(), (int) toolsLoc.y(), (int) toolsSiz.x(),
+						(int) toolsSiz.y());
+				if (toolRec.intersects(iRec)) {
+					setLocation(i, (iLoc.x() - 200) % w, (iLoc.y() - 200) % h, w, h);
+				}
 			}
 		}
 
@@ -248,18 +257,21 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			i.setFrameForce(checkPlausibility(new Vec2d(xForce, yForce)));
 
 			// Toolbar force
-			Vec2d distVec = getDistance(i, toolbar, true);
-			double rsq = distVec.lengthSquared();
-			rsq *= distVec.length();
-			xForce = 1.5f * repulsion * distVec.x() / rsq;
-			yForce = 1.5f * repulsion * distVec.y() / rsq;
+			for (AToolBarElement toolbar : toolbars) {
+				if (!toolbar.isVisible()) // no parent not visible
+					continue;
+				Vec2d distVec = getDistance(i, toolbar, true);
+				double rsq = distVec.lengthSquared();
+				rsq *= distVec.length();
+				xForce = 1.5f * repulsion * distVec.x() / rsq;
+				yForce = 1.5f * repulsion * distVec.y() / rsq;
 
-			distVec = getDistance(i, toolbar, false);
-			rsq = distVec.lengthSquared();
-			rsq *= distVec.length();
-			xForce += 1.5f * repulsion * distVec.x() / rsq;
-			yForce += 1.5f * repulsion * distVec.y() / rsq;
-
+				distVec = getDistance(i, toolbar, false);
+				rsq = distVec.lengthSquared();
+				rsq *= distVec.length();
+				xForce += 1.5f * repulsion * distVec.x() / rsq;
+				yForce += 1.5f * repulsion * distVec.y() / rsq;
+			}
 			xForce += i.getRepForce().x();
 			yForce += i.getRepForce().y();
 			i.setRepForce(checkPlausibility(new Vec2d(xForce, yForce)));
@@ -301,7 +313,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		return vec2d;
 	}
 
-	private Vec2d getDistance(ClusterElement i, GlobalToolBarElement tools, boolean isTop) {
+	private Vec2d getDistance(ClusterElement i, AToolBarElement tools, boolean isTop) {
 		Vec2f toolsPos = tools.getAbsoluteLocation();
 		Vec2f toolsSize = tools.getSize();
 		Vec2d toolsCenter = new Vec2d(toolsPos.x() + toolsSize.x(), toolsPos.y() + toolsSize.y());
@@ -398,11 +410,9 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 		this.dragedElement = element;
 	}
 
-	GlobalToolBarElement toolbar;
 
-	public void setToolbar(GlobalToolBarElement globalToolBar) {
-		this.toolbar = globalToolBar;
-
+	public void setToolBars(AToolBarElement... elements) {
+		this.toolbars.addAll(Arrays.asList(elements));
 	}
 
 	@ListenTo

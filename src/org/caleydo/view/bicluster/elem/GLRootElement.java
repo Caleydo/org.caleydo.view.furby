@@ -14,7 +14,6 @@ import org.caleydo.core.id.IDType;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
-import org.caleydo.core.view.opengl.layout2.IPopupLayer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.band.AllBandsElement;
@@ -27,6 +26,7 @@ import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
+import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 
@@ -38,7 +38,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private AllBandsElement bands;
 	private final AllClustersElement clusters = new AllClustersElement(this);
 
-	private GlobalToolBarElement globalToolBar = new GlobalToolBarElement();
+	private ParameterToolBarElement parameterToolBar = new ParameterToolBarElement();
+	private LayoutToolBarElement layoutToolBar = new LayoutToolBarElement();
 
 	private TablePerspective x, l, z;
 	private ExecutorService executor;
@@ -51,8 +52,17 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	protected void init(IGLElementContext context) {
 		super.init(context);
 		// show the global toolbar as a popup
-		context.getPopupLayer().show(globalToolBar, globalToolBar.getPreferredBounds(),
-				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE | IPopupLayer.FLAG_COLLAPSABLE);
+		parameterToolBar.show(context);
+	}
+
+	@ListenTo
+	private void onShowToolBar(ShowToolBarEvent event) {
+		boolean parameters = event.isShowParameter();
+		if (parameters && !parameterToolBar.isVisible())
+			parameterToolBar.show(context);
+		if (!parameters && !layoutToolBar.isVisible())
+			layoutToolBar.show(context);
+		clusters.relayout();
 	}
 
 	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z,
@@ -61,7 +71,10 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		this.l = l;
 		this.z = z;
 		this.executor = executor;
-		globalToolBar.setXTablePerspective(x);
+
+		parameterToolBar.setXTablePerspective(x);
+		layoutToolBar.setXTablePerspective(x);
+
 		if (clusters.size() > 0)
 			clusters.clear();
 		this.clear();
@@ -76,7 +89,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				clusters.add(el);
 			}
 		}
-		clusters.setToolbar(globalToolBar);
+		clusters.setToolBars(parameterToolBar, layoutToolBar);
 	}
 
 	public void createBands() {

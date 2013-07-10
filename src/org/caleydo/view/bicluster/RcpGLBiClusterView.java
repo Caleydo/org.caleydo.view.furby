@@ -5,7 +5,9 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster;
 
+import org.caleydo.core.gui.SimpleEventAction;
 import org.caleydo.core.view.ARcpGLViewPart;
+import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.eclipse.swt.widgets.Composite;
 
 /**
@@ -27,6 +29,16 @@ public class RcpGLBiClusterView extends ARcpGLViewPart {
 		initializeView();
 
 		createPartControlGL();
+	}
+
+	@Override
+	public void addToolBarContent() {
+		super.addToolBarContent();
+		toolBarManager.add(new SimpleEventAction("Show Parameter Settings", "resources/icons/setting_tools.png",
+				Activator.getResourceLoader(), new ShowToolBarEvent(true)));
+		toolBarManager.add(new SimpleEventAction("Show Layout Settings", "resources/icons/gear_in.png", Activator
+				.getResourceLoader(),
+				new ShowToolBarEvent(false)));
 	}
 
 	@Override

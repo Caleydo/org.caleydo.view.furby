@@ -42,6 +42,7 @@ import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -64,8 +65,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	public static final String VIEW_NAME = "BiCluster Visualization";
 
 	private TablePerspective x, l, z;
-	private List<TablePerspective> recordClusters = new ArrayList<>(1);
-	private List<TablePerspective> dimensionClusters = new ArrayList<>(1);
 
 	private ExecutorService executorService = Executors.newFixedThreadPool(4);
 
@@ -259,6 +258,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			rootElement = new GLRootElement();
 			root.setContent(rootElement);
 		}
+
 		List<TablePerspective> numerical = Lists.newArrayList(Iterables.filter(all,
 				DataSupportDefinitions.numericalTables.asTablePerspectivePredicate()));
 
@@ -290,12 +290,23 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			rootElement.setClusterSizes();
 		}
 
+		handleSpecialClusters(added, removed);
+	}
+
+	/**
+	 * @param added
+	 * @param removed
+	 */
+	private void handleSpecialClusters(List<TablePerspective> added, List<TablePerspective> removed) {
 		// search within the categorical table perspectives the chemical clusters
-		List<TablePerspective> categorical = Lists.newArrayList(Iterables.filter(all,
-				Predicates.not(DataSupportDefinitions.numericalTables.asTablePerspectivePredicate())));
+		Predicate<TablePerspective> predicate = Predicates.not(DataSupportDefinitions.numericalTables
+				.asTablePerspectivePredicate());
+		added = Lists.newArrayList(Iterables.filter(added,predicate));
+		removed = Lists.newArrayList(Iterables.filter(removed,predicate));
+
 		assert this.x != null;
 
-		for (TablePerspective t : categorical) {
+		for (TablePerspective t : added) {
 			if (findGroupings(t.getRecordPerspective())) {
 				for (TablePerspective group : t.getRecordSubTablePerspectives())
 					rootElement.addSpecialCluster(t.getRecordPerspective().getIdType(), group);
@@ -305,6 +316,18 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 					rootElement.addSpecialCluster(t.getDimensionPerspective().getIdType(), group);
 			}
 		}
+		// FIXME
+		// for (TablePerspective t : removed) {
+		// rootElement.getSpecialClusters();
+		// rootElement.removeSpecialCluster()
+		// }
+	}
+
+	/**
+	 * @param added
+	 */
+	private void addAllSpecialClusters(List<TablePerspective> added) {
+
 	}
 
 	/**
