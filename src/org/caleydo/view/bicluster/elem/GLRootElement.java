@@ -52,16 +52,18 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	protected void init(IGLElementContext context) {
 		super.init(context);
 		// show the global toolbar as a popup
-		parameterToolBar.show(context);
+		parameterToolBar.toggle(context);
 	}
 
 	@ListenTo
 	private void onShowToolBar(ShowToolBarEvent event) {
+		if (context == null)
+			return;
 		boolean parameters = event.isShowParameter();
-		if (parameters && !parameterToolBar.isVisible())
-			parameterToolBar.show(context);
-		if (!parameters && !layoutToolBar.isVisible())
-			layoutToolBar.show(context);
+		if (parameters)
+			parameterToolBar.toggle(context);
+		else
+			layoutToolBar.toggle(context);
 		clusters.relayout();
 	}
 

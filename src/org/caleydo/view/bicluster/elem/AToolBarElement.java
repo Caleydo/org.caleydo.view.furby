@@ -47,12 +47,18 @@ public abstract class AToolBarElement extends GLElementContainer implements GLBu
 
 	}
 
-	public final void show(IGLElementContext context) {
+	public void toggle(IGLElementContext context) {
 		if (context == null)
 			return;
-		context.getPopupLayer().show(this, getPreferredBounds(),
-				IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE | IPopupLayer.FLAG_COLLAPSABLE
-						| IPopupLayer.FLAG_CLOSEABLE);
+		boolean visible = isVisible();
+		if (visible) {
+			context.getPopupLayer().hide(this);
+		} else
+			context.getPopupLayer().show(
+					this,
+					getPreferredBounds(),
+					IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE | IPopupLayer.FLAG_COLLAPSABLE
+							| IPopupLayer.FLAG_CLOSEABLE);
 	}
 
 	public abstract Vec4f getPreferredBounds();
