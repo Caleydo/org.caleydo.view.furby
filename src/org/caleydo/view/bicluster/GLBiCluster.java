@@ -31,7 +31,7 @@ import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.canvas.ATableBasedView;
 import org.caleydo.core.view.opengl.canvas.IGLCanvas;
-import org.caleydo.core.view.opengl.layout2.AGLElementDecorator;
+import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.view.AMultiTablePerspectiveElementView;
 import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.concurrent.ScanResult;
@@ -250,7 +250,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	}
 
 	@Override
-	protected void applyTablePerspectives(AGLElementDecorator root,
+	protected void applyTablePerspectives(GLElementDecorator root,
 			List<TablePerspective> all, List<TablePerspective> added,
 			List<TablePerspective> removed) {
 		// single time init

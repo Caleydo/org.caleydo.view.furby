@@ -46,15 +46,7 @@ public final class TesselatedBiClusterPolygons {
 
 
 	public static Band band(List<Vec2f> anchorPoints, final float z, float radius, int numberOfSplinePoints) {
-		Preconditions.checkArgument(anchorPoints.size() >= 2, "at least two points");
-		List<Vec3f> curve = NURBSCurve.spline3(Lists.transform(anchorPoints, new Function<Vec2f, Vec3f>() {
-			@Override
-			public Vec3f apply(Vec2f in) {
-				return new Vec3f(in.x(), in.y(), z);
-			}
-		}), numberOfSplinePoints);
-
-		return toBand(curve, radius);
+		return band(anchorPoints, z, radius, radius, numberOfSplinePoints);
 	}
 
 
@@ -77,29 +69,6 @@ public final class TesselatedBiClusterPolygons {
 		float diff = radiusFirst-radiusSecond;
 		for ( int i = 0; i <= last; ++i) {
 			radius = radiusSecond + diff * i/last;
-			top[i] = c[i].addScaled(radius, normals[i]);
-			bottom[i] = c[i].addScaled(-radius, normals[i]);
-		}
-
-		return new Band(Arrays.asList(top), Arrays.asList(bottom));
-	}
-
-	private static Band toBand(List<Vec3f> curve, float radius) {
-		final int last = curve.size() - 1;
-		Vec3f[] c = curve.toArray(new Vec3f[0]);
-		Vec3f[] normals = new Vec3f[curve.size()];
-
-		normals[0] = normal(c[0], c[1]);
-		for(int i = 1; i < last; ++i) {
-			normals[i] = normal(c[i - 1], c[i]).plus(normal(c[i], c[i + 1]));
-			normals[i].scale(0.5f);
-			normals[i].normalize();
-		}
-		normals[last] = normal(c[last - 1], c[last]);
-
-		Vec3f[] top = new Vec3f[curve.size()];
-		Vec3f[] bottom = new Vec3f[curve.size()];
-		for (int i = 0; i <= last; ++i) {
 			top[i] = c[i].addScaled(radius, normals[i]);
 			bottom[i] = c[i].addScaled(-radius, normals[i]);
 		}
