@@ -5,14 +5,13 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import gleem.linalg.Vec4f;
-
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
+import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.view.bicluster.event.ForceChangeEvent;
@@ -173,8 +172,8 @@ public class LayoutToolBarElement extends AToolBarElement {
 	 * @return
 	 */
 	@Override
-	public Vec4f getPreferredBounds() {
-		return new Vec4f(Float.NaN, 340, 200, 230);
+	public Rect getPreferredBounds() {
+		return new Rect(-200, 340, 200, 230);
 	}
 
 }

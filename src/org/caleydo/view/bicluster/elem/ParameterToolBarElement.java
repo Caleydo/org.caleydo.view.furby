@@ -5,8 +5,6 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import gleem.linalg.Vec4f;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +18,7 @@ import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.EButtonMode;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
+import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
@@ -309,8 +308,8 @@ public class ParameterToolBarElement extends AToolBarElement {
 	 * @return
 	 */
 	@Override
-	public Vec4f getPreferredBounds() {
-		return new Vec4f(Float.NaN, 0, 200, 320);
+	public Rect getPreferredBounds() {
+		return new Rect(-200, 0, 200, 320);
 	}
 
 }

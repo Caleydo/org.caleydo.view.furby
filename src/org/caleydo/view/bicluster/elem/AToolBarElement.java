@@ -5,14 +5,13 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import gleem.linalg.Vec4f;
-
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.IPopupLayer;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
+import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLFlowLayout;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
@@ -61,6 +60,6 @@ public abstract class AToolBarElement extends GLElementContainer implements GLBu
 							| IPopupLayer.FLAG_CLOSEABLE);
 	}
 
-	public abstract Vec4f getPreferredBounds();
+	public abstract Rect getPreferredBounds();
 
 }
