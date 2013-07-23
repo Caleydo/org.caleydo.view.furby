@@ -30,6 +30,9 @@ import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 /**
  * @author user
  *
@@ -258,7 +261,36 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	 * @param group
 	 */
 	public void addSpecialCluster(IDType idType, TablePerspective group) {
-		// TODO group either the record or dimension perspective has the right given IDType, which is one of the X table
+		SpecialGenericClusterElement specialCluster = new SpecialGenericClusterElement(group, clusters, x, l,
+				z,
+				executor, this);
+		specialCluster.setLocation(1000, 1000);
+		clusters.add(specialCluster);
+		setClusterSizes();
+		recalculateOverlap(dimBands, recBands);
+		for (GLElement start : clusters) {
+			if (start == specialCluster)
+				continue;
+			if (this.x.getRecordPerspective().getIdType().resolvesTo(idType))
+				bands.add(new RecordBandElement(start, specialCluster, bands));
+			else
+				bands.add(new DimensionBandElement(start, specialCluster, bands));
+		}
+		bands.updateSelection();
+		relayout();
+	}
+
+	/**
+	 * @param removed
+	 */
+	public void removeSpecialClusters(List<TablePerspective> parents) {
+		if (parents.isEmpty())
+			return;
+		for (SpecialGenericClusterElement cluster : Lists.newArrayList(Iterables.filter(clusters,
+				SpecialGenericClusterElement.class))) {
+			if (parents.contains(cluster.getTablePerspective().getParentTablePerspective()))
+				cluster.remove();
+		}
 	}
 
 	@ListenTo
@@ -270,5 +302,6 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private void listenTo(UnhidingClustersEvent e) {
 		setClusterSizes();
 	}
+
 
 }

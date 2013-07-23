@@ -27,6 +27,7 @@ import org.caleydo.core.data.virtualarray.events.DimensionVAUpdateEvent;
 import org.caleydo.core.data.virtualarray.events.RecordVAUpdateEvent;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
+import org.caleydo.core.event.data.DataSetSelectedEvent;
 import org.caleydo.core.gui.util.RenameNameDialog;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
@@ -227,7 +228,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		return data.getLabel();
 	}
 
-	private void setZValuesAccordingToState() {
+	protected void setZValuesAccordingToState() {
 		if (isDragged) {
 			setzDelta(DRAGGING_Z_DELTA);
 		} else if (isFocused) {
@@ -290,10 +291,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			if (!pick.isAnyDragging()) {
 				isHovered = true;
 				EventPublisher.trigger(new MouseOverClusterEvent(this, true));
+				EventPublisher.trigger(new DataSetSelectedEvent(data));
 				relayout(); // for showing the bars
 			}
 			break;
 		case MOUSE_OUT:
+			if (isHovered)
+				EventPublisher.trigger(new DataSetSelectedEvent(data.getDataDomain()));
 			mouseOut();
 			break;
 		default:

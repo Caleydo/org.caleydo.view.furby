@@ -23,7 +23,7 @@ import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.perspective.variable.Perspective;
 import org.caleydo.core.data.perspective.variable.PerspectiveInitializationData;
 import org.caleydo.core.event.EventPublisher;
-import org.caleydo.core.event.data.DataDomainUpdateEvent;
+import org.caleydo.core.event.data.DataSetSelectedEvent;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.serialize.ASerializedView;
@@ -278,7 +278,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			this.z = z2;
 			rootElement.setData(initTablePerspectives(), x, l, z,
 					executorService);
-			EventPublisher.trigger(new DataDomainUpdateEvent(x.getDataDomain()));
+			EventPublisher.trigger(new DataSetSelectedEvent(x.getDataDomain()));
 			// signal that we now use that data domain
 			createBiClusterPerspectives(x, l, z);
 			// createBiClusterPerspectives(x, l, z);
@@ -316,19 +316,9 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 					rootElement.addSpecialCluster(t.getDimensionPerspective().getIdType(), group);
 			}
 		}
-		// FIXME
-		// for (TablePerspective t : removed) {
-		// rootElement.getSpecialClusters();
-		// rootElement.removeSpecialCluster()
-		// }
+		rootElement.removeSpecialClusters(removed);
 	}
 
-	/**
-	 * @param added
-	 */
-	private void addAllSpecialClusters(List<TablePerspective> added) {
-
-	}
 
 	/**
 	 * @param p
@@ -338,15 +328,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		final IDType record = this.x.getRecordPerspective().getIdType();
 		final IDType dimension = this.x.getDimensionPerspective().getIdType();
 		final IDType idtype = p.getIdType();
-		if ((!idtype.equals(record) && !idtype.equals(dimension)))
+		if ((!idtype.resolvesTo(record) && !idtype.resolvesTo(dimension)))
 			return false;
 		return true;
-	}
-
-	@Override
-	public void initFromSerializableRepresentation(
-			ASerializedView serializedView) {
-		// TODO Auto-generated method stub
-		super.initFromSerializableRepresentation(serializedView);
 	}
 }

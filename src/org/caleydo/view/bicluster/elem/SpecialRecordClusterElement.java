@@ -250,17 +250,19 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 
 			@Override
 			public void onSelectionChanged(GLButton button, boolean selected) {
-				EventPublisher.trigger(new SpecialClusterRemoveEvent(cluster, false));
-				cluster.isHidden = true;
-				setVisibility();
-				allClusters.remove(cluster);
-				cluster.mouseOut();
+				remove();
 			}
 
 		});
 		return hide;
 	}
 
-
+	public void remove() {
+		EventPublisher.trigger(new SpecialClusterRemoveEvent(this, false));
+		this.isHidden = true;
+		setVisibility();
+		allClusters.remove(this);
+		this.mouseOut();
+	}
 
 }
