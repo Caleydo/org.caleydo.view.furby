@@ -235,7 +235,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	public ASerializedView getSerializableRepresentation() {
 		SerializedBiClusterView serializedForm = new SerializedBiClusterView(
 				this);
-		serializedForm.setViewID(this.getID());
 		return serializedForm;
 	}
 

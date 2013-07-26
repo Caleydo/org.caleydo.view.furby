@@ -32,9 +32,4 @@ public class SerializedBiClusterView extends ASerializedMultiTablePerspectiveBas
 	public String getViewType() {
 		return GLBiCluster.VIEW_TYPE;
 	}
-
-	@Override
-	public String getViewClassType() {
-		return GLBiCluster.class.getName();
-	}
 }
