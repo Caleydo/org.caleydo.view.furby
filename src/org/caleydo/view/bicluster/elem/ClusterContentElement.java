@@ -7,12 +7,13 @@ package org.caleydo.view.bicluster.elem;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
-import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
+import org.caleydo.core.view.opengl.layout2.basic.GLElementSelector;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
+import org.caleydo.view.histogram.v2.HistogramElement;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ClassToInstanceMap;
@@ -21,13 +22,21 @@ import com.google.common.collect.ClassToInstanceMap;
  * @author Samuel Gratzl
  *
  */
-public class ClusterContentElement extends GLElementDecorator {
+public class ClusterContentElement extends GLElementSelector {
 	private final HeatMapElement heatmap;
 
 	public ClusterContentElement(TablePerspective data, ClassToInstanceMap<Object> params) {
+		EDetailLevel mode = getDefault(params, EDetailLevel.HIGH);
 		heatmap = new HeatMapElement(data, getDefault(params, IBlockColorer.class, BasicBlockColorer.INSTANCE),
-				getDefault(params, EDetailLevel.HIGH));
-		setContent(heatmap);
+				mode);
+		this.add(heatmap);
+		this.add(new HistogramElement(data, mode));
+		setLazy(false);
+	}
+
+	@Override
+	protected int select() {
+		return 0;
 	}
 
 	@SuppressWarnings("unchecked")

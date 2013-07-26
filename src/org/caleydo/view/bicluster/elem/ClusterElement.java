@@ -188,7 +188,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	 */
 	protected final ClusterContentElement createContent() {
 		Builder<Object> builder = ImmutableClassToInstanceMap.builder();
-		builder.put(EDetailLevel.class, EDetailLevel.HIGH);
+		builder.put(EDetailLevel.class, EDetailLevel.MEDIUM);
 		builder.put(IBlockColorer.class, this);
 		return new ClusterContentElement(data, builder.build());
 	}
