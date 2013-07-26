@@ -15,7 +15,6 @@ import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.color.Color;
-import org.caleydo.core.view.opengl.canvas.EDetailLevel;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
@@ -24,7 +23,6 @@ import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
-import org.caleydo.view.heatmap.v2.HeatMapElement;
 
 public final class SpecialGenericClusterElement extends ClusterElement {
 	private final VirtualArray recordVA;
@@ -76,8 +74,7 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 		headerBar = new HeaderBar();
 		this.add(toolBar); // add a element toolbar
 		this.add(headerBar);
-		final HeatMapElement heatmapImpl = new HeatMapElement(data, this, EDetailLevel.HIGH);
-		content = heatmapImpl;
+		content = createContent();
 		setZValuesAccordingToState();
 		this.add(content);
 	}

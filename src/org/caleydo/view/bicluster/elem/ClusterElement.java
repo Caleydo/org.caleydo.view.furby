@@ -74,12 +74,12 @@ import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
-import org.caleydo.view.heatmap.v2.CellSpace;
-import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
-import org.caleydo.view.heatmap.v2.SpacingStrategies;
 import org.eclipse.swt.widgets.Display;
+
+import com.google.common.collect.ImmutableClassToInstanceMap;
+import com.google.common.collect.ImmutableClassToInstanceMap.Builder;
 
 /**
  * e.g. a class for representing a cluster
@@ -178,18 +178,19 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
 
-		final HeatMapElement heatmapImpl = new HeatMapElement(data, this, EDetailLevel.HIGH);
-
-		// heatmapImpl.setRecordLabels(EShowLabels.RIGHT);
-		// let's use a fish-eye spacing strategy where selected lines have a
-		// height of at least 16 pixels
-		// heatmapImpl.setRecordSpacingStrategy(SpacingStrategies.fishEye(16));
-		// heatmapImpl.setDimensionLabels(EShowLabels.RIGHT);
-		// heatmap = new ScrollingDecorator(heatmapImpl, new ScrollBar(true),
-		// new ScrollBar(false), 5);
-		content = heatmapImpl;
+		content = createContent();
 		setZValuesAccordingToState();
 		this.add(content);
+	}
+
+	/**
+	 * @return
+	 */
+	protected final ClusterContentElement createContent() {
+		Builder<Object> builder = ImmutableClassToInstanceMap.builder();
+		builder.put(EDetailLevel.class, EDetailLevel.HIGH);
+		builder.put(IBlockColorer.class, this);
+		return new ClusterContentElement(data, builder.build());
 	}
 
 	@Override
@@ -827,20 +828,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	}
 
 	protected void handleFocus() {
-		HeatMapElement hm = (HeatMapElement) content;
 		if (isFocused) {
 			scaleFactor = scaleFactor >= 4 ? 4 : 3;
-			hm.setDimensionLabels(EShowLabels.RIGHT);
-			hm.setRecordLabels(EShowLabels.RIGHT);
-			hm.setRecordSpacingStrategy(SpacingStrategies.fishEye(18));
-			hm.setDimensionSpacingStrategy(SpacingStrategies.fishEye(18));
+			if (content instanceof ClusterContentElement)
+				((ClusterContentElement) content).showLabels(EShowLabels.RIGHT);
 			resize();
 		} else {
 			resetScaleFactor();
-			hm.setDimensionLabels(EShowLabels.NONE);
-			hm.setRecordLabels(EShowLabels.NONE);
-			hm.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
-			hm.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
+			if (content instanceof ClusterContentElement)
+				((ClusterContentElement) content).hideLabels();
 			resize();
 			mouseOut();
 		}
@@ -1038,20 +1034,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	}
 
 	public float getDimPosOf(int index) {
-		if (isFocused) {
+		if (isFocused && content instanceof ClusterContentElement) {
 			int ind = getDimensionVirtualArray().indexOf(index);
-			CellSpace space = ((HeatMapElement) content).getDimensionCellSpace(ind);
-			return space.getPosition();
+			return ((ClusterContentElement) content).getDimensionPos(ind);
 		} else {
 			return getDimIndexOf(index) * getSize().x() / getDimensionVirtualArray().size();
 		}
 	}
 
 	public float getRecPosOf(int index) {
-		if (isFocused) {
+		if (isFocused && content instanceof ClusterContentElement) {
 			int ind = getRecordVirtualArray().indexOf(index);
-			CellSpace space = ((HeatMapElement) content).getRecordCellSpace(ind);
-			return space.getPosition();
+			return ((ClusterContentElement) content).getRecordPos(ind);
 		} else {
 			return getRecIndexOf(index) * getSize().y() / getRecordVirtualArray().size();
 		}
