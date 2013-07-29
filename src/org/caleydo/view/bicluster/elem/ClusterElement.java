@@ -194,7 +194,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		builder.withData(data);
 		builder.put(EDetailLevel.class, EDetailLevel.MEDIUM);
 		builder.put(IBlockColorer.class, this);
-		return new ClusterContentElement(builder);
+		ClusterContentElement c = new ClusterContentElement(builder);
+
+		if (toolBar != null) {
+			toolBar.add(c.createVerticalButtonBar());
+		}
+
+		return c;
 	}
 
 	@Override

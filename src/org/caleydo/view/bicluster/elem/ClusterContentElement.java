@@ -44,7 +44,13 @@ public class ClusterContentElement extends GLElementContainer implements IGLLayo
 		heatmap = (HeatMapElement) content.get("heatmap");
 		assert heatmap != null;
 		this.add(content);
-		this.add(content.createButtonBar());
+	}
+
+	public GLElementContainer createVerticalButtonBar() {
+		GLElementContainer bar = ((GLElementFactorySwitcher) get(0)).createButtonBar();
+		bar.setLayout(GLLayouts.flowVertical(2));
+		bar.setSize(16, Float.NaN);
+		return bar;
 	}
 
 	@Override
