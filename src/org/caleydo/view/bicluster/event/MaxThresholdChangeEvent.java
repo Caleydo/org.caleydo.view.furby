@@ -12,8 +12,8 @@ import org.caleydo.core.event.AEvent;
  *
  */
 public class MaxThresholdChangeEvent extends AEvent {
-	double newDimThreshold;
-	double newRecThreshold;
+	private final double newDimThreshold;
+	private final double newRecThreshold;
 
 	/**
 	 *
@@ -39,7 +39,6 @@ public class MaxThresholdChangeEvent extends AEvent {
 
 	@Override
 	public boolean checkIntegrity() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 }

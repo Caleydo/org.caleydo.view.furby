@@ -10,8 +10,7 @@ import org.caleydo.view.bicluster.elem.ClusterElement;
 
 public class SpecialClusterRemoveEvent extends ADirectedEvent {
 
-	boolean isDimCluster;
-
+	private final boolean isDimCluster;
 
 	public SpecialClusterRemoveEvent(ClusterElement sender, boolean isDimCluster) {
 		setSender(sender);

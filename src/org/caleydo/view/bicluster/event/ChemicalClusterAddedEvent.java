@@ -12,7 +12,14 @@ import org.caleydo.core.event.AEvent;
 
 public class ChemicalClusterAddedEvent extends AEvent {
 
-	private List<String> clusterList;
+	private final List<String> clusterList;
+	private final Map<Integer, String> elementToClusterMap;
+
+	public ChemicalClusterAddedEvent(List<String> clusterList, Map<Integer, String> elementToClusterMap) {
+		this.clusterList = clusterList;
+		this.elementToClusterMap = elementToClusterMap;
+	}
+
 	public List<String> getClusterList() {
 		return clusterList;
 	}
@@ -21,17 +28,9 @@ public class ChemicalClusterAddedEvent extends AEvent {
 		return elementToClusterMap;
 	}
 
-	private Map<Integer, String> elementToClusterMap;
-
-	public ChemicalClusterAddedEvent(List<String> clusterList,
-			Map<Integer, String> elementToClusterMap) {
-		this.clusterList = clusterList;
-		this.elementToClusterMap = elementToClusterMap;
-	}
 
 	@Override
 	public boolean checkIntegrity() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 

@@ -11,9 +11,8 @@ import org.caleydo.core.event.AEvent;
 
 public class SpecialClusterAddedEvent extends AEvent {
 
-	private List<Integer> elements;
-	private boolean isDimCluster;
-
+	private final List<Integer> elements;
+	private final boolean isDimCluster;
 
 	public SpecialClusterAddedEvent(List<Integer> elements, boolean isDimCluster) {
 		this.elements = elements;

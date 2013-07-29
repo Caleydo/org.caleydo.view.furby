@@ -9,11 +9,16 @@ import org.caleydo.core.event.AEvent;
 
 /**
  * @author Michael Gillhofer
- * 
+ *
  */
 public class MaxClusterSizeChangeEvent extends AEvent {
 
-	float dim, rec;
+	private final float dim, rec;
+
+	public MaxClusterSizeChangeEvent(float maxDimSize, float maxRecSize) {
+		this.dim = maxDimSize;
+		this.rec = maxRecSize;
+	}
 
 	public float getMaxDimensionSize() {
 		return dim;
@@ -23,10 +28,6 @@ public class MaxClusterSizeChangeEvent extends AEvent {
 		return rec;
 	}
 
-	public MaxClusterSizeChangeEvent(float maxDimSize, float maxRecSize) {
-		this.dim = maxDimSize;
-		this.rec = maxRecSize;
-	}
 
 	@Override
 	public boolean checkIntegrity() {

@@ -24,7 +24,6 @@ public class MouseOverClusterEvent extends AEvent {
 
 	@Override
 	public boolean checkIntegrity() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 

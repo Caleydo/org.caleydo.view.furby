@@ -13,7 +13,7 @@ import org.caleydo.core.event.AEvent;
  */
 public class ClusterResizeEvent extends AEvent {
 
-	boolean zoom;
+	private final boolean zoom;
 
 	public ClusterResizeEvent (boolean zoom) {
 		this.zoom = zoom;
@@ -28,8 +28,7 @@ public class ClusterResizeEvent extends AEvent {
 
 	@Override
 	public boolean checkIntegrity() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 }

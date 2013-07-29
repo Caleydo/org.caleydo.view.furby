@@ -10,10 +10,16 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 
 public class RecalculateOverlapEvent extends AEvent {
 
-	final boolean isGlobal;
-	final boolean dimBands;
-	final boolean recBands;
+	private final boolean isGlobal;
+	private final boolean dimBands;
+	private final boolean recBands;
 
+	public RecalculateOverlapEvent(GLElement sender, boolean isGlobal, boolean dimBands, boolean recBands) {
+		this.setSender(sender);
+		this.isGlobal = isGlobal;
+		this.dimBands = dimBands;
+		this.recBands = recBands;
+	}
 	public boolean isGlobal(){
 		return isGlobal;
 	}
@@ -26,16 +32,8 @@ public class RecalculateOverlapEvent extends AEvent {
 		return recBands;
 	}
 
-	public RecalculateOverlapEvent(GLElement sender, boolean isGlobal, boolean dimBands, boolean recBands) {
-		this.setSender(sender);
-		this.isGlobal = isGlobal;
-		this.dimBands = dimBands;
-		this.recBands = recBands;
-	}
-
 	@Override
 	public boolean checkIntegrity() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 

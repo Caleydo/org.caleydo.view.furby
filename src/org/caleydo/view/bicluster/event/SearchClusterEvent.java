@@ -14,7 +14,7 @@ import org.caleydo.core.event.AEvent;
  *
  */
 public class SearchClusterEvent extends AEvent {
-	private String text;
+	private final String text;
 
 	/**
 	 *

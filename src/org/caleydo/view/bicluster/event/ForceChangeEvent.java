@@ -9,11 +9,17 @@ import org.caleydo.core.event.AEvent;
 
 /**
  * @author Michael Gillhofer
- * 
+ *
  */
 public class ForceChangeEvent extends AEvent {
 
-	float att, rep, board;
+	private final float att, rep, board;
+
+	public ForceChangeEvent(float att, float rep, float board) {
+		this.att = att;
+		this.board = board;
+		this.rep = rep;
+	}
 
 	public float getAttractionForce() {
 		return att;
@@ -27,11 +33,6 @@ public class ForceChangeEvent extends AEvent {
 		return board;
 	}
 
-	public ForceChangeEvent(float att, float rep, float board) {
-		this.att = att;
-		this.board = board;
-		this.rep = rep;
-	}
 
 	@Override
 	public boolean checkIntegrity() {

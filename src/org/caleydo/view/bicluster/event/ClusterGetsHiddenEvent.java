@@ -9,7 +9,7 @@ import org.caleydo.core.event.AEvent;
 
 public class ClusterGetsHiddenEvent extends AEvent {
 
-	String clusterID;
+	private final String clusterID;
 
 	public ClusterGetsHiddenEvent(String clusterID) {
 		this.clusterID = clusterID;

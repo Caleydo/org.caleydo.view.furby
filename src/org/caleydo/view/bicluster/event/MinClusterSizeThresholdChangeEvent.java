@@ -9,7 +9,7 @@ import org.caleydo.core.event.AEvent;
 
 public class MinClusterSizeThresholdChangeEvent extends AEvent {
 
-	private float minClusterSize;
+	private final float minClusterSize;
 
 	public MinClusterSizeThresholdChangeEvent(float minClusterSize) {
 		this.minClusterSize = minClusterSize;

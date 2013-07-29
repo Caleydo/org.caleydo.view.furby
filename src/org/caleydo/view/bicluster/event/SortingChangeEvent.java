@@ -13,11 +13,12 @@ import org.caleydo.core.event.AEvent;
  */
 public class SortingChangeEvent extends AEvent {
 
-	SortingType sortingType;
+	private final SortingType sortingType;
 
-
-
-
+	public SortingChangeEvent(SortingType sortingType, Object source) {
+		this.sortingType = sortingType;
+		this.setSender(source);
+	}
 
 	public SortingType getType() {
 		return sortingType;
@@ -25,14 +26,7 @@ public class SortingChangeEvent extends AEvent {
 
 	@Override
 	public boolean checkIntegrity() {
-		// TODO Auto-generated method stub
 		return true;
-	}
-
-
-	public SortingChangeEvent(SortingType sortingType, Object source) {
-		this.sortingType = sortingType;
-		this.setSender(source);
 	}
 
 	public enum SortingType {
