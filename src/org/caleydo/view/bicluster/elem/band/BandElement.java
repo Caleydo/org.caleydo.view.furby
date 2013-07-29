@@ -171,7 +171,7 @@ public abstract class BandElement extends PickableGLElement {
 				bandColor = hoveredColor;
 			else
 				bandColor = defaultColor;
-			if (isMouseOver == true) {
+			if (isMouseOver) {
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * curOpacityFactor);
 				for (Band b : splittedBands.values()) {
 					g.drawPath(b);
@@ -180,24 +180,18 @@ public abstract class BandElement extends PickableGLElement {
 				for (Band b : splittedBands.values()) {
 					g.fillPolygon(b);
 				}
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.25f * curOpacityFactor);
 
-				Band currSelectedSpline = null;
-				int id = currSelectedSplineID - 1;
-				currSelectedSpline = splines.get(id);
-				for (Integer i : splines.keySet()) {
-					if (id == i) {
-						currSelectedSpline = splines.get(i);
-					}
-				}
+				g.color(bandColor.r, bandColor.g, bandColor.b, 0.25f * curOpacityFactor);
+				Band currSelectedSpline = splines.get(currSelectedSplineID - 1);
 				for (Band b : splines.values()) {
 					if (b == currSelectedSpline)
 						continue;
 					g.fillPolygon(b);
 				}
 				if (currSelectedSpline != null) {
-					g.color(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, 0.15f * curOpacityFactor);
+					g.color(0, 0, 0, 0.85f * curOpacityFactor).lineWidth(2);
 					g.fillPolygon(currSelectedSpline);
+					g.lineWidth(1);
 				}
 			} else {
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * curOpacityFactor);
