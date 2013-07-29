@@ -34,6 +34,7 @@ import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.base.ILabeled;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
+import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
@@ -301,6 +302,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			if (isHovered)
 				EventPublisher.trigger(new DataSetSelectedEvent(data.getDataDomain()));
 			mouseOut();
+			break;
+		case MOUSE_WHEEL:
+			// zoom on CTRL+mouse wheel
+			IMouseEvent event = ((IMouseEvent) pick);
+			int r = (event).getWheelRotation();
+			if (r != 0 && event.isCtrlDown()) {
+				scaleFactor = Math.max(standardScaleFactor, scaleFactor * (r > 0 ? 1.1 : 1 / 1.1));
+				resize();
+			}
 			break;
 		default:
 			break;
