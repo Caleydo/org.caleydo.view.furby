@@ -5,55 +5,60 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.view.opengl.canvas.EDetailLevel;
-import org.caleydo.core.view.opengl.layout2.basic.GLElementSelector;
-import org.caleydo.view.heatmap.v2.BasicBlockColorer;
+import java.util.List;
+
+import org.caleydo.core.util.color.Color;
+import org.caleydo.core.view.opengl.layout2.GLElementContainer;
+import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementSupplier;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.ELazyiness;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
-import org.caleydo.view.heatmap.v2.IBlockColorer;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
-import org.caleydo.view.histogram.v2.HistogramElement;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ClassToInstanceMap;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 
 /**
  * @author Samuel Gratzl
  *
  */
-public class ClusterContentElement extends GLElementSelector {
+public class ClusterContentElement extends GLElementContainer implements IGLLayout {
 	private final HeatMapElement heatmap;
 
-	public ClusterContentElement(TablePerspective data, ClassToInstanceMap<Object> params) {
-		EDetailLevel mode = getDefault(params, EDetailLevel.HIGH);
-		heatmap = new HeatMapElement(data, getDefault(params, IBlockColorer.class, BasicBlockColorer.INSTANCE),
-				mode);
-		this.add(heatmap);
-		this.add(new HistogramElement(data, mode));
-		setLazy(false);
+	/**
+	 * @param builder
+	 */
+	public ClusterContentElement(Builder builder) {
+		setLayout(GLLayouts.flowVertical(2));
+		builder.set("histogram.showColorMapper", false);
+		GLElementFactoryContext context = builder.build();
+		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",
+				Predicates.alwaysTrue());
+		GLElementFactorySwitcher content = new GLElementFactorySwitcher(extensions, ELazyiness.NONE);
+		heatmap = (HeatMapElement) content.get("heatmap");
+		assert heatmap != null;
+		this.add(content);
+		this.add(content.createButtonBar());
 	}
 
 	@Override
-	protected int select() {
-		return 0;
+	protected void renderImpl(GLGraphics g, float w, float h) {
+		g.color(Color.WHITE).fillRect(0, 0, w, h);
+		super.renderImpl(g, w, h);
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <T> T getDefault(ClassToInstanceMap<Object> params, T default_) {
-		Preconditions.checkNotNull(default_);
-		if (params.containsKey(default_.getClass()))
-			return (T) params.get(default_.getClass());
-		return default_;
+	@Override
+	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
+		// TODO
 	}
-
-	private static <T> T getDefault(ClassToInstanceMap<Object> params, Class<T> clazz, T default_) {
-		if (params.containsKey(clazz))
-			return params.getInstance(clazz);
-		return default_;
-	}
-
-
 	/**
 	 * @param right
 	 */

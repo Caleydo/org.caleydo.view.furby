@@ -49,6 +49,8 @@ import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
@@ -78,8 +80,6 @@ import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
 import org.eclipse.swt.widgets.Display;
 
-import com.google.common.collect.ImmutableClassToInstanceMap;
-import com.google.common.collect.ImmutableClassToInstanceMap.Builder;
 
 /**
  * e.g. a class for representing a cluster
@@ -187,10 +187,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	 * @return
 	 */
 	protected final ClusterContentElement createContent() {
-		Builder<Object> builder = ImmutableClassToInstanceMap.builder();
+		Builder builder = GLElementFactoryContext.builder();
+		builder.withData(data);
 		builder.put(EDetailLevel.class, EDetailLevel.MEDIUM);
 		builder.put(IBlockColorer.class, this);
-		return new ClusterContentElement(data, builder.build());
+		return new ClusterContentElement(builder);
 	}
 
 	@Override
