@@ -9,6 +9,7 @@ import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
@@ -40,8 +41,6 @@ public class LayoutToolBarElement extends AToolBarElement {
 
 	private GLSlider clusterDimSizeSlider, clusterRecSizeSlider;
 	private GLSlider repulsionSlider, attractionSlider, borderForceSlider;
-	private GLElement repulsionLabel, attractionLabel, borderForceLabel;
-	private GLElement clusterDimSizeLabel, clusterRecSizeLabel;
 
 	private TablePerspective x;
 
@@ -72,51 +71,70 @@ public class LayoutToolBarElement extends AToolBarElement {
 	private void initSliders() {
 		createClusterSizeSlider();
 		createForceSliders();
+
+		GLButton reset = new GLButton();
+		reset.setRenderer(GLRenderers.drawText("Reset", VAlign.CENTER, new GLPadding(0, 0, 0, 2)));
+		reset.setCallback(new GLButton.ISelectionCallback() {
+			@Override
+			public void onSelectionChanged(GLButton button, boolean selected) {
+				reset();
+			}
+		});
+		reset.setTooltip("Reset the layout parameters to their default value");
+		reset.setSize(Float.NaN, LABEL_WIDTH);
+		this.add(reset);
+
+		reset();
+	}
+
+	/**
+	 *
+	 */
+	public void reset() {
+		this.repulsionSlider.setValue(DEFAULT_REPULSION);
+		this.attractionSlider.setValue(DEFAULT_ATTRACTION);
+		this.borderForceSlider.setValue(DEFAULT_BORDERFACTOR);
+		this.clusterDimSizeSlider.setValue(110f);
+		this.clusterRecSizeSlider.setValue(150f);
 	}
 
 	/**
 	 *
 	 */
 	private void createForceSliders() {
-		this.remove(repulsionLabel);
-		this.repulsionLabel = new GLElement();
-		this.repulsionLabel.setSize(Float.NaN, LABEL_WIDTH);
+		GLElement repulsionLabel = new GLElement();
+		repulsionLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(repulsionLabel);
 
-		this.remove(repulsionSlider);
 		this.repulsionSlider = new GLSlider(MIN_REPULSION, MAX_REPULSION, DEFAULT_REPULSION);
 		this.repulsionSlider.setCallback(this);
 		this.repulsionSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.repulsionSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(repulsionSlider);
 
-		this.remove(attractionLabel);
-		this.attractionLabel = new GLElement();
-		this.attractionLabel.setSize(Float.NaN, LABEL_WIDTH);
+		GLElement attractionLabel = new GLElement();
+		attractionLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(attractionLabel);
 
-		this.remove(attractionSlider);
 		this.attractionSlider = new GLSlider(MIN_ATTRACTION, MAX_ATTRACTION, DEFAULT_ATTRACTION);
 		this.attractionSlider.setCallback(this);
 		this.attractionSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.attractionSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(attractionSlider);
 
-		this.remove(borderForceLabel);
-		this.borderForceLabel = new GLElement();
-		this.borderForceLabel.setSize(Float.NaN, LABEL_WIDTH);
+		GLElement borderForceLabel = new GLElement();
+		borderForceLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(borderForceLabel);
 
-		this.remove(borderForceSlider);
 		this.borderForceSlider = new GLSlider(MIN_BORDER_FORCE, MAX_BORDER_FORCE, DEFAULT_BORDERFACTOR);
 		this.borderForceSlider.setCallback(this);
 		this.borderForceSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.borderForceSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(borderForceSlider);
 
-		setText(this.repulsionLabel, "Repulsion between Clusters");
-		setText(this.attractionLabel, "Attraction between Clusters");
-		setText(this.borderForceLabel, "Force from the Windowborder");
+		setText(repulsionLabel, "Repulsion between Clusters");
+		setText(attractionLabel, "Attraction between Clusters");
+		setText(borderForceLabel, "Force from the Windowborder");
 
 	}
 
@@ -124,38 +142,33 @@ public class LayoutToolBarElement extends AToolBarElement {
 	 *
 	 */
 	private void createClusterSizeSlider() {
-		this.remove(clusterDimSizeLabel);
-		this.clusterDimSizeLabel = new GLElement();
-		this.clusterDimSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
+		GLElement clusterDimSizeLabel = new GLElement();
+		clusterDimSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterDimSizeLabel);
 
-		this.remove(clusterDimSizeSlider);
 		this.clusterDimSizeSlider = new GLSlider(MIN_DIMENSION_SIZE, MAX_DIMENSION_SIZE, 110f);
 		this.clusterDimSizeSlider.setCallback(this);
 		this.clusterDimSizeSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.clusterDimSizeSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(clusterDimSizeSlider);
 
-		this.remove(clusterRecSizeLabel);
-		this.clusterRecSizeLabel = new GLElement();
-		this.clusterRecSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
+		GLElement clusterRecSizeLabel = new GLElement();
+		clusterRecSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterRecSizeLabel);
 
-		this.remove(clusterRecSizeSlider);
-		this.clusterRecSizeSlider = new GLSlider(MIN_RECORD_SIZE, MAX_RECORD_SIZE, 110f);
-		this.clusterRecSizeSlider.setValue(150);
+		this.clusterRecSizeSlider = new GLSlider(MIN_RECORD_SIZE, MAX_RECORD_SIZE, 150f);
 		this.clusterRecSizeSlider.setCallback(this);
 		this.clusterRecSizeSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.clusterRecSizeSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(clusterRecSizeSlider);
 
 		if (x == null) {
-			setText(this.clusterDimSizeLabel, "Max. Dimension Size (pxl)");
-			setText(this.clusterRecSizeLabel, "Max. Record Size (pxl)");
+			setText(clusterDimSizeLabel, "Max. Dimension Size (pxl)");
+			setText(clusterRecSizeLabel, "Max. Record Size (pxl)");
 		} else {
-			setText(this.clusterDimSizeLabel, "Max. " + x.getDataDomain().getDimensionIDCategory().toString()
+			setText(clusterDimSizeLabel, "Max. " + x.getDataDomain().getDimensionIDCategory().toString()
 					+ " Size (pxl)");
-			setText(this.clusterRecSizeLabel, "Max. " + x.getDataDomain().getRecordIDCategory().toString()
+			setText(clusterRecSizeLabel, "Max. " + x.getDataDomain().getRecordIDCategory().toString()
 					+ " Size (pxl)");
 
 		}
@@ -173,7 +186,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-200, 340, 200, 230);
+		return new Rect(-205, 340, 200, 236);
 	}
 
 }

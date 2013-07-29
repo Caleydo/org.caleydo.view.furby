@@ -309,7 +309,7 @@ public class ParameterToolBarElement extends AToolBarElement {
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-200, 0, 200, 320);
+		return new Rect(-205, 0, 200, 320);
 	}
 
 }

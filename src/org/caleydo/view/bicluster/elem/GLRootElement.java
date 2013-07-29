@@ -41,8 +41,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private AllBandsElement bands;
 	private final AllClustersElement clusters = new AllClustersElement(this);
 
-	private ParameterToolBarElement parameterToolBar = new ParameterToolBarElement();
-	private LayoutToolBarElement layoutToolBar = new LayoutToolBarElement();
+	private final ParameterToolBarElement parameterToolBar = new ParameterToolBarElement();
+	private final LayoutToolBarElement layoutToolBar = new LayoutToolBarElement();
 
 	private TablePerspective x, l, z;
 	private ExecutorService executor;
