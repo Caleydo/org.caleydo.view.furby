@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+import org.apache.commons.lang.StringUtils;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
@@ -68,6 +69,7 @@ import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
+import org.caleydo.view.bicluster.event.SearchClusterEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
@@ -928,6 +930,23 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		} else {
 			opacityfactor = highOpacityFactor;
 		}
+	}
+
+	@ListenTo
+	private void onSearchClusterEvent(SearchClusterEvent event) {
+		if (event.isClear()) {
+			opacityfactor = highOpacityFactor;
+		} else if (StringUtils.containsIgnoreCase(getLabel(), event.getText())) {
+			opacityfactor = highOpacityFactor;
+			System.out.println(getLabel() + " matches " + event.getText());
+		} else {
+			opacityfactor = lowOpacityFactor;
+			System.out.println(getLabel() + " not matches " + event.getText());
+		}
+		if (content != null)
+			content.repaint();
+		else
+			repaint();
 	}
 
 	@ListenTo

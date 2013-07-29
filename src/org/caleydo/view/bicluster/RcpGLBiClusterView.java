@@ -10,6 +10,7 @@ import org.caleydo.core.view.ARcpGLElementViewPart;
 import org.caleydo.core.view.opengl.canvas.IGLCanvas;
 import org.caleydo.core.view.opengl.layout2.AGLElementView;
 import org.caleydo.view.bicluster.event.ShowToolBarEvent;
+import org.caleydo.view.bicluster.internal.SearchAction;
 import org.eclipse.jface.action.IToolBarManager;
 
 /**
@@ -18,6 +19,9 @@ import org.eclipse.jface.action.IToolBarManager;
  * @author <INSERT_YOUR_NAME>
  */
 public class RcpGLBiClusterView extends ARcpGLElementViewPart {
+
+
+	private SearchAction searchAction;
 
 	public RcpGLBiClusterView() {
 		super(SerializedBiClusterView.class);
@@ -29,11 +33,21 @@ public class RcpGLBiClusterView extends ARcpGLElementViewPart {
 	}
 
 	@Override
+	public void createPartControlGL() {
+		this.searchAction = new SearchAction();
+		glCanvas.addKeyListener(this.searchAction);
+
+		super.createPartControlGL();
+	}
+
+
+	@Override
 	public void addToolBarContent(IToolBarManager toolBarManager) {
 		super.addToolBarContent(toolBarManager);
-		toolBarManager.add(new SimpleEventAction("Show Parameter Settings", BiClusterRenderStyle.ICON_TOOLS,
+		toolBarManager.add(searchAction);
+		toolBarManager.add(new SimpleEventAction("Show &Parameter Settings", BiClusterRenderStyle.ICON_TOOLS,
 				Activator.getResourceLoader(), new ShowToolBarEvent(true)));
-		toolBarManager.add(new SimpleEventAction("Show Layout Settings", BiClusterRenderStyle.ICON_LAYOUT, Activator
+		toolBarManager.add(new SimpleEventAction("Show &Layout Settings", BiClusterRenderStyle.ICON_LAYOUT, Activator
 				.getResourceLoader(),
 				new ShowToolBarEvent(false)));
 	}

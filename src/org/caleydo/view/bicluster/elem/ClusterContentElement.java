@@ -48,6 +48,18 @@ public class ClusterContentElement extends GLElementContainer implements IGLLayo
 	}
 
 	@Override
+	public void repaint() {
+		super.repaint();
+		super.repaintChildren();
+	}
+
+	@Override
+	public void repaintPick() {
+		super.repaintPick();
+		super.repaintPickChildren();
+	}
+
+	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		// TODO
 	}

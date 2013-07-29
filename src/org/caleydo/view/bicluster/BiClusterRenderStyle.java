@@ -22,5 +22,6 @@ public class BiClusterRenderStyle {
 	public static final String ICON_ZOOM_OUT = ICON_PREFIX + "zoom_out.png";
 	public static final String ICON_TOOLS = ICON_PREFIX + "setting_tools.png";
 	public static final String ICON_LAYOUT = ICON_PREFIX + "gear_in.png";
+	public static final String ICON_FIND = ICON_PREFIX + "find.png";
 
 }
