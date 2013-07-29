@@ -24,6 +24,12 @@ import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
+/**
+ * a special cluster element based on an external table perspective e.g. a chemical cluster
+ *
+ * @author Samuel Gratzl
+ *
+ */
 public final class SpecialGenericClusterElement extends ClusterElement {
 	private final VirtualArray recordVA;
 	private final VirtualArray dimVA;
@@ -160,6 +166,11 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 	@Override
 	protected void sort(SortingType type) {
 		// Nothing to do here
+	}
+
+	@Override
+	protected void rebuildMyData(boolean isGlobal) {
+		//
 	}
 
 	@Override

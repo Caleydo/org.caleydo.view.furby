@@ -7,9 +7,7 @@ package org.caleydo.view.bicluster.elem;
 
 import java.util.List;
 
-import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
-import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
@@ -47,12 +45,6 @@ public class ClusterContentElement extends GLElementContainer implements IGLLayo
 		assert heatmap != null;
 		this.add(content);
 		this.add(content.createButtonBar());
-	}
-
-	@Override
-	protected void renderImpl(GLGraphics g, float w, float h) {
-		g.color(Color.WHITE).fillRect(0, 0, w, h);
-		super.renderImpl(g, w, h);
 	}
 
 	@Override

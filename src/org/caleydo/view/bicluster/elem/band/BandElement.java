@@ -49,8 +49,8 @@ public abstract class BandElement extends PickableGLElement {
 
 	protected IDType idType;
 	protected String dataDomainID;
-	protected SelectionType selectionType;
-	protected SelectionManager selectionManager;
+	protected final SelectionType selectionType;
+	protected final SelectionManager selectionManager;
 	protected AllBandsElement root;
 
 	protected BandFactory secondMergeArea, bandFactory;

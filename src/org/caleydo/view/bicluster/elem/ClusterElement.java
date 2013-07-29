@@ -840,7 +840,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 	protected void handleFocus() {
 		if (isFocused) {
-			scaleFactor = scaleFactor >= 4 ? 4 : 3;
+			scaleFactor = defaultFocusScaleFactor();
 			if (content instanceof ClusterContentElement)
 				((ClusterContentElement) content).showLabels(EShowLabels.RIGHT);
 			resize();
@@ -851,6 +851,31 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			resize();
 			mouseOut();
 		}
+	}
+
+	/**
+	 * generate the default scale factor to use during focus
+	 *
+	 * @return
+	 */
+	private double defaultFocusScaleFactor() {
+		double s = 0;
+		double ws = focusSize(getNumberOfDimElements()) / dimSize;
+		double hs = focusSize(getNumberOfRecElements()) / recSize;
+		s = Math.max(ws, hs);
+		return Math.max(scaleFactor, s);
+	}
+
+	/**
+	 * @param dimensionElementSize
+	 * @return
+	 */
+	private float focusSize(int elements) {
+		if (elements < 5)
+			return 20 * elements;
+		else if (elements < 10)
+			return 16 * elements;
+		return Math.min(14 * elements, 14 * 20);
 	}
 
 	private void hideThisCluster() {
