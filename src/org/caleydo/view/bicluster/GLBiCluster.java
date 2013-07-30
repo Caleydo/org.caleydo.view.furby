@@ -10,11 +10,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.caleydo.core.data.collection.table.CategoricalTable;
+import org.caleydo.core.data.collection.table.NumericalTable;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.datadomain.DataSupportDefinitions;
@@ -43,7 +46,6 @@ import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -290,16 +292,69 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		}
 
 		handleSpecialClusters(added, removed);
+		handleThresholds(added, removed);
 	}
 
+	private void handleThresholds(List<TablePerspective> added, List<TablePerspective> removed) {
+		if (added.isEmpty())
+			return;
+		// search within the categorical table perspectives the chemical clusters
+		Predicate<TablePerspective> predicate = new Predicate<TablePerspective>() {
+			@Override
+			public boolean apply(TablePerspective arg0) {
+				ATableBasedDataDomain datadomain = arg0.getDataDomain();
+				if (datadomain.getTable() instanceof CategoricalTable<?>
+						|| datadomain.getTable() instanceof NumericalTable)
+					return false;
+				// inhomogenous
+				if (l != null
+						&& !arg0.getRecordPerspective().getIdType().resolvesTo(l.getDimensionPerspective().getIdType()))
+					return false;
+				// single column
+				return arg0.getDimensionPerspective().getVirtualArray().size() == 1;
+			}
+		};
+		added = Lists.newArrayList(Iterables.filter(added, predicate));
+
+		assert this.x != null;
+
+		for (TablePerspective add : added) {
+			// use the label as indicator whether for L or Z thresholds
+			String label = add.getLabel();
+			boolean isZ = label.toLowerCase().contains("z");
+			Map<Integer, Float> thresholds = new TreeMap<>();
+			Integer col = add.getDimensionPerspective().getVirtualArray().get(0);
+			Table table = add.getDataDomain().getTable();
+			for (Integer row : add.getRecordPerspective().getVirtualArray()) {
+				Float t = table.getRaw(col, row);
+				if (t == null || t.isNaN())
+					continue;
+				thresholds.put(row, t);
+			}
+			rootElement.setThresholds(isZ, thresholds);
+		}
+	}
 	/**
 	 * @param added
 	 * @param removed
 	 */
 	private void handleSpecialClusters(List<TablePerspective> added, List<TablePerspective> removed) {
 		// search within the categorical table perspectives the chemical clusters
-		Predicate<TablePerspective> predicate = Predicates.not(DataSupportDefinitions.numericalTables
-				.asTablePerspectivePredicate());
+		Predicate<TablePerspective> predicate = new Predicate<TablePerspective>() {
+			@Override
+			public boolean apply(TablePerspective arg0) {
+				ATableBasedDataDomain datadomain = arg0.getDataDomain();
+				if (datadomain.getTable() instanceof CategoricalTable<?>)
+					return true;
+				if (datadomain.getTable() instanceof NumericalTable)
+					return false;
+				return hasGroups(arg0.getRecordPerspective()) || hasGroups(arg0.getDimensionPerspective());
+			}
+
+			private boolean hasGroups(Perspective p) {
+				return p.getVirtualArray().getGroupList().size() > 1;
+			}
+		};
 		added = Lists.newArrayList(Iterables.filter(added,predicate));
 		removed = Lists.newArrayList(Iterables.filter(removed,predicate));
 
@@ -329,6 +384,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		final IDType idtype = p.getIdType();
 		if ((!idtype.resolvesTo(record) && !idtype.resolvesTo(dimension)))
 			return false;
-		return true;
+		return p.getVirtualArray().getGroupList().size() > 1;
 	}
 }

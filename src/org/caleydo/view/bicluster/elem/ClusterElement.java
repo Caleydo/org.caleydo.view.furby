@@ -127,7 +127,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	protected List<Integer> recProbabilitySorting;
 
 	protected boolean setOnlyShowXElements;
-	protected int bcNr;
+	protected int bcNr = -1;
 	protected ToolBar toolBar;
 	protected HeaderBar headerBar;
 	protected ThresholdBar dimThreshBar;
@@ -176,6 +176,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		});
 		this.setLayoutData(MoveTransitions.MOVE_AND_GROW_LINEAR);
 		this.cluster = this;
+	}
+
+	/**
+	 * @return the bcNr, see {@link #bcNr}
+	 */
+	public int getBiClusterNumber() {
+		return bcNr;
 	}
 
 	protected void initContent() {
@@ -701,11 +708,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			}
 			if (value <= localMinSliderValue || value >= localMaxSliderValue)
 				return;
-			if (isHorizontal)
-				dimThreshold = value;
-			else
-				recThreshold = value;
-			rebuildMyData(false);
+			setThresholdImpl(isHorizontal, value);
 
 		}
 
@@ -727,6 +730,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 				ignoreNextChange = true;
 				slider.setValue(isHorizontal ? event.getDimensionThreshold() : event.getRecordThreshold());
 			}
+		}
+
+		/**
+		 * @param value
+		 */
+		public void setValue(float value) {
+			slider.setCallback(null);
+			slider.setValue(value);
+			slider.setCallback(this);
 		}
 	}
 
@@ -1226,6 +1238,28 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		builder.append("ClusterElement [").append(getLabel());
 		builder.append("]");
 		return builder.toString();
+	}
+
+	public void setThreshold(boolean isDimension, float value) {
+		setThresholdImpl(isDimension, value);
+		if (isDimension && dimThreshBar != null)
+			dimThreshBar.setValue(value);
+		else if (!isDimension && recThreshBar != null)
+			recThreshBar.setValue(value);
+	}
+
+	/**
+	 * @param isDimension
+	 * @param value
+	 */
+	void setThresholdImpl(boolean isDimension, float value) {
+		if ((isDimension && dimThreshold == value) || (!isDimension && recThreshold == value))
+			return;
+		if (isDimension)
+			dimThreshold = value;
+		else
+			recThreshold = value;
+		rebuildMyData(false);
 	}
 
 }

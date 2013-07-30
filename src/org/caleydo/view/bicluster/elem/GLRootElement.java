@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster.elem;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
@@ -278,6 +279,22 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		}
 		bands.updateSelection();
 		relayout();
+	}
+
+	/**
+	 *
+	 * @param isDimensionThresholds
+	 * @param thresholds
+	 *            bicluster id x threshold
+	 */
+	public void setThresholds(boolean isDimensionThresholds, Map<Integer, Float> thresholds) {
+		for (ClusterElement elem : Iterables.filter(clusters, ClusterElement.class)) {
+			int number = elem.getBiClusterNumber();
+			if (thresholds.containsKey(number)) {
+				float t = thresholds.get(number);
+				elem.setThreshold(isDimensionThresholds, t);
+			}
+		}
 	}
 
 	/**
