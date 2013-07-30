@@ -16,7 +16,7 @@ import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.GLSandBox;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.util.spline.Band;
-import org.caleydo.core.view.opengl.util.vislink.NURBSCurve;
+import org.caleydo.core.view.opengl.util.vislink.Splines;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -34,7 +34,7 @@ public final class TesselatedBiClusterPolygons {
 	public static Band band(List<Vec2f> anchorPoints, final float z, float radiusFirst, float radiusSecond, int numberOfSplinePoints) {
 		Preconditions.checkArgument(anchorPoints.size() >= 2, "at least two points");
 
-		List<Vec3f> curve = NURBSCurve.spline3(Lists.transform(anchorPoints, new Function<Vec2f, Vec3f>() {
+		List<Vec3f> curve = Splines.spline3(Lists.transform(anchorPoints, new Function<Vec2f, Vec3f>() {
 			@Override
 			public Vec3f apply(Vec2f in) {
 				return new Vec3f(in.x(), in.y(), z);

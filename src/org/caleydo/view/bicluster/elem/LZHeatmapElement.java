@@ -25,6 +25,8 @@ import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
 
 /**
+ * element for showing a heatmap of probabilities
+ *
  * @author Samuel Gratzl
  *
  */
@@ -62,6 +64,7 @@ public class LZHeatmapElement extends GLElement {
 		texture.enable(gl);
 		texture.bind(gl);
 		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
+		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
 		g.color(Color.WHITE);
 		g.save();
 		gl.glTranslatef(0, 0, g.z());

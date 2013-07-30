@@ -62,7 +62,7 @@ public abstract class BandElement extends PickableGLElement {
 
 	protected BandFactory secondMergeArea, bandFactory;
 	protected Map<List<Integer>, Band> splittedBands, nonSplittedBands;
-	protected Map<Integer, Band> splines;
+	protected Map<Integer, List<Vec2f>> splines;
 	protected List<List<Integer>> firstSubIndices, secondSubIndices;
 	protected Color highlightColor, hoveredColor, defaultColor;
 	protected boolean isMouseOver = false;
@@ -189,15 +189,15 @@ public abstract class BandElement extends PickableGLElement {
 				}
 
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.25f * curOpacityFactor);
-				Band currSelectedSpline = splines.get(currSelectedSplineID - 1);
-				for (Band b : splines.values()) {
+				List<Vec2f> currSelectedSpline = splines.get(currSelectedSplineID - 1);
+				for (List<Vec2f> b : splines.values()) {
 					if (b == currSelectedSpline)
 						continue;
-					g.fillPolygon(b);
+					g.drawPath(b, false);
 				}
 				if (currSelectedSpline != null) {
 					g.color(0, 0, 0, 0.85f * curOpacityFactor).lineWidth(2);
-					g.fillPolygon(currSelectedSpline);
+					g.drawPath(currSelectedSpline, false);
 					g.lineWidth(1);
 				}
 			} else {

@@ -175,7 +175,7 @@ public class RecordBandFactory extends BandFactory {
 		bandPoints.addAll(secondPoints);
 		final Band band = band(bandPoints, 0,
 		allIndices.size() / 2f * firstElementSize, allIndices.size() / 2f * secondElementSize, MAINBAND_POLYGONS);
-		
+
 		bandsMap.put(allIndices, band);
 
 		return bandsMap;
@@ -463,8 +463,8 @@ public class RecordBandFactory extends BandFactory {
 	}
 
 	@Override
-	protected Map<Integer, Band> getConnectionsSplines() {
-		Map<Integer, Band> bandsMap = new IdentityHashMap<>();
+	protected Map<Integer, List<Vec2f>> getConnectionsSplines() {
+		Map<Integer, List<Vec2f>> bandsMap = new IdentityHashMap<>();
 		if (allIndices.size() == 1)
 			return bandsMap;
 		int firstIndex = 0;
@@ -500,7 +500,7 @@ public class RecordBandFactory extends BandFactory {
 		return index;
 	}
 
-	private Band createBSplineBandFromIndex(Integer i, int firstIndex,
+	private List<Vec2f> createBSplineBandFromIndex(Integer i, int firstIndex,
 			int secondIndex) {
 		List<Vec2f> finalPoints = new ArrayList<>();
 		if (firstIndices.size() == 1) {
@@ -580,8 +580,7 @@ public class RecordBandFactory extends BandFactory {
 			secondPoints = translateToClusterAbsoluteCoordinates(secondPoints,
 					second);
 			finalPoints.addAll(secondPoints);
-			return TesselatedPolygons.band(finalPoints, 0, SPLINE_RADIUS,
-					SPLINE_POLYGONS);
+			return TesselatedPolygons.spline(finalPoints, SPLINE_POLYGONS);
 		} else {
 
 			float startPosX = (secondIndex + 0.5f - allIndices.size() / 2f) * secondElementSize;
@@ -627,8 +626,7 @@ public class RecordBandFactory extends BandFactory {
 			bandPoints = translateToClusterAbsoluteCoordinates(bandPoints,
 					second);
 			finalPoints.addAll(bandPoints);
-			return TesselatedPolygons.band(finalPoints, 0, SPLINE_RADIUS,
-					SPLINE_POLYGONS);
+			return TesselatedPolygons.spline(finalPoints, SPLINE_POLYGONS);
 		}
 
 	}

@@ -5,6 +5,8 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
+import gleem.linalg.Vec2f;
+
 import java.util.List;
 import java.util.Map;
 
@@ -46,5 +48,5 @@ public abstract class BandFactory {
 
 	protected abstract Map<List<Integer>, Band> getNonSplitableBands();
 
-	protected abstract Map<Integer, Band> getConnectionsSplines();
+	protected abstract Map<Integer, List<Vec2f>> getConnectionsSplines();
 }
