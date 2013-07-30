@@ -5,8 +5,11 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
@@ -17,6 +20,7 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.ELazyiness;
+import org.caleydo.view.heatmap.v2.CellSpace;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
@@ -30,6 +34,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class ClusterContentElement extends GLElementContainer implements IGLLayout {
 	private final HeatMapElement heatmap;
+	private final Collection<GLElement> repaintOnRepaint = new ArrayList<>(2);
 
 	/**
 	 * @param builder
@@ -57,12 +62,22 @@ public class ClusterContentElement extends GLElementContainer implements IGLLayo
 	public void repaint() {
 		super.repaint();
 		super.repaintChildren();
+		for (GLElement r : repaintOnRepaint)
+			r.repaint();
 	}
 
 	@Override
 	public void repaintPick() {
 		super.repaintPick();
 		super.repaintPickChildren();
+	}
+
+	public void addRepaintOnRepaint(GLElement elem) {
+		this.repaintOnRepaint.add(elem);
+	}
+
+	public void removeRepaintOnRepaint(GLElement elem) {
+		this.repaintOnRepaint.remove(elem);
 	}
 
 	@Override
@@ -97,11 +112,19 @@ public class ClusterContentElement extends GLElementContainer implements IGLLayo
 		return heatmap.getDimensionCellSpace(index).getPosition();
 	}
 
+	public CellSpace getDimensionCell(int index) {
+		return heatmap.getDimensionCellSpace(index);
+	}
+
 	/**
 	 * @param ind
 	 * @return
 	 */
 	public float getRecordPos(int index) {
 		return heatmap.getRecordCellSpace(index).getPosition();
+	}
+
+	public CellSpace getRecordCell(int index) {
+		return heatmap.getRecordCellSpace(index);
 	}
 }

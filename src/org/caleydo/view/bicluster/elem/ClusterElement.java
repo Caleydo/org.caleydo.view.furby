@@ -147,6 +147,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	protected double standardScaleFactor;
 	protected boolean isFocused = false;
 
+	/**
+	 * elements for showing the probability heatmaps
+	 */
+	private LZHeatmapElement propabilityHeatMapHor;
+	private LZHeatmapElement propabilityHeatMapVer;
+
 	public ClusterElement(TablePerspective data, AllClustersElement root, TablePerspective x, TablePerspective l,
 			TablePerspective z, ExecutorService executor, GLRootElement biclusterRoot) {
 		setLayout(this);
@@ -185,6 +191,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		content = createContent();
 		setZValuesAccordingToState();
 		this.add(content);
+
+		this.propabilityHeatMapHor = new LZHeatmapElement(z.getDataDomain().getTable(), true);
+		this.add(this.propabilityHeatMapHor);
+		this.propabilityHeatMapVer = new LZHeatmapElement(l.getDataDomain().getTable(), false);
+		this.add(this.propabilityHeatMapVer);
 	}
 
 	/**
@@ -359,6 +370,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			recArray.append(i);
 			count++;
 		}
+		if (propabilityHeatMapHor != null)
+			propabilityHeatMapHor.update(dimThreshold, this.bcNr, dimArray);
+		if (propabilityHeatMapVer != null)
+			propabilityHeatMapVer.update(recThreshold, this.bcNr, recArray);
 	}
 
 	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
@@ -484,25 +499,36 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		IGLLayoutElement headerbar = children.get(1);
 		IGLLayoutElement dimthreshbar = children.get(2);
 		IGLLayoutElement recthreshbar = children.get(3);
+
+		// shift for propability heat maps
+		float shift = children.size() > 5 ? 10 : 0;
+
 		if (isHovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
-			toolbar.setBounds(-38, 0, 18, 100);
-			headerbar.setBounds(0, -39, w < 55 ? 57 : w + 2, 20);
-			dimthreshbar.setBounds(-1, -20, w < 55 ? 56 : w + 1, 20);
-			recthreshbar.setBounds(-20, -1, 20, h < 60 ? 61 : h + 1);
+			toolbar.setBounds(-38 - shift, 0, 18, 100);
+			headerbar.setBounds(0, -39 - shift, w < 55 ? 57 : w + 2, 20);
+			dimthreshbar.setBounds(-1, -20 - shift, w < 55 ? 56 : w + 1, 20);
+			recthreshbar.setBounds(-20 - shift, -1, 20, h < 60 ? 61 : h + 1);
 
 		} else {
-			toolbar.setBounds(-38, 0, 0, 100); // hide by setting the width to 0
-			headerbar.setBounds(0, -18, w < 50 ? 50 : w, 17);
-			dimthreshbar.setBounds(-1, -20, 0, 0);
-			recthreshbar.setBounds(-20, -1, 0, 0);
+			// hide by setting the width to 0
+			toolbar.setBounds(-38 - shift, 0, 0, 100);
+			headerbar.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
+			dimthreshbar.setBounds(-1, -20 - shift, 0, 0);
+			recthreshbar.setBounds(-20 - shift, -1, 0, 0);
 		}
+		if (children.size() > 5) {
+			children.get(5).setBounds(0, -shift, w, shift);
+			children.get(6).setBounds(-shift, 0, shift, h);
+		}
+
 		IGLLayoutElement igllContent = children.get(4);
 		if (isFocused) {
 			igllContent.setBounds(0, 0, w + 79, h + 79);
 		} else {
 			igllContent.setBounds(0, 0, w, h);
 		}
+
 	}
 
 	protected class HeaderBar extends GLButton implements ISelectionCallback {
@@ -854,13 +880,23 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	protected void handleFocus() {
 		if (isFocused) {
 			scaleFactor = defaultFocusScaleFactor();
-			if (content instanceof ClusterContentElement)
+			if (content instanceof ClusterContentElement) {
 				((ClusterContentElement) content).showLabels(EShowLabels.RIGHT);
+				if (propabilityHeatMapHor != null)
+					propabilityHeatMapHor.nonUniformLayout(((ClusterContentElement) content));
+				if (propabilityHeatMapVer != null)
+					propabilityHeatMapVer.nonUniformLayout(((ClusterContentElement) content));
+			}
 			resize();
 		} else {
 			resetScaleFactor();
-			if (content instanceof ClusterContentElement)
+			if (content instanceof ClusterContentElement) {
 				((ClusterContentElement) content).hideLabels();
+				if (propabilityHeatMapHor != null)
+					propabilityHeatMapHor.uniformLayout();
+				if (propabilityHeatMapVer != null)
+					propabilityHeatMapVer.uniformLayout();
+			}
 			resize();
 			mouseOut();
 		}
