@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster.elem;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
@@ -15,6 +16,7 @@ import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.color.Color;
+import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
@@ -155,12 +157,33 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 	}
 
 	@Override
-	public void setVisibility() {
-		if (isHidden || !hasContent || getRecordOverlapSize() == 0 && getDimensionOverlapSize() == 0)
-			setVisibility(EVisibility.NONE);
-		else
-			setVisibility(EVisibility.PICKABLE);
+	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
+		super.calculateOverlap(dimBandsEnabled, recBandsEnabled);
+		setVisibility();
+	}
 
+	@Override
+	public void setVisibility() {
+		if (isHidden || !hasContent || (getRecordOverlapSize() == 0 || recordVA.size() == 0 || !anyShown(recOverlap))
+				&& (getDimensionOverlapSize() == 0 || dimVA.size() == 0 || !anyShown(dimOverlap))) {
+			setVisibility(EVisibility.NONE);
+			System.out.println(getLabel() + " hide");
+		} else {
+			setVisibility(EVisibility.PICKABLE);
+			System.out.println(getLabel() + " pickable");
+		}
+
+	}
+
+	/**
+	 * @param recOverlap
+	 * @return
+	 */
+	private static boolean anyShown(Map<GLElement, List<Integer>> elems) {
+		for (GLElement elem : elems.keySet())
+			if (elem.getVisibility().doRender())
+				return true;
+		return false;
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import gleem.linalg.Vec2f;
 
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -379,16 +380,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 				eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
 				dimOverlap.put(element, eIndizes);
 				dimensionOverlapSize += eIndizes.size();
-			} else {
-				dimOverlap.put(element, new ArrayList<Integer>());
 			}
 			if (recBandsEnabled) {
 				eIndizes = new ArrayList<Integer>(myRecIndizes);
 				eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
 				recOverlap.put(element, eIndizes);
 				recordOverlapSize += eIndizes.size();
-			} else {
-				recOverlap.put(element, new ArrayList<Integer>());
 			}
 		}
 		if (getVisibility() == EVisibility.PICKABLE)
@@ -457,11 +454,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	}
 
 	public List<Integer> getDimOverlap(GLElement jElement) {
-		return dimOverlap.get(jElement);
+		if (dimOverlap.containsKey(jElement))
+			return dimOverlap.get(jElement);
+		return Collections.emptyList();
 	}
 
 	public List<Integer> getRecOverlap(GLElement jElement) {
-		return recOverlap.get(jElement);
+		if (recOverlap.containsKey(jElement))
+			return recOverlap.get(jElement);
+		return Collections.emptyList();
 	}
 
 	public int getDimensionOverlapSize() {
@@ -491,7 +492,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			recthreshbar.setBounds(-20, -1, 20, h < 60 ? 61 : h + 1);
 
 		} else {
-			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
+			toolbar.setBounds(-38, 0, 0, 100); // hide by setting the width to 0
 			headerbar.setBounds(0, -18, w < 50 ? 50 : w, 17);
 			dimthreshbar.setBounds(-1, -20, 0, 0);
 			recthreshbar.setBounds(-20, -1, 0, 0);
@@ -534,11 +535,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 						g.textColor(new Color(0, 0, 0, curOpacityFactor));
 
 					if (isHovered) {
-						g.drawText(" " + (scaleFactor == standardScaleFactor ? getID() : getID()) + " ("
-								+ (int) (100 * scaleFactor) + "%)", 0, 0, 120, 12);
-					} else
-						g.drawText(scaleFactor == standardScaleFactor ? getID() : getID() + " ("
-								+ (int) (100 * scaleFactor) + "%)", 0, 0, 120, 12);
+						final String text = " " + (scaleFactor == standardScaleFactor ? getID() : getID()) + " ("
+								+ (int) (100 * scaleFactor) + "%)";
+
+						g.drawText(text, 0, 0, g.text.getTextWidth(text, 12) + 2, 12);
+					} else {
+						final String text = scaleFactor == standardScaleFactor ? getID() : getID() + " ("
+								+ (int) (100 * scaleFactor) + "%)";
+						g.drawText(text, 0, 0, g.text.getTextWidth(text, 12) + 2, 12);
+					}
 					g.textColor(Color.BLACK);
 
 				}
@@ -1178,4 +1183,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	public TablePerspective getTablePerspective() {
 		return data;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("ClusterElement [").append(getLabel());
+		builder.append("]");
+		return builder.toString();
+	}
+
 }
