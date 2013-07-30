@@ -9,6 +9,7 @@ import gleem.linalg.Vec2f;
 import gleem.linalg.Vec4f;
 
 import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +28,7 @@ import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.ForceChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
+import org.caleydo.view.bicluster.physics.Physics;
 import org.caleydo.view.bicluster.util.Vec2d;
 
 /**
@@ -318,22 +320,16 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private Vec2d getDistance(ClusterElement i, AToolBarElement tools, boolean isTop) {
 		Vec2f toolsPos = tools.getAbsoluteLocation();
 		Vec2f toolsSize = tools.getSize();
+		// FIXME: why is the tool center computed in that way?
 		Vec2d toolsCenter = new Vec2d(toolsPos.x() + toolsSize.x(), toolsPos.y() + toolsSize.y());
 		if (isTop) {
 			toolsCenter.add(new Vec2d(0, -toolsSize.y() / 4));
 		} else {
 			toolsCenter.add(new Vec2d(0, toolsSize.y() / 4));
 		}
-		Vec2d distVec = getCenter(i).minus(toolsCenter);
-		double distance = distVec.length();
-		Vec2f iSize = i.getSize();
-		Vec2f jSize = toolsSize;
-		double r1 = iSize.x() > iSize.y() ? iSize.x() / 2 : iSize.y() / 2;
-		double r2 = jSize.x() > jSize.y() ? jSize.x() / 2 : jSize.y() / 2;
-		distance -= Math.abs(r1) + Math.abs(r2);
-		distVec.normalize();
-		distVec.scale(distance);
-		return distVec;
+
+		Rectangle2D toolBounds = new Rectangle2D.Float(toolsPos.x(), toolsPos.y(), toolsSize.x(), toolsSize.y());
+		return Physics.distance(i.getRectangleBounds(), toolBounds);
 	}
 
 	private Vec2d getDistanceFromTopLeft(ClusterElement i, float w, float h) {
@@ -361,16 +357,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	}
 
 	private Vec2d getDistance(ClusterElement i, ClusterElement j) {
-		Vec2d distVec = getCenter(i).minus(getCenter(j));
-		double distance = distVec.length();
-		Vec2f iSize = i.getSize();
-		Vec2f jSize = j.getSize();
-		double r1 = iSize.x() > iSize.y() ? iSize.x() / 2 : iSize.y() / 2;
-		double r2 = jSize.x() > jSize.y() ? jSize.x() / 2 : jSize.y() / 2;
-		distance -= Math.abs(r1) + Math.abs(r2);
-		distVec.normalize();
-		distVec.scale(distance);
-		return distVec;
+		return Physics.distance(i.getRectangleBounds(), j.getRectangleBounds());
 	}
 
 	private void setLocation(ClusterElement v, double xPos, double yPos, float w, float h) {

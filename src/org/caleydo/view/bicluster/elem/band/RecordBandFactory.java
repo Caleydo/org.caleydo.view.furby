@@ -24,7 +24,6 @@ public class RecordBandFactory extends BandFactory {
 	private static final int SUBBAND_POLYGONS = 30;
 	private static final int MAINBAND_POLYGONS = 50;
 	private static final int SPLINE_POLYGONS = 20;
-	private static final float SPLINE_RADIUS = 0.2f;
 
 	private float[] rotationMatrixFirst = new float[4];
 	private float[] rotationMatrixSecond = new float[4];
@@ -78,6 +77,7 @@ public class RecordBandFactory extends BandFactory {
 	}
 
 	private void calculateRotationMatrixFirst() {
+		// TODO what about Rotf class
 		rotationMatrixFirst[0] = (float) Math.cos(firstAngle);
 		rotationMatrixFirst[1] = (float) Math.sin(firstAngle);
 		rotationMatrixFirst[2] = (float) -Math.sin(firstAngle);
