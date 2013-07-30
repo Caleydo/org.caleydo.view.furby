@@ -5,9 +5,12 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
+import gleem.linalg.Vec2f;
 import gleem.linalg.Vec3f;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -20,12 +23,16 @@ import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.GLSandBox;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
+import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.layout2.util.PickingPool;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.spline.Band;
+import org.caleydo.core.view.opengl.util.spline.ColoredVec3f;
+import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 
@@ -194,17 +201,21 @@ public abstract class BandElement extends PickableGLElement {
 					g.lineWidth(1);
 				}
 			} else {
+				Color col = bandColor.clone();
+				col.a = 0.8f;
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * curOpacityFactor);
-				for (Band b : nonSplittedBands.values()) {
+				Collection<Band> stubBands = stubify(nonSplittedBands.values(), col, curOpacityFactor);
+				for (Band b : stubBands) {
 					g.drawPath(b);
 				}
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.5f * curOpacityFactor);
-				for (Band b : nonSplittedBands.values()) {
+				for (Band b : stubBands) {
 					g.fillPolygon(b);
 				}
 			}
 		}
 	}
+
 
 	protected boolean isVisible() {
 		return first.isVisible() && second.isVisible() && overlap != null;
@@ -341,8 +352,89 @@ public abstract class BandElement extends PickableGLElement {
 		return Pair.make(_1, _2);
 	}
 
+	/**
+	 * @param values
+	 * @param bandColor
+	 * @param curOpacityFactor2
+	 * @return
+	 */
+	private static Collection<Band> stubify(Collection<Band> bands, Color color, float centerAlpha) {
+		if (bands.isEmpty() || centerAlpha >= 1)
+			return bands;
+
+		Collection<Band> result = new ArrayList<>(bands.size());
+
+		for (Band band : bands) {
+			result.add(stubify(band, color, centerAlpha));
+		}
+		return result;
+	}
+
+	private static Band stubify(Band band, Color color, float centerAlpha) {
+		float r = color.r;
+		float g = color.g;
+		float b = color.b;
+		float a = color.a;
+
+		List<Vec3f> curveTop = band.getCurveTop();
+		List<Vec3f> curveBottom = band.getCurveBottom();
+		assert curveTop.size() == curveBottom.size();
+
+		final int size = curveTop.size();
+		List<Vec3f> cOut = new ArrayList<>(size);
+		List<Vec3f> bOut = new ArrayList<>(size);
+
+		boolean even = size % 2 == 0;
+		int center = size % 2 == 0 ? (size / 2 - 1) : size / 2;
+
+		float delta_a = (centerAlpha - 1.f) / (center * 0.25f); // artificial enlarge delta for better fading effect
+		float act_a = 1;
+		for (int i = 0; i < size; ++i) {
+			Vec3f top = curveTop.get(i);
+			Vec3f bottom = curveBottom.get(i);
+
+			Color act = new Color(r, g, b, Math.max(a * act_a, 0));
+			// System.out.println(i + " " + act_a);
+			// manipulate act
+			if (even && i == center) {
+				// nothing
+			} else if (i <= center)
+				act_a += delta_a;
+			else
+				act_a -= delta_a;
+			cOut.add(new ColoredVec3f(top, act));
+			bOut.add(new ColoredVec3f(bottom, act));
+		}
+		return new Band(cOut, bOut);
+	}
+
 	public enum BandType {
 		recordBand, dimensionBand;
 	}
 
+	public static void main(String[] args) {
+
+		GLSandBox.main(args, new IGLRenderer() {
+			@Override
+			public void render(GLGraphics g, float w, float h, GLElement parent) {
+				renderBand(g, new Vec2f(0, 0), new Vec2f(2, -2), new Vec2f(4, -4), new Vec2f(5, -4),
+						new Vec2f(5.5f, -2));
+
+			}
+
+			private void renderBand(GLGraphics g, Vec2f... vecs) {
+				final Band band = TesselatedPolygons.band(Arrays.asList(vecs), 0, 1, 10);
+				Band band2 = stubify(band, new Color(1, 0, 0), 0.0f);
+
+				g.move(100, 100);
+				g.save().gl.glScalef(10, 10, 10);
+				g.color(1, 0, 0, 0.5f);
+				g.fillPolygon(band2);
+				g.color(0, 1, 0, 0.5f);
+				g.drawPath(band2);
+				g.restore();
+			}
+		});
+
+	}
 }

@@ -5,6 +5,7 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem.band;
 
+import static org.caleydo.view.bicluster.util.TesselatedBiClusterPolygons.band;
 import gleem.linalg.Vec2f;
 
 import java.util.ArrayList;
@@ -15,7 +16,6 @@ import java.util.Map;
 import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 import org.caleydo.view.bicluster.elem.ClusterElement;
-import org.caleydo.view.bicluster.util.TesselatedBiClusterPolygons;
 
 public class RecordBandFactory extends BandFactory {
 
@@ -173,8 +173,10 @@ public class RecordBandFactory extends BandFactory {
 		secondPoints = translateToClusterAbsoluteCoordinates(secondPoints,
 				second);
 		bandPoints.addAll(secondPoints);
-		bandsMap.put(allIndices, TesselatedBiClusterPolygons.band(bandPoints, 0,
-				allIndices.size() / 2f * firstElementSize, allIndices.size() / 2f * secondElementSize, MAINBAND_POLYGONS));
+		final Band band = band(bandPoints, 0,
+		allIndices.size() / 2f * firstElementSize, allIndices.size() / 2f * secondElementSize, MAINBAND_POLYGONS);
+		
+		bandsMap.put(allIndices, band);
 
 		return bandsMap;
 	}
@@ -252,7 +254,9 @@ public class RecordBandFactory extends BandFactory {
 			secondPoints = translateToClusterAbsoluteCoordinates(secondPoints,
 					second);
 			bandPoints.addAll(secondPoints);
-			bandsMap.put(allIndices, TesselatedBiClusterPolygons.band(
+			bandsMap.put(
+					allIndices,
+					band(
 					bandPoints, 0, allIndices.size() / 2f * firstElementSize,
 					allIndices.size() / 2f * secondElementSize,
 					MAINBAND_POLYGONS));
@@ -292,7 +296,9 @@ public class RecordBandFactory extends BandFactory {
 					mainPointsSecond, second);
 
 			bandPoints.addAll(mainPointsSecond);
-			bandsMap.put(allIndices, TesselatedBiClusterPolygons.band(bandPoints, 0,
+			bandsMap.put(
+					allIndices,
+					band(bandPoints, 0,
 					allIndices.size() / 2f * firstElementSize,
 					allIndices.size() / 2f * secondElementSize, MAINBAND_POLYGONS));
 		}

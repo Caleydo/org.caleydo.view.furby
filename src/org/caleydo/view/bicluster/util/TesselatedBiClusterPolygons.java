@@ -45,11 +45,6 @@ public final class TesselatedBiClusterPolygons {
 	}
 
 
-	public static Band band(List<Vec2f> anchorPoints, final float z, float radius, int numberOfSplinePoints) {
-		return band(anchorPoints, z, radius, radius, numberOfSplinePoints);
-	}
-
-
 	private static Band toBand(List<Vec3f> curve, float radiusSecond, float radiusFirst) {
 		final int last = curve.size() - 1;
 		Vec3f[] c = curve.toArray(new Vec3f[0]);
@@ -94,7 +89,7 @@ public final class TesselatedBiClusterPolygons {
 			}
 
 			private void renderBandTwo(GLGraphics g, Vec2f... vecs) {
-				final Band band = band(Arrays.asList(vecs), 0, 3,40);
+				final Band band = band(Arrays.asList(vecs), 0, 3, 4, 40);
 				g.move(100, 100);
 				g.save().gl.glScalef(10, 10, 10);
 				g.color(1, 0, 0, 0.5f);

@@ -144,7 +144,7 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
 			boolean setXElements, String id, int bcNr, double maxDim,
 			double maxRec, double minDim, double minRec) {
-
+		setVisibility();
 	}
 
 	@Override
@@ -156,7 +156,7 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 
 	@Override
 	public void setVisibility() {
-		if (isHidden || !hasContent)
+		if (isHidden || !hasContent || getRecordOverlapSize() == 0 && getDimensionOverlapSize() == 0)
 			setVisibility(EVisibility.NONE);
 		else
 			setVisibility(EVisibility.PICKABLE);
@@ -171,6 +171,7 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 	@Override
 	protected void rebuildMyData(boolean isGlobal) {
 		//
+		setVisibility();
 	}
 
 	@Override
