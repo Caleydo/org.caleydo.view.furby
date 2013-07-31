@@ -11,6 +11,7 @@ import java.util.List;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
+import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
@@ -42,23 +43,28 @@ public class ParameterToolBarElement extends AToolBarElement {
 	float maxRecordValue = 0.2f;
 	float maxDimensionValue = 5f;
 
-	private GLButton fixedClusterButton;
-	private GLButton dimBandVisibilityButton;
-	private GLButton recBandVisibilityButton;
 	private GLButton bandSortingModeButton;
 	private GLButton probabilitySortingModeButton;
-	private GLSlider recordThresholdSlider;
-	private GLSlider dimensionThresholdSlider;
-	private GLSlider clusterMinSizeThresholdSlider;
 
-	private GLElement dimensionLabel;
-	private GLElement recordLabel;
-	private GLElement clusterMinSizeLabel;
+	private GLButton dimBandVisibilityButton;
+	private GLButton recBandVisibilityButton;
+
 	private GLButton clearHiddenClusterButton;
+	private List<String> clearHiddenButtonTooltipList = new ArrayList<>();
+
 	private GLButton specialRecordButton;
 	private GLButton specialDimensionButton;
 
-	private List<String> clearHiddenButtonTooltipList = new ArrayList<>();
+	private GLButton fixedClusterButton;
+
+	private GLElement recordLabel;
+	private GLSlider recordThresholdSlider;
+	private GLElement dimensionLabel;
+	private GLSlider dimensionThresholdSlider;
+	private GLElement clusterMinSizeLabel;
+	private GLSlider clusterMinSizeThresholdSlider;
+
+
 	private TablePerspective x;
 
 	public ParameterToolBarElement() {
@@ -75,36 +81,34 @@ public class ParameterToolBarElement extends AToolBarElement {
 		probabilitySortingModeButton.setCallback(this);
 		probabilitySortingModeButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(probabilitySortingModeButton);
+		this.add(createHorizontalLine());
 
-		clearHiddenClusterButton = new GLButton(EButtonMode.BUTTON);
-		setClearHiddenButtonRenderer();
-		clearHiddenClusterButton.setCallback(this);
-		clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
-		this.add(clearHiddenClusterButton);
-		specialRecordButton = new GLButton(EButtonMode.BUTTON);
-		specialRecordButton.setRenderer(new IGLRenderer() {
+		{
+			clearHiddenClusterButton = new GLButton(EButtonMode.BUTTON);
+			setClearHiddenButtonRenderer();
+			clearHiddenClusterButton.setCallback(this);
+			clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
+			clearHiddenClusterButton.setSize(Float.NaN, BUTTON_WIDTH);
+			this.add(clearHiddenClusterButton);
+		}
+		this.add(createHorizontalLine());
 
-			@Override
-			public void render(GLGraphics g, float w, float h, GLElement parent) {
-				g.drawText("Add dim Element", 18, 4, w, 13);
-			}
-		});
-
-		specialRecordButton.setCallback(this);
-		specialRecordButton.setTooltip("Add special record Elements");
-		this.add(specialRecordButton);
-
-		specialDimensionButton = new GLButton(EButtonMode.BUTTON);
-		specialDimensionButton.setRenderer(new IGLRenderer() {
-
-			@Override
-			public void render(GLGraphics g, float w, float h, GLElement parent) {
-				g.drawText("Assign Chemical clusters", 18, 4, w, 13);
-			}
-		});
-		specialDimensionButton.setCallback(this);
-		specialDimensionButton.setTooltip("Add chemical Clusters");
-		this.add(specialDimensionButton);
+		{
+			specialRecordButton = new GLButton(EButtonMode.BUTTON);
+			specialRecordButton.setRenderer(new MyTextRender("Add dim Element"));
+			specialRecordButton.setCallback(this);
+			specialRecordButton.setTooltip("Add special record Elements");
+			specialRecordButton.setSize(Float.NaN, BUTTON_WIDTH);
+			this.add(specialRecordButton);
+		}
+		{
+			specialDimensionButton = new GLButton(EButtonMode.BUTTON);
+			specialDimensionButton.setRenderer(new MyTextRender("Assign Chemical clusters"));
+			specialDimensionButton.setCallback(this);
+			specialDimensionButton.setTooltip("Add chemical Clusters");
+			specialDimensionButton.setSize(Float.NaN, BUTTON_WIDTH);
+			this.add(specialDimensionButton);
+		}
 
 		this.dimBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer("Dimension Bands"));
@@ -120,6 +124,8 @@ public class ParameterToolBarElement extends AToolBarElement {
 		recBandVisibilityButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(recBandVisibilityButton);
 
+		this.add(createGroupLabelLine("Thresholds"));
+
 		this.fixedClusterButton = new GLButton(EButtonMode.CHECKBOX);
 		fixedClusterButton.setRenderer(GLButton.createCheckRenderer("Show only 15 Elements"));
 		fixedClusterButton.setSelected(false);
@@ -130,8 +136,27 @@ public class ParameterToolBarElement extends AToolBarElement {
 		initSliders();
 	}
 
+	private GLElement createHorizontalLine() {
+		return new GLElement(new IGLRenderer() {
+			@Override
+			public void render(GLGraphics g, float w, float h, GLElement parent) {
+				g.color(Color.DARK_GRAY).drawLine(2, h / 2, w - 4, h / 2);
+			}
+		}).setSize(Float.NaN, 5);
+	}
+
+	private GLElement createGroupLabelLine(final String name) {
+		return new GLElement(new IGLRenderer() {
+			@Override
+			public void render(GLGraphics g, float w, float h, GLElement parent) {
+				g.color(Color.DARK_GRAY).drawLine(2, h - 1, w - 4, h - 1);
+				g.drawText(name, 1, 1, w - 2, h - 3);
+			}
+		}).setSize(Float.NaN, LABEL_WIDTH + 4);
+	}
+
 	private void setText(GLElement elem, String text) {
-		elem.setRenderer(GLRenderers.drawText(text, VAlign.LEFT, new GLPadding(1)));
+		elem.setRenderer(GLRenderers.drawText(text, VAlign.LEFT, new GLPadding(1, 0, 1, 2)));
 	}
 
 	@Override
@@ -196,23 +221,14 @@ public class ParameterToolBarElement extends AToolBarElement {
 	}
 
 	private void setClearHiddenButtonRenderer() {
+		String text;
 		if (clearHiddenButtonTooltipList.size() == 0) {
-			clearHiddenClusterButton.setRenderer(new IGLRenderer() {
-
-				@Override
-				public void render(GLGraphics g, float w, float h, GLElement parent) {
-					g.drawText("Show all clusters", 18, 4, w, 13);
-				}
-			});
+			text = "Show all clusters";
 		} else
-			clearHiddenClusterButton.setRenderer(new IGLRenderer() {
-
-				@Override
-				public void render(GLGraphics g, float w, float h, GLElement parent) {
-					g.drawText("Show all clusters (+" + clearHiddenButtonTooltipList.size() + ")", 18, 4, w, 13);
-				}
-			});
+			text = "Show all clusters (+" + clearHiddenButtonTooltipList.size() + ")";
+		clearHiddenClusterButton.setRenderer(new MyTextRender(text));
 	}
+
 
 	@ListenTo
 	public void listenTo(ClusterGetsHiddenEvent event) {
@@ -309,7 +325,20 @@ public class ParameterToolBarElement extends AToolBarElement {
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-205, 0, 200, 320);
+		return new Rect(-205, 0, 200, 340);
+	}
+
+	private static class MyTextRender implements IGLRenderer {
+		private final String text;
+
+		public MyTextRender(String text) {
+			this.text = text;
+		}
+
+		@Override
+		public void render(GLGraphics g, float w, float h, GLElement parent) {
+			g.drawText(text, 18, 1, w, 13);
+		}
 	}
 
 }

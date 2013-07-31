@@ -85,8 +85,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 			clusters.clear();
 		this.clear();
 		bands = new AllBandsElement(x);
-		this.add(clusters);
 		this.add(bands);
+		this.add(clusters);
 
 		if (list != null) {
 			System.out.println(list.size() + " Cluster geladen.");
