@@ -14,6 +14,12 @@ import org.caleydo.view.bicluster.util.Vec2d;
  *
  */
 public class Physics {
+	/**
+	 * @return
+	 */
+	public static boolean isApproximateRects() {
+		return false; // change to true if you use circles
+	}
 	public static Vec2d distance(Rectangle2D a, Rectangle2D b) {
 		// return circleDistance(a, b);
 		return aabbDistance(a, b);

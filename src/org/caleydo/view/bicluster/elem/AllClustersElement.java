@@ -264,17 +264,25 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 			for (AToolBarElement toolbar : toolbars) {
 				if (!toolbar.isVisible()) // no parent not visible
 					continue;
-				Vec2d distVec = getDistance(i, toolbar, true);
-				double rsq = distVec.lengthSquared();
-				rsq *= distVec.length();
-				xForce += 1.5f * repulsion * distVec.x() / rsq;
-				yForce += 1.5f * repulsion * distVec.y() / rsq;
+				if (Physics.isApproximateRects()) {
+					Vec2d distVec = getDistance(i, toolbar, true);
+					double rsq = distVec.lengthSquared();
+					rsq *= distVec.length();
+					xForce += 1.5f * repulsion * distVec.x() / rsq;
+					yForce += 1.5f * repulsion * distVec.y() / rsq;
 
-				distVec = getDistance(i, toolbar, false);
-				rsq = distVec.lengthSquared();
-				rsq *= distVec.length();
-				xForce += 1.5f * repulsion * distVec.x() / rsq;
-				yForce += 1.5f * repulsion * distVec.y() / rsq;
+					distVec = getDistance(i, toolbar, false);
+					rsq = distVec.lengthSquared();
+					rsq *= distVec.length();
+					xForce += 1.5f * repulsion * distVec.x() / rsq;
+					yForce += 1.5f * repulsion * distVec.y() / rsq;
+				} else {
+					Vec2d distVec = getDistance(i, toolbar, true);
+					double rsq = distVec.lengthSquared();
+					rsq *= distVec.length();
+					xForce += 1.5f * repulsion * distVec.x() / rsq;
+					yForce += 1.5f * repulsion * distVec.y() / rsq;
+				}
 			}
 			xForce += i.getRepForce().x();
 			yForce += i.getRepForce().y();
@@ -320,16 +328,23 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	private Vec2d getDistance(ClusterElement i, AToolBarElement tools, boolean isTop) {
 		Vec2f toolsPos = tools.getAbsoluteLocation();
 		Vec2f toolsSize = tools.getSize();
-		// FIXME: why is the tool center computed in that way?
-		Vec2d toolsCenter = new Vec2d(toolsPos.x() + toolsSize.x(), toolsPos.y() + toolsSize.y());
-		if (isTop) {
-			toolsCenter.add(new Vec2d(0, -toolsSize.y() / 4));
+		if (Physics.isApproximateRects()) {
+			// FIXME: idea is to approximate long rects by two circles
+			Vec2f toolsCenter = new Vec2f(toolsPos.x() + toolsSize.x(), toolsPos.y() + toolsSize.y());
+			if (isTop) {
+				toolsCenter.add(new Vec2f(0, -toolsSize.y() / 4));
+			} else {
+				toolsCenter.add(new Vec2f(0, toolsSize.y() / 4));
+			}
+			Rectangle2D toolBounds = new Rectangle2D.Float(toolsCenter.x() - toolsSize.x() * 0.5f, toolsCenter.y()
+					- toolsSize.y() * 0.5f, toolsSize.x(), toolsSize.y());
+			return Physics.distance(i.getRectangleBounds(), toolBounds);
 		} else {
-			toolsCenter.add(new Vec2d(0, toolsSize.y() / 4));
+			Rectangle2D toolBounds = new Rectangle2D.Float(toolsPos.x(), toolsPos.y(), toolsSize.x(), toolsSize.y());
+			return Physics.distance(i.getRectangleBounds(), toolBounds);
 		}
 
-		Rectangle2D toolBounds = new Rectangle2D.Float(toolsPos.x(), toolsPos.y(), toolsSize.x(), toolsSize.y());
-		return Physics.distance(i.getRectangleBounds(), toolBounds);
+
 	}
 
 	private Vec2d getDistanceFromTopLeft(ClusterElement i, float w, float h) {
