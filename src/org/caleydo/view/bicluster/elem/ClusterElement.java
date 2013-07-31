@@ -134,9 +134,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	protected ThresholdBar recThreshBar;
 	protected GLElement content;
 
-	protected float recThreshold = 0.08f;
+	protected float recThreshold = ParameterToolBarElement.DEFAULT_REC_THRESHOLD;
 	protected int recNumberThreshold = ParameterToolBarElement.UNBOUND_NUMBER;
-	protected float dimThreshold = 4.5f;
+	protected float dimThreshold = ParameterToolBarElement.DEFAULT_DIM_THRESHOLD;
 	protected int dimNumberThreshold = ParameterToolBarElement.UNBOUND_NUMBER;
 	protected double clusterSizeThreshold;
 	protected double elementCountBiggestCluster;
@@ -1026,10 +1026,16 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		if (!event.isGlobalEvent()) {
 			return;
 		}
+		if (bcNr == 0) {
+			System.out.println(recThreshold + " " + dimThreshold + " " + recNumberThreshold + " " + dimNumberThreshold);
+		}
 		recThreshold = event.getRecordThreshold();
 		dimThreshold = event.getDimensionThreshold();
 		recNumberThreshold = event.getRecordNumberThreshold();
 		dimNumberThreshold = event.getDimensionNumberThreshold();
+		if (bcNr == 0) {
+			System.out.println(recThreshold + " " + dimThreshold + " " + recNumberThreshold + " " + dimNumberThreshold);
+		}
 		rebuildMyData(event.isGlobalEvent());
 
 	}

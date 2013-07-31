@@ -71,8 +71,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 
 	private ExecutorService executorService = Executors.newFixedThreadPool(4);
 
-	private float sampleThreshold = 4.5f;
-	private float geneThreshold = 0.08f;
+	private float sampleThreshold = ParameterToolBarElement.DEFAULT_DIM_THRESHOLD; // 4.5f;
+	private float geneThreshold = ParameterToolBarElement.DEFAULT_REC_THRESHOLD; // 0.08f;
 	double maxDimThreshold = 0, maxRecThreshold = 0;
 	ASerializedView view;
 

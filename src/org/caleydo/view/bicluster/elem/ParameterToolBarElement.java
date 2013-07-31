@@ -44,6 +44,8 @@ import org.caleydo.view.bicluster.util.ImportExternalDialog;
  */
 public class ParameterToolBarElement extends AToolBarElement implements GLSpinner.IChangeCallback<Integer> {
 	public static final int UNBOUND_NUMBER = 0;
+	public static final float DEFAULT_REC_THRESHOLD = 0.08f;
+	public static final float DEFAULT_DIM_THRESHOLD = 4.5f;
 
 	private GLButton bandSortingModeButton;
 	private GLButton probabilitySortingModeButton;
@@ -276,7 +278,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		this.dimensionNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.dimensionNumberThresholdSpinner));
 
-		this.dimensionThresholdSlider = new GLSlider(0.05f, 0.5f, 4.5f);
+		this.dimensionThresholdSlider = new GLSlider(0.05f, 5f, DEFAULT_DIM_THRESHOLD);
 		dimensionThresholdSlider.setCallback(this);
 		dimensionThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
 		dimensionThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
@@ -294,7 +296,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		this.recordNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.recordNumberThresholdSpinner));
 
-		this.recordThresholdSlider = new GLSlider(0.02f, 0.2f, 0.08f);
+		this.recordThresholdSlider = new GLSlider(0.02f, 0.2f, DEFAULT_REC_THRESHOLD);
 		recordThresholdSlider.setCallback(this);
 		recordThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
 		recordThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
@@ -370,4 +372,5 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		}
 
 	};
+
 }
