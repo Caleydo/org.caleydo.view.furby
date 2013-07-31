@@ -48,6 +48,9 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private TablePerspective x, l, z;
 	private ExecutorService executor;
 
+	private float dimScaleFactor = 4;
+	private float recScaleFactor = 4;
+
 	public GLRootElement() {
 		setLayout(this);
 	}
@@ -135,11 +138,13 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				maxRecClusterElements = i.getNumberOfRecElements();
 			}
 		}
-		double maxSize = maxDimClusterElements < maxRecClusterElements ? maxRecClusterElements : maxDimClusterElements;
+		final double maxSize = maxDimClusterElements < maxRecClusterElements ? maxRecClusterElements
+				: maxDimClusterElements;
+
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
-			double recSize = i.getNumberOfRecElements() * maxRecClusterSize / maxRecClusterElements;
-			double dimSize = i.getNumberOfDimElements() * maxDimClusterSize / maxDimClusterElements;
+			double recSize = i.getNumberOfRecElements() * recScaleFactor; // maxRecClusterSize / maxRecClusterElements;
+			double dimSize = i.getNumberOfDimElements() * dimScaleFactor; // maxDimClusterSize / maxDimClusterElements;
 			i.setClusterSize(dimSize, recSize, maxSize);
 			i.setVisibility();
 			i.relayout();
@@ -175,13 +180,11 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	int bandCount = 0;
 	int count = 0;
 
-	private int maxDimClusterSize = 150;
-	private int maxRecClusterSize = 150;
 
 	@ListenTo
 	private void listenTo(MaxClusterSizeChangeEvent e) {
-		maxDimClusterSize = (int) e.getMaxDimensionSize() + 1;
-		maxRecClusterSize = (int) e.getMaxRecordSize() + 1;
+		dimScaleFactor = (int) e.getMaxDimensionSize() + 1;
+		recScaleFactor = (int) e.getMaxRecordSize() + 1;
 		setClusterSizes();
 	}
 

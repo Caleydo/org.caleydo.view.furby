@@ -24,10 +24,10 @@ import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
  *
  */
 public class LayoutToolBarElement extends AToolBarElement {
-	private static final float MIN_DIMENSION_SIZE = 50;
-	private static final float MIN_RECORD_SIZE = 50;
-	private static final float MAX_DIMENSION_SIZE = 250;
-	private static final float MAX_RECORD_SIZE = 250;
+	private static final float MIN_DIMENSION_SIZE = 0.25f;
+	private static final float MIN_RECORD_SIZE = 0.25f;
+	private static final float MAX_DIMENSION_SIZE = 32f;
+	private static final float MAX_RECORD_SIZE = 32f;
 
 	private static final float MIN_REPULSION = 0;
 	private static final float MIN_ATTRACTION = 0;
@@ -94,8 +94,8 @@ public class LayoutToolBarElement extends AToolBarElement {
 		this.repulsionSlider.setValue(DEFAULT_REPULSION);
 		this.attractionSlider.setValue(DEFAULT_ATTRACTION);
 		this.borderForceSlider.setValue(DEFAULT_BORDERFACTOR);
-		this.clusterDimSizeSlider.setValue(110f);
-		this.clusterRecSizeSlider.setValue(150f);
+		this.clusterDimSizeSlider.setValue(4);
+		this.clusterRecSizeSlider.setValue(4);
 	}
 
 	/**
@@ -146,7 +146,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 		clusterDimSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterDimSizeLabel);
 
-		this.clusterDimSizeSlider = new GLSlider(MIN_DIMENSION_SIZE, MAX_DIMENSION_SIZE, 110f);
+		this.clusterDimSizeSlider = new GLSlider(MIN_DIMENSION_SIZE, MAX_DIMENSION_SIZE, 4);
 		this.clusterDimSizeSlider.setCallback(this);
 		this.clusterDimSizeSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.clusterDimSizeSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
@@ -156,7 +156,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 		clusterRecSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterRecSizeLabel);
 
-		this.clusterRecSizeSlider = new GLSlider(MIN_RECORD_SIZE, MAX_RECORD_SIZE, 150f);
+		this.clusterRecSizeSlider = new GLSlider(MIN_RECORD_SIZE, MAX_RECORD_SIZE, 4);
 		this.clusterRecSizeSlider.setCallback(this);
 		this.clusterRecSizeSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.clusterRecSizeSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
