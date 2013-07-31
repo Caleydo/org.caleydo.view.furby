@@ -17,6 +17,7 @@ import java.util.Map;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.event.data.SelectionUpdateEvent;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.collection.Pair;
@@ -34,6 +35,7 @@ import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.core.view.opengl.util.spline.ColoredVec3f;
 import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 import org.caleydo.view.bicluster.elem.ClusterElement;
+import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 
 /**
@@ -66,7 +68,7 @@ public abstract class BandElement extends PickableGLElement {
 	protected List<List<Integer>> firstSubIndices, secondSubIndices;
 	protected Color highlightColor, hoveredColor, defaultColor;
 	protected boolean isMouseOver = false;
-	protected boolean isAnyClusterHovered = false;
+	protected boolean isAnyThingHovered = false;
 
 	protected PickingPool pickingPool;
 	protected IPickingListener pickingListener;
@@ -89,6 +91,20 @@ public abstract class BandElement extends PickableGLElement {
 		sharedElementsWithHover = new ArrayList<>();
 		setZDeltaAccordingToState();
 		initBand();
+	}
+
+	/**
+	 * @return the first, see {@link #first}
+	 */
+	public final ClusterElement getFirst() {
+		return first;
+	}
+
+	/**
+	 * @return the second, see {@link #second}
+	 */
+	public final ClusterElement getSecond() {
+		return second;
 	}
 
 	@Override
@@ -143,7 +159,7 @@ public abstract class BandElement extends PickableGLElement {
 			onMouseOver(pick);
 			break;
 		default:
-			break;
+			return;
 		}
 		setZDeltaAccordingToState();
 	}
@@ -204,8 +220,13 @@ public abstract class BandElement extends PickableGLElement {
 				Color col = bandColor.clone();
 				col.a = 0.8f;
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * curOpacityFactor);
-				Collection<Band> stubBands = stubify(nonSplittedBands.values(), col, curOpacityFactor,
-						HIGH_OPACITY_FACTPOR);
+				Collection<Band> stubBands;
+				if (!hasSharedElementsWithHoveredBand() && !hasSharedElementsWithSelectedBand())
+					// stub only if we haven't any highlights
+					stubBands = stubify(nonSplittedBands.values(), col, curOpacityFactor, HIGH_OPACITY_FACTPOR);
+				else {
+					stubBands = nonSplittedBands.values();
+				}
 				for (Band b : stubBands) {
 					g.drawPath(b);
 				}
@@ -232,7 +253,7 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
-		if (isVisible() && !isAnyClusterHovered) {
+		if (getVisibility() == EVisibility.PICKABLE && !isAnyThingHovered) {
 			g.color(defaultColor);
 			if (isMouseOver == true) {
 				for (Band b : splittedBands.values())
@@ -287,6 +308,7 @@ public abstract class BandElement extends PickableGLElement {
 		isMouseOver = true;
 		currSelectedSplineID = pick.getObjectID();
 		hoverElement();
+		EventPublisher.trigger(new MouseOverBandEvent(this, true));
 		repaintAll();
 	}
 
@@ -294,6 +316,7 @@ public abstract class BandElement extends PickableGLElement {
 	protected void onMouseOut(Pick pick) {
 		isMouseOver = false;
 		currSelectedSplineID = -1;
+		EventPublisher.trigger(new MouseOverBandEvent(this, false));
 		hoverElement();
 		repaintAll();
 	}
@@ -336,11 +359,23 @@ public abstract class BandElement extends PickableGLElement {
 	protected float curOpacityFactor = 1;
 
 	@ListenTo
-	public void listenTo(MouseOverClusterEvent event) {
-		isAnyClusterHovered = event.isMouseOver();
+	private void listenTo(MouseOverClusterEvent event) {
+		isAnyThingHovered = event.isMouseOver();
 		if (event.getSender() == first || event.getSender() == second)
 			return;
 		else if (event.isMouseOver())
+			opacityFactor = LOW_OPACITY_FACTOR;
+		else
+			opacityFactor = HIGH_OPACITY_FACTPOR;
+		setZDeltaAccordingToState();
+	}
+
+	@ListenTo
+	private void listenTo(MouseOverBandEvent event) {
+		if (event.getSender() == this)
+			return;
+		isAnyThingHovered = event.isMouseOver();
+		if (event.isMouseOver())
 			opacityFactor = LOW_OPACITY_FACTOR;
 		else
 			opacityFactor = HIGH_OPACITY_FACTPOR;

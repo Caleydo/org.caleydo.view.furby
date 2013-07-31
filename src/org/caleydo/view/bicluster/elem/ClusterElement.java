@@ -68,6 +68,7 @@ import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
+import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SearchClusterEvent;
@@ -982,6 +983,18 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		ClusterElement hoveredElement = (ClusterElement) event.getSender();
 		if (hoveredElement == this || getDimOverlap(hoveredElement).size() > 0
 				|| getRecOverlap(hoveredElement).size() > 0) {
+			opacityfactor = highOpacityFactor;
+			return;
+		} else if (event.isMouseOver()) {
+			opacityfactor = lowOpacityFactor;
+		} else {
+			opacityfactor = highOpacityFactor;
+		}
+	}
+
+	@ListenTo
+	private void listenTo(MouseOverBandEvent event) {
+		if (event.getFirst() == this || event.getSecond() == this) {
 			opacityfactor = highOpacityFactor;
 			return;
 		} else if (event.isMouseOver()) {
