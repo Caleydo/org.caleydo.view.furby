@@ -204,7 +204,8 @@ public abstract class BandElement extends PickableGLElement {
 				Color col = bandColor.clone();
 				col.a = 0.8f;
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * curOpacityFactor);
-				Collection<Band> stubBands = stubify(nonSplittedBands.values(), col, curOpacityFactor);
+				Collection<Band> stubBands = stubify(nonSplittedBands.values(), col, curOpacityFactor,
+						HIGH_OPACITY_FACTPOR);
 				for (Band b : stubBands) {
 					g.drawPath(b);
 				}
@@ -358,19 +359,19 @@ public abstract class BandElement extends PickableGLElement {
 	 * @param curOpacityFactor2
 	 * @return
 	 */
-	private static Collection<Band> stubify(Collection<Band> bands, Color color, float centerAlpha) {
+	private static Collection<Band> stubify(Collection<Band> bands, Color color, float centerAlpha, float maxAlpha) {
 		if (bands.isEmpty() || centerAlpha >= 1)
 			return bands;
 
 		Collection<Band> result = new ArrayList<>(bands.size());
 
 		for (Band band : bands) {
-			result.add(stubify(band, color, centerAlpha));
+			stubify(result, band, color, centerAlpha, maxAlpha);
 		}
 		return result;
 	}
 
-	private static Band stubify(Band band, Color color, float centerAlpha) {
+	private static void stubify(Collection<Band> result, Band band, Color color, float centerAlpha, float maxAlpha) {
 		float r = color.r;
 		float g = color.g;
 		float b = color.b;
@@ -381,19 +382,24 @@ public abstract class BandElement extends PickableGLElement {
 		assert curveTop.size() == curveBottom.size();
 
 		final int size = curveTop.size();
+
 		List<Vec3f> cOut = new ArrayList<>(size);
 		List<Vec3f> bOut = new ArrayList<>(size);
 
 		boolean even = size % 2 == 0;
 		int center = size % 2 == 0 ? (size / 2 - 1) : size / 2;
 
-		float delta_a = (centerAlpha - 1.f) / (center * 0.25f); // artificial enlarge delta for better fading effect
+		float delta_a = (centerAlpha - maxAlpha) / (center * 0.3f); // artificial enlarge delta for better fading effect
 		float act_a = 1;
+		int firstAlpha = center;
 		for (int i = 0; i < size; ++i) {
 			Vec3f top = curveTop.get(i);
 			Vec3f bottom = curveBottom.get(i);
 
-			Color act = new Color(r, g, b, Math.max(a * act_a, 0));
+			float a_i = Math.max(a * act_a, 0);
+			if (a_i <= 0)
+				firstAlpha = Math.min(firstAlpha, i);
+			Color act = new Color(r, g, b, a_i);
 			// System.out.println(i + " " + act_a);
 			// manipulate act
 			if (even && i == center) {
@@ -405,7 +411,10 @@ public abstract class BandElement extends PickableGLElement {
 			cOut.add(new ColoredVec3f(top, act));
 			bOut.add(new ColoredVec3f(bottom, act));
 		}
-		return new Band(cOut, bOut);
+
+		// split the band into two to avoid tesselation effects
+		result.add(new Band(cOut.subList(0, firstAlpha + 2), bOut.subList(0, firstAlpha + 2)));
+		result.add(new Band(cOut.subList(size - firstAlpha - 1, size), bOut.subList(size - firstAlpha - 1, size)));
 	}
 
 	public enum BandType {
@@ -424,14 +433,17 @@ public abstract class BandElement extends PickableGLElement {
 
 			private void renderBand(GLGraphics g, Vec2f... vecs) {
 				final Band band = TesselatedPolygons.band(Arrays.asList(vecs), 0, 1, 10);
-				Band band2 = stubify(band, new Color(1, 0, 0), 0.0f);
+				Collection<Band> r = new ArrayList<>();
+				stubify(r, band, new Color(1, 0, 0), 0.0f, 1);
 
 				g.move(100, 100);
 				g.save().gl.glScalef(10, 10, 10);
 				g.color(1, 0, 0, 0.5f);
-				g.fillPolygon(band2);
+				for (Band ri : r)
+					g.fillPolygon(ri);
 				g.color(0, 1, 0, 0.5f);
-				g.drawPath(band2);
+				for (Band ri : r)
+					g.drawPath(ri);
 				g.restore();
 			}
 		});
