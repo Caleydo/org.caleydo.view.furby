@@ -127,7 +127,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	protected List<Integer> dimProbabilitySorting;
 	protected List<Integer> recProbabilitySorting;
 
-	protected boolean setOnlyShowXElements;
 	protected int bcNr = -1;
 	protected ToolBar toolBar;
 	protected HeaderBar headerBar;
@@ -136,7 +135,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	protected GLElement content;
 
 	protected float recThreshold = 0.08f;
+	protected int recNumberThreshold = ParameterToolBarElement.UNBOUND_NUMBER;
 	protected float dimThreshold = 4.5f;
+	protected int dimNumberThreshold = ParameterToolBarElement.UNBOUND_NUMBER;
 	protected double clusterSizeThreshold;
 	protected double elementCountBiggestCluster;
 
@@ -362,26 +363,22 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	protected void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices) {
 		VirtualArray dimArray = getDimensionVirtualArray();
 		VirtualArray recArray = getRecordVirtualArray();
-		dimArray.clear();
-		int count = 0;
-		for (Integer i : dimIndices) {
-			if (setOnlyShowXElements && allClusters.getFixedElementsCount() <= count)
-				break;
-			dimArray.append(i);
-			count++;
-		}
-		count = 0;
-		recArray.clear();
-		for (Integer i : recIndices) {
-			if (setOnlyShowXElements && allClusters.getFixedElementsCount() <= count)
-				break;
-			recArray.append(i);
-			count++;
-		}
+		addAll(dimArray, dimIndices, dimNumberThreshold);
+		addAll(recArray, recIndices, recNumberThreshold);
+
 		if (propabilityHeatMapHor != null)
 			propabilityHeatMapHor.update(dimThreshold, this.bcNr, dimArray);
 		if (propabilityHeatMapVer != null)
 			propabilityHeatMapVer.update(recThreshold, this.bcNr, recArray);
+	}
+
+	private static void addAll(VirtualArray array, List<Integer> indices, int treshold) {
+		array.clear();
+		if (treshold == ParameterToolBarElement.UNBOUND_NUMBER) // unbound flush all
+			array.addAll(indices);
+		else
+			// sublist of the real elements
+			array.addAll(indices.subList(0, Math.min(indices.size(), treshold)));
 	}
 
 	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
@@ -1031,7 +1028,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		}
 		recThreshold = event.getRecordThreshold();
 		dimThreshold = event.getDimensionThreshold();
-		setOnlyShowXElements = event.isFixedClusterCount();
+		recNumberThreshold = event.getRecordNumberThreshold();
+		dimNumberThreshold = event.getDimensionNumberThreshold();
 		rebuildMyData(event.isGlobalEvent());
 
 	}
@@ -1053,7 +1051,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			setVisibility(EVisibility.NONE);
 	}
 
-	public void setData(List<Integer> dimIndices, List<Integer> recIndices, boolean setXElements, String id, int bcNr,
+	public void setData(List<Integer> dimIndices, List<Integer> recIndices, String id, int bcNr,
 			double maxDim, double maxRec, double minDim, double minRec) {
 		setLabel(id);
 		if (maxDim >= 0 && maxRec >= 0) {
@@ -1063,7 +1061,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		dimProbabilitySorting = new ArrayList<Integer>(dimIndices);
 		recProbabilitySorting = new ArrayList<Integer>(recIndices);
 		this.bcNr = bcNr;
-		this.setOnlyShowXElements = setXElements;
 		setHasContent(dimIndices, recIndices);
 		setVisibility();
 	}
@@ -1196,7 +1193,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
-		setData(dimIndices, recIndices, setOnlyShowXElements, getID(), bcNr, -1, -1, -1, -1);
+		setData(dimIndices, recIndices, getID(), bcNr, -1, -1, -1, -1);
 		EventPublisher.trigger(new ClusterScaleEvent(this));
 		if (!isGlobal)
 			EventPublisher.trigger(new MouseOverClusterEvent(this, true));

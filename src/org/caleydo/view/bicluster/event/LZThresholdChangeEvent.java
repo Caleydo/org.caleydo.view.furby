@@ -14,21 +14,33 @@ import org.caleydo.core.event.AEvent;
 public class LZThresholdChangeEvent extends AEvent {
 	private float recordThreshold;
 	private float dimensionThreshold;
-	private boolean fixedClusterCount;
 	private boolean global;
+	private final int recordNumberThreshold;
+	private final int dimensionNumberThreshold;
 
-	public LZThresholdChangeEvent(float recordThreshold, float dimensionThreshold, boolean fixedClusterSelection,
-			boolean global) {
+	public LZThresholdChangeEvent(float recordThreshold, float dimensionThreshold, int recordNumberThreshold,
+			int dimensionNumberThreshold, boolean global) {
 		this.recordThreshold = recordThreshold;
 		this.dimensionThreshold = dimensionThreshold;
-		this.fixedClusterCount = fixedClusterSelection;
+		this.recordNumberThreshold = recordNumberThreshold;
+		this.dimensionNumberThreshold = dimensionNumberThreshold;
 		this.global = global;
 		System.out.println("Erstelle Cluster mit SampleTH: " + dimensionThreshold);
 		System.out.println("                     RecordTH: " + recordThreshold);
 	}
 
-	public boolean isFixedClusterCount() {
-		return fixedClusterCount;
+	/**
+	 * @return the recordNumberThreshold, see {@link #recordNumberThreshold}
+	 */
+	public int getRecordNumberThreshold() {
+		return recordNumberThreshold;
+	}
+
+	/**
+	 * @return the dimensionNumberThreshold, see {@link #dimensionNumberThreshold}
+	 */
+	public int getDimensionNumberThreshold() {
+		return dimensionNumberThreshold;
 	}
 
 	public float getRecordThreshold() {

@@ -40,6 +40,7 @@ import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.elem.GLRootElement;
+import org.caleydo.view.bicluster.elem.ParameterToolBarElement;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
@@ -76,7 +77,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	ASerializedView view;
 
 	GLRootElement rootElement;
-	private boolean setXElements = false;
 
 	public GLBiCluster(IGLCanvas glCanvas, ASerializedView serializedView) {
 		super(glCanvas, VIEW_TYPE, VIEW_NAME);
@@ -174,7 +174,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 						.get(i);
 
 				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i) + "L");
-				el.setData(dimIndices, recIndices, setXElements, el.getTablePerspective().getLabel(), i, dimResult
+				el.setData(dimIndices, recIndices, el.getTablePerspective().getLabel(), i, dimResult
 						.getMax(), recResult.getMax(), dimResult.getMin(),
 						recResult.getMin());
 			} catch (InterruptedException | ExecutionException
@@ -286,7 +286,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold,
 					maxRecThreshold));
 			EventPublisher.trigger(new LZThresholdChangeEvent(geneThreshold,
-					sampleThreshold, false, true));
+ sampleThreshold,
+					ParameterToolBarElement.UNBOUND_NUMBER, ParameterToolBarElement.UNBOUND_NUMBER, true));
 			// rootElement.createBands();
 			rootElement.setClusterSizes();
 		}

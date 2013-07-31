@@ -144,7 +144,7 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 
 	@Override
 	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
-			boolean setXElements, String id, int bcNr, double maxDim,
+ String id, int bcNr, double maxDim,
 			double maxRec, double minDim, double minRec) {
 		setVisibility();
 	}

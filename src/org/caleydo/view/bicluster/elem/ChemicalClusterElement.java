@@ -119,12 +119,11 @@ public final class ChemicalClusterElement extends ClusterElement {
 
 	@Override
 	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
-			boolean setXElements, String id, int bcNr, double maxDim,
+ String id, int bcNr, double maxDim,
 			double maxRec, double minDim, double minRec) {
 		setLabel(id);
 		recProbabilitySorting = new ArrayList<Integer>(recIndices);
 		this.bcNr = bcNr;
-		this.setOnlyShowXElements = setXElements;
 		setHasContent(dimIndices, recIndices);
 		setVisibility();
 	}
@@ -198,8 +197,7 @@ public final class ChemicalClusterElement extends ClusterElement {
 	protected void rebuildMyData(boolean isGlobal) {
 		if (isLocked)
 			return;
-		setData(elements.getIDs(), elements.getIDs(), setOnlyShowXElements,
-				getID(), bcNr, -1, -1, -1, -1);
+		setData(elements.getIDs(), elements.getIDs(), getID(), bcNr, -1, -1, -1, -1);
 		EventPublisher.trigger(new ClusterScaleEvent(this));
 		if (!isGlobal)
 			EventPublisher.trigger(new MouseOverClusterEvent(this, true));
