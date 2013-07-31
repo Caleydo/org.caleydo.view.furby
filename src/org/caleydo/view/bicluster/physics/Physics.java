@@ -24,21 +24,18 @@ public class Physics {
 		distVec.setX(a.getCenterX() - b.getCenterX());
 		distVec.setY(a.getCenterY() - b.getCenterY());
 		final double d = distVec.length();
-		distVec.normalize();
+		distVec.scale(1. / d); // aka normalize
 
 		double r1; // = getRadius(a);
 		double r2; // = getRadius(b);
 
-		// if ((r1 + r2) * 2 < d) { // too far away use fast circular method
-		//
-		// } else
-		{
-			Vec2d ray_pos = new Vec2d(b.getCenterX(), b.getCenterY());
-			Vec2d ray_dir = distVec;
-			r1 = d - raxBoxIntersection(ray_pos, ray_dir, a); // as starting from b
-			r2 = raxBoxIntersection(ray_pos, ray_dir, b);
-		}
-		double d_real = d - r1 - r2;
+		double ray_pos_x = b.getCenterX();
+		double ray_pos_y = b.getCenterY();
+		Vec2d ray_dir = distVec;
+		r1 = d - raxBoxIntersection(ray_pos_x, ray_pos_y, ray_dir, a); // as starting from b
+		r2 = raxBoxIntersection(ray_pos_x, ray_pos_y, ray_dir, b);
+
+		final double d_real = d - r1 - r2;
 		distVec.scale(d_real);
 		return distVec;
 
@@ -52,7 +49,7 @@ public class Physics {
 	 * @param r
 	 * @return
 	 */
-	static double raxBoxIntersection(Vec2d ray_pos, Vec2d ray_dir, Rectangle2D r) {
+	static double raxBoxIntersection(double ray_pos_x, double ray_pos_y, Vec2d ray_dir, Rectangle2D r) {
 		// http://www.scratchapixel.com/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-box-intersection/
 		final double min_x = r.getMinX();
 		final double min_y = r.getMinY();
@@ -62,18 +59,18 @@ public class Physics {
 
 		double tmin = 0;
 		double tmax = 0;
-		if (ray_dir.x() != 0) {
-			tmin = (min_x - ray_pos.x()) / ray_dir.x();
-			tmax = (max_x - ray_pos.x()) / ray_dir.x();
+		if (ray_dir.x() != 0) { // corner case = 0
+			tmin = (min_x - ray_pos_x) / ray_dir.x();
+			tmax = (max_x - ray_pos_x) / ray_dir.x();
 			if (tmin > tmax) {
 				tmp = tmin;
 				tmin = tmax;
 				tmax = tmp;
 			}
 		}
-		if (ray_dir.y() != 0) {
-			double tymin = (min_y - ray_pos.y()) / ray_dir.y();
-			double tymax = (max_y - ray_pos.y()) / ray_dir.y();
+		if (ray_dir.y() != 0) { // corner case = 0
+			double tymin = (min_y - ray_pos_y) / ray_dir.y();
+			double tymax = (max_y - ray_pos_y) / ray_dir.y();
 			if (tymin > tymax) {
 				tmp = tymin;
 				tymin = tymax;
@@ -127,9 +124,10 @@ public class Physics {
 		Rectangle2D d = new Rectangle2D.Double(3, 3, 2, 2);
 		Rectangle2D e = new Rectangle2D.Double(4, 3, 2, 2);
 
-		System.out.println(distance(a, b).length());
-		System.out.println(distance(a, c).length());
-		System.out.println(distance(a, d).length());
-		System.out.println(distance(a, e).length());
+		System.out.println("AABB\t\tcircle");
+		System.out.println(String.format("%f\t%f", aabbDistance(a, b).length(), circleDistance(a, b).length()));
+		System.out.println(String.format("%f\t%f", aabbDistance(a, c).length(), circleDistance(a, b).length()));
+		System.out.println(String.format("%f\t%f", aabbDistance(a, d).length(), circleDistance(a, b).length()));
+		System.out.println(String.format("%f\t%f", aabbDistance(a, e).length(), circleDistance(a, b).length()));
 	}
 }
