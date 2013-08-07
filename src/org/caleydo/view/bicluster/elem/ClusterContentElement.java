@@ -31,7 +31,7 @@ import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
 
-import com.google.common.base.Predicates;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -44,13 +44,14 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 
 	/**
 	 * @param builder
+	 * @param filter
 	 */
-	public ClusterContentElement(Builder builder) {
+	public ClusterContentElement(Builder builder, Predicate<? super String> filter) {
 		builder.set("histogram.showColorMapper", false);
 		GLElementFactoryContext context = builder.build();
 		this.data = context.getData();
 		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",
-				Predicates.alwaysTrue());
+ filter);
 		GLElementFactorySwitcher content = new GLElementFactorySwitcher(extensions, ELazyiness.NONE);
 		content.onActiveChanged(this);
 		setContent(content);
@@ -106,11 +107,7 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 	}
 
 	boolean doesShowLabels() {
-		HeatMapElement heatMap = getHeatMap();
-		if (heatMap == null)
-			return false;
-		GLElementFactorySwitcher switcher = getSwitcher();
-		return "heatmap".equals(switcher.getActiveId()) && heatMap.getRecordLabels() == EShowLabels.RIGHT;
+		return isShowingHeatMap() && getHeatMap().getRecordLabels() == EShowLabels.RIGHT;
 	}
 
 	private GLElementFactorySwitcher getSwitcher() {
@@ -122,6 +119,14 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 		boolean labels = doesShowLabels();
 		g.color(Color.WHITE).fillRect(0, 0, w - (labels ? 79 : 0), h - (labels ? 79 : 0));
 		super.renderImpl(g, w, h);
+	}
+
+	boolean isShowingHeatMap() {
+		HeatMapElement heatMap = getHeatMap();
+		if (heatMap == null)
+			return false;
+		GLElementFactorySwitcher switcher = getSwitcher();
+		return "heatmap".equals(switcher.getActiveId());
 	}
 
 	public Vec2f getMinSize() {

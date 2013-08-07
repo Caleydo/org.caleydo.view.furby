@@ -145,9 +145,9 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
-			Vec2f preferredSize = i.getPreferredSize();
-			double recSize = preferredSize.y() * recScaleFactor; // maxRecClusterSize / maxRecClusterElements;
-			double dimSize = preferredSize.x() * dimScaleFactor; // maxDimClusterSize / maxDimClusterElements;
+			Vec2f preferredSize = i.getPreferredSize(dimScaleFactor, recScaleFactor);
+			double recSize = preferredSize.y();
+			double dimSize = preferredSize.x();
 			i.setClusterSize(dimSize, recSize, maxSize);
 			i.setVisibility();
 			i.relayout();

@@ -5,6 +5,7 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -26,6 +27,8 @@ import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
+import com.google.common.base.Predicates;
+
 /**
  * a special cluster element based on an external table perspective e.g. a chemical cluster
  *
@@ -46,8 +49,6 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 		toolBar.remove(1);
 		toolBar.remove(1);
 		toolBar.remove(1);
-		standardScaleFactor = 3;
-		resetScaleFactor();
 		setLabel(data.getDataDomain().getLabel() + " " + data.getLabel());
 
 		this.recordVA = createVA(x.getRecordPerspective().getIdType(), data);
@@ -82,7 +83,7 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 		headerBar = new HeaderBar();
 		this.add(toolBar); // add a element toolbar
 		this.add(headerBar);
-		content = createContent();
+		content = createContent(Predicates.not(Predicates.in(Arrays.asList("distribution.pie", "distribution.hist"))));
 		setZValuesAccordingToState();
 		this.add(content);
 	}
@@ -180,8 +181,8 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 	 * @return
 	 */
 	private static boolean anyShown(Map<GLElement, List<Integer>> elems) {
-		for (GLElement elem : elems.keySet())
-			if (elem.getVisibility().doRender())
+		for (Map.Entry<GLElement, List<Integer>> entry : elems.entrySet())
+			if (entry.getKey().getVisibility().doRender() && !entry.getValue().isEmpty())
 				return true;
 		return false;
 	}

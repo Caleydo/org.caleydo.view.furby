@@ -59,8 +59,8 @@ public final class ChemicalClusterElement extends ClusterElement {
 		toolBar.remove(1);
 		toolBar.remove(1);
 		toolBar.remove(1);
-		standardScaleFactor = 3;
-		resetScaleFactor();
+		minScaleFactor = 3;
+		setScaleFactor(3);
 	}
 
 	private ChemicalClusterElement(TablePerspective data,

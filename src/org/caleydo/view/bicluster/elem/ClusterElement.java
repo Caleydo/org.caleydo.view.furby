@@ -86,6 +86,8 @@ import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
 import org.eclipse.swt.widgets.Display;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
 /**
  * e.g. a class for representing a cluster
@@ -147,7 +149,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	private double dimSize;
 	private double recSize;
 	protected double scaleFactor;
-	protected double standardScaleFactor;
+	protected double minScaleFactor;
+	private double preFocusScaleFactor;
 	protected boolean isFocused = false;
 
 	/**
@@ -166,10 +169,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		this.z = z;
 		this.executor = executor;
 		this.biclusterRoot = biclusterRoot;
-		standardScaleFactor = 0.25;
+		minScaleFactor = 0.25;
 		initContent();
 		setVisibility();
-		scaleFactor = 1.0f;
+		setScaleFactor(1);
 		this.onPick(new IPickingListener() {
 
 			@Override
@@ -181,6 +184,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		this.cluster = this;
 	}
 
+	/**
+	 * @param i
+	 */
+	protected final void setScaleFactor(double s) {
+		if (s < minScaleFactor)
+			s = minScaleFactor;
+		scaleFactor = s;
+	}
 	/**
 	 * @return the bcNr, see {@link #bcNr}
 	 */
@@ -198,7 +209,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
 
-		content = createContent();
+		content = createContent(Predicates.alwaysTrue());
 		setZValuesAccordingToState();
 		this.add(content);
 
@@ -211,12 +222,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	/**
 	 * @return
 	 */
-	protected final ClusterContentElement createContent() {
+	protected final ClusterContentElement createContent(Predicate<? super String> filter) {
 		Builder builder = GLElementFactoryContext.builder();
 		builder.withData(data);
 		builder.put(EDetailLevel.class, EDetailLevel.MEDIUM);
 		builder.put(IBlockColorer.class, this);
-		ClusterContentElement c = new ClusterContentElement(builder);
+		ClusterContentElement c = new ClusterContentElement(builder, filter);
 
 		if (toolBar != null) {
 			toolBar.add(c.createVerticalButtonBar());
@@ -346,7 +357,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			IMouseEvent event = ((IMouseEvent) pick);
 			int r = (event).getWheelRotation();
 			if (r != 0 && event.isCtrlDown()) {
-				scaleFactor = Math.max(standardScaleFactor, scaleFactor * (r > 0 ? 1.1 : 1 / 1.1));
+				scaleFactor = Math.max(minScaleFactor, scaleFactor * (r > 0 ? 1.1 : 1 / 1.1));
 				resize();
 			}
 			break;
@@ -409,13 +420,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			if (dimBandsEnabled) {
 				eIndizes = new ArrayList<Integer>(myDimIndizes);
 				eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
-				dimOverlap.put(element, eIndizes);
+				if (!eIndizes.isEmpty())
+					dimOverlap.put(element, eIndizes);
 				dimensionOverlapSize += eIndizes.size();
 			}
 			if (recBandsEnabled) {
 				eIndizes = new ArrayList<Integer>(myRecIndizes);
 				eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
-				recOverlap.put(element, eIndizes);
+				if (!eIndizes.isEmpty())
+					recOverlap.put(element, eIndizes);
 				recordOverlapSize += eIndizes.size();
 			}
 		}
@@ -584,16 +597,12 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 					} else
 						g.textColor(new Color(0, 0, 0, curOpacityFactor));
 
-					if (isHovered) {
-						final String text = " " + (scaleFactor == standardScaleFactor ? getID() : getID()) + " ("
-								+ (int) (100 * scaleFactor) + "%)";
-
-						g.drawText(text, 0, 0, g.text.getTextWidth(text, 12) + 2, 12);
-					} else {
-						final String text = scaleFactor == standardScaleFactor ? getID() : getID() + " ("
-								+ (int) (100 * scaleFactor) + "%)";
-						g.drawText(text, 0, 0, g.text.getTextWidth(text, 12) + 2, 12);
-					}
+					String text = getID();
+					if (scaleFactor > minScaleFactor && Math.round(scaleFactor * 100) != 100)
+						text += String.format(" (%d%%)", (int) (100 * scaleFactor));
+					if (isHovered)
+						text = " " + text;
+					g.drawText(text, 0, 0, g.text.getTextWidth(text, 12) + 2, 12);
 					g.textColor(Color.BLACK);
 
 				}
@@ -873,12 +882,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 	protected void reduceScaleFactor() {
 		scaleFactor -= 0.6;
-		if (scaleFactor <= standardScaleFactor)
-			resetScaleFactor();
-	}
-
-	protected void resetScaleFactor() {
-		scaleFactor = standardScaleFactor;
+		if (scaleFactor <= minScaleFactor)
+			scaleFactor = minScaleFactor;
 	}
 
 	private boolean wasResizedWhileHovered = false;
@@ -908,6 +913,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 	protected void handleFocus() {
 		if (isFocused) {
+			preFocusScaleFactor = scaleFactor;
 			scaleFactor = defaultFocusScaleFactor();
 			if (content instanceof ClusterContentElement) {
 				((ClusterContentElement) content).showLabels(EShowLabels.RIGHT);
@@ -918,7 +924,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			}
 			resize();
 		} else {
-			resetScaleFactor();
+			setScaleFactor(preFocusScaleFactor);
 			if (content instanceof ClusterContentElement) {
 				((ClusterContentElement) content).hideLabels();
 				if (propabilityHeatMapHor != null)
@@ -970,7 +976,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		if (e.getSender() == this) {
 			this.isFocused = !this.isFocused;
 		} else {
-			resetScaleFactor();
+			setScaleFactor(1);
 			resize();
 			this.isFocused = false;
 		}
@@ -1297,10 +1303,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		rebuildMyData(false);
 	}
 
-	public Vec2f getPreferredSize() {
-		if (content instanceof ClusterContentElement) {
-			return ((ClusterContentElement) content).getMinSize();
+	public Vec2f getPreferredSize(float scaleX, float scaleY) {
+		if (content instanceof ClusterContentElement && !(((ClusterContentElement) content).isShowingHeatMap())) {
+			ClusterContentElement c = ((ClusterContentElement) content);
+			return c.getMinSize();
 		}
-		return new Vec2f(getNumberOfRecElements(), getNumberOfDimElements());
+		return new Vec2f(getNumberOfDimElements() * scaleX, getNumberOfRecElements() * scaleY);
 	}
 }

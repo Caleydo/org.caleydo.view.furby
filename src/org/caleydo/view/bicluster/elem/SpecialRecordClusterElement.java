@@ -46,8 +46,8 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 		toolBar.remove(1);
 		toolBar.remove(1);
 		toolBar.remove(1);
-		standardScaleFactor = 3;
-		resetScaleFactor();
+		minScaleFactor = 3;
+		setScaleFactor(3);
 	}
 
 	private SpecialRecordClusterElement(TablePerspective data,
