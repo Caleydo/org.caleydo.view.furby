@@ -7,19 +7,22 @@ package org.caleydo.view.bicluster.elem;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
+import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
+import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
+import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
-import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
-import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementSupplier;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.ELazyiness;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.IActiveChangedCallback;
 import org.caleydo.view.heatmap.v2.CellSpace;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
@@ -32,36 +35,40 @@ import com.google.common.collect.ImmutableList;
  * @author Samuel Gratzl
  *
  */
-public class ClusterContentElement extends GLElementContainer implements IGLLayout {
-	private final HeatMapElement heatmap;
+public class ClusterContentElement extends GLElementDecorator implements IActiveChangedCallback {
 	private final Collection<GLElement> repaintOnRepaint = new ArrayList<>(2);
+	private final TablePerspective data;
 
 	/**
 	 * @param builder
 	 */
 	public ClusterContentElement(Builder builder) {
-		setLayout(GLLayouts.flowVertical(2));
 		builder.set("histogram.showColorMapper", false);
 		GLElementFactoryContext context = builder.build();
+		this.data = context.getData();
 		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",
 				Predicates.alwaysTrue());
 		GLElementFactorySwitcher content = new GLElementFactorySwitcher(extensions, ELazyiness.NONE);
-		heatmap = (HeatMapElement) content.get("heatmap");
-		assert heatmap != null;
-		this.add(content);
+		content.onActiveChanged(this);
+		setContent(content);
 	}
 
 	public GLElementContainer createVerticalButtonBar() {
-		GLElementContainer bar = ((GLElementFactorySwitcher) get(0)).createButtonBar();
+		GLElementContainer bar = getSwitcher().createButtonBar();
 		bar.setLayout(GLLayouts.flowVertical(2));
 		bar.setSize(16, Float.NaN);
 		return bar;
 	}
 
 	@Override
+	public void onActiveChanged(int active) {
+		relayoutParent();
+	}
+
+	@Override
 	public void repaint() {
 		super.repaint();
-		super.repaintChildren();
+		GLElementAccessor.repaintDown(getContent());
 		for (GLElement r : repaintOnRepaint)
 			r.repaint();
 	}
@@ -69,7 +76,7 @@ public class ClusterContentElement extends GLElementContainer implements IGLLayo
 	@Override
 	public void repaintPick() {
 		super.repaintPick();
-		super.repaintPickChildren();
+		GLElementAccessor.repaintPickDown(getContent());
 	}
 
 	public void addRepaintOnRepaint(GLElement elem) {
@@ -80,28 +87,60 @@ public class ClusterContentElement extends GLElementContainer implements IGLLayo
 		this.repaintOnRepaint.remove(elem);
 	}
 
-	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-		// TODO
-	}
 	/**
 	 * @param right
 	 */
-	public void showLabels(EShowLabels right) {
-		heatmap.setDimensionLabels(EShowLabels.RIGHT);
-		heatmap.setRecordLabels(EShowLabels.RIGHT);
-		heatmap.setRecordSpacingStrategy(SpacingStrategies.fishEye(18));
-		heatmap.setDimensionSpacingStrategy(SpacingStrategies.fishEye(18));
+	public boolean showLabels(EShowLabels right) {
+		HeatMapElement heatmap = getHeatMap();
+		if (heatmap != null) {
+			heatmap.setDimensionLabels(EShowLabels.RIGHT);
+			heatmap.setRecordLabels(EShowLabels.RIGHT);
+			heatmap.setRecordSpacingStrategy(SpacingStrategies.fishEye(18));
+			heatmap.setDimensionSpacingStrategy(SpacingStrategies.fishEye(18));
+			return true;
+		} else
+			return false;
+	}
+
+	boolean doesShowLabels() {
+		HeatMapElement heatMap = getHeatMap();
+		if (heatMap == null)
+			return false;
+		GLElementFactorySwitcher switcher = getSwitcher();
+		return "heatmap".equals(switcher.getActiveId()) && heatMap.getRecordLabels() == EShowLabels.RIGHT;
+	}
+
+	private GLElementFactorySwitcher getSwitcher() {
+		return (GLElementFactorySwitcher) getContent();
+	}
+
+	@Override
+	protected void renderImpl(GLGraphics g, float w, float h) {
+		boolean labels = doesShowLabels();
+		g.color(Color.WHITE).fillRect(0, 0, w - (labels ? 79 : 0), h - (labels ? 79 : 0));
+		super.renderImpl(g, w, h);
+	}
+
+	/**
+	 * @return
+	 */
+	private HeatMapElement getHeatMap() {
+		return (HeatMapElement) getSwitcher().get("heatmap");
 	}
 
 	/**
 	 *
 	 */
-	public void hideLabels() {
-		heatmap.setDimensionLabels(EShowLabels.NONE);
-		heatmap.setRecordLabels(EShowLabels.NONE);
-		heatmap.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
-		heatmap.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
+	public boolean hideLabels() {
+		HeatMapElement heatmap = getHeatMap();
+		if (heatmap != null) {
+			heatmap.setDimensionLabels(EShowLabels.NONE);
+			heatmap.setRecordLabels(EShowLabels.NONE);
+			heatmap.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
+			heatmap.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
+			return true;
+		} else
+			return false;
 	}
 
 	/**
@@ -109,11 +148,19 @@ public class ClusterContentElement extends GLElementContainer implements IGLLayo
 	 * @return
 	 */
 	public float getDimensionPos(int index) {
-		return heatmap.getDimensionCellSpace(index).getPosition();
+		HeatMapElement heatmap = getHeatMap();
+		if (heatmap != null)
+			return heatmap.getDimensionCellSpace(index).getPosition();
+		return getDimensionCell(index).getPosition();
 	}
 
 	public CellSpace getDimensionCell(int index) {
-		return heatmap.getDimensionCellSpace(index);
+		HeatMapElement heatmap = getHeatMap();
+		if (heatmap != null)
+			return heatmap.getDimensionCellSpace(index);
+		float w = getSize().x();
+		float wi = w / data.getDimensionPerspective().getVirtualArray().size();
+		return new CellSpace(index * wi, wi);
 	}
 
 	/**
@@ -121,10 +168,18 @@ public class ClusterContentElement extends GLElementContainer implements IGLLayo
 	 * @return
 	 */
 	public float getRecordPos(int index) {
-		return heatmap.getRecordCellSpace(index).getPosition();
+		HeatMapElement heatmap = getHeatMap();
+		if (heatmap != null)
+			return heatmap.getRecordCellSpace(index).getPosition();
+		return getRecordCell(index).getPosition();
 	}
 
 	public CellSpace getRecordCell(int index) {
-		return heatmap.getRecordCellSpace(index);
+		HeatMapElement heatmap = getHeatMap();
+		if (heatmap != null)
+			return heatmap.getRecordCellSpace(index);
+		float h = getSize().y();
+		float hi = h / data.getRecordPerspective().getVirtualArray().size();
+		return new CellSpace(index * hi, hi);
 	}
 }
