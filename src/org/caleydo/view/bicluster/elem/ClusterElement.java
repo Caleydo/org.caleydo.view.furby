@@ -366,6 +366,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		addAll(dimArray, dimIndices, dimNumberThreshold);
 		addAll(recArray, recIndices, recNumberThreshold);
 
+		this.data.invalidateContainerStatistics();
+
 		if (propabilityHeatMapHor != null)
 			propabilityHeatMapHor.update(dimThreshold, this.bcNr, dimArray);
 		if (propabilityHeatMapVer != null)
@@ -528,12 +530,20 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		}
 
 		IGLLayoutElement igllContent = children.get(4);
-		if (isFocused) {
+		if (isFocused && doesShowLabels(igllContent.asElement())) {
 			igllContent.setBounds(0, 0, w + 79, h + 79);
 		} else {
 			igllContent.setBounds(0, 0, w, h);
 		}
 
+	}
+
+	/**
+	 * @param asElement
+	 * @return
+	 */
+	private static boolean doesShowLabels(GLElement asElement) {
+		return (asElement instanceof ClusterContentElement && ((ClusterContentElement) asElement).doesShowLabels());
 	}
 
 	protected class HeaderBar extends GLButton implements ISelectionCallback {

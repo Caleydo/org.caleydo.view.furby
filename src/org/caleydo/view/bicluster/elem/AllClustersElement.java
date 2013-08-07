@@ -68,6 +68,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	public AllClustersElement(GLRootElement glRootElement) {
 		setLayout(this);
+		this.setzDelta(0.5f);
 	}
 
 	@Override
@@ -78,7 +79,6 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z,
 			ExecutorService executor, GLRootElement biclusterRoot) {
 		this.clear();
-		this.setzDelta(1);
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {

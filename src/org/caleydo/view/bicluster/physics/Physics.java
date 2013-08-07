@@ -20,31 +20,32 @@ public class Physics {
 	public static boolean isApproximateRects() {
 		return false; // change to true if you use circles
 	}
-	public static Vec2d distance(Rectangle2D a, Rectangle2D b) {
-		// return circleDistance(a, b);
-		return aabbDistance(a, b);
-	}
 
-	public static Vec2d aabbDistance(Rectangle2D a, Rectangle2D b) {
+	public static Vec2d distance(Rectangle2D a, Rectangle2D b) {
 		final Vec2d distVec = new Vec2d();
 		distVec.setX(a.getCenterX() - b.getCenterX());
 		distVec.setY(a.getCenterY() - b.getCenterY());
 		final double d = distVec.length();
 		distVec.scale(1. / d); // aka normalize
 
-		double r1; // = getRadius(a);
-		double r2; // = getRadius(b);
+		// final double d_real = aabbDistance(a, b, distVec, d);
+		final double d_real = ellipseDistance(a, b, distVec, d);
+		// final double d_real = enclosedEllipseDistance(a, b, distVec, d);
+		// final double d_real = circleDistance(a, b, distVec, d);
+		// final double d_real = circleDiameterDistance(a, b, distVec, d);
 
-		double ray_pos_x = b.getCenterX();
-		double ray_pos_y = b.getCenterY();
-		Vec2d ray_dir = distVec;
-		r1 = d - raxBoxIntersection(ray_pos_x, ray_pos_y, ray_dir, a); // as starting from b
-		r2 = raxBoxIntersection(ray_pos_x, ray_pos_y, ray_dir, b);
-
-		final double d_real = d - r1 - r2;
 		distVec.scale(d_real);
 		return distVec;
+	}
 
+	private static double aabbDistance(Rectangle2D a, Rectangle2D b, final Vec2d ray_dir, final double d) {
+		double ray_pos_x = b.getCenterX();
+		double ray_pos_y = b.getCenterY();
+		double r1 = d - raxBoxIntersection(ray_pos_x, ray_pos_y, ray_dir, a); // as starting from b
+		double r2 = raxBoxIntersection(ray_pos_x, ray_pos_y, ray_dir, b);
+
+		final double d_real = d - r1 - r2;
+		return d_real;
 	}
 
 	/**
@@ -100,27 +101,51 @@ public class Physics {
 		return tmin;
 	}
 
-	private static Vec2d circleDistance(Rectangle2D a, Rectangle2D b) {
-		Vec2d distVec = new Vec2d();
-		distVec.setX(a.getCenterX() - b.getCenterX());
-		distVec.setY(a.getCenterY() - b.getCenterY());
 
-		double distance = distVec.length();
-		double r1 = getRadius(a);
-		double r2 = getRadius(b);
-		distance -= r1 + r2;
-
-		distVec.normalize();
-		distVec.scale(distance);
-		return distVec;
+	private static double ellipseDistance(Rectangle2D a, Rectangle2D b, final Vec2d ray_dir, final double d) {
+		double r1 = ellipseRadius(ray_dir, a.getWidth() * 0.5, a.getHeight() * 0.5);
+		double r2 = ellipseRadius(ray_dir, b.getWidth() * 0.5, b.getHeight() * 0.5f);
+		final double d_real = d - r1 - r2;
+		return d_real;
 	}
 
-	/**
-	 * @param a
-	 * @return
-	 */
-	private static double getRadius(Rectangle2D a) {
+	private static double ellipseRadius(Vec2d ray_dir, double a, double b) {
+		// https://en.wikipedia.org/wiki/Ellipse#Polar_form_relative_to_center
+		// r(\theta)=\frac{ab}{\sqrt{(b \cos \theta)^2 + (a\sin \theta)^2}}
+		double r = (a * b) / (Math.sqrt(Math.pow(a * ray_dir.x(), 2) + Math.pow(b * ray_dir.y(), 2)));
+
+		return r;
+	}
+
+	private static double enclosedEllipseDistance(Rectangle2D a, Rectangle2D b, final Vec2d ray_dir, final double d) {
+		// FIXME compute from the diameter of the rect a ellipse that touches it
+		double r1 = ellipseRadius(ray_dir, a.getWidth() * 0.5, a.getHeight() * 0.5);
+		double r2 = ellipseRadius(ray_dir, b.getWidth() * 0.5, b.getHeight() * 0.5);
+		final double d_real = d - r1 - r2;
+		return d_real;
+	}
+
+	private static double circleDistance(Rectangle2D a, Rectangle2D b, final Vec2d distVec, final double d) {
+		double r1 = circleRadius(a);
+		double r2 = circleRadius(b);
+		final double d_real = d - r1 - r2;
+		return d_real;
+	}
+
+	private static double circleRadius(Rectangle2D a) {
 		return Math.max(a.getWidth(), a.getHeight()) * 0.5f;
+	}
+
+	private static double circleDiameterDistance(Rectangle2D a, Rectangle2D b, final Vec2d distVec, final double d) {
+		double r1 = circleDiameterRadius(a);
+		double r2 = circleDiameterRadius(b);
+		final double d_real = d - r1 - r2;
+		return d_real;
+	}
+
+	private static double circleDiameterRadius(Rectangle2D a) {
+		return Math.sqrt(Math.pow(a.getWidth() * 0.5f, 2) + Math.pow(a.getHeight() * 0.5f, 2));
+
 	}
 
 	public static void main(String[] args) {
@@ -129,11 +154,29 @@ public class Physics {
 		Rectangle2D c = new Rectangle2D.Double(0, 3, 2, 2);
 		Rectangle2D d = new Rectangle2D.Double(3, 3, 2, 2);
 		Rectangle2D e = new Rectangle2D.Double(4, 3, 2, 2);
+		Rectangle2D f = new Rectangle2D.Double(4, 3, 2, 3);
 
-		System.out.println("AABB\t\tcircle");
-		System.out.println(String.format("%f\t%f", aabbDistance(a, b).length(), circleDistance(a, b).length()));
-		System.out.println(String.format("%f\t%f", aabbDistance(a, c).length(), circleDistance(a, b).length()));
-		System.out.println(String.format("%f\t%f", aabbDistance(a, d).length(), circleDistance(a, b).length()));
-		System.out.println(String.format("%f\t%f", aabbDistance(a, e).length(), circleDistance(a, b).length()));
+		System.out.println("AABB\t\tellipse\t\tenclosed\t\tcircle\t\tcircleDiameter");
+		test(a, b);
+		test(a, c);
+		test(a, d);
+		test(a, e);
+		test(a, f);
+	}
+
+	private static void test(Rectangle2D a, Rectangle2D b) {
+		final Vec2d distVec = new Vec2d();
+		distVec.setX(a.getCenterX() - b.getCenterX());
+		distVec.setY(a.getCenterY() - b.getCenterY());
+		final double d = distVec.length();
+		distVec.scale(1. / d); // aka normalize
+
+		final double a_real = aabbDistance(a, b, distVec, d);
+		final double e_real = ellipseDistance(a, b, distVec, d);
+		final double e2_real = enclosedEllipseDistance(a, b, distVec, d);
+		final double c_real = circleDistance(a, b, distVec, d);
+		final double d_real = circleDiameterDistance(a, b, distVec, d);
+		System.out.format("%f\t%f\t%f\t%f\t%f\n", a_real, e_real, e2_real, c_real, d_real);
+
 	}
 }
