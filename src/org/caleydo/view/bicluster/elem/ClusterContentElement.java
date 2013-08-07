@@ -5,6 +5,8 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import gleem.linalg.Vec2f;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -15,6 +17,7 @@ import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementSupplier;
@@ -121,6 +124,12 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 		super.renderImpl(g, w, h);
 	}
 
+	public Vec2f getMinSize() {
+		IHasMinSize minSize = getContent().getLayoutDataAs(IHasMinSize.class, null);
+		if (minSize != null)
+			return minSize.getMinSize();
+		return getContent().getLayoutDataAs(Vec2f.class, new Vec2f(data.getNrDimensions(), data.getNrRecords()));
+	}
 	/**
 	 * @return
 	 */
@@ -181,5 +190,12 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 		float h = getSize().y();
 		float hi = h / data.getRecordPerspective().getVirtualArray().size();
 		return new CellSpace(index * hi, hi);
+	}
+
+	/**
+	 * @param iActiveChangedCallback
+	 */
+	public void onActiveChanged(IActiveChangedCallback callback) {
+		getSwitcher().onActiveChanged(callback);
 	}
 }

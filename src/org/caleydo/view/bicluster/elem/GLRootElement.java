@@ -5,6 +5,8 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import gleem.linalg.Vec2f;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -143,8 +145,9 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
-			double recSize = i.getNumberOfRecElements() * recScaleFactor; // maxRecClusterSize / maxRecClusterElements;
-			double dimSize = i.getNumberOfDimElements() * dimScaleFactor; // maxDimClusterSize / maxDimClusterElements;
+			Vec2f preferredSize = i.getPreferredSize();
+			double recSize = preferredSize.y() * recScaleFactor; // maxRecClusterSize / maxRecClusterElements;
+			double dimSize = preferredSize.x() * dimScaleFactor; // maxDimClusterSize / maxDimClusterElements;
 			i.setClusterSize(dimSize, recSize, maxSize);
 			i.setVisibility();
 			i.relayout();

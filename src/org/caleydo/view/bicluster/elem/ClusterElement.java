@@ -54,6 +54,7 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
@@ -165,10 +166,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		this.z = z;
 		this.executor = executor;
 		this.biclusterRoot = biclusterRoot;
-		standardScaleFactor = 1;
+		standardScaleFactor = 0.25;
 		initContent();
 		setVisibility();
-		resetScaleFactor();
+		scaleFactor = 1.0f;
 		this.onPick(new IPickingListener() {
 
 			@Override
@@ -220,6 +221,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		if (toolBar != null) {
 			toolBar.add(c.createVerticalButtonBar());
 		}
+		// trigger a scale event on vis change
+		c.onActiveChanged(new GLElementFactorySwitcher.IActiveChangedCallback() {
+			@Override
+			public void onActiveChanged(int active) {
+				EventPublisher.trigger(new ClusterScaleEvent(ClusterElement.this));
+			}
+		});
+
 
 		return c;
 	}
@@ -1288,4 +1297,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		rebuildMyData(false);
 	}
 
+	public Vec2f getPreferredSize() {
+		if (content instanceof ClusterContentElement) {
+			return ((ClusterContentElement) content).getMinSize();
+		}
+		return new Vec2f(getNumberOfRecElements(), getNumberOfDimElements());
+	}
 }
