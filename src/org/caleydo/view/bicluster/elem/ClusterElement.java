@@ -82,7 +82,7 @@ import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
-import org.caleydo.view.heatmap.v2.HeatMapElement.EShowLabels;
+import org.caleydo.view.heatmap.v2.EShowLabels;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
 import org.eclipse.swt.widgets.Display;
 
@@ -231,6 +231,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 		if (toolBar != null) {
 			toolBar.add(c.createVerticalButtonBar());
+			toolBar.setSize(Float.NaN, toolBar.size() * (16 + 6));
 		}
 		// trigger a scale event on vis change
 		c.onActiveChanged(new GLElementFactorySwitcher.IActiveChangedCallback() {
@@ -777,9 +778,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 			super(GLLayouts.flowVertical(6));
 			setzDelta(-0.1f);
 			createButtons();
-			setSize(Float.NaN, 20);
+			setSize(Float.NaN, this.size() * (16 + 6));
 			this.setLayoutData(new MoveTransitions.MoveTransitionBase(Transitions.LINEAR, Transitions.NO,
 					Transitions.LINEAR, Transitions.LINEAR));
+			setVisibility(EVisibility.PICKABLE);
 		}
 
 		protected void createButtons() {
