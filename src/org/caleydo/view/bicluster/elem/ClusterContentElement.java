@@ -26,13 +26,17 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Build
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.ELazyiness;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.IActiveChangedCallback;
+import org.caleydo.view.heatmap.v2.AHeatMapElement;
+import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.CellSpace;
 import org.caleydo.view.heatmap.v2.EShowLabels;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
+import org.caleydo.view.heatmap.v2.IBlockColorer;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * @author Samuel Gratzl
@@ -47,13 +51,16 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 	 * @param filter
 	 */
 	public ClusterContentElement(Builder builder, Predicate<? super String> filter) {
-		builder.set("histogram.showColorMapper", false);
+		builder.set("histogram.showColorMapper", false); // don't show the color mapper
+		builder.set("heatmap.linearBar.scaleLocally"); // scale plot per table perspective
+		builder.put(IBlockColorer.class, BasicBlockColorer.INSTANCE);
 		GLElementFactoryContext context = builder.build();
 		this.data = context.getData();
 		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",
  filter);
 		GLElementFactorySwitcher content = new GLElementFactorySwitcher(extensions, ELazyiness.NONE);
 		content.onActiveChanged(this);
+
 		setContent(content);
 	}
 
@@ -95,19 +102,35 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 	 * @param right
 	 */
 	public boolean showLabels(EShowLabels right) {
-		HeatMapElement heatmap = getHeatMap();
-		if (heatmap != null) {
+		boolean any = false;
+		for (AHeatMapElement heatmap : Iterables.filter(getSwitcher().getInstances(), AHeatMapElement.class)) {
 			heatmap.setDimensionLabels(EShowLabels.RIGHT);
 			heatmap.setRecordLabels(EShowLabels.RIGHT);
 			heatmap.setRecordSpacingStrategy(SpacingStrategies.fishEye(18));
 			heatmap.setDimensionSpacingStrategy(SpacingStrategies.fishEye(18));
-			return true;
-		} else
-			return false;
+			any = true;
+		}
+		return any;
+	}
+
+	/**
+	 *
+	 */
+	public boolean hideLabels() {
+		boolean any = false;
+		for (AHeatMapElement elem : Iterables.filter(getSwitcher().getInstances(), AHeatMapElement.class)) {
+			elem.setDimensionLabels(EShowLabels.NONE);
+			elem.setRecordLabels(EShowLabels.NONE);
+			elem.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
+			elem.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
+			any = true;
+		}
+		return any;
 	}
 
 	boolean doesShowLabels() {
-		return isShowingHeatMap() && getHeatMap().getRecordLabels() == EShowLabels.RIGHT;
+		AHeatMapElement h = getHeatMap();
+		return h != null && h.getRecordLabels() == EShowLabels.RIGHT;
 	}
 
 	private GLElementFactorySwitcher getSwitcher() {
@@ -134,11 +157,7 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 	}
 
 	boolean isShowingHeatMap() {
-		HeatMapElement heatMap = getHeatMap();
-		if (heatMap == null)
-			return false;
-		GLElementFactorySwitcher switcher = getSwitcher();
-		return "heatmap".equals(switcher.getActiveId());
+		return getSwitcher().getActiveElement() instanceof HeatMapElement;
 	}
 
 	public Vec2f getMinSize() {
@@ -150,23 +169,12 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 	/**
 	 * @return
 	 */
-	private HeatMapElement getHeatMap() {
-		return (HeatMapElement) getSwitcher().get("heatmap");
-	}
-
-	/**
-	 *
-	 */
-	public boolean hideLabels() {
-		HeatMapElement heatmap = getHeatMap();
-		if (heatmap != null) {
-			heatmap.setDimensionLabels(EShowLabels.NONE);
-			heatmap.setRecordLabels(EShowLabels.NONE);
-			heatmap.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
-			heatmap.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
-			return true;
-		} else
-			return false;
+	private AHeatMapElement getHeatMap() {
+		GLElementFactorySwitcher s = getSwitcher();
+		GLElement activeElement = s.getActiveElement();
+		if (activeElement instanceof AHeatMapElement)
+			return (AHeatMapElement) activeElement;
+		return null;
 	}
 
 	/**
@@ -174,14 +182,14 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 	 * @return
 	 */
 	public float getDimensionPos(int index) {
-		HeatMapElement heatmap = getHeatMap();
+		AHeatMapElement heatmap = getHeatMap();
 		if (heatmap != null)
 			return heatmap.getDimensionCellSpace(index).getPosition();
 		return getDimensionCell(index).getPosition();
 	}
 
 	public CellSpace getDimensionCell(int index) {
-		HeatMapElement heatmap = getHeatMap();
+		AHeatMapElement heatmap = getHeatMap();
 		if (heatmap != null)
 			return heatmap.getDimensionCellSpace(index);
 		float w = getSize().x();
@@ -194,14 +202,14 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 	 * @return
 	 */
 	public float getRecordPos(int index) {
-		HeatMapElement heatmap = getHeatMap();
+		AHeatMapElement heatmap = getHeatMap();
 		if (heatmap != null)
 			return heatmap.getRecordCellSpace(index).getPosition();
 		return getRecordCell(index).getPosition();
 	}
 
 	public CellSpace getRecordCell(int index) {
-		HeatMapElement heatmap = getHeatMap();
+		AHeatMapElement heatmap = getHeatMap();
 		if (heatmap != null)
 			return heatmap.getRecordCellSpace(index);
 		float h = getSize().y();
