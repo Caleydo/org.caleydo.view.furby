@@ -62,7 +62,7 @@ public class MyPreferencePage extends FieldEditorPreferencePage implements IWork
 		l.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		labels.add(l);
 
-		addField(new ScaleFieldEditor2("view.bicluster.threshold." + suffix, "Threshold", parent, 0, 100, 1, 10,
+		addField(new ScaleFieldEditor2("view.bicluster.threshold." + suffix, "Threshold", parent, 0, 5000, 10, 100,
 				ScaleFieldEditor2.PERCENT_FORMATTER));
 		addField(new SpinnerFieldEditor("view.bicluster.top." + suffix, "Max # elements", parent, 0, Integer.MAX_VALUE,
 				1, 10));

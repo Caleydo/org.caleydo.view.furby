@@ -221,7 +221,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 	@ListenTo
 	private void listenTo(MaxThresholdChangeEvent e) {
 		this.recordThresholdSlider.setMinMax(0.02f, (float) e.getRecThreshold());
-		this.dimensionThresholdSlider.setMinMax(0.05f, (float) e.getDimThreshold());
+		this.dimensionThresholdSlider.setMinMax(0, (float) e.getDimThreshold());
 	}
 
 	private void setClearHiddenButtonRenderer() {
@@ -281,7 +281,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		this.dimensionNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.dimensionNumberThresholdSpinner));
 
-		this.dimensionThresholdSlider = new GLSlider(0.05f, 5f, getDimThreshold());
+		this.dimensionThresholdSlider = new GLSlider(0, 5f, getDimThreshold());
 		dimensionThresholdSlider.setCallback(this);
 		dimensionThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
 		dimensionThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);

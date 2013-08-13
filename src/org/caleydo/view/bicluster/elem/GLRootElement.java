@@ -32,6 +32,7 @@ import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
+import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -50,8 +51,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private TablePerspective x, l, z;
 	private ExecutorService executor;
 
-	private float dimScaleFactor = 4;
-	private float recScaleFactor = 4;
+	private float dimScaleFactor = MyPreferences.getDimScaleFactor();
+	private float recScaleFactor = MyPreferences.getRecScaleFactor();
 
 	public GLRootElement() {
 		setLayout(this);

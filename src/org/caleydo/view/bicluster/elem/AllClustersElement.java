@@ -46,25 +46,7 @@ public class AllClustersElement extends GLElementContainer implements IGLLayout 
 
 	double damping = 1f;
 
-	public Integer fixedElementsCount = 15;
-
 	private final List<AToolBarElement> toolbars = new ArrayList<>();
-
-
-	/**
-	 * @return the fixedElementsCount, see {@link #fixedElementsCount}
-	 */
-	public Integer getFixedElementsCount() {
-		return fixedElementsCount;
-	}
-
-	/**
-	 * @param fixedElementsCount
-	 *            setter, see {@link fixedElementsCount}
-	 */
-	public void setFixedElementsCount(Integer fixedElementsCount) {
-		this.fixedElementsCount = fixedElementsCount;
-	}
 
 	public AllClustersElement(GLRootElement glRootElement) {
 		setLayout(this);
