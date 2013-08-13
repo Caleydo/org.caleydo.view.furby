@@ -5,6 +5,11 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.UNBOUND_NUMBER;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimThreshold;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimTopNElements;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThreshold;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecTopNElements;
 import gleem.linalg.Vec2f;
 
 import java.awt.Rectangle;
@@ -21,7 +26,6 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.lang.StringUtils;
 import org.caleydo.core.data.collection.table.Table;
-import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
@@ -76,15 +80,12 @@ import org.caleydo.view.bicluster.event.SearchClusterEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
-import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.BandSorting;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 import org.caleydo.view.bicluster.util.Vec2d;
-import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.EShowLabels;
-import org.caleydo.view.heatmap.v2.IBlockColorer;
 import org.eclipse.swt.widgets.Display;
 
 import com.google.common.base.Predicate;
@@ -96,7 +97,7 @@ import com.google.common.base.Predicates;
  * @author Michael Gillhofer
  * @author Samuel Gratzl
  */
-public class ClusterElement extends AnimatedGLElementContainer implements IBlockColorer, IGLLayout, ILabeled {
+public class ClusterElement extends AnimatedGLElementContainer implements IGLLayout, ILabeled {
 	protected static final float highOpacityFactor = 1;
 	protected static final float lowOpacityFactor = 0.2f;
 	protected static final float opacityChangeInterval = 10f;
@@ -138,10 +139,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	protected ThresholdBar recThreshBar;
 	protected GLElement content;
 
-	protected float recThreshold = MyPreferences.getRecThreshold();
-	protected int recNumberThreshold = ParameterToolBarElement.UNBOUND_NUMBER;
-	protected float dimThreshold = MyPreferences.getDimThreshold();
-	protected int dimNumberThreshold = ParameterToolBarElement.UNBOUND_NUMBER;
+	protected float recThreshold = getRecThreshold();
+	protected int recNumberThreshold = getRecTopNElements();
+	protected float dimThreshold = getDimThreshold();
+	protected int dimNumberThreshold = getDimTopNElements();
 	protected double clusterSizeThreshold;
 	protected double elementCountBiggestCluster;
 
@@ -227,7 +228,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 		Builder builder = GLElementFactoryContext.builder();
 		builder.withData(data);
 		builder.put(EDetailLevel.class, EDetailLevel.MEDIUM);
-		builder.put(IBlockColorer.class, this);
 		ClusterContentElement c = new ClusterContentElement(builder, filter);
 
 		if (toolBar != null) {
@@ -244,15 +244,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 
 		return c;
-	}
-
-	@Override
-	public Color apply(int recordID, int dimensionID, ATableBasedDataDomain dataDomain, boolean deSelected) {
-		Color color = BasicBlockColorer.INSTANCE.apply(recordID, dimensionID, dataDomain, deSelected);
-
-		if (!isFocused)
-			color.a = color.a * curOpacityFactor;
-		return color;
 	}
 
 	public IDCategory getRecordIDCategory() {
@@ -398,7 +389,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 
 	private static void addAll(VirtualArray array, List<Integer> indices, int treshold) {
 		array.clear();
-		if (treshold == ParameterToolBarElement.UNBOUND_NUMBER) // unbound flush all
+		if (treshold == UNBOUND_NUMBER) // unbound flush all
 			array.addAll(indices);
 		else
 			// sublist of the real elements

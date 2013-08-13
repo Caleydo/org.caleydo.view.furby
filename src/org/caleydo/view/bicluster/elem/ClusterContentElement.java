@@ -119,6 +119,18 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 		boolean labels = doesShowLabels();
 		g.color(Color.WHITE).fillRect(0, 0, w - (labels ? 79 : 0), h - (labels ? 79 : 0));
 		super.renderImpl(g, w, h);
+
+		// render blend out overlay
+		ClusterElement cluster = findParent(ClusterElement.class);
+		float a = 1.0f;
+		if (!cluster.isFocused) {
+			a *= cluster.curOpacityFactor;
+		}
+		if (a < 1) {
+			g.incZ(5);
+			g.color(1, 1, 1, 1 - a).fillRect(0, 0, w, h);
+			g.incZ(-5);
+		}
 	}
 
 	boolean isShowingHeatMap() {
