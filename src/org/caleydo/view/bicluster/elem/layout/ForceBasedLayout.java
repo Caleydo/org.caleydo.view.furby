@@ -8,7 +8,6 @@ package org.caleydo.view.bicluster.elem.layout;
 import gleem.linalg.Vec2f;
 import gleem.linalg.Vec4f;
 
-import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 
@@ -71,6 +70,7 @@ public class ForceBasedLayout implements IGLLayout {
 		}
 		bringClustersBackToFrame(children, w, h);
 		clearClusterCollisions(children, w, h);
+
 		int iterations = computeNumberOfIterations();
 		for (int i = 0; i < iterations; i++)
 			forceDirectedLayout(children, w, h);
@@ -79,7 +79,7 @@ public class ForceBasedLayout implements IGLLayout {
 	private void bringClustersBackToFrame(List<? extends IGLLayoutElement> children, float w, float h) {
 		for (IGLLayoutElement i : children) {
 			Vec4f bounds = i.getBounds();
-			Rectangle frame = new Rectangle(0, 0, (int) w, (int) h);
+			Rectangle2D frame = new Rectangle2D.Float(0, 0, (int) w, (int) h);
 			if (!frame.intersects(bounds.x(), bounds.y(), bounds.z(), bounds.w()))
 				i.setLocation((float) (Math.random() * w), (float) (Math.random() * h));
 		}
@@ -92,8 +92,7 @@ public class ForceBasedLayout implements IGLLayout {
 				continue;
 			Vec2f iSize = iIGL.getSetSize();
 			Vec2f iLoc = iIGL.getLocation();
-			Rectangle iRec = new Rectangle((int) iLoc.x() - 10, (int) iLoc.y() - 10, (int) iSize.x() + 20,
-					(int) iSize.y() + 20);
+			Rectangle2D iRec = new Rectangle2D.Float(iLoc.x() - 10, iLoc.y() - 10, iSize.x() + 20, iSize.y() + 20);
 			for (IGLLayoutElement jIGL : children) {
 				ClusterElement j = (ClusterElement) jIGL.asElement();
 				if (j == i || !j.isVisible() || (j == parent.getDragedElement() || j == focusedElement))
@@ -101,8 +100,7 @@ public class ForceBasedLayout implements IGLLayout {
 
 				Vec2f jSize = j.getSize();
 				Vec2f jLoc = j.getLocation();
-				Rectangle jRec = new Rectangle((int) jLoc.x() - 10, (int) jLoc.y() - 10, (int) jSize.x() + 20,
-						(int) jSize.y() + 20);
+				Rectangle2D jRec = new Rectangle2D.Float(jLoc.x() - 10, jLoc.y() - 10, jSize.x() + 20, jSize.y() + 20);
 				if (iRec.intersects(jRec)) {
 					setLocation(j, (jLoc.x() + 200) % w, (jLoc.y() + 200) % h, w, h);
 				}
@@ -112,8 +110,7 @@ public class ForceBasedLayout implements IGLLayout {
 					continue;
 				Vec2f toolsLoc = toolbar.getAbsoluteLocation();
 				Vec2f toolsSiz = toolbar.getSize();
-				Rectangle toolRec = new Rectangle((int) toolsLoc.x(), (int) toolsLoc.y(), (int) toolsSiz.x(),
-						(int) toolsSiz.y());
+				Rectangle2D toolRec = new Rectangle2D.Float(toolsLoc.x(), toolsLoc.y(), toolsSiz.x(), toolsSiz.y());
 				if (toolRec.intersects(iRec)) {
 					setLocation(i, (iLoc.x() - 200) % w, (iLoc.y() - 200) % h, w, h);
 				}
@@ -148,8 +145,11 @@ public class ForceBasedLayout implements IGLLayout {
 		}
 		double attractionX = 1;
 		double attractionY = 1;
+
 		attractionX = attractionFactor / (xOverlapSize + yOverlapSize);
 		attractionY = attractionFactor / (yOverlapSize + xOverlapSize);
+		// -> attractionX = attrationY
+		// TODO: magic numbers?
 		xOverlapSize *= 2;
 		yOverlapSize /= 3;
 
@@ -174,6 +174,7 @@ public class ForceBasedLayout implements IGLLayout {
 				Vec2d distVec = getDistance(i, j);
 				double rsq = distVec.lengthSquared();
 				rsq *= distVec.length();
+				// why: rsq = |distVec| * (|distVec| * |distVec|) = cubic
 				xForce += repulsion * distVec.x() / rsq;
 				yForce += repulsion * distVec.y() / rsq;
 			}

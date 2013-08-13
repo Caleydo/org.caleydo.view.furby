@@ -156,6 +156,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	protected boolean isFocused = false;
 
 	/**
+	 * delayed mouse out to avoid fast in / out delays
+	 */
+	private int mouseOutDelay = Integer.MAX_VALUE;
+
+	/**
 	 * elements for showing the probability heatmaps
 	 */
 	private LZHeatmapElement propabilityHeatMapHor;
@@ -231,8 +236,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		ClusterContentElement c = new ClusterContentElement(builder, filter);
 
 		if (toolBar != null) {
-			toolBar.add(c.createVerticalButtonBar());
-			toolBar.setSize(Float.NaN, toolBar.size() * (16 + 6));
+			GLElementContainer b = c.createVerticalButtonBar();
+			toolBar.add(b);
+			float h = (toolBar.size() * (16 + 6) + (b.size() - 1) * (16 + 2));
+			toolBar.setSize(Float.NaN, h);
 		}
 		// trigger a scale event on vis change
 		c.onActiveChanged(new GLElementFactorySwitcher.IActiveChangedCallback() {
@@ -312,6 +319,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 			accu = 0;
 		} else
 			accu += deltaTimeMs;
+		if (mouseOutDelay != Integer.MAX_VALUE) {
+			mouseOutDelay -= deltaTimeMs;
+			if (mouseOutDelay <= 0) {
+				mouseOutDelay = Integer.MAX_VALUE;
+				mouseOut();
+			}
+		}
 		super.layout(deltaTimeMs);
 
 	}
@@ -333,8 +347,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	protected void onPicked(Pick pick) {
 		switch (pick.getPickingMode()) {
 		case MOUSE_OVER:
-			if (!pick.isAnyDragging()) {
+			if (!pick.isAnyDragging() && !isHovered) {
 				isHovered = true;
+				mouseOutDelay = Integer.MAX_VALUE;
 				EventPublisher.trigger(new MouseOverClusterEvent(this, true));
 				EventPublisher.trigger(new DataSetSelectedEvent(data));
 				relayout(); // for showing the bars
@@ -343,7 +358,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		case MOUSE_OUT:
 			if (isHovered)
 				EventPublisher.trigger(new DataSetSelectedEvent(data.getDataDomain()));
-			mouseOut();
+			mouseOutDelay = 1000;
 			break;
 		case MOUSE_WHEEL:
 			// zoom on CTRL+mouse wheel
@@ -527,14 +542,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 
 		if (isHovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
-			toolbar.setBounds(-38 - shift, 0, 18, 100);
+			toolbar.setBounds(-38 - shift, 0, 18, toolbar.getSetHeight());
 			headerbar.setBounds(0, -39 - shift, w < 55 ? 57 : w + 2, 20);
 			dimthreshbar.setBounds(-1, -20 - shift, w < 55 ? 56 : w + 1, 20);
 			recthreshbar.setBounds(-20 - shift, -1, 20, h < 60 ? 61 : h + 1);
 
 		} else {
 			// hide by setting the width to 0
-			toolbar.setBounds(-38 - shift, 0, 0, 100);
+			toolbar.setBounds(-38 - shift, 0, 0, toolbar.getSetHeight());
 			headerbar.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
 			dimthreshbar.setBounds(-1, -20 - shift, 0, 0);
 			recthreshbar.setBounds(-20 - shift, -1, 0, 0);
@@ -782,19 +797,19 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 			sorting = new GLButton();
 			sorting.setRenderer(GLRenderers.drawText(
 					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
-			sorting.setSize(16, Float.NaN);
+			sorting.setSize(16, 16);
 			sorting.setTooltip("Change sorting");
 			sorting.setCallback(this);
 			this.add(sorting);
 			focus = new GLButton();
 			focus.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_FOCUS));
-			focus.setSize(16, Float.NaN);
+			focus.setSize(16, 16);
 			focus.setTooltip("Focus this Cluster");
 			focus.setCallback(this);
 			this.add(focus);
 			lock = new GLButton();
 			lock.setTooltip("Lock this cluster. It will not recieve threshold updates.");
-			lock.setSize(16, Float.NaN);
+			lock.setSize(16, 16);
 			lock.setRenderer(new IGLRenderer() {
 
 				@Override
@@ -809,14 +824,14 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 			lock.setCallback(this);
 			this.add(lock);
 			enlarge = new GLButton();
-			enlarge.setSize(16, Float.NaN);
+			enlarge.setSize(16, 16);
 			enlarge.setTooltip("Enlarge");
 			enlarge.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_IN));
 			enlarge.setCallback(this);
 			this.add(enlarge);
 			smaller = new GLButton();
 			smaller.setTooltip("Reduce");
-			smaller.setSize(16, Float.NaN);
+			smaller.setSize(16, 16);
 			smaller.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_OUT));
 			smaller.setCallback(this);
 			this.add(smaller);
@@ -1251,7 +1266,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		GLButton hide = new GLButton();
 		hide.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_CLOSE));
 		hide.setTooltip("Close");
-		hide.setSize(16, Float.NaN);
+		hide.setSize(16, 16);
 		hide.setCallback(new ISelectionCallback() {
 
 			@Override

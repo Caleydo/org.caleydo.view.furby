@@ -17,6 +17,7 @@ import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.animation.Duration;
 import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories;
@@ -62,6 +63,7 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 		content.onActiveChanged(this);
 
 		setContent(content);
+		setLayoutData(new Duration(0)); // no animator for this element
 	}
 
 	public GLElementContainer createVerticalButtonBar() {
