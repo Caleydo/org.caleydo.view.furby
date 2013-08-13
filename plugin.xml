@@ -93,7 +93,7 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            category="org.caleydo.view"
+            category="org.caleydo.core.gui.preferences.views"
             class="org.caleydo.view.bicluster.internal.prefs.MyPreferencePage"
             id="org.caleydo.view.bicluster"
             name="BiCluster">
