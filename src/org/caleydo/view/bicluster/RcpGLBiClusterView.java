@@ -10,6 +10,7 @@ import org.caleydo.core.view.ARcpGLElementViewPart;
 import org.caleydo.core.view.opengl.canvas.IGLCanvas;
 import org.caleydo.core.view.opengl.layout2.AGLElementView;
 import org.caleydo.view.bicluster.event.ShowToolBarEvent;
+import org.caleydo.view.bicluster.internal.Activator;
 import org.caleydo.view.bicluster.internal.SearchAction;
 import org.eclipse.jface.action.IToolBarManager;
 

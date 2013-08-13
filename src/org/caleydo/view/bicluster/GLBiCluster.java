@@ -40,9 +40,9 @@ import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
 import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.elem.GLRootElement;
-import org.caleydo.view.bicluster.elem.ParameterToolBarElement;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
+import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 
@@ -71,8 +71,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 
 	private ExecutorService executorService = Executors.newFixedThreadPool(4);
 
-	private float sampleThreshold = ParameterToolBarElement.DEFAULT_DIM_THRESHOLD; // 4.5f;
-	private float geneThreshold = ParameterToolBarElement.DEFAULT_REC_THRESHOLD; // 0.08f;
+	private float sampleThreshold = MyPreferences.getDimThreshold(); // 4.5f;
+	private float geneThreshold = MyPreferences.getRecThreshold(); // 0.08f;
 	double maxDimThreshold = 0, maxRecThreshold = 0;
 	ASerializedView view;
 
@@ -287,7 +287,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 					maxRecThreshold));
 			EventPublisher.trigger(new LZThresholdChangeEvent(geneThreshold,
  sampleThreshold,
-					ParameterToolBarElement.UNBOUND_NUMBER, ParameterToolBarElement.UNBOUND_NUMBER, true));
+ MyPreferences
+					.getRecTopNElements(), MyPreferences.getDimTopNElements(), true));
 			// rootElement.createBands();
 			rootElement.setClusterSizes();
 		}

@@ -11,4 +11,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Export-Package: org.caleydo.view.bicluster
 Bundle-Vendor: www.caleydo.org
 Bundle-ActivationPolicy: lazy
-Bundle-Activator: org.caleydo.view.bicluster.Activator
+Bundle-Activator: org.caleydo.view.bicluster.internal.Activator

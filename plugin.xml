@@ -84,4 +84,19 @@
          </run>
       </application>
    </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.caleydo.view.bicluster.internal.prefs.MyPreferences">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="org.caleydo.view"
+            class="org.caleydo.view.bicluster.internal.prefs.MyPreferencePage"
+            id="org.caleydo.view.bicluster"
+            name="BiCluster">
+      </page>
+   </extension>
 </plugin>

@@ -76,6 +76,7 @@ import org.caleydo.view.bicluster.event.SearchClusterEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
+import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.BandSorting;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
@@ -137,9 +138,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements IBlock
 	protected ThresholdBar recThreshBar;
 	protected GLElement content;
 
-	protected float recThreshold = ParameterToolBarElement.DEFAULT_REC_THRESHOLD;
+	protected float recThreshold = MyPreferences.getRecThreshold();
 	protected int recNumberThreshold = ParameterToolBarElement.UNBOUND_NUMBER;
-	protected float dimThreshold = ParameterToolBarElement.DEFAULT_DIM_THRESHOLD;
+	protected float dimThreshold = MyPreferences.getDimThreshold();
 	protected int dimNumberThreshold = ParameterToolBarElement.UNBOUND_NUMBER;
 	protected double clusterSizeThreshold;
 	protected double elementCountBiggestCluster;

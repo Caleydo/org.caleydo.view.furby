@@ -5,6 +5,11 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.MAX_SCALE_FACTOR;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.MIN_SCALE_FACTOR;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimScaleFactor;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecScaleFactor;
+
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
@@ -24,11 +29,6 @@ import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
  *
  */
 public class LayoutToolBarElement extends AToolBarElement {
-	private static final float MIN_DIMENSION_SIZE = 0.25f;
-	private static final float MIN_RECORD_SIZE = 0.25f;
-	private static final float MAX_DIMENSION_SIZE = 32f;
-	private static final float MAX_RECORD_SIZE = 32f;
-
 	private static final float MIN_REPULSION = 0;
 	private static final float MIN_ATTRACTION = 0;
 	private static final float MAX_REPULSION = 150000f;
@@ -39,7 +39,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 	private static final float DEFAULT_ATTRACTION = 100f;
 	private static final float DEFAULT_BORDERFACTOR = 200f;
 
-	private GLSlider clusterDimSizeSlider, clusterRecSizeSlider;
+	private GLSlider clusterDimFactorSlider, clusterRecFactorSlider;
 	private GLSlider repulsionSlider, attractionSlider, borderForceSlider;
 
 	private TablePerspective x;
@@ -54,8 +54,9 @@ public class LayoutToolBarElement extends AToolBarElement {
 
 	@Override
 	public void onSelectionChanged(GLSlider slider, float value) {
-		if (slider == clusterDimSizeSlider || slider == clusterRecSizeSlider)
-			EventPublisher.trigger(new MaxClusterSizeChangeEvent(clusterDimSizeSlider.getValue(), clusterRecSizeSlider
+		if (slider == clusterDimFactorSlider || slider == clusterRecFactorSlider)
+			EventPublisher.trigger(new MaxClusterSizeChangeEvent(clusterDimFactorSlider.getValue(),
+					clusterRecFactorSlider
 					.getValue()));
 		if (slider == borderForceSlider || slider == repulsionSlider || slider == attractionSlider) {
 			float att = attractionSlider.getValue();
@@ -94,8 +95,8 @@ public class LayoutToolBarElement extends AToolBarElement {
 		this.repulsionSlider.setValue(DEFAULT_REPULSION);
 		this.attractionSlider.setValue(DEFAULT_ATTRACTION);
 		this.borderForceSlider.setValue(DEFAULT_BORDERFACTOR);
-		this.clusterDimSizeSlider.setValue(4);
-		this.clusterRecSizeSlider.setValue(4);
+		this.clusterDimFactorSlider.setValue(getDimScaleFactor());
+		this.clusterRecFactorSlider.setValue(getRecScaleFactor());
 	}
 
 	/**
@@ -146,30 +147,28 @@ public class LayoutToolBarElement extends AToolBarElement {
 		clusterDimSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterDimSizeLabel);
 
-		this.clusterDimSizeSlider = new GLSlider(MIN_DIMENSION_SIZE, MAX_DIMENSION_SIZE, 4);
-		this.clusterDimSizeSlider.setCallback(this);
-		this.clusterDimSizeSlider.setSize(Float.NaN, SLIDER_WIDH);
-		this.clusterDimSizeSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
-		this.add(clusterDimSizeSlider);
+		this.clusterDimFactorSlider = new GLSlider(MIN_SCALE_FACTOR, MAX_SCALE_FACTOR, MIN_SCALE_FACTOR);
+		this.clusterDimFactorSlider.setCallback(this);
+		this.clusterDimFactorSlider.setSize(Float.NaN, SLIDER_WIDH);
+		this.clusterDimFactorSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
+		this.add(clusterDimFactorSlider);
 
 		GLElement clusterRecSizeLabel = new GLElement();
 		clusterRecSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterRecSizeLabel);
 
-		this.clusterRecSizeSlider = new GLSlider(MIN_RECORD_SIZE, MAX_RECORD_SIZE, 4);
-		this.clusterRecSizeSlider.setCallback(this);
-		this.clusterRecSizeSlider.setSize(Float.NaN, SLIDER_WIDH);
-		this.clusterRecSizeSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
-		this.add(clusterRecSizeSlider);
+		this.clusterRecFactorSlider = new GLSlider(MIN_SCALE_FACTOR, MAX_SCALE_FACTOR, MIN_SCALE_FACTOR);
+		this.clusterRecFactorSlider.setCallback(this);
+		this.clusterRecFactorSlider.setSize(Float.NaN, SLIDER_WIDH);
+		this.clusterRecFactorSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
+		this.add(clusterRecFactorSlider);
 
 		if (x == null) {
-			setText(clusterDimSizeLabel, "Max. Dimension Size (pxl)");
-			setText(clusterRecSizeLabel, "Max. Record Size (pxl)");
+			setText(clusterDimSizeLabel, "Dimension Scale Factor");
+			setText(clusterRecSizeLabel, "Record Scale Factor)");
 		} else {
-			setText(clusterDimSizeLabel, "Max. " + x.getDataDomain().getDimensionIDCategory().toString()
-					+ " Size (pxl)");
-			setText(clusterRecSizeLabel, "Max. " + x.getDataDomain().getRecordIDCategory().toString()
-					+ " Size (pxl)");
+			setText(clusterDimSizeLabel, x.getDataDomain().getDimensionIDCategory() + " Scale Factor");
+			setText(clusterRecSizeLabel, x.getDataDomain().getRecordIDCategory() + " Scale Factor");
 
 		}
 	}

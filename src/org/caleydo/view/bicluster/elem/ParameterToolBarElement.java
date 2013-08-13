@@ -5,6 +5,12 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.UNBOUND_NUMBER;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimThreshold;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThreshold;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowDimBands;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowRecBands;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,9 +49,6 @@ import org.caleydo.view.bicluster.util.ImportExternalDialog;
  *
  */
 public class ParameterToolBarElement extends AToolBarElement implements GLSpinner.IChangeCallback<Integer> {
-	public static final int UNBOUND_NUMBER = 0;
-	public static final float DEFAULT_REC_THRESHOLD = 0.08f;
-	public static final float DEFAULT_DIM_THRESHOLD = 4.5f;
 
 	private GLButton bandSortingModeButton;
 	private GLButton probabilitySortingModeButton;
@@ -117,14 +120,14 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 
 		this.dimBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer("Dimension Bands"));
-		dimBandVisibilityButton.setSelected(true);
+		dimBandVisibilityButton.setSelected(isShowDimBands());
 		dimBandVisibilityButton.setCallback(this);
 		dimBandVisibilityButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(dimBandVisibilityButton);
 
 		this.recBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
 		recBandVisibilityButton.setRenderer(GLButton.createCheckRenderer("Record Bands"));
-		recBandVisibilityButton.setSelected(true);
+		recBandVisibilityButton.setSelected(isShowRecBands());
 		recBandVisibilityButton.setCallback(this);
 		recBandVisibilityButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(recBandVisibilityButton);
@@ -278,7 +281,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		this.dimensionNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.dimensionNumberThresholdSpinner));
 
-		this.dimensionThresholdSlider = new GLSlider(0.05f, 5f, DEFAULT_DIM_THRESHOLD);
+		this.dimensionThresholdSlider = new GLSlider(0.05f, 5f, getDimThreshold());
 		dimensionThresholdSlider.setCallback(this);
 		dimensionThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
 		dimensionThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
@@ -296,7 +299,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		this.recordNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.recordNumberThresholdSpinner));
 
-		this.recordThresholdSlider = new GLSlider(0.02f, 0.2f, DEFAULT_REC_THRESHOLD);
+		this.recordThresholdSlider = new GLSlider(0.02f, 0.2f, getRecThreshold());
 		recordThresholdSlider.setCallback(this);
 		recordThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
 		recordThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
