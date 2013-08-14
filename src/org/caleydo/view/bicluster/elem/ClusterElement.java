@@ -84,7 +84,6 @@ import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.BandSorting;
 import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
-import org.caleydo.view.bicluster.util.Vec2d;
 import org.caleydo.view.heatmap.v2.EShowLabels;
 import org.eclipse.swt.widgets.Display;
 
@@ -113,9 +112,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	protected final AllClustersElement allClusters;
 	protected final GLRootElement biclusterRoot;
 	protected final ExecutorService executor;
-	protected Vec2d attForce = new Vec2d(0, 0);
-	protected Vec2d repForce = new Vec2d(0, 0);
-	protected Vec2d frameForce = new Vec2d(0, 0);
 	protected boolean isDragged = false;
 	protected boolean isHovered = false;
 	protected boolean isHidden = false;
@@ -443,30 +439,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		if (getVisibility() == EVisibility.PICKABLE)
 			sort(sortingType);
 		fireTablePerspectiveChanged();
-	}
-
-	public Vec2d getAttForce() {
-		return attForce;
-	}
-
-	public void setAttForce(Vec2d force) {
-		this.attForce = force;
-	}
-
-	public void setRepForce(Vec2d force) {
-		this.repForce = force;
-	}
-
-	public Vec2d getRepForce() {
-		return repForce;
-	}
-
-	public Vec2d getFrameForce() {
-		return frameForce;
-	}
-
-	public void setFrameForce(Vec2d frameForce) {
-		this.frameForce = frameForce;
 	}
 
 	public void setPerspectiveLabel(String dimensionName, String recordName) {

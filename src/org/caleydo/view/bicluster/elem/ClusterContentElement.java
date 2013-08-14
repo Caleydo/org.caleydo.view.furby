@@ -143,7 +143,7 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		boolean labels = doesShowLabels();
 		g.color(Color.WHITE).fillRect(0, 0, w - (labels ? 79 : 0), h - (labels ? 79 : 0));
-		super.renderImpl(g, w, h);
+		// super.renderImpl(g, w, h);
 
 		// render blend out overlay
 		ClusterElement cluster = findParent(ClusterElement.class);

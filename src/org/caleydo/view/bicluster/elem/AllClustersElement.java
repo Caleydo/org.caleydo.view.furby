@@ -15,6 +15,7 @@ import org.caleydo.core.event.EventListenerManager.DeepScan;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.view.bicluster.elem.layout.ForceBasedLayout;
+import org.caleydo.view.bicluster.elem.layout.IBiClusterLayout;
 
 /**
  * @author Samuel Gratzl
@@ -28,7 +29,7 @@ public class AllClustersElement extends GLElementContainer {
 	private final List<AToolBarElement> toolbars = new ArrayList<>();
 
 	@DeepScan
-	private final ForceBasedLayout layout = new ForceBasedLayout(this);
+	private final IBiClusterLayout layout = new ForceBasedLayout(this);
 
 	public AllClustersElement(GLRootElement glRootElement) {
 		setLayout(layout);
