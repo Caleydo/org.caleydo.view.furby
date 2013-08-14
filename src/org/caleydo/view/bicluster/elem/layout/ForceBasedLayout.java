@@ -74,6 +74,8 @@ public class ForceBasedLayout implements IGLLayout {
 		int iterations = computeNumberOfIterations();
 		for (int i = 0; i < iterations; i++)
 			forceDirectedLayout(children, w, h);
+
+		parent.relayout();
 	}
 
 	private void bringClustersBackToFrame(List<? extends IGLLayoutElement> children, float w, float h) {
@@ -259,7 +261,7 @@ public class ForceBasedLayout implements IGLLayout {
 			// System.out.println("  Fra: " + i.getCenterForce());
 			// System.out.println("  Sum: " + force);
 			if (!isActiveCluster(i))
-				setLocation(i, (float) pos.x(), (float) pos.y(), w, h);
+				setLocation(iGLL, (float) pos.x(), (float) pos.y(), w, h);
 
 		}
 
@@ -270,7 +272,7 @@ public class ForceBasedLayout implements IGLLayout {
 	 * @return
 	 */
 	private boolean isActiveCluster(ClusterElement i) {
-		return i != parent.getDragedElement() && i != hoveredElement && i != focusedElement;
+		return i == parent.getDragedElement() || i == hoveredElement || i == focusedElement;
 	}
 
 	private Vec2d checkPlausibility(Vec2d vec2d) {
