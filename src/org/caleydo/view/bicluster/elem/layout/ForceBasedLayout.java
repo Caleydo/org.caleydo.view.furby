@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster.elem.layout;
 
 import gleem.linalg.Vec2f;
+import gleem.linalg.Vec4f;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ import org.caleydo.view.bicluster.physics.Physics;
 import org.caleydo.view.bicluster.util.Vec2d;
 
 /**
- * @author Michael Gillhofer and Samuel Gratzl
+ * @author Samuel Gratzl
  *
  */
 public class ForceBasedLayout implements IBiClusterLayout {
@@ -54,111 +55,79 @@ public class ForceBasedLayout implements IBiClusterLayout {
 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-		List<ForcedBody> bodies = toForcedBodies(children);
-		List<ForcedBody> toolBars = toToolBarBodies(parent.getToolbars());
-
 		if (!isInitLayoutDone && !children.isEmpty()) {
-			initialLayout(bodies, w, h);
+			initialLayout(children, w, h);
 			isInitLayoutDone = true;
-		} else {
-			if (lastW > w || lastH > h)
-				scaleView(bodies, w, h);
-			lastW = w;
-			lastH = h;
-
-			if (focusedElement != null) {
-				for (ForcedBody body : bodies) {
-					if (body.isFocussed())
-						body.setLocation(w * 0.5f, h * 0.5f);
-				}
-			}
-			bringClustersBackToFrame(bodies, w, h);
-			clearClusterCollisions(bodies, toolBars, w, h);
-
-			int iterations = Math.min(1, computeNumberOfIterations());
-			for (int i = 0; i < iterations; i++)
-				forceDirectedLayout(bodies, toolBars, w, h);
-		}
-		double totalDistanceSquared = 0;
-		for (ForcedBody body : bodies)
-			totalDistanceSquared += body.apply();
-
-		if (totalDistanceSquared > 10) // FIXME damping factor
 			parent.relayout();
+			return;
+		}
+		if (lastW > w || lastH > h)
+			scaleView(children, w, h);
+		lastW = w;
+		lastH = h;
+		if (focusedElement != null) {
+			setLocation(focusedElement, w / 2, h / 2, w, h);
+		}
+		bringClustersBackToFrame(children, w, h);
+		clearClusterCollisions(children, w, h);
+
+		int iterations = computeNumberOfIterations();
+		for (int i = 0; i < iterations; i++)
+			forceDirectedLayout(children, w, h);
+
+		parent.relayout();
 	}
 
-	/**
-	 * @param toolbars
-	 * @return
-	 */
-	private List<ForcedBody> toToolBarBodies(List<AToolBarElement> toolbars) {
-		List<ForcedBody> b = new ArrayList<>(toolbars.size());
-		for (AToolBarElement elem : toolbars) {
-			if (!elem.isVisible())
+	private void bringClustersBackToFrame(List<? extends IGLLayoutElement> children, float w, float h) {
+		for (IGLLayoutElement i : children) {
+			Vec4f bounds = i.getBounds();
+			Rectangle2D frame = new Rectangle2D.Float(0, 0, (int) w, (int) h);
+			if (!frame.intersects(bounds.x(), bounds.y(), bounds.z(), bounds.w()))
+				i.setLocation((float) (Math.random() * w), (float) (Math.random() * h));
+		}
+	}
+
+	private void clearClusterCollisions(List<? extends IGLLayoutElement> children, float w, float h) {
+		for (IGLLayoutElement iIGL : children) {
+			ClusterElement i = (ClusterElement) iIGL.asElement();
+			if (!i.isVisible())
 				continue;
-			b.add(new ForcedBody(GLElementAccessor.asLayoutElement(elem), ForcedBody.FLAG_TOOLBAR));
-		}
-		return b;
-	}
-
-	/**
-	 * @param children
-	 * @return
-	 */
-	private List<ForcedBody> toForcedBodies(List<? extends IGLLayoutElement> children) {
-		List<ForcedBody> b =new ArrayList<>(children.size());
-		for(IGLLayoutElement elem : children) {
-			b.add(toForcedBody(elem));
-		}
-		return b;
-	}
-
-	private ForcedBody toForcedBody(IGLLayoutElement elem) {
-		int flags = 0;
-		GLElement glelem = elem.asElement();
-		if (focusedElement == glelem)
-			flags |= ForcedBody.FLAG_FOCUSSED;
-		if (parent.getDragedElement() == glelem)
-			flags |= ForcedBody.FLAG_DRAGGED;
-		if (hoveredElement == glelem)
-			flags |= ForcedBody.FLAG_HOVERED;
-		return new ForcedBody(elem, flags);
-	}
-
-	private void bringClustersBackToFrame(List<ForcedBody> bodies, float w, float h) {
-		Rectangle2D frame = new Rectangle2D.Float(0, 0, w, h);
-		for (ForcedBody body : bodies) {
-			if (!frame.intersects(body))
-				body.setLocation(Math.random() * w, Math.random() * h);
-		}
-	}
-
-	private void clearClusterCollisions(List<ForcedBody> bodies, List<ForcedBody> toolBars, float w, float h) {
-		for (ForcedBody body : bodies) {
-			if (!body.isVisible())
-				continue;
-			for (ForcedBody other : bodies) {
-				if (body == other || !other.isVisible() || other.isDraggedOrFocussed())
+			Vec2f iSize = iIGL.getSetSize();
+			Vec2f iLoc = iIGL.getLocation();
+			Rectangle2D iRec = new Rectangle2D.Float(iLoc.x() - 10, iLoc.y() - 10, iSize.x() + 20, iSize.y() + 20);
+			for (IGLLayoutElement jIGL : children) {
+				ClusterElement j = (ClusterElement) jIGL.asElement();
+				if (j == i || !j.isVisible() || (j == parent.getDragedElement() || j == focusedElement))
 					continue;
-				if (body.intersects(other)) {
-					other.setLocation((other.centerX + 200) % w, (other.centerY + 200) % h);
+
+				Vec2f jSize = j.getSize();
+				Vec2f jLoc = j.getLocation();
+				Rectangle2D jRec = new Rectangle2D.Float(jLoc.x() - 10, jLoc.y() - 10, jSize.x() + 20, jSize.y() + 20);
+				if (iRec.intersects(jRec)) {
+					setLocation(j, (jLoc.x() + 200) % w, (jLoc.y() + 200) % h, w, h);
 				}
 			}
-			for (ForcedBody toolbar : toolBars) {
-				if (body.intersects(toolbar)) {
-					body.setLocation((body.centerX - 200) % w, (body.centerY - 200) % h);
+			for (AToolBarElement toolbar : parent.getToolbars()) {
+				if (!toolbar.isVisible()) // no parent not visible
+					continue;
+				Vec2f toolsLoc = toolbar.getAbsoluteLocation();
+				Vec2f toolsSiz = toolbar.getSize();
+				Rectangle2D toolRec = new Rectangle2D.Float(toolsLoc.x(), toolsLoc.y(), toolsSiz.x(), toolsSiz.y());
+				if (toolRec.intersects(iRec)) {
+					setLocation(i, (iLoc.x() - 200) % w, (iLoc.y() - 200) % h, w, h);
 				}
 			}
 		}
 
 	}
 
-	private void scaleView(List<ForcedBody> bodies, float w, float h) {
-		final double wfactor = w / lastW;
-		final double hfactor = h / lastH;
-		for (ForcedBody body : bodies) {
-			body.setLocation(body.centerX * wfactor, body.centerY * hfactor);
+	private void scaleView(List<? extends IGLLayoutElement> children, float w, float h) {
+		for (IGLLayoutElement igllChild : children) {
+			GLElement child = igllChild.asElement();
+			Vec2f loc = child.getLocation();
+			child.setLocation(loc.x() * w / lastW, loc.y() * h / lastH);
 		}
+
 	}
 
 	/**
@@ -166,143 +135,235 @@ public class ForceBasedLayout implements IBiClusterLayout {
 	 * @param w
 	 * @param h
 	 */
-	private void forceDirectedLayout(List<ForcedBody> bodies, List<ForcedBody> toolBars, float w, float h) {
+	private void forceDirectedLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 
 		// calculate the attraction based on the size of all overlaps
 		double xOverlapSize = 0, yOverlapSize = 0;
-		for (ForcedBody body : bodies) {
-			ClusterElement v = body.asClusterElement();
+		for (IGLLayoutElement iGLE : children) {
+			GLElement vGL = iGLE.asElement();
+			ClusterElement v = (ClusterElement) vGL;
 			xOverlapSize += v.getDimensionOverlapSize();
 			yOverlapSize += v.getRecordOverlapSize();
 		}
-		final double attractionX = attractionFactor / (xOverlapSize + yOverlapSize);
-		final double attractionY = attractionFactor / (yOverlapSize + xOverlapSize);
+		double attractionX = 1;
+		double attractionY = 1;
+
+		attractionX = attractionFactor / (xOverlapSize + yOverlapSize);
+		attractionY = attractionFactor / (yOverlapSize + xOverlapSize);
 		// -> attractionX = attrationY
 		// TODO: magic numbers?
-
 		xOverlapSize *= 2;
 		yOverlapSize /= 3;
 
-		final int size = bodies.size();
+		List<ForceHelper> helpers = new ArrayList<>(children.size());
 
-		for (int i = 0; i < size; ++i) { // Loop through Vertices
-			final ForcedBody body = bodies.get(i);
-			if (!body.isVisible())
-				continue;
+		// layout begin
+		double xForce = 0, yForce = 0;
+		for (IGLLayoutElement iGLE : children) { // Loop through Vertices
+			GLElement vGL = iGLE.asElement();
+			ClusterElement i = (ClusterElement) vGL;
+			ForceHelper f = new ForceHelper();
+			helpers.add(f);
+			f.setRepForce(new Vec2d(0, 0));
+			f.setAttForce(new Vec2d(0, 0));
 			// repulsion
-			for (int j = i + 1; j < size; ++j) { // loop through other vertices
-				final ForcedBody other = bodies.get(j);
-				if (!other.isVisible())
+			xForce = 0;
+			yForce = 0;
+			for (IGLLayoutElement jGLL : children) { // loop through other
+														// vertices
+				GLElement jElement = jGLL.asElement();
+				ClusterElement j = (ClusterElement) jElement;
+				if (j == i)
 					continue;
 				// squared distance between "u" and "v" in 2D space
 				// calculate the repulsion between two vertices
-				final Vec2d distVec = body.distanceTo(other);
-				final double distLength = distVec.length();
-				{ //repulsion
-					double rsq = distLength * distLength * distLength;
-					// why: rsq = |distVec| * (|distVec| * |distVec|) = cubic
-					double repX = distVec.x() / rsq;
-					double repY = distVec.y() / rsq;
-					// as distance symmetrical
-					body.addRepForce(repX, repY);
-					other.addRepForce(-repX, -repY);
-				}
-				{// attraction force
-					int overlap = body.getOverlap(other);
-					if (overlap > 0) {
-						// counting the attraction
-						double accX = distVec.x() * (overlap) / distLength;
-						double accY = distVec.y() * (overlap) / distLength;
-						// as distance symmetrical
-						body.addAttForce(-accX, -accY);
-						other.addAttForce(accX, accY);
-					}
+				Vec2d distVec = getDistance(i, j);
+				double rsq = distVec.lengthSquared();
+				rsq *= distVec.length();
+				// why: rsq = |distVec| * (|distVec| * |distVec|) = cubic
+				xForce += repulsion * distVec.x() / rsq;
+				yForce += repulsion * distVec.y() / rsq;
+			}
+			f.setRepForce(checkPlausibility(new Vec2d(xForce, yForce)));
+
+			// attraction force calculation
+			xForce = 0;
+			yForce = 0;
+			for (IGLLayoutElement jGLL : children) {
+				GLElement jElement = jGLL.asElement();
+				ClusterElement j = (ClusterElement) jElement;
+				if (i == j)
+					continue;
+				List<Integer> xOverlap = i.getDimOverlap(j);
+				List<Integer> yOverlap = i.getRecOverlap(j);
+				if (xOverlap.size() == 0 && yOverlap.size() == 0)
+					continue;
+				int overlapSizeX = xOverlap.size();
+				int overlapSizeY = yOverlap.size();
+				Vec2d distVec = getDistance(j, i);
+				double dist = distVec.length/* Squared */();
+				// counting the attraction
+				xForce += attractionX * distVec.x() * (overlapSizeX + overlapSizeY) / dist;
+				yForce += attractionY * distVec.y() * (overlapSizeY + overlapSizeX) / dist;
+			}
+			f.setAttForce(checkPlausibility(new Vec2d(xForce, yForce)));
+
+			// Border Force
+			Vec2d distFromTopLeft = getDistanceFromTopLeft(i, w, h);
+			Vec2d distFromBottomRight = getDistanceFromBottomRight(i, w, h);
+			xForce = Math.exp(borderForceFactor / Math.abs(distFromTopLeft.x()));
+			xForce -= Math.exp(borderForceFactor / Math.abs(distFromBottomRight.x()));
+			yForce = Math.exp(borderForceFactor / Math.abs(distFromTopLeft.y()));
+			yForce -= Math.exp(borderForceFactor / Math.abs(distFromBottomRight.y()));
+			f.setFrameForce(checkPlausibility(new Vec2d(xForce, yForce)));
+
+			// Toolbar force
+			xForce = 0;
+			yForce = 0;
+			for (AToolBarElement toolbar : parent.getToolbars()) {
+				if (!toolbar.isVisible()) // no parent not visible
+					continue;
+				if (Physics.isApproximateRects()) {
+					Vec2d distVec = getDistance(i, toolbar, true);
+					double rsq = distVec.lengthSquared();
+					rsq *= distVec.length();
+					xForce += 1.5f * repulsion * distVec.x() / rsq;
+					yForce += 1.5f * repulsion * distVec.y() / rsq;
+
+					distVec = getDistance(i, toolbar, false);
+					rsq = distVec.lengthSquared();
+					rsq *= distVec.length();
+					xForce += 1.5f * repulsion * distVec.x() / rsq;
+					yForce += 1.5f * repulsion * distVec.y() / rsq;
+				} else {
+					Vec2d distVec = getDistance(i, toolbar, true);
+					double rsq = distVec.lengthSquared();
+					rsq *= distVec.length();
+					xForce += 1.5f * repulsion * distVec.x() / rsq;
+					yForce += 1.5f * repulsion * distVec.y() / rsq;
 				}
 			}
-			{// Border Force
-				Vec2d distFromTopLeft = getDistanceFromTopLeft(body, w, h);
-				Vec2d distFromBottomRight = getDistanceFromBottomRight(body, w, h);
-				double xForce = Math.exp(borderForceFactor / Math.abs(distFromTopLeft.x()));
-				xForce -= Math.exp(borderForceFactor / Math.abs(distFromBottomRight.x()));
-				double yForce = Math.exp(borderForceFactor / Math.abs(distFromTopLeft.y()));
-				yForce -= Math.exp(borderForceFactor / Math.abs(distFromBottomRight.y()));
-				body.addFrameForce(checkPlausibility(xForce), checkPlausibility(yForce));
-			}
-			{// Toolbar force
-				for (ForcedBody toolbar : toolBars) {
-					final Vec2d distVec = body.distanceTo(toolbar);
-					final double distLength = distVec.length();
-					double rsq = distLength * distLength * distLength;
-					double xForce = 1.5f * distVec.x() / rsq;
-					double yForce = 1.5f * distVec.y() / rsq;
-					body.addRepForce(xForce, yForce);
-				}
-			}
+			xForce += f.getRepForce().x();
+			yForce += f.getRepForce().y();
+			f.setRepForce(checkPlausibility(new Vec2d(xForce, yForce)));
+
 		}
 
-		// count forces together + apply + reset
-		for (ForcedBody body : bodies) { // reset forces
-			if (!body.isVisible())
-				continue;
-			double repForceX = checkPlausibility(body.repForceX * repulsion);
-			double repForceY = checkPlausibility(body.repForceY * repulsion);
-			double attForceX = checkPlausibility(body.attForceX * attractionX);
-			double attForceY = checkPlausibility(body.attForceY * attractionY);
-			if (xOverlapSize < 3) {
-				attForceX *= 0.2;
-				attForceY *= 0.2;
-			}
-			double forceX = repForceX + attForceX + body.frameForceX;
-			double forceY = repForceY + attForceY + body.frameForceY;
+		int ii = 0;
+		for (IGLLayoutElement iGLL : children) {
+			ClusterElement i = (ClusterElement) iGLL.asElement();
+			ForceHelper f = helpers.get(ii++);
+			Vec2d attForce = f.getAttForce();
+			if (xOverlapSize < 3)
+				attForce = attForce.times(0.2);
+			Vec2d force = attForce.plus(f.getRepForce()).plus(f.getFrameForce());
+			while (force.length() > 20)
+				force.scale(0.1);
+			Vec2d pos = getCenter(i);
+			pos = force.times(damping).plus(pos);
+			// System.out.println(i.getId() + ": ");
+			// System.out.println("  Att: " + i.getAttForce());
+			// System.out.println("  Rep: " + i.getRepForce());
+			// System.out.println("  Fra: " + i.getCenterForce());
+			// System.out.println("  Sum: " + force);
+			if (!isActiveCluster(i))
+				setLocation(iGLL, (float) pos.x(), (float) pos.y(), w, h);
 
-			while ((forceX * forceX + forceY * forceY) > 20 * 20) {
-				forceX *= 0.1;
-				forceY *= 0.1;
-			}
-			System.out.println(body.elem + ": ");
-			System.out.println("  Att: " + attForceX + " " + attForceY);
-			System.out.println("  Rep: " + repForceX + " " + repForceY);
-			System.out.println("  Fra: " + body.frameForceX + " " + body.frameForceY);
-			System.out.println("  Sum: " + forceX + " " + forceY);
-			if (!body.isActive())
-				body.move(forceX*damping,forceY*damping);
-
-			body.resetForce();
 		}
 
 	}
 
-	private double checkPlausibility(double v) {
-		if (v > 1e4)
-			return 1e4;
-		if (v < -1e4)
-			return -1e4;
-		return v;
+	/**
+	 * @param i
+	 * @return
+	 */
+	private boolean isActiveCluster(ClusterElement i) {
+		return i == parent.getDragedElement() || i == hoveredElement || i == focusedElement;
 	}
 
-	private Vec2d getDistanceFromTopLeft(ForcedBody body, float w, float h) {
-		return new Vec2d(body.centerX, body.centerY);
+	private Vec2d checkPlausibility(Vec2d vec2d) {
+		if (vec2d.x() > 1e4)
+			vec2d.setX(1e4);
+		if (vec2d.x() < -1e4)
+			vec2d.setX(-1e4);
+		if (vec2d.y() > 1e4)
+			vec2d.setY(1e4);
+		if (vec2d.y() < -1e4)
+			vec2d.setY(-1e4);
+
+		return vec2d;
 	}
 
-	private Vec2d getDistanceFromBottomRight(ForcedBody body, float w, float h) {
-		Vec2d dist = getDistanceFromTopLeft(body, w, h);
+	private Vec2d getDistance(ClusterElement i, AToolBarElement tools, boolean isTop) {
+		Vec2f toolsPos = tools.getAbsoluteLocation();
+		Vec2f toolsSize = tools.getSize();
+		if (Physics.isApproximateRects()) {
+			// FIXME: idea is to approximate long rects by two circles
+			Vec2f toolsCenter = new Vec2f(toolsPos.x() + toolsSize.x(), toolsPos.y() + toolsSize.y());
+			if (isTop) {
+				toolsCenter.add(new Vec2f(0, -toolsSize.y() / 4));
+			} else {
+				toolsCenter.add(new Vec2f(0, toolsSize.y() / 4));
+			}
+			Rectangle2D toolBounds = new Rectangle2D.Float(toolsCenter.x() - toolsSize.x() * 0.5f, toolsCenter.y()
+					- toolsSize.y() * 0.5f, toolsSize.x(), toolsSize.y());
+			return Physics.distance(i.getRectangleBounds(), toolBounds);
+		} else {
+			Rectangle2D toolBounds = new Rectangle2D.Float(toolsPos.x(), toolsPos.y(), toolsSize.x(), toolsSize.y());
+			return Physics.distance(i.getRectangleBounds(), toolBounds);
+		}
+
+	}
+
+	private Vec2d getDistanceFromTopLeft(ClusterElement i, float w, float h) {
+		Vec2d pos = getCenter(i);
+		Vec2f size = i.getSize();
+		pos.setX(pos.x() - size.x() * 0.5);
+		pos.setY(pos.y() - size.y() * 0.5);
+		return pos;
+	}
+
+	private Vec2d getDistanceFromBottomRight(ClusterElement i, float w, float h) {
+		Vec2d dist = getDistanceFromTopLeft(i, w, h);
 		dist.setX(-(w - dist.x()));
 		dist.setY(-(h - dist.y()));
-		dist.setX(dist.x() + body.radiusX + 30);
-		dist.setY(dist.y() + body.radiusY + 30);
+		Vec2f size = i.getSize();
+		dist.setX(dist.x() + size.x() * 0.5 + 30);
+		dist.setY(dist.y() + size.y() * 0.5 + 30);
+
 		return dist;
 	}
 
-	private void initialLayout(List<ForcedBody> bodies, float w, float h) {
-		final int rowCount = (int) (Math.sqrt(bodies.size())) + 1;
+	private Vec2d getCenter(ClusterElement i) {
+		Vec2f vec = i.getLocation().addScaled(0.5f, i.getSize());
+		return new Vec2d(vec.x(), vec.y());
+	}
+
+	private Vec2d getDistance(ClusterElement i, ClusterElement j) {
+		return Physics.distance(i.getRectangleBounds(), j.getRectangleBounds());
+	}
+
+	private void setLocation(GLElement v, double xPos, double yPos, float w, float h) {
+		setLocation(GLElementAccessor.asLayoutElement(v), xPos, yPos, w, h);
+	}
+
+	private void setLocation(IGLLayoutElement v, double xPos, double yPos, float w, float h) {
+		if (xPos > w || xPos < 0 || yPos > h || yPos < 0)
+			System.out.println(v.asElement() + ": " + xPos + "/" + yPos);
+		v.setLocation((float) (xPos - v.getSetSize().x() / 2), (float) (yPos - v.getSetSize().y() / 2));
+	}
+
+	private void initialLayout(List<? extends IGLLayoutElement> children, float w, float h) {
+		final int rowCount = (int) (Math.sqrt(children.size())) + 1;
 		int i = 0;
 
 		float hFactor = (h - 200) / rowCount;
-		float wFactor = (w - 300) / (bodies.size() / rowCount + 1);
-		for (ForcedBody child : bodies) {
+		float wFactor = (w - 300) / (children.size() / rowCount + 1);
+		for (IGLLayoutElement child : children) {
 			int row = i / rowCount;
 			int col = (i % rowCount);
-			child.setLocation(row * wFactor + 200, col * hFactor + 100);
+			Vec2d pos = new Vec2d(row * wFactor + 200, col * hFactor + 100);
+			setLocation(child, pos.x(), pos.y(), w, h);
 			i++;
 		}
 		EventPublisher.trigger(new CreateBandsEvent(parent));
@@ -352,228 +413,34 @@ public class ForceBasedLayout implements IBiClusterLayout {
 		deltaToLastFrame += deltaTimeMs;
 	}
 
-	private static class ForcedBody extends Rectangle2D {
-		public static final int FLAG_FOCUSSED = 1 << 1;
-		public static final int FLAG_HOVERED = 1 << 2;
-		public static final int FLAG_DRAGGED = 1 << 3;
-		public static final int FLAG_TOOLBAR = 1 << 4;
+	private final static class ForceHelper {
+		private Vec2d attForce;
+		private Vec2d repForce;
+		private Vec2d frameForce;
 
-		private final int flags;
-		private final IGLLayoutElement elem;
-		private final Vec2f size;
-		private final double radiusX;
-		private final double radiusY;
-
-		private double attForceX = 0;
-		private double attForceY = 0;
-
-		private double repForceX = 0;
-		private double repForceY = 0;
-
-		private double frameForceX = 0;
-		private double frameForceY = 0;
-
-		private double centerX;
-		private double centerY;
-
-		public ForcedBody(IGLLayoutElement elem, int flags) {
-			this.elem = elem;
-			this.flags = flags;
-			Vec2f location = ((flags & FLAG_TOOLBAR) != 0) ? elem.asElement().getAbsoluteLocation() : elem
-					.getLocation();
-			this.size = new Vec2f(elem.getWidth(), elem.getHeight());
-			radiusX = size.x() * 0.5;
-			radiusY = size.y() * 0.5;
-			centerX = location.x() + radiusX;
-			centerY = location.y() + radiusY;
+		public Vec2d getAttForce() {
+			return attForce;
 		}
 
-		/**
-		 * @param d
-		 * @param e
-		 */
-		public void move(double x, double y) {
-			centerX += x;
-			centerY += y;
+		public void setAttForce(Vec2d attForce) {
+			this.attForce = attForce;
 		}
 
-		/**
-		 * @param other
-		 * @return
-		 */
-		public int getOverlap(ForcedBody other) {
-			ClusterElement o = other.asClusterElement();
-			ClusterElement c = asClusterElement();
-			int rsize = c.getRecOverlap(o).size();
-			int csize = c.getDimOverlap(o).size();
-			return rsize + csize;
+		public Vec2d getRepForce() {
+			return repForce;
 		}
 
-		public void addAttForce(double attX, double attY) {
-			attForceX += attX;
-			attForceY += attY;
+		public void setRepForce(Vec2d repForce) {
+			this.repForce = repForce;
 		}
 
-		public void addRepForce(double repX, double repY) {
-			repForceX += repX;
-			repForceY += repY;
+		public Vec2d getFrameForce() {
+			return frameForce;
 		}
 
-		public void addFrameForce(double xForce, double yForce) {
-			frameForceX += xForce;
-			frameForceX += yForce;
+		public void setFrameForce(Vec2d frameForce) {
+			this.frameForce = frameForce;
 		}
 
-		public Vec2d distanceTo(ForcedBody other) {
-			return Physics.distance(this, other);
-		}
-
-		public void resetForce() {
-			attForceX = 0;
-			attForceY = 0;
-			repForceX = 0;
-			repForceY = 0;
-			frameForceX = 0;
-			frameForceY = 0;
-		}
-
-		/**
-		 * @return
-		 */
-		public ClusterElement asClusterElement() {
-			assert !isToolBar();
-			return (ClusterElement) elem.asElement();
-		}
-
-		public boolean isDraggedOrFocussed() {
-			return (flags & (FLAG_FOCUSSED | FLAG_DRAGGED)) != 0;
-		}
-
-		public boolean isFocussed() {
-			return (flags & FLAG_FOCUSSED) != 0;
-		}
-
-		public boolean isActive() {
-			return (flags & (FLAG_FOCUSSED | FLAG_DRAGGED | FLAG_HOVERED)) != 0;
-		}
-
-		public boolean isToolBar() {
-			return (flags & FLAG_TOOLBAR) != 0;
-		}
-
-		private double y0() {
-			return centerY - radiusY;
-		}
-
-		private double x0() {
-			return centerX - radiusX;
-		}
-
-		/**
-		 * set the new location + return the difference
-		 *
-		 * @return
-		 */
-		public double apply() {
-			assert !isToolBar();
-			Vec2f ori = elem.getLocation();
-			double x0 = x0();
-			double y0 = y0();
-			// really set the location
-			elem.setLocation((float) x0, (float) y0);
-
-			x0 -= ori.x();
-			y0 -= ori.y();
-			return x0 * x0 + y0 * y0;
-		}
-
-		public void setLocation(double x, double y) {
-			centerX = x;
-			centerY = y;
-		}
-
-		public boolean isVisible() {
-			GLElement elem = this.elem.asElement();
-			return elem.getVisibility().doRender() && elem.getParent() != null;
-		}
-
-		@Override
-		public void setRect(double x, double y, double w, double h) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public int outcode(double x, double y) {
-			int out = 0;
-			if (this.getWidth() <= 0) {
-				out |= OUT_LEFT | OUT_RIGHT;
-			} else if (x < this.x0()) {
-				out |= OUT_LEFT;
-			} else if (x > this.x0() + this.getWidth()) {
-				out |= OUT_RIGHT;
-			}
-			if (this.getHeight() <= 0) {
-				out |= OUT_TOP | OUT_BOTTOM;
-			} else if (y < this.y0()) {
-				out |= OUT_TOP;
-			} else if (y > this.y0() + this.getHeight()) {
-				out |= OUT_BOTTOM;
-			}
-			return out;
-		}
-
-		@Override
-		public Rectangle2D createIntersection(Rectangle2D r) {
-			Rectangle2D dest = new Rectangle2D.Double();
-			Rectangle2D.intersect(this, r, dest);
-			return dest;
-		}
-
-		@Override
-		public Rectangle2D createUnion(Rectangle2D r) {
-			Rectangle2D dest = new Rectangle2D.Double();
-			Rectangle2D.union(this, r, dest);
-			return dest;
-		}
-
-		@Override
-		public double getX() {
-			return x0();
-		}
-
-		@Override
-		public double getY() {
-			return y0();
-		}
-
-		@Override
-		public double getWidth() {
-			return size.x();
-		}
-
-		@Override
-		public double getHeight() {
-			return size.y();
-		}
-
-		@Override
-		public double getCenterX() {
-			return centerX;
-		}
-
-		@Override
-		public double getCenterY() {
-			return centerY;
-		}
-
-		@Override
-		public boolean isEmpty() {
-			return (getWidth() <= 0.0 || getHeight() <= 0.0);
-		}
-
-		@Override
-		public String toString() {
-			return String.format("%s %2f %2f", elem.toString(), centerX, centerY);
-		}
 	}
 }
