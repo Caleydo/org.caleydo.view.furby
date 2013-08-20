@@ -7,7 +7,9 @@ package org.caleydo.view.bicluster.elem;
 
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.UNBOUND_NUMBER;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimThreshold;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimTopNElements;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThreshold;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecTopNElements;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowDimBands;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowRecBands;
 
@@ -273,7 +275,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		dimensionLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(dimensionLabel);
 
-		this.dimensionNumberThresholdSpinner = GLSpinner.createIntegerSpinner(UNBOUND_NUMBER, UNBOUND_NUMBER,
+		this.dimensionNumberThresholdSpinner = GLSpinner.createIntegerSpinner(getDimTopNElements(), UNBOUND_NUMBER,
 				Integer.MAX_VALUE, 1,
 				SPINNER_UNBOUND);
 		this.dimensionNumberThresholdSpinner.setRenderer(null);
@@ -292,7 +294,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		recordLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(recordLabel);
 
-		this.recordNumberThresholdSpinner = GLSpinner.createIntegerSpinner(UNBOUND_NUMBER, UNBOUND_NUMBER,
+		this.recordNumberThresholdSpinner = GLSpinner.createIntegerSpinner(getRecTopNElements(), UNBOUND_NUMBER,
 				Integer.MAX_VALUE, 1, SPINNER_UNBOUND);
 		this.recordNumberThresholdSpinner.setRenderer(null);
 		this.recordNumberThresholdSpinner.setCallback(this);

@@ -71,8 +71,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 
 	private ExecutorService executorService = Executors.newFixedThreadPool(4);
 
-	private float sampleThreshold = MyPreferences.getDimThreshold(); // 4.5f;
-	private float geneThreshold = MyPreferences.getRecThreshold(); // 0.08f;
+	private float dimThreshold = MyPreferences.getDimThreshold(); // 4.5f;
+	private float recThreshold = MyPreferences.getRecThreshold(); // 0.08f;
 	double maxDimThreshold = 0, maxRecThreshold = 0;
 	ASerializedView view;
 
@@ -147,11 +147,11 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		for (int bcNr = 0; bcNr < bcCountData; bcNr++) {
 			ASortingStrategy strategy = new ProbabilityStrategy(L, bcNr);
 			Future<ScanResult> recList = executorService
-					.submit(new ScanProbabilityMatrix(geneThreshold, L, bcNr,
+					.submit(new ScanProbabilityMatrix(recThreshold, L, bcNr,
 							strategy));
 			strategy = new ProbabilityStrategy(Z, bcNr);
 			Future<ScanResult> dimList = executorService
-					.submit(new ScanProbabilityMatrix(sampleThreshold, Z, bcNr,
+					.submit(new ScanProbabilityMatrix(dimThreshold, Z, bcNr,
 							strategy));
 
 			bcRecScanFut.put(bcNr, recList);
@@ -285,8 +285,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 			// createBiClusterPerspectives(x, l, z);
 			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold,
 					maxRecThreshold));
-			EventPublisher.trigger(new LZThresholdChangeEvent(geneThreshold,
- sampleThreshold,
+			EventPublisher.trigger(new LZThresholdChangeEvent(recThreshold,
+ dimThreshold,
  MyPreferences
 					.getRecTopNElements(), MyPreferences.getDimTopNElements(), true));
 			// rootElement.createBands();
