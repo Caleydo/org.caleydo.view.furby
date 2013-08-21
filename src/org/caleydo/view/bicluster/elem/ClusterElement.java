@@ -45,6 +45,7 @@ import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
+import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
 import org.caleydo.core.view.opengl.layout2.animation.MoveTransitions;
@@ -53,9 +54,11 @@ import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
+import org.caleydo.core.view.opengl.layout2.layout.GLLayoutDatas;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.core.view.opengl.layout2.layout.IHasGLLayoutData;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
@@ -71,7 +74,6 @@ import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
-import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
@@ -97,6 +99,11 @@ import com.google.common.base.Predicates;
  * @author Samuel Gratzl
  */
 public class ClusterElement extends AnimatedGLElementContainer implements IGLLayout, ILabeled {
+	private static final IHasGLLayoutData GROW_LEFT = GLLayoutDatas.combine(new MoveTransitions.MoveTransitionBase(
+			Transitions.LINEAR, Transitions.NO, Transitions.LINEAR, Transitions.NO), DEFAULT_DURATION);
+	private static final IHasGLLayoutData GROW_UP = GLLayoutDatas.combine(new MoveTransitions.MoveTransitionBase(
+			Transitions.NO, Transitions.LINEAR, Transitions.NO, Transitions.LINEAR), DEFAULT_DURATION);
+
 	protected static final float highOpacityFactor = 1;
 	protected static final float lowOpacityFactor = 0.2f;
 	protected static final float opacityChangeInterval = 10f;
@@ -183,7 +190,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 				onPicked(pick);
 			}
 		});
-		this.setLayoutData(MoveTransitions.MOVE_AND_GROW_LINEAR);
+		setAnimateByDefault(false);
 		this.cluster = this;
 	}
 
@@ -343,18 +350,23 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	protected void onPicked(Pick pick) {
 		switch (pick.getPickingMode()) {
 		case MOUSE_OVER:
-			if (!pick.isAnyDragging() && !isHovered) {
+			if (!pick.isAnyDragging()) {
+				if (!isHovered) {
+					EventPublisher.trigger(new MouseOverClusterEvent(this, true));
+					EventPublisher.trigger(new DataSetSelectedEvent(data));
+					relayout(); // for showing the bars
+				}
 				isHovered = true;
 				mouseOutDelay = Integer.MAX_VALUE;
-				EventPublisher.trigger(new MouseOverClusterEvent(this, true));
-				EventPublisher.trigger(new DataSetSelectedEvent(data));
-				relayout(); // for showing the bars
+				System.out.println("OVER");
 			}
 			break;
 		case MOUSE_OUT:
 			if (isHovered)
 				EventPublisher.trigger(new DataSetSelectedEvent(data.getDataDomain()));
 			mouseOutDelay = 1000;
+			System.out.println("OUT");
+			// mouseOut();
 			break;
 		case MOUSE_WHEEL:
 			// zoom on CTRL+mouse wheel
@@ -377,8 +389,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 			if (wasResizedWhileHovered)
 				setClusterSize(newDimSize, newRecSize, elementCountBiggestCluster);
 			opacityfactor = highOpacityFactor;
-			for (GLElement child : this)
-				child.repaint();
+			repaintChildren();
 			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
 			relayout(); // for hiding the bars
 		}
@@ -516,17 +527,17 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 							// the toolbar's
 			toolbar.setBounds(-38 - shift, 0, 18, toolbar.getSetHeight());
 			headerbar.setBounds(0, -39 - shift, w < 55 ? 57 : w + 2, 20);
-			dimthreshbar.setBounds(-1, -20 - shift, w < 55 ? 56 : w + 1, 20);
-			recthreshbar.setBounds(-20 - shift, -1, 20, h < 60 ? 61 : h + 1);
+			dimthreshbar.setBounds(-1, -20 - shift, Math.max(w + 1, 56), 20);
+			recthreshbar.setBounds(-20 - shift, -1, 20, Math.max(h + 1, 61));
 
 		} else {
 			// hide by setting the width to 0
-			toolbar.setBounds(-38 - shift, 0, 0, toolbar.getSetHeight());
+			toolbar.setBounds(-18 - shift, 0, 0, toolbar.getSetHeight());
 			headerbar.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
-			dimthreshbar.setBounds(-1, -20 - shift, 0, 0);
-			recthreshbar.setBounds(-20 - shift, -1, 0, 0);
+			dimthreshbar.setBounds(-1, -shift, Math.max(w + 1, 56), 0);
+			recthreshbar.setBounds(-shift, -1, 0, Math.max(h + 1, 61));
 		}
-		if (children.size() > 5) {
+		if (children.size() > 5) { // LZ heatmaps
 			children.get(5).setBounds(0, -shift, w, shift);
 			children.get(6).setBounds(-shift, 0, shift, h);
 		}
@@ -560,6 +571,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 			setzDelta(DEFAULT_Z_DELTA);
 			createButtons();
 			setSize(Float.NaN, 20);
+			this.setLayoutData(GROW_UP);
 		}
 
 		protected void createButtons() {
@@ -659,82 +671,57 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		return false;
 	}
 
-	protected class ThresholdBar extends GLElementContainer implements
+	protected class ThresholdBar extends GLElementDecorator implements
 			org.caleydo.core.view.opengl.layout2.basic.GLSlider.ISelectionCallback {
 
-		boolean isHorizontal;
-		GLSlider slider;
-		float globalMaxThreshold;
-		float localMaxSliderValue;
-		float localMinSliderValue;
+		private final boolean isHorizontal;
+		private final GLSlider slider;
+		// float globalMaxThreshold;
+		private float localMaxSliderValue;
+		private float localMinSliderValue;
 
 		protected ThresholdBar(boolean layout) {
-			super(layout ? GLLayouts.flowHorizontal(1) : GLLayouts.flowVertical(1));
 			isHorizontal = layout;
 			// move to the top
 			setzDelta(DEFAULT_Z_DELTA);
 
 			// create buttons
-			createButtons();
-
-			setSize(Float.NaN, 20);
-
-			// define the animation used to move this element
-			if (isHorizontal) {
-				this.setLayoutData(new MoveTransitions.MoveTransitionBase(Transitions.LINEAR, Transitions.LINEAR,
-						Transitions.NO, Transitions.LINEAR));
-			} else {
-				this.setLayoutData(new MoveTransitions.MoveTransitionBase(Transitions.LINEAR, Transitions.LINEAR,
-						Transitions.LINEAR, Transitions.NO));
-			}
-		}
-
-		protected void createButtons() {
-			this.remove(slider);
 			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue : localMinSliderValue;
 			this.slider = new GLSlider(0, max, max / 2);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
-			if (isHorizontal) {
-				slider.setSize(Float.NaN, 18);
-			} else {
-				slider.setSize(18, Float.NaN);
-			}
 			slider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
-			this.add(slider);
-		}
+			setContent(slider);
 
-		boolean ignoreNextChange = true;
+			// define the animation used to move this element
+			this.setLayoutData(isHorizontal ? GROW_UP : GROW_LEFT);
+			setVisibility(EVisibility.PICKABLE); // for parent
+		}
 
 		@Override
 		public void onSelectionChanged(GLSlider slider, float value) {
-			if (ignoreNextChange) {
-				ignoreNextChange = false;
-				return;
-			}
 			if (value <= localMinSliderValue || value >= localMaxSliderValue)
 				return;
 			setThresholdImpl(isHorizontal, value);
-
 		}
 
 		protected void updateSliders(double maxValue, double minValue) {
 			localMaxSliderValue = (float) maxValue;
 			localMinSliderValue = (float) minValue;
-			relayout();
+			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue : localMinSliderValue;
+			this.slider.setMinMax(0, max);
 		}
 
-		@ListenTo
-		public void listenTo(MaxThresholdChangeEvent event) {
-			globalMaxThreshold = (float) (isHorizontal ? event.getDimThreshold() : event.getRecThreshold());
-			createButtons();
-		}
+		// @ListenTo
+		// public void listenTo(MaxThresholdChangeEvent event) {
+		// globalMaxThreshold = (float) (isHorizontal ? event.getDimThreshold() : event.getRecThreshold());
+		// createButtons();
+		// }
 
 		@ListenTo
 		public void listenTo(LZThresholdChangeEvent event) {
 			if (event.isGlobalEvent()) {
-				ignoreNextChange = true;
-				slider.setValue(isHorizontal ? event.getDimensionThreshold() : event.getRecordThreshold());
+				setValue(isHorizontal ? event.getDimensionThreshold() : event.getRecordThreshold());
 			}
 		}
 
@@ -742,7 +729,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		 * @param value
 		 */
 		public void setValue(float value) {
-			slider.setCallback(null);
+			slider.setCallback(null); // to avoid that we will be callbacked
 			slider.setValue(value);
 			slider.setCallback(this);
 		}
@@ -758,8 +745,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 			setzDelta(-0.1f);
 			createButtons();
 			setSize(Float.NaN, this.size() * (16 + 6));
-			this.setLayoutData(new MoveTransitions.MoveTransitionBase(Transitions.LINEAR, Transitions.NO,
-					Transitions.LINEAR, Transitions.LINEAR));
+			setLayoutData(GROW_LEFT);
 			setVisibility(EVisibility.PICKABLE);
 		}
 
