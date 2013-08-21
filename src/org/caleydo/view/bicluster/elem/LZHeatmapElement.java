@@ -9,6 +9,7 @@ import java.nio.FloatBuffer;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLContext;
 import javax.media.opengl.GLProfile;
 
@@ -72,7 +73,7 @@ public class LZHeatmapElement extends GLElement {
 		final int size = texture.getWidth();
 		final float factor = 1.f / size;
 
-		gl.glBegin(GL2.GL_QUADS);
+		gl.glBegin(GL2GL3.GL_QUADS);
 		if (spaceProvider == null || factor >= 1)
 			rect(0, 1, 0, 1, gl);
 		else {

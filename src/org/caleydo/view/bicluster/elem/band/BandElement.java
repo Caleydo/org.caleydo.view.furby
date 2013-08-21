@@ -221,7 +221,7 @@ public abstract class BandElement extends PickableGLElement {
 				col.a = 0.8f;
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * curOpacityFactor);
 				Collection<Band> stubBands;
-				if (!hasSharedElementsWithHoveredBand() && !hasSharedElementsWithSelectedBand())
+				if (!hasSelections())
 					// stub only if we haven't any highlights
 					stubBands = stubify(nonSplittedBands.values(), col, curOpacityFactor, HIGH_OPACITY_FACTPOR);
 				else {
@@ -363,7 +363,7 @@ public abstract class BandElement extends PickableGLElement {
 		isAnyThingHovered = event.isMouseOver();
 		if (event.getSender() == first || event.getSender() == second)
 			return;
-		else if (event.isMouseOver())
+		else if (event.isMouseOver() && !hasSelections())
 			opacityFactor = LOW_OPACITY_FACTOR;
 		else
 			opacityFactor = HIGH_OPACITY_FACTPOR;
@@ -375,11 +375,16 @@ public abstract class BandElement extends PickableGLElement {
 		if (event.getSender() == this)
 			return;
 		isAnyThingHovered = event.isMouseOver();
-		if (event.isMouseOver())
+		boolean fadeOut = event.isMouseOver() && !hasSelections();
+		if (fadeOut)
 			opacityFactor = LOW_OPACITY_FACTOR;
 		else
 			opacityFactor = HIGH_OPACITY_FACTPOR;
 		setZDeltaAccordingToState();
+	}
+
+	private boolean hasSelections() {
+		return hasSharedElementsWithHoveredBand() || hasSharedElementsWithSelectedBand();
 	}
 
 	protected Pair<Vec3f, Vec3f> pair(float x1, float y1, float x2, float y2) {
