@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
@@ -41,11 +40,9 @@ public final class ChemicalClusterElement extends ClusterElement {
 	private Map<Integer, String> elementToClusterMap;
 
 	public ChemicalClusterElement(TablePerspective data,
-			AllClustersElement root, TablePerspective x, TablePerspective l,
-			TablePerspective z, ExecutorService executor,
-			List<String> clusterList, Map<Integer, String> elementToClusterMap,
-			GLRootElement biclusterRoot) {
-		super(data, root, x, l, z, executor, biclusterRoot);
+ BiClustering clustering, List<String> clusterList,
+			Map<Integer, String> elementToClusterMap) {
+		super(data, clustering);
 		this.clusterList = clusterList;
 		this.elementToClusterMap = elementToClusterMap;
 		List<Integer> elements = new ArrayList<>(elementToClusterMap.size());
@@ -61,14 +58,6 @@ public final class ChemicalClusterElement extends ClusterElement {
 		toolBar.remove(1);
 		minScaleFactor = 3;
 		setScaleFactor(3);
-	}
-
-	private ChemicalClusterElement(TablePerspective data,
-			AllClustersElement root, TablePerspective x, TablePerspective l,
-			TablePerspective z, ExecutorService executor, List<String> list,
-			GLRootElement biclusterRoot) {
-		super(data, root, x, l, z, executor, biclusterRoot);
-
 	}
 
 	@Override
@@ -168,7 +157,7 @@ public final class ChemicalClusterElement extends ClusterElement {
 	@Override
 	protected void recreateVirtualArrays(List<Integer> dimIndices,
 			List<Integer> recIndices) {
-		this.elements = new VirtualArray(x.getDataDomain()
+		this.elements = new VirtualArray(clustering.getXDataDomain()
 				.getDimensionGroupIDType(), dimIndices);
 		((SpecialClusterContent) content).update();
 	}
@@ -180,7 +169,7 @@ public final class ChemicalClusterElement extends ClusterElement {
 
 	@Override
 	protected VirtualArray getRecordVirtualArray() {
-		return new VirtualArray(x.getDataDomain().getRecordIDType());
+		return new VirtualArray(clustering.getXDataDomain().getRecordIDType());
 	}
 
 	@Override
@@ -298,7 +287,7 @@ public final class ChemicalClusterElement extends ClusterElement {
 						false));
 				cluster.isHidden = true;
 				setVisibility();
-				allClusters.remove(cluster);
+				findParent(AllClustersElement.class).remove(cluster);
 				cluster.mouseOut();
 			}
 

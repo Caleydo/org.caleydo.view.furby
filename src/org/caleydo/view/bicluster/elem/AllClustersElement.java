@@ -8,7 +8,6 @@ package org.caleydo.view.bicluster.elem;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.DeepScan;
@@ -43,13 +42,12 @@ public class AllClustersElement extends GLElementContainer {
 		return toolbars;
 	}
 
-	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z,
-			ExecutorService executor, GLRootElement biclusterRoot) {
+	public void setData(List<TablePerspective> list, BiClustering clustering) {
 		this.clear();
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(p, this, x, l, z, executor, biclusterRoot);
+				final ClusterElement el = new ClusterElement(p, clustering);
 				this.add(el);
 			}
 		}
@@ -83,11 +81,7 @@ public class AllClustersElement extends GLElementContainer {
 		this.dragedElement = element;
 	}
 
-
 	public void setToolBars(AToolBarElement... elements) {
 		this.toolbars.addAll(Arrays.asList(elements));
 	}
-
-
-
 }

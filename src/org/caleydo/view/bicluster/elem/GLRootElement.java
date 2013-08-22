@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
+import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.id.IDType;
@@ -48,11 +49,11 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private final ParameterToolBarElement parameterToolBar = new ParameterToolBarElement();
 	private final LayoutToolBarElement layoutToolBar = new LayoutToolBarElement();
 
-	private TablePerspective x, l, z;
-	private ExecutorService executor;
-
 	private float dimScaleFactor = MyPreferences.getDimScaleFactor();
 	private float recScaleFactor = MyPreferences.getRecScaleFactor();
+
+	private BiClustering clustering;
+	private TablePerspective x;
 
 	public GLRootElement() {
 		setLayout(this);
@@ -80,9 +81,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z,
 			ExecutorService executor) {
 		this.x = x;
-		this.l = l;
-		this.z = z;
-		this.executor = executor;
+		this.clustering = new BiClustering(toTable(x), toTable(l), toTable(z), executor);
 
 		parameterToolBar.setXTablePerspective(x);
 		layoutToolBar.setXTablePerspective(x);
@@ -97,11 +96,17 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		if (list != null) {
 			System.out.println(list.size() + " Cluster geladen.");
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(p, clusters, x, l, z, executor, this);
+				final ClusterElement el = new ClusterElement(p, clustering);
 				clusters.add(el);
 			}
 		}
 		clusters.setToolBars(parameterToolBar, layoutToolBar);
+	}
+
+	private static Table toTable(TablePerspective t) {
+		if (t == null)
+			return null;
+		return t.getDataDomain().getTable();
 	}
 
 	public void createBands() {
@@ -122,9 +127,6 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		bands.updateSelection();
 		bands.updateStructure();
 	}
-
-
-
 
 	public void setClusterSizes() {
 		double maxDimClusterElements = 1;
@@ -229,8 +231,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	@ListenTo
 	private void listenTo(SpecialClusterAddedEvent event) {
-		ClusterElement specialCluster = new SpecialRecordClusterElement(x, clusters, x, l, z, executor,
-				event.getElements(), this);
+		ClusterElement specialCluster = new SpecialRecordClusterElement(x, clustering, event.getElements());
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);
 		setClusterSizes();
@@ -249,8 +250,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	@ListenTo
 	private void listenTo(ChemicalClusterAddedEvent e) {
-		ClusterElement specialCluster = new ChemicalClusterElement(x, clusters, x, l, z, executor, e.getClusterList(),
-				e.getElementToClusterMap(), this);
+		ClusterElement specialCluster = new ChemicalClusterElement(x, clustering, e.getClusterList(),
+				e.getElementToClusterMap());
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);
 		setClusterSizes();
@@ -269,9 +270,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	 * @param group
 	 */
 	public void addSpecialCluster(IDType idType, TablePerspective group) {
-		SpecialGenericClusterElement specialCluster = new SpecialGenericClusterElement(group, clusters, x, l,
-				z,
-				executor, this);
+		SpecialGenericClusterElement specialCluster = new SpecialGenericClusterElement(group, clustering);
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);
 		setClusterSizes();
@@ -279,7 +278,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		for (GLElement start : clusters) {
 			if (start == specialCluster)
 				continue;
-			if (this.x.getRecordPerspective().getIdType().resolvesTo(idType))
+			if (clustering.getXDataDomain().getRecordIDType().resolvesTo(idType))
 				bands.add(new RecordBandElement(start, specialCluster, bands));
 			else
 				bands.add(new DimensionBandElement(start, specialCluster, bands));
@@ -324,6 +323,9 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	@ListenTo
 	private void listenTo(UnhidingClustersEvent e) {
+		for (ClusterElement elem : Iterables.filter(clusters, ClusterElement.class)) {
+			elem.show();
+		}
 		setClusterSizes();
 	}
 

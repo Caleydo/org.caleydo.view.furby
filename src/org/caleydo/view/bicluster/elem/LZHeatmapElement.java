@@ -61,6 +61,7 @@ public class LZHeatmapElement extends GLElement {
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
+		g.color(Color.GRAY).drawRect(0, 0, w, h);
 		GL2 gl = g.gl;
 		texture.enable(gl);
 		texture.bind(gl);

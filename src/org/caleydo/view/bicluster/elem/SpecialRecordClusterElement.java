@@ -7,8 +7,8 @@ package org.caleydo.view.bicluster.elem;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
+import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
@@ -35,10 +35,8 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 
 	private String clusterName;
 
-	public SpecialRecordClusterElement(TablePerspective data,
-			AllClustersElement root, TablePerspective x, TablePerspective l,
-			TablePerspective z, ExecutorService executor, List<Integer> elements, GLRootElement biclusterRoot) {
-		super(data, root, x, l, z, executor, biclusterRoot);
+	public SpecialRecordClusterElement(TablePerspective data, BiClustering clustering, List<Integer> elements) {
+		super(data, clustering);
 		setHasContent(null, elements);
 		content.setzDelta(0.5f);
 		toolBar.remove(3);
@@ -48,13 +46,6 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 		toolBar.remove(1);
 		minScaleFactor = 3;
 		setScaleFactor(3);
-	}
-
-	private SpecialRecordClusterElement(TablePerspective data,
-			AllClustersElement root, TablePerspective x, TablePerspective l,
-			TablePerspective z, ExecutorService executor, GLRootElement biclusterRoot) {
-		super(data, root, x, l, z, executor, biclusterRoot);
-
 	}
 
 	@Override
@@ -143,7 +134,11 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 
 	@Override
 	public String getID() {
-		return clusterName == null ? "Special " + x.getDataDomain().getRecordIDCategory().getDenominationPlural().toString() : clusterName;
+		return clusterName == null ? "Special " + getXDataDomain().getRecordIDCategory().getDenominationPlural().toString() : clusterName;
+	}
+
+	private ATableBasedDataDomain getXDataDomain() {
+		return clustering.getXDataDomain();
 	}
 
 	@Override
@@ -154,14 +149,14 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 	@Override
 	protected void recreateVirtualArrays(List<Integer> dimIndices,
 			List<Integer> recIndices) {
-		this.elements = new VirtualArray(x.getDataDomain()
+		this.elements = new VirtualArray(getXDataDomain()
 				.getRecordGroupIDType(), recIndices);
 		((SpecialClusterContent)content).update();
 	}
 
 	@Override
 	protected VirtualArray getDimensionVirtualArray() {
-		return new VirtualArray(x.getDataDomain().getDimensionIDType());
+		return new VirtualArray(getXDataDomain().getDimensionIDType());
 	}
 
 	@Override
@@ -222,7 +217,7 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 		void update() {
 			recordNames = new ArrayList<String>();
 			for (Integer i: elements) {
-				recordNames.add(x.getDataDomain().getRecordLabel(i));
+				recordNames.add(getXDataDomain().getRecordLabel(i));
 			}
 		}
 
@@ -259,7 +254,7 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 		EventPublisher.trigger(new SpecialClusterRemoveEvent(this, false));
 		this.isHidden = true;
 		setVisibility();
-		allClusters.remove(this);
+		findParent(AllClustersElement.class).remove(this);
 		this.mouseOut();
 	}
 

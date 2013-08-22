@@ -20,12 +20,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 
 import org.apache.commons.lang.StringUtils;
-import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
@@ -38,6 +34,7 @@ import org.caleydo.core.gui.util.RenameNameDialog;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.base.ILabeled;
+import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
@@ -59,6 +56,8 @@ import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.layout.IHasGLLayoutData;
+import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder;
+import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder.EButtonBarLayout;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
@@ -67,8 +66,6 @@ import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.BiClusterRenderStyle;
-import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
-import org.caleydo.view.bicluster.concurrent.ScanResult;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
@@ -81,10 +78,7 @@ import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SearchClusterEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
-import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
-import org.caleydo.view.bicluster.sorting.ASortingStrategy;
 import org.caleydo.view.bicluster.sorting.BandSorting;
-import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 import org.caleydo.view.heatmap.v2.EShowLabels;
 import org.eclipse.swt.widgets.Display;
@@ -113,12 +107,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	protected static final float DRAGGING_Z_DELTA = 4;
 
 	protected final TablePerspective data;
-	protected final TablePerspective x;
-	protected final TablePerspective l;
-	protected final TablePerspective z;
-	protected final AllClustersElement allClusters;
-	protected final GLRootElement biclusterRoot;
-	protected final ExecutorService executor;
+	protected final BiClustering clustering;
+
 	protected boolean isDragged = false;
 	protected boolean isHovered = false;
 	protected boolean isHidden = false;
@@ -141,6 +131,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	protected ThresholdBar dimThreshBar;
 	protected ThresholdBar recThreshBar;
 	protected GLElement content;
+	private final GLElement switcher;
 
 	protected float recThreshold = getRecThreshold();
 	protected int recNumberThreshold = getRecTopNElements();
@@ -169,18 +160,15 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	private LZHeatmapElement propabilityHeatMapHor;
 	private LZHeatmapElement propabilityHeatMapVer;
 
-	public ClusterElement(TablePerspective data, AllClustersElement root, TablePerspective x, TablePerspective l,
-			TablePerspective z, ExecutorService executor, GLRootElement biclusterRoot) {
+	public ClusterElement(TablePerspective data, BiClustering clustering) {
 		setLayout(this);
 		this.data = data;
-		this.allClusters = root;
-		this.x = x;
-		this.l = l;
-		this.z = z;
-		this.executor = executor;
-		this.biclusterRoot = biclusterRoot;
+		this.clustering = clustering;
 		minScaleFactor = 0.25;
 		initContent();
+		this.switcher = createSwitcher();
+		this.switcher.setLayoutData(GLLayoutDatas.combine(DEFAULT_DURATION,MoveTransitions.MOVE_AND_GROW_LINEAR));
+		this.add(5, switcher);
 		setVisibility();
 		setScaleFactor(1);
 		this.onPick(new IPickingListener() {
@@ -192,6 +180,21 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		});
 		setAnimateByDefault(false);
 		this.cluster = this;
+
+	}
+
+	/**
+	 * @return
+	 */
+	private GLElement createSwitcher() {
+		if (content instanceof ClusterContentElement) {
+			ButtonBarBuilder b = ((ClusterContentElement) content).createButtonBarBuilder();
+			b.prepend(createHideClusterButton());
+			b.layoutAs(EButtonBarLayout.SLIDE_LEFT).size(18);
+			return b.build();
+		} else {
+			return createHideClusterButton();
+		}
 	}
 
 	/**
@@ -223,9 +226,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		setZValuesAccordingToState();
 		this.add(content);
 
-		this.propabilityHeatMapHor = new LZHeatmapElement(z.getDataDomain().getTable(), true);
+		this.propabilityHeatMapHor = new LZHeatmapElement(clustering.getZ(), true);
 		this.add(this.propabilityHeatMapHor);
-		this.propabilityHeatMapVer = new LZHeatmapElement(l.getDataDomain().getTable(), false);
+		this.propabilityHeatMapVer = new LZHeatmapElement(clustering.getL(), false);
 		this.add(this.propabilityHeatMapVer);
 	}
 
@@ -238,12 +241,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		builder.put(EDetailLevel.class, EDetailLevel.MEDIUM);
 		ClusterContentElement c = new ClusterContentElement(builder, filter);
 
-		if (toolBar != null) {
-			GLElementContainer b = c.createVerticalButtonBar();
-			toolBar.add(b);
-			float h = (toolBar.size() * (16 + 6) + (b.size() - 1) * (16 + 2));
-			toolBar.setSize(Float.NaN, h);
-		}
 		// trigger a scale event on vis change
 		c.onActiveChanged(new GLElementFactorySwitcher.IActiveChangedCallback() {
 			@Override
@@ -418,6 +415,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 			array.addAll(indices.subList(0, Math.min(indices.size(), treshold)));
 	}
 
+	private AllClustersElement findAllClustersElement() {
+		return findParent(AllClustersElement.class);
+	}
+
 	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
 		this.dimBandsEnabled = dimBandsEnabled;
 		this.recBandsEnabled = recBandsEnabled;
@@ -427,7 +428,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		List<Integer> myRecIndizes = getRecordVirtualArray().getIDs();
 		dimensionOverlapSize = 0;
 		recordOverlapSize = 0;
-		for (GLElement element : allClusters.asList()) {
+		for (GLElement element : findAllClustersElement()) {
 			if (element == this)
 				continue;
 			ClusterElement e = (ClusterElement) element;
@@ -519,34 +520,37 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		IGLLayoutElement headerbar = children.get(1);
 		IGLLayoutElement dimthreshbar = children.get(2);
 		IGLLayoutElement recthreshbar = children.get(3);
+		IGLLayoutElement content = children.get(4);
+		IGLLayoutElement close = children.get(5);
 
 		// shift for propability heat maps
-		float shift = children.size() > 5 ? 10 : 0;
+		float shift = children.size() > 6 ? 6 : 0;
 
-		if (isHovered) { // depending whether we are hovered or not, show hide
-							// the toolbar's
-			toolbar.setBounds(-38 - shift, 0, 18, toolbar.getSetHeight());
-			headerbar.setBounds(0, -39 - shift, w < 55 ? 57 : w + 2, 20);
-			dimthreshbar.setBounds(-1, -20 - shift, Math.max(w + 1, 56), 20);
-			recthreshbar.setBounds(-20 - shift, -1, 20, Math.max(h + 1, 61));
+		float baseHeight = 18;
 
+		if (isHovered) { // depending whether we are hovered or not, show hide the toolbar's
+			toolbar.setBounds(-baseHeight - shift, 0, baseHeight, toolbar.getSetHeight());
+			headerbar.setBounds(0, -baseHeight - shift, w < 55 ? 57 : w + 2, baseHeight);
+			//dimthreshbar.setBounds(-1, -baseHeight - shift, Math.max(w + 1, 56), baseHeight);
+			//recthreshbar.setBounds(-baseHeight - shift, -1, baseHeight, Math.max(h + 1, 61));
+			close.setBounds(-baseHeight - shift, -baseHeight - shift, baseHeight, baseHeight);
 		} else {
 			// hide by setting the width to 0
 			toolbar.setBounds(-18 - shift, 0, 0, toolbar.getSetHeight());
 			headerbar.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
 			dimthreshbar.setBounds(-1, -shift, Math.max(w + 1, 56), 0);
 			recthreshbar.setBounds(-shift, -1, 0, Math.max(h + 1, 61));
+			close.setBounds(-shift, -shift, 0, 0);
 		}
-		if (children.size() > 5) { // LZ heatmaps
-			children.get(5).setBounds(0, -shift, w, shift);
-			children.get(6).setBounds(-shift, 0, shift, h);
+		if (children.size() > 6) { // LZ heatmaps
+			children.get(6).setBounds(-1, -shift, w + 2, shift);
+			children.get(7).setBounds(-shift, -1, shift, h + 2);
 		}
 
-		IGLLayoutElement igllContent = children.get(4);
-		if (isFocused && doesShowLabels(igllContent.asElement())) {
-			igllContent.setBounds(0, 0, w + 79, h + 79);
+		if (isFocused && doesShowLabels(content.asElement())) {
+			content.setBounds(0, 0, w + 79, h + 79);
 		} else {
-			igllContent.setBounds(0, 0, w, h);
+			content.setBounds(0, 0, w, h);
 		}
 
 	}
@@ -608,7 +612,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 				if (!pick.isDoDragging())
 					return;
 				if (isDragged == false) {
-					allClusters.setDragedLayoutElement(cluster);
+					findAllClustersElement().setDragedLayoutElement(cluster);
 				}
 				isDragged = true;
 				setzDelta(DRAGGING_Z_DELTA);
@@ -629,7 +633,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 				pick.setDoDragging(false);
 				clicked = false;
 				isDragged = false;
-				allClusters.setDragedLayoutElement(null);
+				findAllClustersElement().setDragedLayoutElement(null);
 				setzDelta(DEFAULT_Z_DELTA);
 				if (isClusterCollision())
 					mouseOut();
@@ -638,7 +642,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 				if (!pick.isDoDragging())
 					return;
 				isDragged = false;
-				allClusters.setDragedLayoutElement(null);
+				findAllClustersElement().setDragedLayoutElement(null);
 			}
 			setZValuesAccordingToState();
 		}
@@ -656,7 +660,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		Vec2f myLoc = getLocation();
 		Rectangle myRec = new Rectangle((int) myLoc.x() - 10, (int) myLoc.y() - 10, (int) mySize.x() + 20,
 				(int) mySize.y() + 20);
-		for (GLElement jGLE : allClusters) {
+		for (GLElement jGLE : findAllClustersElement()) {
 			ClusterElement j = (ClusterElement) jGLE;
 			if (j == this)
 				continue;
@@ -750,8 +754,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		}
 
 		protected void createButtons() {
-			hide = createHideClusterButton();
-			this.add(hide);
 			sorting = new GLButton();
 			sorting.setRenderer(GLRenderers.drawText(
 					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
@@ -950,11 +952,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		handleFocus();
 	}
 
-	@ListenTo
-	private void listenTo(UnhidingClustersEvent event) {
+	public void show() {
+		if (!isHidden)
+			return;
 		isHidden = false;
 		setVisibility();
-		biclusterRoot.setClusterSizes();
 	}
 
 	@ListenTo
@@ -1177,21 +1179,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	protected void rebuildMyData(boolean isGlobal) {
 		if (isLocked)
 			return;
-		Table L = l.getDataDomain().getTable();
-		Table Z = z.getDataDomain().getTable();
-		Future<ScanResult> recList = null, dimList = null;
-		ASortingStrategy strategy = new ProbabilityStrategy(L, bcNr);
-		recList = executor.submit(new ScanProbabilityMatrix(recThreshold, L, bcNr, strategy));
-		strategy = new ProbabilityStrategy(Z, bcNr);
-		dimList = executor.submit(new ScanProbabilityMatrix(dimThreshold, Z, bcNr, strategy));
-		List<Integer> dimIndices = null, recIndices = null;
-		try {
-			dimIndices = dimList.get().getIndices();
-			recIndices = recList.get().getIndices();
-		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
-		}
-		setData(dimIndices, recIndices, getID(), bcNr, -1, -1, -1, -1);
+		Pair<List<Integer>, List<Integer>> pair = clustering.scan(bcNr, dimThreshold, recThreshold);
+		setData(pair.getFirst(), pair.getSecond(), getID(), bcNr, -1, -1, -1, -1);
 		EventPublisher.trigger(new ClusterScaleEvent(this));
 		if (!isGlobal)
 			EventPublisher.trigger(new MouseOverClusterEvent(this, true));
@@ -1199,6 +1188,8 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		EventPublisher.trigger(new CreateBandsEvent(this));
 
 	}
+
+
 
 	public int getDimIndexOf(int value) {
 		return getDimensionVirtualArray().indexOf(value);

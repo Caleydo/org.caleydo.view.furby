@@ -14,11 +14,10 @@ import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
-import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
-import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
+import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementSupplier;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
@@ -42,7 +41,7 @@ import com.google.common.collect.Iterables;
  * @author Samuel Gratzl
  *
  */
-public class ClusterContentElement extends GLElementDecorator implements IActiveChangedCallback {
+public class ClusterContentElement extends GLElementDecorator {
 	private final Collection<GLElement> repaintOnRepaint = new ArrayList<>(2);
 	private final TablePerspective data;
 
@@ -59,21 +58,9 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",
  filter);
 		GLElementFactorySwitcher content = new GLElementFactorySwitcher(extensions, ELazyiness.NONE);
-		content.onActiveChanged(this);
+
 
 		setContent(content);
-	}
-
-	public GLElementContainer createVerticalButtonBar() {
-		GLElementContainer bar = getSwitcher().createButtonBar();
-		bar.setLayout(GLLayouts.flowVertical(2));
-		bar.setSize(16, Float.NaN);
-		return bar;
-	}
-
-	@Override
-	public void onActiveChanged(int active) {
-		relayoutParent();
 	}
 
 	@Override
@@ -222,5 +209,12 @@ public class ClusterContentElement extends GLElementDecorator implements IActive
 	 */
 	public void onActiveChanged(IActiveChangedCallback callback) {
 		getSwitcher().onActiveChanged(callback);
+	}
+
+	/**
+	 * @return
+	 */
+	public ButtonBarBuilder createButtonBarBuilder() {
+		return getSwitcher().createButtonBarBuilder();
 	}
 }

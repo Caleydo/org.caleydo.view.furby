@@ -8,8 +8,8 @@ package org.caleydo.view.bicluster.elem;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
+import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.perspective.variable.Perspective;
 import org.caleydo.core.data.selection.SelectionType;
@@ -39,10 +39,8 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 	private final VirtualArray recordVA;
 	private final VirtualArray dimVA;
 
-	public SpecialGenericClusterElement(TablePerspective data,
-			AllClustersElement root, TablePerspective x, TablePerspective l,
- TablePerspective z, ExecutorService executor, GLRootElement biclusterRoot) {
-		super(data, root, x, l, z, executor, biclusterRoot);
+	public SpecialGenericClusterElement(TablePerspective data, BiClustering clustering) {
+		super(data, clustering);
 		content.setzDelta(0.5f);
 		toolBar.remove(3);
 		toolBar.remove(1);
@@ -51,8 +49,8 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 		toolBar.remove(1);
 		setLabel(data.getDataDomain().getLabel() + " " + data.getLabel());
 
-		this.recordVA = createVA(x.getRecordPerspective().getIdType(), data);
-		this.dimVA = createVA(x.getDimensionPerspective().getIdType(), data);
+		this.recordVA = createVA(clustering.getXDataDomain().getRecordIDType(), data);
+		this.dimVA = createVA(clustering.getXDataDomain().getDimensionIDType(), data);
 		setHasContent(dimVA.getIDs(), recordVA.getIDs());
 	}
 
@@ -65,12 +63,13 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 		// check if dimension can be converted
 		IDType r = data.getRecordPerspective().getIdType();
 		IDType c = data.getDimensionPerspective().getIdType();
+		final ATableBasedDataDomain x = clustering.getXDataDomain();
 		if (r.resolvesTo(idType)) {
-			Perspective convertForeignPerspective = x.getDataDomain().convertForeignPerspective(
+			Perspective convertForeignPerspective = x.convertForeignPerspective(
 					data.getRecordPerspective());
 			return convertForeignPerspective.getVirtualArray();
 		} else if (c.resolvesTo(idType)) {
-			Perspective convertForeignPerspective = x.getDataDomain().convertForeignPerspective(
+			Perspective convertForeignPerspective = x.convertForeignPerspective(
 					data.getDimensionPerspective());
 			return convertForeignPerspective.getVirtualArray();
 		} else
@@ -217,7 +216,7 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 		EventPublisher.trigger(new SpecialClusterRemoveEvent(this, false));
 		this.isHidden = true;
 		setVisibility();
-		allClusters.remove(this);
+		findParent(AllClustersElement.class).remove(this);
 		this.mouseOut();
 	}
 
