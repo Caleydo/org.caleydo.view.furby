@@ -115,7 +115,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected double scaleFactor;
 	protected double minScaleFactor;
 	private double preFocusScaleFactor;
-	protected boolean isFocused = false;
+	private boolean isFocused = false;
 
 	/**
 	 * delayed mouse out to avoid fast in / out delays
@@ -548,7 +548,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		relayout();
 	}
 
-	protected void handleFocus() {
+	/**
+	 * @return the isFocused, see {@link #isFocused}
+	 */
+	public boolean isFocused() {
+		return isFocused;
+	}
+
+	protected void handleFocus(boolean isFocused) {
 		if (isFocused) {
 			preFocusScaleFactor = scaleFactor;
 			scaleFactor = defaultFocusScaleFactor();
@@ -577,7 +584,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 * @param dimensionElementSize
 	 * @return
 	 */
-	private float focusSize(int elements) {
+	private static float focusSize(int elements) {
 		if (elements < 5)
 			return 20 * elements;
 		else if (elements < 10)
@@ -598,12 +605,33 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	private void listenTo(FocusChangeEvent e) {
 		if (e.getSender() == this) {
 			this.isFocused = !this.isFocused;
+			handleFocus(this.isFocused);
 		} else {
-			setScaleFactor(1);
-			resize();
-			this.isFocused = false;
+			if (this.isFocused) {
+				this.isFocused = false;
+				handleFocus(false);
+			}
+			ClusterElement other = (ClusterElement) e.getSender();
+			float relationship = relationshipTo(other);
 		}
-		handleFocus();
+	}
+
+	/**
+	 * compute the relation ship factor (0..none, 1... itself) to the given element
+	 *
+	 * @param other
+	 * @return
+	 */
+	private float relationshipTo(ClusterElement other) {
+		if (other == this)
+			return 1;
+		int dimSize = getDimOverlap(other).size();
+		int recSize = getRecOverlap(other).size();
+		int shared = dimSize + recSize;
+		if (shared == 0)
+			return 0;
+		// TODO
+		return 0;
 	}
 
 	public void show() {
@@ -615,16 +643,19 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	@ListenTo
 	private void listenTo(MouseOverClusterEvent event) {
+		if (!event.isMouseOver()) {
+			opacityfactor = highOpacityFactor;
+			return;
+		}
+
 		ClusterElement hoveredElement = (ClusterElement) event.getSender();
+
 		if (hoveredElement == this || getDimOverlap(hoveredElement).size() > 0
 				|| getRecOverlap(hoveredElement).size() > 0) {
 			opacityfactor = highOpacityFactor;
 			return;
-		} else if (event.isMouseOver()) {
+		} else
 			opacityfactor = lowOpacityFactor;
-		} else {
-			opacityfactor = highOpacityFactor;
-		}
 	}
 
 	@ListenTo

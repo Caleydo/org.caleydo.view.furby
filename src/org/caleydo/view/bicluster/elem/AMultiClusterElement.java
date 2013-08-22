@@ -70,8 +70,8 @@ public abstract class AMultiClusterElement extends ClusterElement {
 
 
 	@Override
-	protected void handleFocus() {
-		super.handleFocus();
+	protected void handleFocus(boolean isFocused) {
+		super.handleFocus(isFocused);
 		if (isFocused) {
 			content.showLabels(EShowLabels.RIGHT);
 		} else {
@@ -81,7 +81,7 @@ public abstract class AMultiClusterElement extends ClusterElement {
 
 	@Override
 	public final float getDimPosOf(int index) {
-		if (isFocused) {
+		if (isFocused()) {
 			int ind = getDimensionVirtualArray().indexOf(index);
 			return content.getDimensionPos(ind);
 		} else {
@@ -91,7 +91,7 @@ public abstract class AMultiClusterElement extends ClusterElement {
 
 	@Override
 	public final float getRecPosOf(int index) {
-		if (isFocused) {
+		if (isFocused()) {
 			int ind = getRecordVirtualArray().indexOf(index);
 			return content.getRecordPos(ind);
 		} else {

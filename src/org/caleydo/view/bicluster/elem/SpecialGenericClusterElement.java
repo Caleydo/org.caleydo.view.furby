@@ -84,7 +84,7 @@ public final class SpecialGenericClusterElement extends AMultiClusterElement {
 			close.setBounds(0, 0, 0, 0); // hide by setting the width to 0
 			headerbar.setBounds(0, -18, w < 50 ? 50 : w, 17);
 		}
-		if (isFocused) {
+		if (isFocused()) {
 			igllContent.setBounds(0, 0, w + 79, h + 79);
 		} else {
 			igllContent.setBounds(0, 0, w, h);

@@ -133,7 +133,7 @@ public class ClusterContentElement extends GLElementDecorator {
 		// render blend out overlay
 		ClusterElement cluster = findParent(ClusterElement.class);
 		float a = 1.0f;
-		if (!cluster.isFocused) {
+		if (!cluster.isFocused()) {
 			a *= cluster.curOpacityFactor;
 		}
 		if (a < 1) {

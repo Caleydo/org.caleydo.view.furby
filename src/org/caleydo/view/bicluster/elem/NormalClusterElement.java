@@ -147,7 +147,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 		children.get(6).setBounds(-1, -shift, w + 2, shift);
 		children.get(7).setBounds(-shift, -1, shift, h + 2);
-		if (isFocused && doesShowLabels(content.asElement())) {
+		if (isFocused() && doesShowLabels(content.asElement())) {
 			content.setBounds(0, 0, w + 79, h + 79);
 		} else {
 			content.setBounds(0, 0, w, h);
@@ -281,8 +281,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 	}
 
 	@Override
-	protected void handleFocus() {
-		super.handleFocus();
+	protected void handleFocus(boolean isFocused) {
+		super.handleFocus(isFocused);
 		if (isFocused) {
 			propabilityHeatMapHor.nonUniformLayout((content));
 			propabilityHeatMapVer.nonUniformLayout((content));
