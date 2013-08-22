@@ -6,12 +6,27 @@
 package org.caleydo.view.bicluster.event;
 
 import org.caleydo.core.event.AEvent;
-import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.view.bicluster.elem.ClusterElement;
 
 public class FocusChangeEvent extends AEvent {
 
-	public FocusChangeEvent(GLElement sender) {
+	private boolean focus;
+
+	public FocusChangeEvent(ClusterElement sender, boolean focus) {
+		this.focus = focus;
 		this.setSender(sender);
+	}
+
+	public ClusterElement getCluster() {
+		return (ClusterElement) getSender();
+	}
+
+	public boolean gotFocus() {
+		return focus;
+	}
+
+	public boolean lostFocus() {
+		return !focus;
 	}
 
 

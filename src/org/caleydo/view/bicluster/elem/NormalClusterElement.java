@@ -434,7 +434,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 			sorting.setTooltip("Change sorting");
 			sorting.setCallback(this);
 			this.add(sorting);
-			focus = new GLButton();
+			focus = new GLButton(GLButton.EButtonMode.CHECKBOX);
 			focus.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_FOCUS));
 			focus.setSize(16, 16);
 			focus.setTooltip("Focus this Cluster");
@@ -491,7 +491,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 				reduceScaleFactor();
 				resize();
 			} else if (button == focus) {
-				EventPublisher.trigger(new FocusChangeEvent(NormalClusterElement.this));
+				EventPublisher.trigger(new FocusChangeEvent(NormalClusterElement.this, selected));
 			} else if (button == lock) {
 				isLocked = !isLocked;
 				lock.setTooltip(isLocked ? "UnLock this cluster. It will again recieve threshold updates."

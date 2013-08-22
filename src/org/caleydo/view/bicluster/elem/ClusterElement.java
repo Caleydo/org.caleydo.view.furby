@@ -114,7 +114,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	private double recSize;
 	protected double scaleFactor;
 	protected double minScaleFactor;
-	private double preFocusScaleFactor;
+	private double preFocusScaleFactor = -1; // -1 indicator no backup
 	private boolean isFocused = false;
 
 	/**
@@ -562,6 +562,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			resize();
 		} else {
 			setScaleFactor(preFocusScaleFactor);
+			preFocusScaleFactor = -1;
 			resize();
 			mouseOut();
 		}
@@ -611,8 +612,22 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 				this.isFocused = false;
 				handleFocus(false);
 			}
-			ClusterElement other = (ClusterElement) e.getSender();
-			float relationship = relationshipTo(other);
+			if (e.gotFocus()) {
+				if (preFocusScaleFactor < 0) {// backup
+					preFocusScaleFactor = scaleFactor;
+				}
+				ClusterElement other = (ClusterElement) e.getSender();
+				float relationship = relationshipTo(other);
+				if (relationship == 0)
+					setScaleFactor(0);
+				else
+					setScaleFactor(preFocusScaleFactor * Math.min(0.8f + relationship * 10, 2));
+				resize();
+			} else {
+				setScaleFactor(preFocusScaleFactor);
+				preFocusScaleFactor = -1;
+				resize();
+			}
 		}
 	}
 
@@ -625,13 +640,24 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	private float relationshipTo(ClusterElement other) {
 		if (other == this)
 			return 1;
-		int dimSize = getDimOverlap(other).size();
-		int recSize = getRecOverlap(other).size();
-		int shared = dimSize + recSize;
-		if (shared == 0)
+		if (!dimBandsEnabled && !recBandsEnabled)
 			return 0;
-		// TODO
-		return 0;
+		int dimIntersection = getDimOverlap(other).size();
+		int recIntersection = getRecOverlap(other).size();
+		int intersection = dimIntersection + recIntersection;
+		if (intersection == 0)
+			return 0;
+		int dimUnion = getNumberOfDimElements() + other.getNumberOfDimElements() - dimIntersection;
+		int recUnion = getNumberOfRecElements() + other.getNumberOfRecElements() - recIntersection;
+		float jaccard = 0;
+		// some kind of jaccard
+		if (dimBandsEnabled && recBandsEnabled)
+			jaccard = (dimIntersection + recIntersection) / (float) (dimUnion + recUnion);
+		else if (dimBandsEnabled)
+			jaccard = (dimIntersection) / (float) (dimUnion);
+		else if (recBandsEnabled)
+			jaccard = (recIntersection) / (float) (recUnion);
+		return jaccard;
 	}
 
 	public void show() {
