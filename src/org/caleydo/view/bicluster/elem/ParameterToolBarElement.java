@@ -105,7 +105,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 
 		{
 			specialRecordButton = new GLButton(EButtonMode.BUTTON);
-			specialRecordButton.setRenderer(new MyTextRender("Add dim Element"));
+			specialRecordButton.setRenderer(new MyTextRender("Add special record cluster"));
 			specialRecordButton.setCallback(this);
 			specialRecordButton.setTooltip("Add special record Elements");
 			specialRecordButton.setSize(Float.NaN, BUTTON_WIDTH);
@@ -113,7 +113,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		}
 		{
 			specialDimensionButton = new GLButton(EButtonMode.BUTTON);
-			specialDimensionButton.setRenderer(new MyTextRender("Assign Chemical clusters"));
+			specialDimensionButton.setRenderer(new MyTextRender("Add chemical clusters"));
 			specialDimensionButton.setCallback(this);
 			specialDimensionButton.setTooltip("Add chemical Clusters");
 			specialDimensionButton.setSize(Float.NaN, BUTTON_WIDTH);
