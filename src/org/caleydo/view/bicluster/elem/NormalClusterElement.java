@@ -122,7 +122,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 		// shift for propability heat maps
 		float shift = 6;
 
-		if (isHovered) { // depending whether we are hovered or not, show hide the toolbar's
+		if (isHovered || isShowAlwaysToolBar()) { // depending whether we are hovered or not, show hide the toolbar's
 			corner.setBounds(-18 - shift, -18 - shift, 18, 18 * 2);
 			if (showThreshold) {
 				top.setBounds(0, -shift, w < 50 ? 50 : w, 0);

@@ -76,7 +76,7 @@ public final class SpecialGenericClusterElement extends AMultiClusterElement {
 		IGLLayoutElement headerbar = children.get(0);
 		IGLLayoutElement igllContent = children.get(1);
 		IGLLayoutElement close = children.get(2);
-		if (isHovered) { // depending whether we are hovered or not, show hide
+		if (isHovered || isShowAlwaysToolBar()) { // depending whether we are hovered or not, show hide
 							// the toolbar's
 			close.setBounds(-18, 0, 18, 18);
 			headerbar.setBounds(0, -19, w < 55 ? 57 : w + 2, 20);

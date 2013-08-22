@@ -9,6 +9,7 @@ import org.caleydo.core.gui.SimpleEventAction;
 import org.caleydo.core.view.ARcpGLElementViewPart;
 import org.caleydo.core.view.opengl.canvas.IGLCanvas;
 import org.caleydo.core.view.opengl.layout2.AGLElementView;
+import org.caleydo.view.bicluster.event.AlwaysShowToolBarEvent;
 import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.internal.Activator;
 import org.caleydo.view.bicluster.internal.SearchAction;
@@ -46,6 +47,8 @@ public class RcpGLBiClusterView extends ARcpGLElementViewPart {
 	public void addToolBarContent(IToolBarManager toolBarManager) {
 		super.addToolBarContent(toolBarManager);
 		toolBarManager.add(searchAction);
+		toolBarManager.add(new SimpleEventAction("Toggle always show header bar", "resources/icons/text_large_cap.png",
+				Activator.getResourceLoader(), new AlwaysShowToolBarEvent().from(this)));
 		toolBarManager.add(new SimpleEventAction("Show &Parameter Settings", BiClusterRenderStyle.ICON_TOOLS,
 				Activator.getResourceLoader(), new ShowToolBarEvent(true)));
 		toolBarManager.add(new SimpleEventAction("Show &Layout Settings", BiClusterRenderStyle.ICON_LAYOUT, Activator

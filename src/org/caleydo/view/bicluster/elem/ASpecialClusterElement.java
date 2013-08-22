@@ -39,7 +39,7 @@ public abstract class ASpecialClusterElement extends ClusterElement {
 			float h) {
 		IGLLayoutElement headerbar = children.get(0);
 		IGLLayoutElement close = children.get(1);
-		if (isHovered) {
+		if (isHovered || isShowAlwaysToolBar()) {
 			close.setBounds(-18, 0, 18, 20);
 			headerbar.setBounds(0, -19, w < 55 ? 57 : w + 2, 20);
 		} else {

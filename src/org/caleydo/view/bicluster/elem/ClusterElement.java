@@ -143,6 +143,11 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		});
 	}
 
+	protected final boolean isShowAlwaysToolBar() {
+		AllClustersElement p = findAllClustersElement();
+		return p != null && p.isShowAlwaysToolBar();
+	}
+
 	/**
 	 * @param i
 	 */
@@ -258,14 +263,12 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 				}
 				isHovered = true;
 				mouseOutDelay = Integer.MAX_VALUE;
-				System.out.println("OVER");
 			}
 			break;
 		case MOUSE_OUT:
 			if (isHovered)
 				EventPublisher.trigger(new DataSetSelectedEvent(data.getDataDomain()));
 			mouseOutDelay = 1000;
-			System.out.println("OUT");
 			// mouseOut();
 			break;
 		case MOUSE_WHEEL:
