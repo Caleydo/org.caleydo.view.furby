@@ -34,10 +34,10 @@ public final class SpecialRecordClusterElement extends ASpecialClusterElement {
 	}
 
 	@Override
-	public void setClusterSize(double x, double y, double maxClusterSize) {
+	public void setClusterSize(double x, double y, double maxClusterSize, Object causer) {
 		x = 100f/scaleFactor;
 		y = width*elements.size()/scaleFactor;
-		super.setClusterSize(x, y, maxClusterSize);
+		super.setClusterSize(x, y, maxClusterSize, causer);
 	}
 
 	@Override

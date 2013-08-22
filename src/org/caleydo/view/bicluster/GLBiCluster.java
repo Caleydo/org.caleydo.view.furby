@@ -290,7 +290,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
  MyPreferences
 					.getRecTopNElements(), MyPreferences.getDimTopNElements(), true));
 			// rootElement.createBands();
-			rootElement.setClusterSizes();
+			rootElement.setClusterSizes(null);
 		}
 
 		handleSpecialClusters(added, removed);

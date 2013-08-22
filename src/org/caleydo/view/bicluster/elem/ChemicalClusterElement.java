@@ -47,10 +47,10 @@ public final class ChemicalClusterElement extends ASpecialClusterElement {
 	}
 
 	@Override
-	public void setClusterSize(double x, double y, double maxClusterSize) {
+	public void setClusterSize(double x, double y, double maxClusterSize, Object causer) {
 		y = 70f / scaleFactor;
 		x = TEXT_SIZE * elements.size() / scaleFactor / 2;
-		super.setClusterSize(x, y, maxClusterSize);
+		super.setClusterSize(x, y, maxClusterSize, causer);
 	}
 
 	@Override

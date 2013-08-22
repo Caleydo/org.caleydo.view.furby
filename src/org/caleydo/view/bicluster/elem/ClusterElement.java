@@ -290,7 +290,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		if (isHovered && !headerBar.isClicked()) {
 			isHovered = false;
 			if (wasResizedWhileHovered)
-				setClusterSize(newDimSize, newRecSize, elementCountBiggestCluster);
+				setClusterSize(newDimSize, newRecSize, elementCountBiggestCluster, this);
 			opacityfactor = highOpacityFactor;
 			repaintChildren();
 			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
@@ -527,8 +527,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	private double newRecSize = 0;
 	private double newDimSize = 0;
 
-	public void setClusterSize(double x, double y, double maxClusterSize) {
-		if (isHovered || isLocked) {
+	public void setClusterSize(double x, double y, double maxClusterSize, Object causer) {
+		if ((isHovered || isLocked) && (causer != this)) {
 			wasResizedWhileHovered = true;
 			newRecSize = y;
 			newDimSize = x;

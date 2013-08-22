@@ -128,7 +128,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		bands.updateStructure();
 	}
 
-	public void setClusterSizes() {
+	public void setClusterSizes(Object causer) {
 		double maxDimClusterElements = 1;
 		double maxRecClusterElements = 1;
 
@@ -151,7 +151,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 			Vec2f preferredSize = i.getPreferredSize(dimScaleFactor, recScaleFactor);
 			double recSize = preferredSize.y();
 			double dimSize = preferredSize.x();
-			i.setClusterSize(dimSize, recSize, maxSize);
+			i.setClusterSize(dimSize, recSize, maxSize, causer);
 			i.updateVisibility();
 			i.relayout();
 		}
@@ -180,7 +180,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	@ListenTo
 	public void listenTo(ClusterScaleEvent event) {
-		setClusterSizes();
+		setClusterSizes(event.getSender());
 	}
 
 	int bandCount = 0;
@@ -191,7 +191,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	private void listenTo(MaxClusterSizeChangeEvent e) {
 		dimScaleFactor = (int) e.getMaxDimensionSize() + 1;
 		recScaleFactor = (int) e.getMaxRecordSize() + 1;
-		setClusterSizes();
+		setClusterSizes(null);
 	}
 
 	boolean dimBands, recBands;
@@ -234,7 +234,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		ClusterElement specialCluster = new SpecialRecordClusterElement(x, clustering, event.getElements());
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);
-		setClusterSizes();
+		setClusterSizes(specialCluster);
 		recalculateOverlap(dimBands, recBands);
 		for (GLElement start : clusters) {
 			if (start == specialCluster)
@@ -254,7 +254,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 				e.getElementToClusterMap());
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);
-		setClusterSizes();
+		setClusterSizes(specialCluster);
 		recalculateOverlap(dimBands, recBands);
 		for (GLElement start : clusters) {
 			if (start == specialCluster)
@@ -273,7 +273,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		SpecialGenericClusterElement specialCluster = new SpecialGenericClusterElement(group, clustering);
 		specialCluster.setLocation(1000, 1000);
 		clusters.add(specialCluster);
-		setClusterSizes();
+		setClusterSizes(specialCluster);
 		recalculateOverlap(dimBands, recBands);
 		for (GLElement start : clusters) {
 			if (start == specialCluster)
@@ -318,7 +318,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	@ListenTo
 	private void listenTo(ClusterGetsHiddenEvent e) {
-		setClusterSizes();
+		setClusterSizes(null);
 	}
 
 	@ListenTo
@@ -326,7 +326,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		for (ClusterElement elem : Iterables.filter(clusters, ClusterElement.class)) {
 			elem.show();
 		}
-		setClusterSizes();
+		setClusterSizes(null);
 	}
 
 

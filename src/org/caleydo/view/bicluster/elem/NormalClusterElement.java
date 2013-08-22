@@ -127,8 +127,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 			if (showThreshold) {
 				top.setBounds(0, -shift, w < 50 ? 50 : w, 0);
 				left.setBounds(-18 - shift, 18, 0, left.getSetHeight());
-				dimthreshbar.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
-				recthreshbar.setBounds(-18 - shift, 18, 17, h < 50 ? 50 : h);
+				dimthreshbar.setBounds(0, -18 - shift, 180, 17);
+				recthreshbar.setBounds(-18 - shift, 18, 17, 180);
 			} else {
 				top.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
 				left.setBounds(-18 - shift, 18, 18, left.getSetHeight());
@@ -156,7 +156,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	@ListenTo
 	private void listenTo(SortingChangeEvent e) {
-		if (e.getSender() instanceof ClusterElement && e.getSender() == this) {
+		if (e.getSender() == this) {
 			// only local change
 		} else {
 			sort(e.getType());
