@@ -12,13 +12,10 @@ import java.util.Map;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.perspective.variable.Perspective;
-import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.id.IDType;
-import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
-import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
@@ -35,23 +32,19 @@ import com.google.common.base.Predicates;
  * @author Samuel Gratzl
  *
  */
-public final class SpecialGenericClusterElement extends ClusterElement {
+public final class SpecialGenericClusterElement extends AMultiClusterElement {
 	private final VirtualArray recordVA;
 	private final VirtualArray dimVA;
 
 	public SpecialGenericClusterElement(TablePerspective data, BiClustering clustering) {
-		super(data, clustering);
+		super(data, clustering, Predicates.not(Predicates.in(Arrays.asList("distribution.pie", "distribution.hist"))));
 		content.setzDelta(0.5f);
-		toolBar.remove(3);
-		toolBar.remove(1);
-		toolBar.remove(1);
-		toolBar.remove(1);
-		toolBar.remove(1);
 		setLabel(data.getDataDomain().getLabel() + " " + data.getLabel());
 
 		this.recordVA = createVA(clustering.getXDataDomain().getRecordIDType(), data);
 		this.dimVA = createVA(clustering.getXDataDomain().getDimensionIDType(), data);
 		setHasContent(dimVA.getIDs(), recordVA.getIDs());
+		this.add(createHideClusterButton());
 	}
 
 	/**
@@ -77,49 +70,25 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 	}
 
 	@Override
-	protected void initContent() {
-		toolBar = new ToolBar();
-		headerBar = new HeaderBar();
-		this.add(toolBar); // add a element toolbar
-		this.add(headerBar);
-		content = createContent(Predicates.not(Predicates.in(Arrays.asList("distribution.pie", "distribution.hist"))));
-		setZValuesAccordingToState();
-		this.add(content);
-	}
-
-	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w,
 			float h) {
 		// if (isHidden) return;
-		IGLLayoutElement toolbar = children.get(0);
-		IGLLayoutElement headerbar = children.get(1);
+		IGLLayoutElement headerbar = children.get(0);
+		IGLLayoutElement igllContent = children.get(1);
+		IGLLayoutElement close = children.get(2);
 		if (isHovered) { // depending whether we are hovered or not, show hide
 							// the toolbar's
-			toolbar.setBounds(-18, 0, 18, 20);
+			close.setBounds(-18, 0, 18, 18);
 			headerbar.setBounds(0, -19, w < 55 ? 57 : w + 2, 20);
 		} else {
-			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
+			close.setBounds(0, 0, 0, 0); // hide by setting the width to 0
 			headerbar.setBounds(0, -18, w < 50 ? 50 : w, 17);
 		}
-		IGLLayoutElement igllContent = children.get(2);
 		if (isFocused) {
 			igllContent.setBounds(0, 0, w + 79, h + 79);
 		} else {
 			igllContent.setBounds(0, 0, w, h);
 		}
-	}
-
-	@Override
-	protected void renderImpl(GLGraphics g, float w, float h) {
-		super.renderImpl(g, w, h);
-		float[] color = { 0, 0, 0, curOpacityFactor };
-		Color highlightedColor = SelectionType.MOUSE_OVER.getColor();
-		g.color(color);
-		if (isHovered) {
-			g.color(highlightedColor);
-		}
-		g.drawRect(-1, -1, w + 2, h + 3);
-
 	}
 
 	@Override
@@ -146,24 +115,18 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
  String id, int bcNr, double maxDim,
 			double maxRec, double minDim, double minRec) {
-		setVisibility();
+		updateVisibility();
 	}
 
 	@Override
 	protected void setHasContent(List<Integer> dimIndices,
 			List<Integer> recIndices) {
 		hasContent = dimIndices.size() > 0 || recIndices.size() > 0;
-		setVisibility();
+		updateVisibility();
 	}
 
 	@Override
-	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
-		super.calculateOverlap(dimBandsEnabled, recBandsEnabled);
-		setVisibility();
-	}
-
-	@Override
-	public void setVisibility() {
+	public void updateVisibility() {
 		if (isHidden || !hasContent || (getRecordOverlapSize() == 0 || recordVA.size() == 0 || !anyShown(recOverlap))
 				&& (getDimensionOverlapSize() == 0 || dimVA.size() == 0 || !anyShown(dimOverlap))) {
 			setVisibility(EVisibility.NONE);
@@ -194,10 +157,9 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 	@Override
 	protected void rebuildMyData(boolean isGlobal) {
 		//
-		setVisibility();
+		updateVisibility();
 	}
 
-	@Override
 	protected GLButton createHideClusterButton() {
 		GLButton hide = new GLButton();
 		hide.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_CLOSE));
@@ -215,10 +177,23 @@ public final class SpecialGenericClusterElement extends ClusterElement {
 	public void remove() {
 		EventPublisher.trigger(new SpecialClusterRemoveEvent(this, false));
 		this.isHidden = true;
-		setVisibility();
+		updateVisibility();
 		findParent(AllClustersElement.class).remove(this);
 		this.mouseOut();
 	}
 
+	@Override
+	protected void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices) {
+		VirtualArray dimArray = getDimensionVirtualArray();
+		VirtualArray recArray = getRecordVirtualArray();
+		addAll(dimArray, dimIndices, dimNumberThreshold);
+		addAll(recArray, recIndices, recNumberThreshold);
 
+		this.data.invalidateContainerStatistics();
+	}
+
+	@Override
+	protected void setLabel(String id) {
+		data.setLabel(id);
+	}
 }

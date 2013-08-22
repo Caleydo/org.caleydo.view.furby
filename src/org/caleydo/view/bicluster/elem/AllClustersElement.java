@@ -47,7 +47,7 @@ public class AllClustersElement extends GLElementContainer {
 		if (list != null) {
 			System.out.println("List size: " + list.size());
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(p, clustering);
+				final ClusterElement el = new NormalClusterElement(p, clustering);
 				this.add(el);
 			}
 		}

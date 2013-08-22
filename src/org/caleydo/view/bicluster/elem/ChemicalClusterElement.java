@@ -12,30 +12,21 @@ import java.util.Map;
 import java.util.Set;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
-import org.caleydo.core.view.opengl.layout2.basic.GLButton;
-import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
-import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
-import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
-import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
-import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
-import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
-public final class ChemicalClusterElement extends ClusterElement {
+public final class ChemicalClusterElement extends ASpecialClusterElement {
 
 	private static float TEXT_SIZE = 10f;
 	private VirtualArray elements;
 
-	private String clusterName;
 	private List<String> clusterList;
 	private Map<Integer, String> elementToClusterMap;
 
@@ -50,71 +41,9 @@ public final class ChemicalClusterElement extends ClusterElement {
 			elements.add(i);
 		}
 		setHasContent(elements, null);
-		content.setzDelta(0.5f);
-		toolBar.remove(3);
-		toolBar.remove(1);
-		toolBar.remove(1);
-		toolBar.remove(1);
-		toolBar.remove(1);
-		minScaleFactor = 3;
-		setScaleFactor(3);
-	}
 
-	@Override
-	protected void initContent() {
-		toolBar = new ToolBar();
-		headerBar = new HeaderBar();
-		this.add(toolBar); // add a element toolbar
-		this.add(headerBar);
-		content = new SpecialClusterContent();
-		content.setzDelta(0.5f);
-		this.add(content);
-	}
-
-	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w,
-			float h) {
-		// if (isHidden) return;
-		IGLLayoutElement toolbar = children.get(0);
-		IGLLayoutElement headerbar = children.get(1);
-		if (isHovered) { // depending whether we are hovered or not, show hide
-							// the toolbar's
-			toolbar.setBounds(-18, 0, 18, 20);
-			headerbar.setBounds(0, -19, w < 55 ? 57 : w + 2, 20);
-		} else {
-			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
-			headerbar.setBounds(0, -18, w < 50 ? 50 : w, 17);
-		}
-		IGLLayoutElement igllContent = children.get(2);
-		if (isFocused) {
-			igllContent.setBounds(0, 0, w + 79, h + 79);
-		} else {
-			igllContent.setBounds(0, 0, w, h);
-		}
-	}
-
-	@Override
-	protected void renderImpl(GLGraphics g, float w, float h) {
-		super.renderImpl(g, w, h);
-		float[] color = { 0, 0, 0, curOpacityFactor };
-		Color highlightedColor = SelectionType.MOUSE_OVER.getColor();
-		g.color(color);
-		if (isHovered) {
-			g.color(highlightedColor);
-		}
-		g.drawRect(-1, -1, w + 2, h + 3);
-
-	}
-
-	@Override
-	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
- String id, int bcNr, double maxDim,
-			double maxRec, double minDim, double minRec) {
-		setLabel(id);
-		recProbabilitySorting = new ArrayList<Integer>(recIndices);
-		this.bcNr = bcNr;
-		setHasContent(dimIndices, recIndices);
-		setVisibility();
+		this.add(new SpecialClusterContent().setzDelta(0.5f));
+		setLabel("Chemical clusters");
 	}
 
 	@Override
@@ -136,30 +65,11 @@ public final class ChemicalClusterElement extends ClusterElement {
 	}
 
 	@Override
-	public void setVisibility() {
-		if (isHidden || !hasContent)
-			setVisibility(EVisibility.NONE);
-		else
-			setVisibility(EVisibility.PICKABLE);
-
-	}
-
-	@Override
-	public String getID() {
-		return clusterName == null ? "Chemical clusters" : clusterName;
-	}
-
-	@Override
-	protected void setLabel(String id) {
-		this.clusterName = id;
-	}
-
-	@Override
 	protected void recreateVirtualArrays(List<Integer> dimIndices,
 			List<Integer> recIndices) {
 		this.elements = new VirtualArray(clustering.getXDataDomain()
 				.getDimensionGroupIDType(), dimIndices);
-		((SpecialClusterContent) content).update();
+		((SpecialClusterContent) get(2)).update();
 	}
 
 	@Override
@@ -196,11 +106,6 @@ public final class ChemicalClusterElement extends ClusterElement {
 
 	}
 
-	@Override
-	protected void upscale() {
-		scaleFactor += 1.2;
-	}
-
 	private class SpecialClusterContent extends AnimatedGLElementContainer {
 
 		List<String> chemicalClusterNames;
@@ -233,15 +138,15 @@ public final class ChemicalClusterElement extends ClusterElement {
 	}
 
 	@Override
-	protected void sort(SortingType type) {
-		// Nothing to do here
-	}
-
-	@Override
 	public float getDimPosOf(int id) {
 //		return clusterList.indexOf(elementToClusterMap.get(index)) * getSize().x()*(float)scaleFactor
 //				/ getDimensionVirtualArray().size();
 		return getDimIndexOf(id)*TEXT_SIZE;
+	}
+
+	@Override
+	public float getRecPosOf(int index) {
+		return getRecIndexOf(index) * getSize().y() / getRecordVirtualArray().size();
 	}
 
 	@Override
@@ -251,7 +156,6 @@ public final class ChemicalClusterElement extends ClusterElement {
 		sequences.add(overlap);
 		return sequences;
 	}
-
 
 	@Override
 	public float getDimensionElementSize() {
@@ -271,28 +175,4 @@ public final class ChemicalClusterElement extends ClusterElement {
 		}
 		return usedElements.size();
 	}
-
-	@Override
-	protected GLButton createHideClusterButton() {
-		GLButton hide = new GLButton();
-		hide.setRenderer(GLRenderers
-.fillImage(BiClusterRenderStyle.ICON_CLOSE));
-		hide.setTooltip("Unload cluster");
-		hide.setSize(16, Float.NaN);
-		hide.setCallback(new ISelectionCallback() {
-
-			@Override
-			public void onSelectionChanged(GLButton button, boolean selected) {
-				EventPublisher.trigger(new SpecialClusterRemoveEvent(cluster,
-						false));
-				cluster.isHidden = true;
-				setVisibility();
-				findParent(AllClustersElement.class).remove(cluster);
-				cluster.mouseOut();
-			}
-
-		});
-		return hide;
-	}
-
 }

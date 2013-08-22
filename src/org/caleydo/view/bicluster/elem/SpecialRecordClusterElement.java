@@ -10,99 +10,27 @@ import java.util.List;
 
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
-import org.caleydo.core.view.opengl.layout2.basic.GLButton;
-import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
-import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
-import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
-import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
-import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
-import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
-public final class SpecialRecordClusterElement extends ClusterElement {
+public final class SpecialRecordClusterElement extends ASpecialClusterElement {
 
 	private VirtualArray elements;
 	private float width = 10f;
 
-	private String clusterName;
-
 	public SpecialRecordClusterElement(TablePerspective data, BiClustering clustering, List<Integer> elements) {
 		super(data, clustering);
 		setHasContent(null, elements);
-		content.setzDelta(0.5f);
-		toolBar.remove(3);
-		toolBar.remove(1);
-		toolBar.remove(1);
-		toolBar.remove(1);
-		toolBar.remove(1);
-		minScaleFactor = 3;
-		setScaleFactor(3);
-	}
 
-	@Override
-	protected void initContent() {
-		toolBar = new ToolBar();
-		headerBar = new HeaderBar();
-		this.add(toolBar); // add a element toolbar
-		this.add(headerBar);
-		content = new SpecialClusterContent();
-		content.setzDelta(0.5f);
-		this.add(content);
-	}
-
-	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w,
-			float h) {
-		// if (isHidden) return;
-		IGLLayoutElement toolbar = children.get(0);
-		IGLLayoutElement headerbar = children.get(1);
-		if (isHovered) { // depending whether we are hovered or not, show hide
-							// the toolbar's
-			toolbar.setBounds(-18, 0, 18, 20);
-			headerbar.setBounds(0, -19, w < 55 ? 57 : w + 2, 20);
-		} else {
-			toolbar.setBounds(0, 0, 0, 0); // hide by setting the width to 0
-			headerbar.setBounds(0, -18, w < 50 ? 50 : w, 17);
-		}
-		IGLLayoutElement igllContent = children.get(2);
-		if (isFocused) {
-			igllContent.setBounds(0, 0, w + 79, h + 79);
-		} else {
-			igllContent.setBounds(0, 0, w, h);
-		}
-	}
-
-	@Override
-	protected void renderImpl(GLGraphics g, float w, float h) {
-		super.renderImpl(g, w, h);
-		float[] color = { 0, 0, 0, curOpacityFactor };
-		Color highlightedColor = SelectionType.MOUSE_OVER.getColor();
-		g.color(color);
-		if (isHovered) {
-			g.color(highlightedColor);
-		}
-		g.drawRect(-1, -1, w + 2, h + 3);
-
-	}
-
-	@Override
-	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
- String id, int bcNr, double maxDim,
-			double maxRec, double minDim, double minRec) {
-		setLabel(id);
-		recProbabilitySorting = new ArrayList<Integer>(recIndices);
-		this.bcNr = bcNr;
-		setHasContent(dimIndices, recIndices);
-		setVisibility();
+		this.add(new SpecialClusterContent().setzDelta(0.5f));
+		setLabel("Special " + clustering.getXDataDomain().getRecordIDCategory().getDenominationPlural().toString());
 	}
 
 	@Override
@@ -123,27 +51,9 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 		}
 	}
 
-	@Override
-	public void setVisibility() {
-		if (isHidden || !hasContent)
-			setVisibility(EVisibility.NONE);
-		else
-			setVisibility(EVisibility.PICKABLE);
-
-	}
-
-	@Override
-	public String getID() {
-		return clusterName == null ? "Special " + getXDataDomain().getRecordIDCategory().getDenominationPlural().toString() : clusterName;
-	}
 
 	private ATableBasedDataDomain getXDataDomain() {
 		return clustering.getXDataDomain();
-	}
-
-	@Override
-	protected void setLabel(String id) {
-		this.clusterName = id;
 	}
 
 	@Override
@@ -151,7 +61,7 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 			List<Integer> recIndices) {
 		this.elements = new VirtualArray(getXDataDomain()
 				.getRecordGroupIDType(), recIndices);
-		((SpecialClusterContent)content).update();
+		((SpecialClusterContent) get(2)).update();
 	}
 
 	@Override
@@ -190,12 +100,6 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 
 	}
 
-	@Override
-	protected void upscale() {
-		scaleFactor += 1.2;
-	}
-
-
 	private class SpecialClusterContent extends AnimatedGLElementContainer {
 
 		List<String> recordNames;
@@ -228,34 +132,13 @@ public final class SpecialRecordClusterElement extends ClusterElement {
 	}
 
 	@Override
-	protected void sort(SortingType type) {
-		// Nothing to do here
+	public float getDimPosOf(int index) {
+		return getDimIndexOf(index) * getSize().x() / getDimensionVirtualArray().size();
 	}
 
 	@Override
-	protected GLButton createHideClusterButton() {
-		GLButton hide = new GLButton();
-		hide.setRenderer(GLRenderers
-.fillImage(BiClusterRenderStyle.ICON_CLOSE));
-		hide.setTooltip("Unload cluster");
-		hide.setSize(16, Float.NaN);
-		hide.setCallback(new ISelectionCallback(){
-
-			@Override
-			public void onSelectionChanged(GLButton button, boolean selected) {
-				remove();
-			}
-
-		});
-		return hide;
-	}
-
-	public void remove() {
-		EventPublisher.trigger(new SpecialClusterRemoveEvent(this, false));
-		this.isHidden = true;
-		setVisibility();
-		findParent(AllClustersElement.class).remove(this);
-		this.mouseOut();
+	public float getRecPosOf(int index) {
+		return getRecIndexOf(index) * getSize().y() / getRecordVirtualArray().size();
 	}
 
 }

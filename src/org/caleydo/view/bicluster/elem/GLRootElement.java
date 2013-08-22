@@ -96,7 +96,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		if (list != null) {
 			System.out.println(list.size() + " Cluster geladen.");
 			for (TablePerspective p : list) {
-				final ClusterElement el = new ClusterElement(p, clustering);
+				final ClusterElement el = new NormalClusterElement(p, clustering);
 				clusters.add(el);
 			}
 		}
@@ -152,7 +152,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 			double recSize = preferredSize.y();
 			double dimSize = preferredSize.x();
 			i.setClusterSize(dimSize, recSize, maxSize);
-			i.setVisibility();
+			i.updateVisibility();
 			i.relayout();
 		}
 	}
@@ -294,7 +294,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 	 *            bicluster id x threshold
 	 */
 	public void setThresholds(boolean isDimensionThresholds, Map<Integer, Float> thresholds) {
-		for (ClusterElement elem : Iterables.filter(clusters, ClusterElement.class)) {
+		for (NormalClusterElement elem : Iterables.filter(clusters, NormalClusterElement.class)) {
 			int number = elem.getBiClusterNumber();
 			if (thresholds.containsKey(number)) {
 				float t = thresholds.get(number);

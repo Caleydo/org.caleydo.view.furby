@@ -16,10 +16,8 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.caleydo.core.data.perspective.table.TablePerspective;
@@ -34,57 +32,33 @@ import org.caleydo.core.gui.util.RenameNameDialog;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.base.ILabeled;
-import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
-import org.caleydo.core.view.opengl.canvas.EDetailLevel;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
-import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
-import org.caleydo.core.view.opengl.layout2.GLElementContainer;
-import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
 import org.caleydo.core.view.opengl.layout2.animation.MoveTransitions;
 import org.caleydo.core.view.opengl.layout2.animation.Transitions;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
-import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
-import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayoutDatas;
-import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.layout.IHasGLLayoutData;
-import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder;
-import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder.EButtonBarLayout;
-import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
-import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
-import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
-import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
-import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
-import org.caleydo.view.bicluster.event.ClusterScaleEvent;
-import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
-import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SearchClusterEvent;
-import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
-import org.caleydo.view.bicluster.sorting.BandSorting;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
-import org.caleydo.view.heatmap.v2.EShowLabels;
 import org.eclipse.swt.widgets.Display;
-
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 
 /**
  * e.g. a class for representing a cluster
@@ -92,10 +66,10 @@ import com.google.common.base.Predicates;
  * @author Michael Gillhofer
  * @author Samuel Gratzl
  */
-public class ClusterElement extends AnimatedGLElementContainer implements IGLLayout, ILabeled {
-	private static final IHasGLLayoutData GROW_LEFT = GLLayoutDatas.combine(new MoveTransitions.MoveTransitionBase(
+public abstract class ClusterElement extends AnimatedGLElementContainer implements IGLLayout, ILabeled {
+	protected static final IHasGLLayoutData GROW_LEFT = GLLayoutDatas.combine(new MoveTransitions.MoveTransitionBase(
 			Transitions.LINEAR, Transitions.NO, Transitions.LINEAR, Transitions.NO), DEFAULT_DURATION);
-	private static final IHasGLLayoutData GROW_UP = GLLayoutDatas.combine(new MoveTransitions.MoveTransitionBase(
+	protected static final IHasGLLayoutData GROW_UP = GLLayoutDatas.combine(new MoveTransitions.MoveTransitionBase(
 			Transitions.NO, Transitions.LINEAR, Transitions.NO, Transitions.LINEAR), DEFAULT_DURATION);
 
 	protected static final float highOpacityFactor = 1;
@@ -115,7 +89,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	protected boolean isLocked = false;
 	protected boolean hasContent = false;
 	protected boolean dimBandsEnabled, recBandsEnabled;
-	protected ClusterElement cluster;
 	protected float curOpacityFactor = 1f;
 	protected float opacityfactor = 1;
 
@@ -126,12 +99,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	protected List<Integer> recProbabilitySorting;
 
 	protected int bcNr = -1;
-	protected ToolBar toolBar;
 	protected HeaderBar headerBar;
-	protected ThresholdBar dimThreshBar;
-	protected ThresholdBar recThreshBar;
-	protected GLElement content;
-	private final GLElement switcher;
 
 	protected float recThreshold = getRecThreshold();
 	protected int recNumberThreshold = getRecTopNElements();
@@ -154,22 +122,17 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	 */
 	private int mouseOutDelay = Integer.MAX_VALUE;
 
-	/**
-	 * elements for showing the probability heatmaps
-	 */
-	private LZHeatmapElement propabilityHeatMapHor;
-	private LZHeatmapElement propabilityHeatMapVer;
-
 	public ClusterElement(TablePerspective data, BiClustering clustering) {
 		setLayout(this);
+		setAnimateByDefault(false);
+
+		this.headerBar = new HeaderBar();
+		this.add(headerBar);
+
 		this.data = data;
 		this.clustering = clustering;
 		minScaleFactor = 0.25;
-		initContent();
-		this.switcher = createSwitcher();
-		this.switcher.setLayoutData(GLLayoutDatas.combine(DEFAULT_DURATION,MoveTransitions.MOVE_AND_GROW_LINEAR));
-		this.add(5, switcher);
-		setVisibility();
+		updateVisibility();
 		setScaleFactor(1);
 		this.onPick(new IPickingListener() {
 
@@ -178,23 +141,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 				onPicked(pick);
 			}
 		});
-		setAnimateByDefault(false);
-		this.cluster = this;
-
-	}
-
-	/**
-	 * @return
-	 */
-	private GLElement createSwitcher() {
-		if (content instanceof ClusterContentElement) {
-			ButtonBarBuilder b = ((ClusterContentElement) content).createButtonBarBuilder();
-			b.prepend(createHideClusterButton());
-			b.layoutAs(EButtonBarLayout.SLIDE_LEFT).size(18);
-			return b.build();
-		} else {
-			return createHideClusterButton();
-		}
 	}
 
 	/**
@@ -208,79 +154,36 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	/**
 	 * @return the bcNr, see {@link #bcNr}
 	 */
-	public int getBiClusterNumber() {
+	public final int getBiClusterNumber() {
 		return bcNr;
 	}
 
-	protected void initContent() {
-		toolBar = new ToolBar();
-		headerBar = new HeaderBar();
-		dimThreshBar = new ThresholdBar(true);
-		recThreshBar = new ThresholdBar(false);
-		this.add(toolBar); // add a element toolbar
-		this.add(headerBar);
-		this.add(dimThreshBar);
-		this.add(recThreshBar);
-
-		content = createContent(Predicates.alwaysTrue());
-		setZValuesAccordingToState();
-		this.add(content);
-
-		this.propabilityHeatMapHor = new LZHeatmapElement(clustering.getZ(), true);
-		this.add(this.propabilityHeatMapHor);
-		this.propabilityHeatMapVer = new LZHeatmapElement(clustering.getL(), false);
-		this.add(this.propabilityHeatMapVer);
-	}
-
-	/**
-	 * @return
-	 */
-	protected final ClusterContentElement createContent(Predicate<? super String> filter) {
-		Builder builder = GLElementFactoryContext.builder();
-		builder.withData(data);
-		builder.put(EDetailLevel.class, EDetailLevel.MEDIUM);
-		ClusterContentElement c = new ClusterContentElement(builder, filter);
-
-		// trigger a scale event on vis change
-		c.onActiveChanged(new GLElementFactorySwitcher.IActiveChangedCallback() {
-			@Override
-			public void onActiveChanged(int active) {
-				EventPublisher.trigger(new ClusterScaleEvent(ClusterElement.this));
-			}
-		});
-
-
-		return c;
-	}
-
-	public IDCategory getRecordIDCategory() {
+	public final IDCategory getRecordIDCategory() {
 		return data.getDataDomain().getRecordIDCategory();
 	}
 
-	public IDCategory getDimensionIDCategory() {
+	public final IDCategory getDimensionIDCategory() {
 		return data.getDataDomain().getDimensionIDCategory();
 	}
 
-	public IDType getDimensionIDType() {
+	public final IDType getDimensionIDType() {
 		return getDimensionVirtualArray().getIdType();
 	}
 
-	public IDType getRecordIDType() {
+	public final IDType getRecordIDType() {
 		return getRecordVirtualArray().getIdType();
 	}
 
-	public String getDataDomainID() {
+	public final String getDataDomainID() {
 		return data.getDataDomain().getDataDomainID();
 	}
 
 	/**
 	 * @return the id, see {@link #id}
 	 */
-	public String getID() {
-		return data.getLabel();
-	}
+	public abstract String getID();
 
-	protected void setZValuesAccordingToState() {
+	protected final void setZValuesAccordingToState() {
 		if (isDragged) {
 			setzDelta(DRAGGING_Z_DELTA);
 		} else if (isFocused) {
@@ -293,7 +196,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	}
 
 	@Override
-	protected void renderPickImpl(GLGraphics g, float w, float h) {
+	protected final void renderPickImpl(GLGraphics g, float w, float h) {
 		g.color(Color.BLACK);
 		if (isHovered) {
 			g.fillRect(-20, -20, w < 55 ? 120 : w + 65, h < 80 ? 150 : h + 70);
@@ -304,7 +207,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	private int accu; // for animating the opacity fading
 
 	@Override
-	public void layout(int deltaTimeMs) {
+	public final void layout(int deltaTimeMs) {
 		// duration -= delta
 		if (deltaTimeMs + accu > opacityChangeInterval) {
 
@@ -344,7 +247,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		g.drawRect(-1, -1, w + 2, h + 2);
 	}
 
-	protected void onPicked(Pick pick) {
+	protected final void onPicked(Pick pick) {
 		switch (pick.getPickingMode()) {
 		case MOUSE_OVER:
 			if (!pick.isAnyDragging()) {
@@ -380,7 +283,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		}
 	}
 
-	protected void mouseOut() {
+	protected final void mouseOut() {
 		if (isHovered && !headerBar.isClicked()) {
 			isHovered = false;
 			if (wasResizedWhileHovered)
@@ -392,34 +295,13 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		}
 	}
 
-	protected void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices) {
-		VirtualArray dimArray = getDimensionVirtualArray();
-		VirtualArray recArray = getRecordVirtualArray();
-		addAll(dimArray, dimIndices, dimNumberThreshold);
-		addAll(recArray, recIndices, recNumberThreshold);
-
-		this.data.invalidateContainerStatistics();
-
-		if (propabilityHeatMapHor != null)
-			propabilityHeatMapHor.update(dimThreshold, this.bcNr, dimArray);
-		if (propabilityHeatMapVer != null)
-			propabilityHeatMapVer.update(recThreshold, this.bcNr, recArray);
-	}
-
-	private static void addAll(VirtualArray array, List<Integer> indices, int treshold) {
-		array.clear();
-		if (treshold == UNBOUND_NUMBER) // unbound flush all
-			array.addAll(indices);
-		else
-			// sublist of the real elements
-			array.addAll(indices.subList(0, Math.min(indices.size(), treshold)));
-	}
+	protected abstract void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices);
 
 	private AllClustersElement findAllClustersElement() {
 		return findParent(AllClustersElement.class);
 	}
 
-	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
+	final void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
 		this.dimBandsEnabled = dimBandsEnabled;
 		this.recBandsEnabled = recBandsEnabled;
 		dimOverlap = new HashMap<>();
@@ -451,116 +333,59 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		if (getVisibility() == EVisibility.PICKABLE)
 			sort(sortingType);
 		fireTablePerspectiveChanged();
+		updateVisibility();
 	}
 
-	public void setPerspectiveLabel(String dimensionName, String recordName) {
+	public final void setPerspectiveLabel(String dimensionName, String recordName) {
 		data.getDimensionPerspective().setLabel(dimensionName);
 		data.getRecordPerspective().setLabel(recordName);
 	}
 
-	protected void fireTablePerspectiveChanged() {
+	protected final void fireTablePerspectiveChanged() {
 		EventPublisher.trigger(new RecordVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
 				.getRecordPerspective().getPerspectiveID(), this));
 		EventPublisher.trigger(new DimensionVAUpdateEvent(data.getDataDomain().getDataDomainID(), data
 				.getDimensionPerspective().getPerspectiveID(), this));
 	}
 
-	protected VirtualArray getDimensionVirtualArray() {
-		return data.getDimensionPerspective().getVirtualArray();
-	}
+	protected abstract VirtualArray getDimensionVirtualArray();
 
-	protected VirtualArray getRecordVirtualArray() {
-		return data.getRecordPerspective().getVirtualArray();
-	}
+	protected abstract VirtualArray getRecordVirtualArray();
 
-	public int getNumberOfDimElements() {
-		return getDimensionVirtualArray().size();
-	}
+	public abstract int getNumberOfDimElements();
 
-	public int getNumberOfRecElements() {
-		return getRecordVirtualArray().size();
-	}
+	public abstract int getNumberOfRecElements();
 
-	public boolean isDragged() {
+	public final boolean isDragged() {
 		return isDragged;
 	}
 
-	public boolean isVisible() {
+	public final boolean isVisible() {
 		return getVisibility().doRender();
 	}
 
-	public List<Integer> getDimOverlap(GLElement jElement) {
+	public final List<Integer> getDimOverlap(GLElement jElement) {
 		if (dimOverlap.containsKey(jElement))
 			return dimOverlap.get(jElement);
 		return Collections.emptyList();
 	}
 
-	public List<Integer> getRecOverlap(GLElement jElement) {
+	public final List<Integer> getRecOverlap(GLElement jElement) {
 		if (recOverlap.containsKey(jElement))
 			return recOverlap.get(jElement);
 		return Collections.emptyList();
 	}
 
-	public int getDimensionOverlapSize() {
+	public final int getDimensionOverlapSize() {
 		return dimensionOverlapSize;
 	}
 
-	public int getRecordOverlapSize() {
+	public final int getRecordOverlapSize() {
 		return recordOverlapSize;
 	}
 
 	protected IGLLayoutElement getIGLayoutElement() {
 		return GLElementAccessor.asLayoutElement(this);
-	}
-
-	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-		// if (isHidden) return;
-		IGLLayoutElement toolbar = children.get(0);
-		IGLLayoutElement headerbar = children.get(1);
-		IGLLayoutElement dimthreshbar = children.get(2);
-		IGLLayoutElement recthreshbar = children.get(3);
-		IGLLayoutElement content = children.get(4);
-		IGLLayoutElement close = children.get(5);
-
-		// shift for propability heat maps
-		float shift = children.size() > 6 ? 6 : 0;
-
-		float baseHeight = 18;
-
-		if (isHovered) { // depending whether we are hovered or not, show hide the toolbar's
-			toolbar.setBounds(-baseHeight - shift, 0, baseHeight, toolbar.getSetHeight());
-			headerbar.setBounds(0, -baseHeight - shift, w < 55 ? 57 : w + 2, baseHeight);
-			//dimthreshbar.setBounds(-1, -baseHeight - shift, Math.max(w + 1, 56), baseHeight);
-			//recthreshbar.setBounds(-baseHeight - shift, -1, baseHeight, Math.max(h + 1, 61));
-			close.setBounds(-baseHeight - shift, -baseHeight - shift, baseHeight, baseHeight);
-		} else {
-			// hide by setting the width to 0
-			toolbar.setBounds(-18 - shift, 0, 0, toolbar.getSetHeight());
-			headerbar.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
-			dimthreshbar.setBounds(-1, -shift, Math.max(w + 1, 56), 0);
-			recthreshbar.setBounds(-shift, -1, 0, Math.max(h + 1, 61));
-			close.setBounds(-shift, -shift, 0, 0);
-		}
-		if (children.size() > 6) { // LZ heatmaps
-			children.get(6).setBounds(-1, -shift, w + 2, shift);
-			children.get(7).setBounds(-shift, -1, shift, h + 2);
-		}
-
-		if (isFocused && doesShowLabels(content.asElement())) {
-			content.setBounds(0, 0, w + 79, h + 79);
-		} else {
-			content.setBounds(0, 0, w, h);
-		}
-
-	}
-
-	/**
-	 * @param asElement
-	 * @return
-	 */
-	private static boolean doesShowLabels(GLElement asElement) {
-		return (asElement instanceof ClusterContentElement && ((ClusterContentElement) asElement).doesShowLabels());
 	}
 
 	protected class HeaderBar extends GLButton implements ISelectionCallback {
@@ -611,14 +436,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 			case DRAGGED:
 				if (!pick.isDoDragging())
 					return;
-				if (isDragged == false) {
-					findAllClustersElement().setDragedLayoutElement(cluster);
-				}
-				isDragged = true;
-				setzDelta(DRAGGING_Z_DELTA);
-				cluster.setLocation(cluster.getLocation().x() + pick.getDx(), cluster.getLocation().y() + pick.getDy());
-				cluster.relayout();
-				cluster.repaintPick();
+				drag(pick);
 				break;
 			case CLICKED:
 				if (!pick.isAnyDragging()) {
@@ -673,159 +491,6 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 			}
 		}
 		return false;
-	}
-
-	protected class ThresholdBar extends GLElementDecorator implements
-			org.caleydo.core.view.opengl.layout2.basic.GLSlider.ISelectionCallback {
-
-		private final boolean isHorizontal;
-		private final GLSlider slider;
-		// float globalMaxThreshold;
-		private float localMaxSliderValue;
-		private float localMinSliderValue;
-
-		protected ThresholdBar(boolean layout) {
-			isHorizontal = layout;
-			// move to the top
-			setzDelta(DEFAULT_Z_DELTA);
-
-			// create buttons
-			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue : localMinSliderValue;
-			this.slider = new GLSlider(0, max, max / 2);
-			slider.setCallback(this);
-			slider.setHorizontal(isHorizontal);
-			slider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
-			setContent(slider);
-
-			// define the animation used to move this element
-			this.setLayoutData(isHorizontal ? GROW_UP : GROW_LEFT);
-			setVisibility(EVisibility.PICKABLE); // for parent
-		}
-
-		@Override
-		public void onSelectionChanged(GLSlider slider, float value) {
-			if (value <= localMinSliderValue || value >= localMaxSliderValue)
-				return;
-			setThresholdImpl(isHorizontal, value);
-		}
-
-		protected void updateSliders(double maxValue, double minValue) {
-			localMaxSliderValue = (float) maxValue;
-			localMinSliderValue = (float) minValue;
-			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue : localMinSliderValue;
-			this.slider.setMinMax(0, max);
-		}
-
-		// @ListenTo
-		// public void listenTo(MaxThresholdChangeEvent event) {
-		// globalMaxThreshold = (float) (isHorizontal ? event.getDimThreshold() : event.getRecThreshold());
-		// createButtons();
-		// }
-
-		@ListenTo
-		public void listenTo(LZThresholdChangeEvent event) {
-			if (event.isGlobalEvent()) {
-				setValue(isHorizontal ? event.getDimensionThreshold() : event.getRecordThreshold());
-			}
-		}
-
-		/**
-		 * @param value
-		 */
-		public void setValue(float value) {
-			slider.setCallback(null); // to avoid that we will be callbacked
-			slider.setValue(value);
-			slider.setCallback(this);
-		}
-	}
-
-	protected class ToolBar extends GLElementContainer implements ISelectionCallback {
-
-		GLButton hide, sorting, enlarge, smaller, focus, lock;
-		SortingType sortingButtonCaption = SortingType.probabilitySorting;
-
-		public ToolBar() {
-			super(GLLayouts.flowVertical(6));
-			setzDelta(-0.1f);
-			createButtons();
-			setSize(Float.NaN, this.size() * (16 + 6));
-			setLayoutData(GROW_LEFT);
-			setVisibility(EVisibility.PICKABLE);
-		}
-
-		protected void createButtons() {
-			sorting = new GLButton();
-			sorting.setRenderer(GLRenderers.drawText(
-					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
-			sorting.setSize(16, 16);
-			sorting.setTooltip("Change sorting");
-			sorting.setCallback(this);
-			this.add(sorting);
-			focus = new GLButton();
-			focus.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_FOCUS));
-			focus.setSize(16, 16);
-			focus.setTooltip("Focus this Cluster");
-			focus.setCallback(this);
-			this.add(focus);
-			lock = new GLButton();
-			lock.setTooltip("Lock this cluster. It will not recieve threshold updates.");
-			lock.setSize(16, 16);
-			lock.setRenderer(new IGLRenderer() {
-
-				@Override
-				public void render(GLGraphics g, float w, float h, GLElement parent) {
-					if (isLocked)
-						g.fillImage(BiClusterRenderStyle.ICON_UNLOCK, 0, 0, w, h);
-					else
-						g.fillImage(BiClusterRenderStyle.ICON_LOCK, 0, 0, w, h);
-				}
-
-			});
-			lock.setCallback(this);
-			this.add(lock);
-			enlarge = new GLButton();
-			enlarge.setSize(16, 16);
-			enlarge.setTooltip("Enlarge");
-			enlarge.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_IN));
-			enlarge.setCallback(this);
-			this.add(enlarge);
-			smaller = new GLButton();
-			smaller.setTooltip("Reduce");
-			smaller.setSize(16, 16);
-			smaller.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_OUT));
-			smaller.setCallback(this);
-			this.add(smaller);
-
-		}
-
-		void setSortingCaption(SortingType caption) {
-			sortingButtonCaption = caption;
-			sorting.setRenderer(GLRenderers.drawText(
-					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
-		}
-
-		@Override
-		public void onSelectionChanged(GLButton button, boolean selected) {
-			if (button == sorting) {
-				setSortingCaption(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
-						: SortingType.probabilitySorting);
-				sort(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
-						: SortingType.probabilitySorting);
-			} else if (button == enlarge) {
-				upscale();
-				resize();
-			} else if (button == smaller) {
-				reduceScaleFactor();
-				resize();
-			} else if (button == focus) {
-				EventPublisher.trigger(new FocusChangeEvent(cluster));
-			} else if (button == lock) {
-				isLocked = !isLocked;
-				lock.setTooltip(isLocked ? "UnLock this cluster. It will again recieve threshold updates."
-						: "Lock this cluster. It will not recieve threshold updates.");
-			}
-		}
-
 	}
 
 	protected void upscale() {
@@ -884,23 +549,9 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		if (isFocused) {
 			preFocusScaleFactor = scaleFactor;
 			scaleFactor = defaultFocusScaleFactor();
-			if (content instanceof ClusterContentElement) {
-				((ClusterContentElement) content).showLabels(EShowLabels.RIGHT);
-				if (propabilityHeatMapHor != null)
-					propabilityHeatMapHor.nonUniformLayout(((ClusterContentElement) content));
-				if (propabilityHeatMapVer != null)
-					propabilityHeatMapVer.nonUniformLayout(((ClusterContentElement) content));
-			}
 			resize();
 		} else {
 			setScaleFactor(preFocusScaleFactor);
-			if (content instanceof ClusterContentElement) {
-				((ClusterContentElement) content).hideLabels();
-				if (propabilityHeatMapHor != null)
-					propabilityHeatMapHor.uniformLayout();
-				if (propabilityHeatMapVer != null)
-					propabilityHeatMapVer.uniformLayout();
-			}
 			resize();
 			mouseOut();
 		}
@@ -931,10 +582,10 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		return Math.min(14 * elements, 14 * 20);
 	}
 
-	private void hideThisCluster() {
+	protected final void hideThisCluster() {
 		isHidden = true;
 		isHovered = false;
-		setVisibility();
+		updateVisibility();
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
 		EventPublisher.trigger(new MouseOverClusterEvent(this, false));
 		relayout();
@@ -956,17 +607,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		if (!isHidden)
 			return;
 		isHidden = false;
-		setVisibility();
-	}
-
-	@ListenTo
-	private void listenTo(SortingChangeEvent e) {
-		if (e.getSender() instanceof ClusterElement && e.getSender() == this) {
-			// only local change
-		} else {
-			sort(e.getType());
-		}
-		toolBar.setSortingCaption(e.getType());
+		updateVisibility();
 	}
 
 	@ListenTo
@@ -1006,10 +647,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 			opacityfactor = lowOpacityFactor;
 			System.out.println(getLabel() + " not matches " + event.getText());
 		}
-		if (content != null)
-			content.repaint();
-		else
-			repaint();
+		repaintChildren();
 	}
 
 	@ListenTo
@@ -1037,99 +675,24 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 	@ListenTo
 	private void listenTo(MinClusterSizeThresholdChangeEvent event) {
 		this.clusterSizeThreshold = event.getMinClusterSize();
-		setVisibility();
+		updateVisibility();
 	}
 
-	public void setVisibility() {
-		if (isHidden || !hasContent)
-			setVisibility(EVisibility.NONE);
-		else if (getDimensionVirtualArray().size() / elementCountBiggestCluster > clusterSizeThreshold)
-			setVisibility(EVisibility.PICKABLE);
-		else if (getRecordVirtualArray().size() / elementCountBiggestCluster > clusterSizeThreshold)
-			setVisibility(EVisibility.PICKABLE);
-		else
-			setVisibility(EVisibility.NONE);
-	}
+	public abstract void updateVisibility();
 
-	public void setData(List<Integer> dimIndices, List<Integer> recIndices, String id, int bcNr,
-			double maxDim, double maxRec, double minDim, double minRec) {
-		setLabel(id);
-		if (maxDim >= 0 && maxRec >= 0) {
-			dimThreshBar.updateSliders(maxDim, minDim);
-			recThreshBar.updateSliders(maxRec, minRec);
-		}
-		dimProbabilitySorting = new ArrayList<Integer>(dimIndices);
-		recProbabilitySorting = new ArrayList<Integer>(recIndices);
-		this.bcNr = bcNr;
-		setHasContent(dimIndices, recIndices);
-		setVisibility();
-	}
+	public abstract void setData(List<Integer> dimIndices, List<Integer> recIndices, String id, int bcNr,
+			double maxDim, double maxRec, double minDim, double minRec);
 
-	protected void setLabel(String id) {
-		data.setLabel(id);
-	}
+	protected abstract void setLabel(String id);
 
 	@Override
 	public String getLabel() {
 		return getID();
 	}
 
-	protected void setHasContent(List<Integer> dimIndices, List<Integer> recIndices) {
-		if (dimIndices.size() > 0 && recIndices.size() > 0) {
-			hasContent = true;
-			recreateVirtualArrays(dimIndices, recIndices);
-		} else {
-			hasContent = false;
-		}
-	}
+	protected abstract void setHasContent(List<Integer> dimIndices, List<Integer> recIndices);
 
-	protected void sort(SortingType type) {
-		switch (type) {
-		case probabilitySorting:
-			sortingType = SortingType.probabilitySorting;
-			probabilitySorting();
-			break;
-		case bandSorting:
-			sortingType = SortingType.bandSorting;
-			bandSorting();
-			break;
-		default:
-		}
-	}
-
-	private void bandSorting() {
-		Set<Integer> finalDimSorting = new LinkedHashSet<Integer>();
-		List<List<Integer>> nonEmptyDimBands = new ArrayList<>();
-		for (List<Integer> dimBand : dimOverlap.values()) {
-			if (dimBand.size() > 0)
-				nonEmptyDimBands.add(dimBand);
-		}
-		BandSorting dimConflicts = new BandSorting(nonEmptyDimBands);
-		for (Integer i : dimConflicts) {
-			finalDimSorting.add(i);
-		}
-		finalDimSorting.addAll(dimProbabilitySorting);
-
-		Set<Integer> finalRecSorting = new LinkedHashSet<Integer>();
-		List<List<Integer>> nonEmptyRecBands = new ArrayList<>();
-		for (List<Integer> recBand : recOverlap.values()) {
-			if (recBand.size() > 0)
-				nonEmptyRecBands.add(recBand);
-		}
-		BandSorting recConflicts = new BandSorting(nonEmptyRecBands);
-		for (Integer i : recConflicts) {
-			finalRecSorting.add(i);
-		}
-		finalRecSorting.addAll(recProbabilitySorting);
-		recreateVirtualArrays(new ArrayList<Integer>(finalDimSorting), new ArrayList<Integer>(finalRecSorting));
-		fireTablePerspectiveChanged();
-	}
-
-	private void probabilitySorting() {
-		sortingType = SortingType.probabilitySorting;
-		recreateVirtualArrays(dimProbabilitySorting, recProbabilitySorting);
-		fireTablePerspectiveChanged();
-	}
+	protected abstract void sort(SortingType type);
 
 	public List<List<Integer>> getListOfContinousRecSequenzes(List<Integer> overlap) {
 		return getListOfContinousIDs(overlap, getRecordVirtualArray().getIDs());
@@ -1139,7 +702,7 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		return getListOfContinousIDs(overlap, getDimensionVirtualArray().getIDs());
 	}
 
-	private List<List<Integer>> getListOfContinousIDs(List<Integer> overlap, List<Integer> indices) {
+	protected static List<List<Integer>> getListOfContinousIDs(List<Integer> overlap, List<Integer> indices) {
 		List<List<Integer>> sequences = new ArrayList<List<Integer>>();
 		if (overlap.size() == 0)
 			return sequences;
@@ -1157,39 +720,11 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		return sequences;
 	}
 
-	public float getDimPosOf(int index) {
-		if (isFocused && content instanceof ClusterContentElement) {
-			int ind = getDimensionVirtualArray().indexOf(index);
-			return ((ClusterContentElement) content).getDimensionPos(ind);
-		} else {
-			return getDimIndexOf(index) * getSize().x() / getDimensionVirtualArray().size();
-		}
-	}
+	public abstract float getDimPosOf(int index);
 
-	public float getRecPosOf(int index) {
-		if (isFocused && content instanceof ClusterContentElement) {
-			int ind = getRecordVirtualArray().indexOf(index);
-			return ((ClusterContentElement) content).getRecordPos(ind);
-		} else {
-			return getRecIndexOf(index) * getSize().y() / getRecordVirtualArray().size();
-		}
+	public abstract float getRecPosOf(int index);
 
-	}
-
-	protected void rebuildMyData(boolean isGlobal) {
-		if (isLocked)
-			return;
-		Pair<List<Integer>, List<Integer>> pair = clustering.scan(bcNr, dimThreshold, recThreshold);
-		setData(pair.getFirst(), pair.getSecond(), getID(), bcNr, -1, -1, -1, -1);
-		EventPublisher.trigger(new ClusterScaleEvent(this));
-		if (!isGlobal)
-			EventPublisher.trigger(new MouseOverClusterEvent(this, true));
-		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal, dimBandsEnabled, recBandsEnabled));
-		EventPublisher.trigger(new CreateBandsEvent(this));
-
-	}
-
-
+	protected abstract void rebuildMyData(boolean isGlobal);
 
 	public int getDimIndexOf(int value) {
 		return getDimensionVirtualArray().indexOf(value);
@@ -1211,61 +746,39 @@ public class ClusterElement extends AnimatedGLElementContainer implements IGLLay
 		return band.size();
 	}
 
-	protected GLButton createHideClusterButton() {
-		GLButton hide = new GLButton();
-		hide.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_CLOSE));
-		hide.setTooltip("Close");
-		hide.setSize(16, 16);
-		hide.setCallback(new ISelectionCallback() {
-
-			@Override
-			public void onSelectionChanged(GLButton button, boolean selected) {
-				hideThisCluster();
-			}
-
-		});
-		return hide;
-	}
-
-	public TablePerspective getTablePerspective() {
+	public final TablePerspective getTablePerspective() {
 		return data;
 	}
 
 	@Override
-	public String toString() {
+	public final String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("ClusterElement [").append(getLabel());
 		builder.append("]");
 		return builder.toString();
 	}
-
-	public void setThreshold(boolean isDimension, float value) {
-		setThresholdImpl(isDimension, value);
-		if (isDimension && dimThreshBar != null)
-			dimThreshBar.setValue(value);
-		else if (!isDimension && recThreshBar != null)
-			recThreshBar.setValue(value);
-	}
-
-	/**
-	 * @param isDimension
-	 * @param value
-	 */
-	void setThresholdImpl(boolean isDimension, float value) {
-		if ((isDimension && dimThreshold == value) || (!isDimension && recThreshold == value))
-			return;
-		if (isDimension)
-			dimThreshold = value;
-		else
-			recThreshold = value;
-		rebuildMyData(false);
-	}
-
 	public Vec2f getPreferredSize(float scaleX, float scaleY) {
-		if (content instanceof ClusterContentElement && !(((ClusterContentElement) content).isShowingHeatMap())) {
-			ClusterContentElement c = ((ClusterContentElement) content);
-			return c.getMinSize();
-		}
 		return new Vec2f(getNumberOfDimElements() * scaleX, getNumberOfRecElements() * scaleY);
 	}
+
+	private void drag(Pick pick) {
+		if (isDragged == false) {
+			findAllClustersElement().setDragedLayoutElement(this);
+		}
+		isDragged = true;
+		setzDelta(DRAGGING_Z_DELTA);
+		setLocation(getLocation().x() + pick.getDx(), getLocation().y() + pick.getDy());
+		relayout();
+		repaintPick();
+	}
+
+	protected static void addAll(VirtualArray array, List<Integer> indices, int treshold) {
+		array.clear();
+		if (treshold == UNBOUND_NUMBER) // unbound flush all
+			array.addAll(indices);
+		else
+			// sublist of the real elements
+			array.addAll(indices.subList(0, Math.min(indices.size(), treshold)));
+	}
+
 }
