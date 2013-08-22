@@ -15,18 +15,19 @@ import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.collection.Pair;
+import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
+import org.caleydo.core.view.opengl.layout2.basic.GLButton.EButtonMode;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
-import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder;
 import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder.EButtonBarLayout;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
@@ -54,18 +55,20 @@ public class NormalClusterElement extends AMultiClusterElement {
 	private ToolBar toolBar;
 	private ThresholdBar dimThreshBar;
 	private ThresholdBar recThreshBar;
-	private final GLElement switcher;
 
 	/**
 	 * elements for showing the probability heatmaps
 	 */
 	private LZHeatmapElement propabilityHeatMapHor;
 	private LZHeatmapElement propabilityHeatMapVer;
+	protected boolean showThreshold;
 
 	public NormalClusterElement(TablePerspective data, BiClustering clustering) {
 		super(data, clustering, Predicates.alwaysTrue());
 
-		toolBar = new ToolBar();
+		this.add(createTopToolBar());
+		toolBar = new ToolBar(content.createButtonBarBuilder().layoutAs(EButtonBarLayout.SLIDE_LEFT).size(16).build()
+				.setSize(16, 16));
 		this.add(toolBar); // add a element toolbar
 		dimThreshBar = new ThresholdBar(true);
 		recThreshBar = new ThresholdBar(false);
@@ -77,46 +80,73 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.propabilityHeatMapVer = new LZHeatmapElement(clustering.getL(), false);
 		this.add(this.propabilityHeatMapVer);
 
-		ButtonBarBuilder b = content.createButtonBarBuilder();
-		b.prepend(createHideClusterButton());
-		b.layoutAs(EButtonBarLayout.SLIDE_LEFT).size(18);
-		this.switcher = b.build();
+
 
 		setZValuesAccordingToState();
+	}
+
+	private GLElementContainer createTopToolBar() {
+		GLElementContainer topToolBar = new GLElementContainer(GLLayouts.flowVertical(3));
+		topToolBar.add(createHideClusterButton());
+		GLButton thresholds = new GLButton(EButtonMode.CHECKBOX);
+		thresholds.setCallback(new ISelectionCallback() {
+			@Override
+			public void onSelectionChanged(GLButton button, boolean selected) {
+				showThreshold = selected;
+				relayout();
+			}
+		});
+		thresholds.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_TOOLS));
+		thresholds.setSelectedRenderer(new IGLRenderer() {
+			@Override
+			public void render(GLGraphics g, float w, float h, GLElement parent) {
+				g.fillImage(g.getTexture(BiClusterRenderStyle.ICON_TOOLS), 0, 0, w, h, new Color(1, 1, 1, 0.5f));
+			}
+		});
+		thresholds.setTooltip("Set cluster specific thresholds");
+		thresholds.setSize(16, 16);
+		topToolBar.add(thresholds);
+		return topToolBar;
 	}
 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
 		// if (isHidden) return;
-		IGLLayoutElement toolbar = children.get(2);
-		IGLLayoutElement headerbar = children.get(0);
-		IGLLayoutElement dimthreshbar = children.get(3);
-		IGLLayoutElement recthreshbar = children.get(4);
+		IGLLayoutElement top = children.get(0);
 		IGLLayoutElement content = children.get(1);
-		IGLLayoutElement close = children.get(5);
+		IGLLayoutElement corner = children.get(2);
+		IGLLayoutElement left = children.get(3);
+		IGLLayoutElement dimthreshbar = children.get(4);
+		IGLLayoutElement recthreshbar = children.get(5);
 
 		// shift for propability heat maps
 		float shift = 6;
 
-		float baseHeight = 18;
-
 		if (isHovered) { // depending whether we are hovered or not, show hide the toolbar's
-			toolbar.setBounds(-baseHeight - shift, 0, baseHeight, toolbar.getSetHeight());
-			headerbar.setBounds(0, -baseHeight - shift, w < 55 ? 57 : w + 2, baseHeight);
-			// dimthreshbar.setBounds(-1, -baseHeight - shift, Math.max(w + 1, 56), baseHeight);
-			// recthreshbar.setBounds(-baseHeight - shift, -1, baseHeight, Math.max(h + 1, 61));
-			close.setBounds(-baseHeight - shift, -baseHeight - shift, baseHeight, baseHeight);
+			corner.setBounds(-18 - shift, -18 - shift, 18, 18 * 2);
+			if (showThreshold) {
+				top.setBounds(0, -shift, w < 50 ? 50 : w, 0);
+				left.setBounds(-18 - shift, 18, 0, left.getSetHeight());
+				dimthreshbar.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
+				recthreshbar.setBounds(-18 - shift, 18, 17, h < 50 ? 50 : h);
+			} else {
+				top.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
+				left.setBounds(-18 - shift, 18, 18, left.getSetHeight());
+				dimthreshbar.hide();
+				recthreshbar.hide();
+			}
 		} else {
 			// hide by setting the width to 0
-			toolbar.setBounds(-18 - shift, 0, 0, toolbar.getSetHeight());
-			headerbar.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
-			dimthreshbar.setBounds(-1, -shift, Math.max(w + 1, 56), 0);
-			recthreshbar.setBounds(-shift, -1, 0, Math.max(h + 1, 61));
-			close.setBounds(-shift, -shift, 0, 0);
+			corner.setBounds(-18 - shift, -shift, 0, 18 * 2);
+			top.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
+			left.setBounds(-18 - shift, 20, 0, left.getSetHeight());
+
+			dimthreshbar.hide();
+			recthreshbar.hide();
 		}
+
 		children.get(6).setBounds(-1, -shift, w + 2, shift);
 		children.get(7).setBounds(-shift, -1, shift, h + 2);
-
 		if (isFocused && doesShowLabels(content.asElement())) {
 			content.setBounds(0, 0, w + 79, h + 79);
 		} else {
@@ -155,9 +185,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 			slider.setHorizontal(isHorizontal);
 			slider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 			setContent(slider);
-
-			// define the animation used to move this element
-			this.setLayoutData(isHorizontal ? GROW_UP : GROW_LEFT);
 			setVisibility(EVisibility.PICKABLE); // for parent
 		}
 
@@ -373,7 +400,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 		GLButton hide = new GLButton();
 		hide.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_CLOSE));
 		hide.setTooltip("Close");
-		hide.setSize(16, 16);
+		hide.setSize(18, 18);
 		hide.setCallback(new ISelectionCallback() {
 
 			@Override
@@ -390,12 +417,12 @@ public class NormalClusterElement extends AMultiClusterElement {
 		GLButton sorting, enlarge, smaller, focus, lock;
 		SortingType sortingButtonCaption = SortingType.probabilitySorting;
 
-		public ToolBar() {
-			super(GLLayouts.flowVertical(6));
+		public ToolBar(GLElement switcher) {
+			super(GLLayouts.flowVertical(3));
 			setzDelta(-0.1f);
+			this.add(switcher);
 			createButtons();
-			setSize(Float.NaN, this.size() * (16 + 6));
-			setLayoutData(GROW_LEFT);
+			setSize(Float.NaN, this.size() * (16 + 3));
 			setVisibility(EVisibility.PICKABLE);
 		}
 
