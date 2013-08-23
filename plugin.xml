@@ -55,7 +55,7 @@
       <command
             defaultHandler="org.caleydo.view.bicluster.OpenViewHandler"
             id="org.caleydo.view.bicluster.command.opentemplate"
-            name="BiCluster">
+            name="Bicluster">
       </command>
       <command
             defaultHandler="org.caleydo.view.bicluster.loading.ImportXLZHandler"
