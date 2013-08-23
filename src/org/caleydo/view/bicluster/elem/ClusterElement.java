@@ -216,7 +216,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		super.renderPickImpl(g, w, h);
 	}
 
-	private int minimalDistanceTo(ClusterElement other) {
+	public int minimalDistanceTo(ClusterElement other, int maxDistance) {
 		return MyDijkstra.minDistance(this, other, maxDistance, this.recBandsEnabled, this.dimBandsEnabled);
 	}
 
@@ -646,7 +646,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 					preFocusScaleFactor = scaleFactor;
 				}
 				ClusterElement other = (ClusterElement) e.getSender();
-				int distance = minimalDistanceTo(other);
+				int distance = minimalDistanceTo(other, maxDistance);
 				if (distance > maxDistance)
 					setVisibility(EVisibility.NONE);
 				else {
@@ -722,8 +722,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 		ClusterElement hoveredElement = (ClusterElement) event.getSender();
 
-		if (hoveredElement == this || getDimOverlap(hoveredElement).size() > 0
-				|| getRecOverlap(hoveredElement).size() > 0) {
+		if (minimalDistanceTo(hoveredElement, maxDistance) <= maxDistance) {
 			opacityfactor = highOpacityFactor;
 			return;
 		} else
@@ -732,14 +731,30 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	@ListenTo
 	private void listenTo(MouseOverBandEvent event) {
-		if (event.getFirst() == this || event.getSecond() == this) {
+		if (!event.isMouseOver()) {
 			opacityfactor = highOpacityFactor;
 			return;
-		} else if (event.isMouseOver()) {
-			opacityfactor = lowOpacityFactor;
-		} else {
-			opacityfactor = highOpacityFactor;
 		}
+		if (nearEnough(event.getFirst(), event.getSecond())) {
+			opacityfactor = highOpacityFactor;
+			return;
+		} else
+			opacityfactor = lowOpacityFactor;
+	}
+
+	/**
+	 * @param first
+	 * @param second
+	 * @return
+	 */
+	public boolean nearEnough(ClusterElement first, ClusterElement second) {
+		int dist = minimalDistanceTo(first, maxDistance + 1);
+		if (dist > maxDistance + 1) // unbound
+			return false;
+		if (dist == maxDistance) // as connected just check one side and in the corner case extrem change if the other
+									// side is nearer
+			dist = minimalDistanceTo(second, maxDistance);
+		return dist <= maxDistance;
 	}
 
 	@ListenTo

@@ -397,13 +397,23 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	@ListenTo
 	private void listenTo(MouseOverClusterEvent event) {
 		isAnyThingHovered = event.isMouseOver();
-		if (event.getSender() == first || event.getSender() == second)
-			return;
-		else if (event.isMouseOver() && !hasSelections())
-			opacityFactor = LOW_OPACITY_FACTOR;
-		else
+		if (!event.isMouseOver() || hasSelections()) {
 			opacityFactor = HIGH_OPACITY_FACTPOR;
+		} else if (isNearEnough((ClusterElement) event.getSender()))
+			opacityFactor = HIGH_OPACITY_FACTPOR;
+		else
+			opacityFactor = LOW_OPACITY_FACTOR;
 		setZDeltaAccordingToState();
+	}
+
+	/**
+	 * @param sender
+	 * @return
+	 */
+	private boolean isNearEnough(ClusterElement c) {
+		if (c == first || c == second)
+			return true;
+		return c.nearEnough(first, second); // as symmetric
 	}
 
 	@ListenTo
@@ -411,7 +421,8 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 		if (event.getSender() == this)
 			return;
 		isAnyThingHovered = event.isMouseOver();
-		boolean fadeOut = event.isMouseOver() && !hasSelections();
+		boolean fadeOut = event.isMouseOver() && !hasSelections()
+				&& !isNearEnought(event.getFirst(), event.getSecond());
 		if (fadeOut) {
 			opacityFactor = LOW_OPACITY_FACTOR;
 			// if (isOtherType(event.getBand()))
@@ -421,6 +432,17 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 			// updateVisibilityByOverlap();
 		}
 		setZDeltaAccordingToState();
+	}
+
+	/**
+	 * @param first2
+	 * @param second2
+	 * @return
+	 */
+	private boolean isNearEnought(ClusterElement first, ClusterElement second) {
+		if (first == this.first || first == this.second || second == this.first || second == this.second)
+			return true;
+		return first.nearEnough(this.first, this.second) || second.nearEnough(this.first, this.second);
 	}
 
 	// /**
