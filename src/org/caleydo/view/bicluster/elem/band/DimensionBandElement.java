@@ -27,11 +27,6 @@ public class DimensionBandElement extends BandElement {
 	}
 
 	@Override
-	protected void fireSelectionChanged() {
-		root.getSelectionMixin().fireDimensionSelectionDelta();
-	}
-
-	@Override
 	protected void initBand() {
 		updateStructure();
 	}

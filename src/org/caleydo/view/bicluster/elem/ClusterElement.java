@@ -623,7 +623,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 				ClusterElement other = (ClusterElement) e.getSender();
 				float relationship = relationshipTo(other);
 				if (relationship == 0)
-					setScaleFactor(0);
+					updateVisibility();
 				else
 					setScaleFactor(preFocusScaleFactor * Math.min(0.8f + relationship * 10, 2));
 				resize();

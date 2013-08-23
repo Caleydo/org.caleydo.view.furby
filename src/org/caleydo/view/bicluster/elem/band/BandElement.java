@@ -18,6 +18,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
+import org.caleydo.core.data.selection.TablePerspectiveSelectionMixin;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.event.data.SelectionUpdateEvent;
@@ -61,7 +62,6 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected final ClusterElement first, second;
 	protected List<Integer> overlap, sharedElementsWithSelection, sharedElementsWithHover;
 
-	protected final SelectionType selectionType;
 	protected final SelectionManager selectionManager;
 	private final IIDTypeMapper<Integer, String> id2label;
 
@@ -91,9 +91,8 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 		this.root = root;
 		this.selectionManager = selectionManager;
 		this.defaultColor = new Color(defaultColor);
-		selectionType = selectionManager.getSelectionType();
 		sharedElementsWithSelection = new ArrayList<>();
-		highlightColor = selectionType.getColor();
+		highlightColor = SelectionType.SELECTION.getColor();
 		hoveredColor = SelectionType.MOUSE_OVER.getColor();
 		sharedElementsWithHover = new ArrayList<>();
 		setZDeltaAccordingToState();
@@ -329,11 +328,28 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected void selectElement(int objectId) {
 		if (selectionManager == null)
 			return;
-		selectionManager.clearSelection(selectionType);
+		clearAll(SelectionType.SELECTION);
 		if (hasSharedElementsWithSelectedBand()) {
-			selectionManager.addToType(selectionType, overlap);
+			selectionManager.addToType(SelectionType.SELECTION, overlap);
 		}
-		fireSelectionChanged();
+		fireAllSelections();
+	}
+
+	/**
+	 *
+	 */
+	private void fireAllSelections() {
+		final TablePerspectiveSelectionMixin mixin = root.getSelectionMixin();
+		for (SelectionManager m : mixin)
+			mixin.fireSelectionDelta(m);
+	}
+
+	/**
+	 * @param selection
+	 */
+	private void clearAll(SelectionType selection) {
+		for (SelectionManager m : root.getSelectionMixin())
+			m.clearSelection(selection);
 	}
 
 	public void deselect() {
@@ -363,11 +379,12 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected void hoverElement(int objectId) {
 		if (selectionManager == null)
 			return;
+		clearAll(SelectionType.MOUSE_OVER);
 		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
 		if (isMouseOver) {
 			selectionManager.addToType(SelectionType.MOUSE_OVER, overlap);
 		}
-		fireSelectionChanged();
+		fireAllSelections();
 	}
 
 	protected void recalculateSelection() {
@@ -383,13 +400,11 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 
 	public abstract void updateSelection();
 
-	protected abstract void fireSelectionChanged();
-
 	@ListenTo
 	public void listenToSelectionEvent(SelectionUpdateEvent e) {
 		sharedElementsWithHover = new ArrayList<>(selectionManager.getElements(SelectionType.MOUSE_OVER));
 		sharedElementsWithHover.retainAll(overlap);
-		sharedElementsWithSelection = new ArrayList<>(selectionManager.getElements(selectionType));
+		sharedElementsWithSelection = new ArrayList<>(selectionManager.getElements(SelectionType.SELECTION));
 		sharedElementsWithSelection.retainAll(overlap);
 		updateSelection();
 		setZDeltaAccordingToState();

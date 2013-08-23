@@ -30,11 +30,6 @@ public class RecordBandElement extends BandElement {
 	}
 
 	@Override
-	protected void fireSelectionChanged() {
-		root.getSelectionMixin().fireRecordSelectionDelta();
-	}
-
-	@Override
 	protected void initBand() {
 		updateStructure();
 	}
