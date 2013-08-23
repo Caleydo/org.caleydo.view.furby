@@ -7,12 +7,15 @@ package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.data.selection.SelectionManager;
+import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.color.Color;
@@ -39,6 +42,7 @@ import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
+import org.caleydo.view.bicluster.util.SetUtils;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -343,5 +347,36 @@ public class GLRootElement extends GLElementContainer {
 		setClusterSizes(null);
 	}
 
+	/**
+	 * @param shared
+	 * @param selection
+	 * @param mouseOver
+	 * @return
+	 */
+	public boolean isAnyRecSelected(Collection<Integer> ids, SelectionType... toCheck) {
+		return isAnySelected(ids, bands.getRecordSelectionManager(), toCheck);
+	}
+
+	/**
+	 * checks whether any of the given ids is an active element within the given SelectionTypes
+	 * 
+	 * @param ids
+	 * @param manager
+	 * @param toCheck
+	 * @return
+	 */
+	private boolean isAnySelected(Collection<Integer> ids, SelectionManager manager, SelectionType[] toCheck) {
+		if (toCheck.length == 0)
+			return false;
+		for (SelectionType type : toCheck) {
+			if (SetUtils.containsAny(manager.getElements(type), ids))
+				return true;
+		}
+		return false;
+	}
+
+	public boolean isAnyDimSelected(Collection<Integer> ids, SelectionType... toCheck) {
+		return isAnySelected(ids, bands.getRecordSelectionManager(), toCheck);
+	}
 
 }

@@ -42,6 +42,7 @@ import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
+import org.caleydo.view.bicluster.util.SetUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -377,21 +378,13 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	public void onSelectionUpdate(SelectionManager manager) {
 		if (manager != selectionManager)
 			return;
-		hasSharedElementsWithHover = containsAny(selectionManager.getElements(SelectionType.MOUSE_OVER));
-		hasSharedElementsWithSelection = containsAny(selectionManager.getElements(SelectionType.SELECTION));
+		hasSharedElementsWithHover = SetUtils.containsAny(overlap,
+				selectionManager.getElements(SelectionType.MOUSE_OVER));
+		hasSharedElementsWithSelection = SetUtils.containsAny(overlap,
+				selectionManager.getElements(SelectionType.SELECTION));
 		setZDeltaAccordingToState();
 	}
 
-	/**
-	 * @param elements
-	 * @return
-	 */
-	private boolean containsAny(Iterable<Integer> elements) {
-		for (Integer elem : elements)
-			if (overlap.contains(elem))
-				return true;
-		return false;
-	}
 
 	protected float curOpacityFactor = 1;
 

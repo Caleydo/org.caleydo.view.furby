@@ -722,11 +722,35 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 		ClusterElement hoveredElement = (ClusterElement) event.getSender();
 
-		if (minimalDistanceTo(hoveredElement, maxDistance) <= maxDistance) {
+		if (minimalDistanceTo(hoveredElement, maxDistance) <= maxDistance || areBandsSelected()) {
 			opacityfactor = highOpacityFactor;
 			return;
 		} else
 			opacityfactor = lowOpacityFactor;
+	}
+
+	/**
+	 *
+	 * check if any of my bands is selected
+	 * 
+	 * @return
+	 */
+	private boolean areBandsSelected() {
+		GLRootElement root = findParent(GLRootElement.class);
+
+		if (recBandsEnabled) {
+			for (List<Integer> shared : recOverlap.values()) {
+				if (root.isAnyRecSelected(shared, SelectionType.SELECTION, SelectionType.MOUSE_OVER))
+					return true;
+			}
+		}
+		if (dimBandsEnabled) {
+			for (List<Integer> shared : dimOverlap.values()) {
+				if (root.isAnyDimSelected(shared, SelectionType.SELECTION, SelectionType.MOUSE_OVER))
+					return true;
+			}
+		}
+		return false;
 	}
 
 	@ListenTo
@@ -735,7 +759,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			opacityfactor = highOpacityFactor;
 			return;
 		}
-		if (nearEnough(event.getFirst(), event.getSecond())) {
+		if (nearEnough(event.getFirst(), event.getSecond()) || areBandsSelected()) {
 			opacityfactor = highOpacityFactor;
 			return;
 		} else
