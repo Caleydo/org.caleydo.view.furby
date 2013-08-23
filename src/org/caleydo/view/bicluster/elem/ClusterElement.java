@@ -555,6 +555,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	private boolean wasResizedWhileHovered = false;
 	private double newRecSize = 0;
 	private double newDimSize = 0;
+	// whether hiding is enforced
+	private boolean forceHide = false;
 
 	public void setClusterSize(double x, double y, double maxClusterSize, Object causer) {
 		if ((isHovered || isLocked) && (causer != this)) {
@@ -647,20 +649,21 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 				}
 				ClusterElement other = (ClusterElement) e.getSender();
 				int distance = minimalDistanceTo(other, maxDistance);
-				if (distance > maxDistance)
-					setVisibility(EVisibility.NONE);
-				else {
+				if (distance > maxDistance) {
+					forceHide = true;
+				} else {
 					float relationship = relationshipTo(other);
-					updateVisibility();
+					forceHide = false;
 					setScaleFactor(preFocusScaleFactor * Math.min(0.8f + relationship * 10, 2));
 					resize();
 				}
 			} else {
-				updateVisibility();
 				setScaleFactor(preFocusScaleFactor);
 				preFocusScaleFactor = -1;
 				resize();
+				forceHide = false;
 			}
+			updateVisibility();
 		}
 	}
 
@@ -732,7 +735,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	/**
 	 *
 	 * check if any of my bands is selected
-	 * 
+	 *
 	 * @return
 	 */
 	private boolean areBandsSelected() {
@@ -827,7 +830,9 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 *
 	 */
 	protected final void updateVisibility() {
-		setVisibility(shouldBeVisible() ? EVisibility.PICKABLE : EVisibility.NONE);
+		boolean should = shouldBeVisible();
+		boolean v = should && !forceHide;
+		setVisibility(v ? EVisibility.PICKABLE : EVisibility.NONE);
 	}
 
 	public abstract boolean shouldBeVisible();
