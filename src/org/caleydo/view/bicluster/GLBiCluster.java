@@ -65,7 +65,7 @@ import com.google.common.collect.Lists;
 
 public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
-	public static final String VIEW_NAME = "BiCluster Visualization";
+	public static final String VIEW_NAME = "Bicluster";
 
 	private TablePerspective x, l, z;
 

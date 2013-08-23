@@ -1,2 +1,2 @@
-BiCluster Visualization
+Bicluster Visualization
 =========================
