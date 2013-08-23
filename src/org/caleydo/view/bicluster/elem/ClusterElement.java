@@ -623,11 +623,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 				ClusterElement other = (ClusterElement) e.getSender();
 				float relationship = relationshipTo(other);
 				if (relationship == 0)
+					setVisibility(EVisibility.NONE);
+				else {
 					updateVisibility();
-				else
 					setScaleFactor(preFocusScaleFactor * Math.min(0.8f + relationship * 10, 2));
-				resize();
+					resize();
+				}
 			} else {
+				updateVisibility();
 				setScaleFactor(preFocusScaleFactor);
 				preFocusScaleFactor = -1;
 				resize();
@@ -742,7 +745,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		updateVisibility();
 	}
 
-	public abstract void updateVisibility();
+	/**
+	 *
+	 */
+	protected final void updateVisibility() {
+		setVisibility(shouldBeVisible() ? EVisibility.PICKABLE : EVisibility.NONE);
+	}
+
+	public abstract boolean shouldBeVisible();
 
 	public abstract void setData(List<Integer> dimIndices, List<Integer> recIndices, String id, int bcNr,
 			double maxDim, double maxRec, double minDim, double minRec);

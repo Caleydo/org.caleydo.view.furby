@@ -126,14 +126,12 @@ public final class SpecialGenericClusterElement extends AMultiClusterElement {
 	}
 
 	@Override
-	public void updateVisibility() {
+	public boolean shouldBeVisible() {
 		if (isHidden || !hasContent || (getRecordOverlapSize() == 0 || recordVA.size() == 0 || !anyShown(recOverlap))
 				&& (getDimensionOverlapSize() == 0 || dimVA.size() == 0 || !anyShown(dimOverlap))) {
-			setVisibility(EVisibility.NONE);
-			System.out.println(getLabel() + " hide");
+			return false;
 		} else {
-			setVisibility(EVisibility.PICKABLE);
-			System.out.println(getLabel() + " pickable");
+			return true;
 		}
 
 	}

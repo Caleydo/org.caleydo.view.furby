@@ -74,12 +74,8 @@ public abstract class ASpecialClusterElement extends ClusterElement {
 	}
 
 	@Override
-	public final void updateVisibility() {
-		if (isHidden || !hasContent)
-			setVisibility(EVisibility.NONE);
-		else
-			setVisibility(EVisibility.PICKABLE);
-
+	public final boolean shouldBeVisible() {
+		return !isHidden && hasContent;
 	}
 
 	@Override

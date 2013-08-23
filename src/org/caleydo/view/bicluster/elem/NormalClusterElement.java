@@ -293,15 +293,13 @@ public class NormalClusterElement extends AMultiClusterElement {
 	}
 
 	@Override
-	public void updateVisibility() {
+	public final boolean shouldBeVisible() {
 		if (isHidden || !hasContent)
-			setVisibility(EVisibility.NONE);
-		else if (getDimensionVirtualArray().size() / elementCountBiggestCluster > clusterSizeThreshold)
-			setVisibility(EVisibility.PICKABLE);
-		else if (getRecordVirtualArray().size() / elementCountBiggestCluster > clusterSizeThreshold)
-			setVisibility(EVisibility.PICKABLE);
-		else
-			setVisibility(EVisibility.NONE);
+			return false;
+		if ((getDimensionVirtualArray().size() / elementCountBiggestCluster) < clusterSizeThreshold
+				&& (getRecordVirtualArray().size() / elementCountBiggestCluster) < clusterSizeThreshold)
+			return false;
+		return true;
 	}
 
 	@Override
