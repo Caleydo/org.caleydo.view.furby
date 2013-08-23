@@ -272,7 +272,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		case MOUSE_OUT:
 			if (isHovered)
 				EventPublisher.trigger(new DataSetSelectedEvent(data.getDataDomain()));
-			mouseOutDelay = 1000;
+			mouseOutDelay = 200;
 			// mouseOut();
 			break;
 		case MOUSE_WHEEL:

@@ -10,17 +10,17 @@ import java.util.List;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionManager;
+import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.selection.TablePerspectiveSelectionMixin;
-import org.caleydo.core.data.selection.delta.SelectionDelta;
 import org.caleydo.core.event.EventListenerManager.DeepScan;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
-import org.caleydo.core.event.EventPublisher;
-import org.caleydo.core.event.data.SelectionUpdateEvent;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
+
+import com.google.common.collect.Iterables;
 
 /**
  * @author Michael Gillhofer
@@ -32,13 +32,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	private final TablePerspectiveSelectionMixin selectionMixin;
 
 	private BandElement selection;
-
-	/**
-	 * @return the selectionMixin, see {@link #selectionMixin}
-	 */
-	public TablePerspectiveSelectionMixin getSelectionMixin() {
-		return selectionMixin;
-	}
 
 	/**
 	 * @param savedData
@@ -59,31 +52,28 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		}
 		if (resortOnNextRun) {
 			sortBy(new Comparator<GLElement>() {
-
 				@Override
 				public int compare(GLElement o1, GLElement o2) {
-					return new Float(o1.getzDelta()).compareTo(o2.getzDelta());
+					return Float.compare(o1.getzDelta(), o2.getzDelta());
 				}
-
 			});
 			resortOnNextRun = false;
 		}
-		relayout();
+		relayout(); // FIXME
 	}
 
 	@Override
 	public void onSelectionUpdate(SelectionManager manager) {
-		SelectionDelta selectionDelta = manager.getDelta();
-		SelectionUpdateEvent event = new SelectionUpdateEvent();
-		event.setSender(selectionMixin);
-		event.setEventSpace(selectionMixin.getTablePerspective().getDataDomain().getDataDomainID());
-		event.setSelectionDelta(selectionDelta);
-		EventPublisher.trigger(event);
+		for (BandElement band : allBands())
+			band.onSelectionUpdate(manager);
+	}
+
+	private Iterable<BandElement> allBands() {
+		return Iterables.filter(this, BandElement.class);
 	}
 
 	@Override
 	public void onVAUpdate(TablePerspective tablePerspective) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -95,6 +85,30 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		if (this.selection != null)
 			this.selection.deselect();
 		this.selection = selection;
+		if (this.selection != null)
+			selection.recalculateSelection();
+	}
+
+	/**
+	 *
+	 */
+	void fireAllSelections(BandElement sender) {
+		for (SelectionManager m : selectionMixin) {
+			if (selectionMixin.fireSelectionDelta(m)) {
+				// fire internal selection update
+				for (BandElement band : allBands())
+					if (band != sender)
+						band.onSelectionUpdate(m);
+			}
+		}
+	}
+
+	/**
+	 * @param selection
+	 */
+	void clearAll(SelectionType selection) {
+		for (SelectionManager m : selectionMixin)
+			m.clearSelection(selection);
 	}
 
 	public BandElement getSelection() {
@@ -124,5 +138,15 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		resortOnNextRun = true;
 	}
 
+	/**
+	 * @return
+	 */
+	public SelectionManager getDimensionSelectionManager() {
+		return selectionMixin.getDimensionSelectionManager();
+	}
+
+	public SelectionManager getRecordSelectionManager() {
+		return selectionMixin.getRecordSelectionManager();
+	}
 
 }

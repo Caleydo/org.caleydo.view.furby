@@ -18,10 +18,8 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
-import org.caleydo.core.data.selection.TablePerspectiveSelectionMixin;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
-import org.caleydo.core.event.data.SelectionUpdateEvent;
 import org.caleydo.core.id.IDMappingManagerRegistry;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
@@ -45,6 +43,9 @@ import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+
 /**
  * @author Michael Gillhofer
  *
@@ -60,7 +61,9 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	private static final float HOVERED_Z_DELTA = -1;
 
 	protected final ClusterElement first, second;
-	protected List<Integer> overlap, sharedElementsWithSelection, sharedElementsWithHover;
+	protected List<Integer> overlap;
+	private boolean hasSharedElementsWithSelection;
+	private boolean hasSharedElementsWithHover;
 
 	protected final SelectionManager selectionManager;
 	private final IIDTypeMapper<Integer, String> id2label;
@@ -81,22 +84,27 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 
 	private float opacityFactor = 1;
 
-	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
+	protected BandElement(GLElement first, GLElement second, List<Integer> list,
+			SelectionManager selectionManager,
 			AllBandsElement root, float[] defaultColor, IDType idType) {
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
-		this.overlap = list;
+		this.overlap = toFastOverlap(list);
 		this.id2label = IDMappingManagerRegistry.get().getIDMappingManager(idType)
 				.getIDTypeMapper(idType, idType.getIDCategory().getHumanReadableIDType());
 		this.root = root;
 		this.selectionManager = selectionManager;
 		this.defaultColor = new Color(defaultColor);
-		sharedElementsWithSelection = new ArrayList<>();
+		hasSharedElementsWithSelection = false;
+		hasSharedElementsWithHover = false;
 		highlightColor = SelectionType.SELECTION.getColor();
 		hoveredColor = SelectionType.MOUSE_OVER.getColor();
-		sharedElementsWithHover = new ArrayList<>();
 		setZDeltaAccordingToState();
 		initBand();
+	}
+
+	protected static ImmutableList<Integer> toFastOverlap(List<Integer> list) {
+		return ImmutableSortedSet.copyOf(list).asList();
 	}
 
 	/**
@@ -129,10 +137,6 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected void takeDown() {
 		pickingPool.clear();
 		super.takeDown();
-	}
-
-	public List<Integer> getOverlap() {
-		return overlap;
 	}
 
 	private void setZDeltaAccordingToState() {
@@ -283,11 +287,11 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	}
 
 	protected boolean hasSharedElementsWithSelectedBand() {
-		return sharedElementsWithSelection.size() != 0;
+		return hasSharedElementsWithSelection;
 	}
 
 	protected boolean hasSharedElementsWithHoveredBand() {
-		return sharedElementsWithHover.size() != 0;
+		return hasSharedElementsWithHover;
 	}
 
 	@Override
@@ -317,10 +321,10 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 		if (pick.getObjectID() != 0)
 			return;
 		if (hasSharedElementsWithSelectedBand()) { // disable the selection again
-			sharedElementsWithSelection = new ArrayList<>();
+			hasSharedElementsWithSelection = false;
 			root.setSelection(null);
 		} else {
-			sharedElementsWithSelection = new ArrayList<>(overlap);
+			hasSharedElementsWithSelection = true;
 			root.setSelection(this);
 		}
 	}
@@ -328,33 +332,15 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected void selectElement(int objectId) {
 		if (selectionManager == null)
 			return;
-		clearAll(SelectionType.SELECTION);
+		root.clearAll(SelectionType.SELECTION);
 		if (hasSharedElementsWithSelectedBand()) {
 			selectionManager.addToType(SelectionType.SELECTION, overlap);
 		}
-		fireAllSelections();
-	}
-
-	/**
-	 *
-	 */
-	private void fireAllSelections() {
-		final TablePerspectiveSelectionMixin mixin = root.getSelectionMixin();
-		for (SelectionManager m : mixin)
-			mixin.fireSelectionDelta(m);
-	}
-
-	/**
-	 * @param selection
-	 */
-	private void clearAll(SelectionType selection) {
-		for (SelectionManager m : root.getSelectionMixin())
-			m.clearSelection(selection);
+		root.fireAllSelections(this);
 	}
 
 	public void deselect() {
-		sharedElementsWithSelection = new ArrayList<>();
-		updateSelection();
+		hasSharedElementsWithSelection = false;
 		setZDeltaAccordingToState();
 	}
 
@@ -363,6 +349,7 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 		isMouseOver = true;
 		currSelectedSplineID = pick.getObjectID();
 		hoverElement(pick.getObjectID());
+		hasSharedElementsWithHover = true;
 		EventPublisher.trigger(new MouseOverBandEvent(this, true));
 		repaintAll();
 	}
@@ -371,6 +358,7 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected void onMouseOut(Pick pick) {
 		isMouseOver = false;
 		currSelectedSplineID = -1;
+		hasSharedElementsWithHover = false;
 		EventPublisher.trigger(new MouseOverBandEvent(this, false));
 		hoverElement(pick.getObjectID());
 		repaintAll();
@@ -379,18 +367,17 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected void hoverElement(int objectId) {
 		if (selectionManager == null)
 			return;
-		clearAll(SelectionType.MOUSE_OVER);
-		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
+		root.clearAll(SelectionType.MOUSE_OVER);
 		if (isMouseOver) {
 			selectionManager.addToType(SelectionType.MOUSE_OVER, overlap);
 		}
-		fireAllSelections();
+		root.fireAllSelections(this);
 	}
 
 	protected void recalculateSelection() {
 		if (root.getSelection() != this)
 			return;
-		sharedElementsWithSelection = new ArrayList<>(overlap);
+		hasSharedElementsWithSelection = true;
 		selectElement(0);
 	}
 
@@ -398,16 +385,23 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 
 	public abstract void updatePosition();
 
-	public abstract void updateSelection();
-
-	@ListenTo
-	public void listenToSelectionEvent(SelectionUpdateEvent e) {
-		sharedElementsWithHover = new ArrayList<>(selectionManager.getElements(SelectionType.MOUSE_OVER));
-		sharedElementsWithHover.retainAll(overlap);
-		sharedElementsWithSelection = new ArrayList<>(selectionManager.getElements(SelectionType.SELECTION));
-		sharedElementsWithSelection.retainAll(overlap);
-		updateSelection();
+	public void onSelectionUpdate(SelectionManager manager) {
+		if (manager != selectionManager)
+			return;
+		hasSharedElementsWithHover = containsAny(selectionManager.getElements(SelectionType.MOUSE_OVER));
+		hasSharedElementsWithSelection = containsAny(selectionManager.getElements(SelectionType.SELECTION));
 		setZDeltaAccordingToState();
+	}
+
+	/**
+	 * @param elements
+	 * @return
+	 */
+	private boolean containsAny(Iterable<Integer> elements) {
+		for (Integer elem : elements)
+			if (overlap.contains(elem))
+				return true;
+		return false;
 	}
 
 	protected float curOpacityFactor = 1;

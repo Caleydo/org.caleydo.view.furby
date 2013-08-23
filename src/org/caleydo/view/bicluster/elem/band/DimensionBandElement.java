@@ -22,7 +22,7 @@ public class DimensionBandElement extends BandElement {
 	public DimensionBandElement(GLElement first, GLElement second,
 			AllBandsElement root) {
 		super(first, second, ((ClusterElement) first).getDimOverlap(second),
-				root.getSelectionMixin().getDimensionSelectionManager(), root,
+ root.getDimensionSelectionManager(), root,
  dimBandColor, ((ClusterElement) first).getDimensionIDType());
 	}
 
@@ -35,7 +35,7 @@ public class DimensionBandElement extends BandElement {
 	public void updateStructure() {
 		if (!isVisible())
 			return;
-		overlap = first.getDimOverlap(second);
+		overlap = toFastOverlap(first.getDimOverlap(second));
 		updateVisibilityByOverlap();
 		firstSubIndices = first.getListOfContinousDimSequences(overlap);
 		secondSubIndices = second.getListOfContinousDimSequences(overlap);
@@ -55,12 +55,6 @@ public class DimensionBandElement extends BandElement {
 	@Override
 	public void updatePosition() {
 		updateStructure();
-	}
-
-	@Override
-	public void updateSelection() {
-		// TODO Auto-generated method stub
-
 	}
 
 	@ListenTo

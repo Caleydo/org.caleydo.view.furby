@@ -25,7 +25,7 @@ public class RecordBandElement extends BandElement {
 	public RecordBandElement(GLElement first, GLElement second,
 			AllBandsElement root) {
 		super(first, second, ((ClusterElement) first).getRecOverlap(second),
-				root.getSelectionMixin().getRecordSelectionManager(), root,
+ root.getRecordSelectionManager(), root,
  recBandColor, ((ClusterElement) first).getRecordIDType());
 	}
 
@@ -38,7 +38,7 @@ public class RecordBandElement extends BandElement {
 	public void updateStructure() {
 		if (!isVisible())
 			return;
-		overlap = first.getRecOverlap(second);
+		overlap = toFastOverlap(first.getRecOverlap(second));
 		updateVisibilityByOverlap();
 		firstSubIndices = first.getListOfContinousRecSequenzes(overlap);
 		secondSubIndices = second.getListOfContinousRecSequenzes(overlap);
@@ -65,11 +65,6 @@ public class RecordBandElement extends BandElement {
 		updateStructure();
 	}
 
-	@Override
-	public void updateSelection() {
-		// TODO Auto-generated method stub
-
-	}
 
 	@ListenTo
 	private void listenTo(SpecialClusterRemoveEvent e) {
