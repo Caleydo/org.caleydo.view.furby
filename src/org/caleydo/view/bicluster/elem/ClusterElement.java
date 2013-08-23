@@ -74,7 +74,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	protected static final float highOpacityFactor = 1;
 	protected static final float lowOpacityFactor = 0.2f;
-	protected static final float opacityChangeInterval = 10f;
 	protected static final float DEFAULT_Z_DELTA = 0;
 	protected static final float FOCUSED_Z_DELTA = 1;
 	protected static final float HOVERED_NOT_FOCUSED_Z_DELTA = 2;
@@ -209,24 +208,10 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		super.renderPickImpl(g, w, h);
 	}
 
-	private int accu; // for animating the opacity fading
 
 	@Override
 	public final void layout(int deltaTimeMs) {
-		// duration -= delta
-		if (deltaTimeMs + accu > opacityChangeInterval) {
-
-			if (opacityfactor < curOpacityFactor)
-				curOpacityFactor -= 0.02;
-			else if (opacityfactor > curOpacityFactor)
-				curOpacityFactor += 0.02;
-
-			repaint();
-			for (GLElement child : this)
-				child.repaint();
-			accu = 0;
-		} else
-			accu += deltaTimeMs;
+		updateOpacticy(deltaTimeMs);
 		if (mouseOutDelay != Integer.MAX_VALUE) {
 			mouseOutDelay -= deltaTimeMs;
 			if (mouseOutDelay <= 0) {
@@ -236,6 +221,25 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		}
 		super.layout(deltaTimeMs);
 
+	}
+
+	private void updateOpacticy(int deltaTimeMs) {
+		float delta = Math.abs(curOpacityFactor - opacityfactor);
+		if (delta < 0.01f) // done
+			return;
+		final float speed = 0.002f; // [units/ms]
+		float back = curOpacityFactor;
+
+		final float change = deltaTimeMs * speed;
+
+		if (opacityfactor < curOpacityFactor)
+			curOpacityFactor = Math.max(opacityfactor, curOpacityFactor - change);
+		else
+			curOpacityFactor = Math.min(opacityfactor, curOpacityFactor + change);
+		if (back != curOpacityFactor) {
+			repaint();
+			repaintChildren();
+		}
 	}
 
 	@Override

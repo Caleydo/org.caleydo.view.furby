@@ -24,12 +24,16 @@ public class MouseOverBandEvent extends AEvent {
 		in = isMouseOver;
 	}
 
+	public BandElement getBand() {
+		return (BandElement) getSender();
+	}
+
 	public ClusterElement getFirst() {
-		return ((BandElement) getSender()).getFirst();
+		return getBand().getFirst();
 	}
 
 	public ClusterElement getSecond() {
-		return ((BandElement) getSender()).getSecond();
+		return getBand().getSecond();
 	}
 
 	public boolean isMouseOver(){

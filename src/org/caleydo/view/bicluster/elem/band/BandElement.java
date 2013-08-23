@@ -166,22 +166,35 @@ public abstract class BandElement extends PickableGLElement {
 
 	protected abstract void initBand();
 
-	private int accu; // for animating the opacity fading
-
 	@Override
 	public void layout(int deltaTimeMs) {
-		if (deltaTimeMs + accu > OPACITY_CHANGE_INTERVAL) {
-
-			if (opacityFactor < curOpacityFactor)
-				curOpacityFactor -= 0.03;
-			else if (opacityFactor > curOpacityFactor)
-				curOpacityFactor += 0.03;
-			repaint();
-			accu = 0;
-		} else
-			accu += deltaTimeMs;
+		updateOpacticy(deltaTimeMs);
 		super.layout(deltaTimeMs);
+	}
 
+	private void updateOpacticy(int deltaTimeMs) {
+		float delta = Math.abs(curOpacityFactor - opacityFactor);
+		if (delta < 0.01f) // done
+			return;
+		final float speed = 0.003f; // [units/ms]
+		float back = curOpacityFactor;
+
+		final float change = deltaTimeMs * speed;
+
+		if (opacityFactor < curOpacityFactor)
+			curOpacityFactor = Math.max(opacityFactor, curOpacityFactor - change);
+		else
+			curOpacityFactor = Math.min(opacityFactor, curOpacityFactor + change);
+		if (back != curOpacityFactor) {
+			repaint();
+		}
+	}
+
+	protected final void updateVisibilityByOverlap() {
+		if (overlap.size() > 0)
+			setVisibility(EVisibility.PICKABLE);
+		else
+			setVisibility(EVisibility.NONE);
 	}
 
 	@Override
@@ -253,7 +266,7 @@ public abstract class BandElement extends PickableGLElement {
 
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
-		if (getVisibility() == EVisibility.PICKABLE && !isAnyThingHovered) {
+		if (getVisibility() == EVisibility.PICKABLE && !isAnyThingHovered && isVisible()) {
 			g.color(defaultColor);
 			if (isMouseOver == true) {
 				for (Band b : splittedBands.values())
@@ -376,12 +389,26 @@ public abstract class BandElement extends PickableGLElement {
 			return;
 		isAnyThingHovered = event.isMouseOver();
 		boolean fadeOut = event.isMouseOver() && !hasSelections();
-		if (fadeOut)
+		if (fadeOut) {
 			opacityFactor = LOW_OPACITY_FACTOR;
-		else
+			// if (isOtherType(event.getBand()))
+			// setVisibility(EVisibility.NONE);
+		} else {
 			opacityFactor = HIGH_OPACITY_FACTPOR;
+			// updateVisibilityByOverlap();
+		}
 		setZDeltaAccordingToState();
 	}
+
+	// /**
+	// * whether the bands are from different types
+	// *
+	// * @param band
+	// * @return
+	// */
+	// private boolean isOtherType(BandElement band) {
+	// return !band.getClass().equals(this.getClass());
+	// }
 
 	private boolean hasSelections() {
 		return hasSharedElementsWithHoveredBand() || hasSharedElementsWithSelectedBand();

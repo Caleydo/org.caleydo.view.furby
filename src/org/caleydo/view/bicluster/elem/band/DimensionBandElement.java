@@ -41,10 +41,7 @@ public class DimensionBandElement extends BandElement {
 		if (!isVisible())
 			return;
 		overlap = first.getDimOverlap(second);
-		if (overlap.size() > 0)
-			setVisibility(EVisibility.PICKABLE);
-		else
-			setVisibility(EVisibility.NONE);
+		updateVisibilityByOverlap();
 		firstSubIndices = first.getListOfContinousDimSequences(overlap);
 		secondSubIndices = second.getListOfContinousDimSequences(overlap);
 		if (firstSubIndices.size() == 0)

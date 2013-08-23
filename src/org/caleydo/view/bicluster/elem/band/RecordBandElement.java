@@ -44,10 +44,7 @@ public class RecordBandElement extends BandElement {
 		if (!isVisible())
 			return;
 		overlap = first.getRecOverlap(second);
-		if (overlap.size() > 0)
-			setVisibility(EVisibility.PICKABLE);
-		else
-			setVisibility(EVisibility.NONE);
+		updateVisibilityByOverlap();
 		firstSubIndices = first.getListOfContinousRecSequenzes(overlap);
 		secondSubIndices = second.getListOfContinousRecSequenzes(overlap);
 		if (firstSubIndices.size() == 0)
