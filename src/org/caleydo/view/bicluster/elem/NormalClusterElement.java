@@ -427,7 +427,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 		}
 
 		protected void createButtons() {
-			sorting = new GLButton();
+			sorting = new GLButton(GLButton.EButtonMode.CHECKBOX);
 			sorting.setRenderer(GLRenderers.drawText(
 					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
 			sorting.setSize(16, 16);
@@ -436,25 +436,17 @@ public class NormalClusterElement extends AMultiClusterElement {
 			this.add(sorting);
 			focus = new GLButton(GLButton.EButtonMode.CHECKBOX);
 			focus.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_FOCUS));
+			focus.setSelectedRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_FOCUS_OUT));
 			focus.setSize(16, 16);
 			focus.setTooltip("Focus this Cluster");
 			focus.setCallback(this);
 			this.add(focus);
-			lock = new GLButton();
+			lock = new GLButton(GLButton.EButtonMode.CHECKBOX);
 			lock.setTooltip("Lock this cluster. It will not recieve threshold updates.");
 			lock.setSize(16, 16);
-			lock.setRenderer(new IGLRenderer() {
-
-				@Override
-				public void render(GLGraphics g, float w, float h, GLElement parent) {
-					if (isLocked)
-						g.fillImage(BiClusterRenderStyle.ICON_UNLOCK, 0, 0, w, h);
-					else
-						g.fillImage(BiClusterRenderStyle.ICON_LOCK, 0, 0, w, h);
-				}
-
-			});
 			lock.setCallback(this);
+			lock.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_LOCK));
+			lock.setSelectedRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_UNLOCK));
 			this.add(lock);
 			enlarge = new GLButton();
 			enlarge.setSize(16, 16);

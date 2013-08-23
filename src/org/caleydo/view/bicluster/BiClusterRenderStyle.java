@@ -16,6 +16,7 @@ public class BiClusterRenderStyle {
 
 	public static final String ICON_CLOSE = ICON_PREFIX + "dialog_close.png";
 	public static final String ICON_FOCUS = ICON_PREFIX + "target.png";
+	public static final String ICON_FOCUS_OUT = ICON_PREFIX + "target_out.png";
 	public static final String ICON_UNLOCK = ICON_PREFIX + "lock_open.png";
 	public static final String ICON_LOCK = ICON_PREFIX + "lock.png";
 	public static final String ICON_ZOOM_IN = ICON_PREFIX + "zoom_in.png";
