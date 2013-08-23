@@ -16,7 +16,6 @@ import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
-import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
@@ -161,7 +160,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 		} else {
 			sort(e.getType());
 		}
-		toolBar.setSortingCaption(e.getType());
 	}
 
 	protected class ThresholdBar extends GLElementDecorator implements
@@ -412,7 +410,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	protected class ToolBar extends GLElementContainer implements ISelectionCallback {
 
-		GLButton sorting, enlarge, smaller, focus, lock;
+		GLButton enlarge, smaller, focus, lock;
 		SortingType sortingButtonCaption = SortingType.probabilitySorting;
 
 		public ToolBar(GLElement switcher) {
@@ -425,13 +423,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 		}
 
 		protected void createButtons() {
-			sorting = new GLButton(GLButton.EButtonMode.CHECKBOX);
-			sorting.setRenderer(GLRenderers.drawText(
-					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
-			sorting.setSize(16, 16);
-			sorting.setTooltip("Change sorting");
-			sorting.setCallback(this);
-			this.add(sorting);
 			focus = new GLButton(GLButton.EButtonMode.CHECKBOX);
 			focus.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_FOCUS));
 			focus.setSelectedRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_FOCUS_OUT));
@@ -461,20 +452,9 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 		}
 
-		void setSortingCaption(SortingType caption) {
-			sortingButtonCaption = caption;
-			sorting.setRenderer(GLRenderers.drawText(
-					sortingButtonCaption == SortingType.probabilitySorting ? "P" : "B", VAlign.CENTER));
-		}
-
 		@Override
 		public void onSelectionChanged(GLButton button, boolean selected) {
-			if (button == sorting) {
-				setSortingCaption(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
-						: SortingType.probabilitySorting);
-				sort(sortingType == SortingType.probabilitySorting ? SortingType.bandSorting
-						: SortingType.probabilitySorting);
-			} else if (button == enlarge) {
+			if (button == enlarge) {
 				upscale();
 				resize();
 			} else if (button == smaller) {
