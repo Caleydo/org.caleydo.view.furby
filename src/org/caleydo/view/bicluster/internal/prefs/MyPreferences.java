@@ -27,6 +27,7 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 	@Override
 	public void initializeDefaultPreferences() {
 		IPreferenceStore store = prefs();
+		store.setDefault("view.bicluster.scale", 100);
 		store.setDefault("view.bicluster.scale.dim", 4 * 100);
 		store.setDefault("view.bicluster.scale.rec", 4 * 100);
 		store.setDefault("view.bicluster.threshold.dim", (int) (4.5f * 100));
@@ -38,16 +39,14 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 		store.setDefault("view.bicluster.maxdistance", 1);
 	}
 
-	/**
-	 * @return
-	 */
+	public static double getScaleFactor() {
+		return prefs().getInt("view.bicluster.scale") / 100.f;
+	}
+
 	public static float getDimScaleFactor() {
 		return prefs().getInt("view.bicluster.scale.dim") / 100.f;
 	}
 
-	/**
-	 * @return
-	 */
 	public static float getRecScaleFactor() {
 		return prefs().getInt("view.bicluster.scale.rec") / 100.f;
 	}
@@ -82,5 +81,4 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 	public static int getMaxDistance() {
 		return prefs().getInt("view.bicluster.maxdistance");
 	}
-
 }

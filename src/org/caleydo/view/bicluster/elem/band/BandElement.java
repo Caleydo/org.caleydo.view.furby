@@ -101,6 +101,7 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 		hoveredColor = SelectionType.MOUSE_OVER.getColor();
 		setZDeltaAccordingToState();
 		initBand();
+		setPicker(null);
 	}
 
 	protected static ImmutableList<Integer> toFastOverlap(List<Integer> list) {

@@ -15,11 +15,16 @@ import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.id.IDType;
+import org.caleydo.core.util.color.Color;
+import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
-import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
-import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
+import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.core.view.opengl.picking.IPickingListener;
+import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.core.view.opengl.picking.PickingMode;
 import org.caleydo.view.bicluster.elem.band.AllBandsElement;
 import org.caleydo.view.bicluster.elem.band.DimensionBandElement;
 import org.caleydo.view.bicluster.elem.band.RecordBandElement;
@@ -42,7 +47,7 @@ import com.google.common.collect.Lists;
  * @author user
  *
  */
-public class GLRootElement extends GLElementContainer implements IGLLayout {
+public class GLRootElement extends GLElementContainer {
 	private AllBandsElement bands;
 	private final AllClustersElement clusters = new AllClustersElement(this);
 
@@ -51,12 +56,28 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	private float dimScaleFactor = MyPreferences.getDimScaleFactor();
 	private float recScaleFactor = MyPreferences.getRecScaleFactor();
+	private double scaleFactor = MyPreferences.getScaleFactor();
 
 	private BiClustering clustering;
 	private TablePerspective x;
 
+	private final GLElement zoomLayer = new GLElement().setVisibility(EVisibility.PICKABLE)
+.setPicker(
+			GLRenderers.fillRect(Color.CYAN));
+
 	public GLRootElement() {
-		setLayout(this);
+		setLayout(GLLayouts.LAYERS);
+		zoomLayer.onPick(new IPickingListener() {
+			@Override
+			public void pick(Pick pick) {
+				if (pick.getPickingMode() == PickingMode.MOUSE_WHEEL && ((IMouseEvent) pick).isCtrlDown()) {
+					scaleFactor = Math.max(0.2, scaleFactor
+							* (((IMouseEvent) pick).getWheelRotation() > 0 ? 1.1 : 1 / 1.1));
+					setClusterSizes(null);
+				}
+			}
+		});
+		this.add(zoomLayer);
 	}
 
 	@Override
@@ -90,6 +111,7 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 			clusters.clear();
 		this.clear();
 		bands = new AllBandsElement(x);
+		this.add(zoomLayer);
 		this.add(bands);
 		this.add(clusters);
 
@@ -149,8 +171,8 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
 			Vec2f preferredSize = i.getPreferredSize(dimScaleFactor, recScaleFactor);
-			double recSize = preferredSize.y();
-			double dimSize = preferredSize.x();
+			double recSize = preferredSize.y() * scaleFactor;
+			double dimSize = preferredSize.x() * scaleFactor;
 			i.setClusterSize(dimSize, recSize, maxSize, causer);
 			i.updateVisibility();
 			i.relayout();
@@ -159,14 +181,6 @@ public class GLRootElement extends GLElementContainer implements IGLLayout {
 
 	public AllClustersElement getClusters() {
 		return clusters;
-	}
-
-	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-		for (IGLLayoutElement child : children) {
-			child.setBounds(0, 0, w, h);
-			child.asElement().relayout();
-		}
 	}
 
 	public void recalculateOverlap(boolean dimBands, boolean recBands) {
