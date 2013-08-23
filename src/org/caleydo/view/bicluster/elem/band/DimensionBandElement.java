@@ -23,7 +23,7 @@ public class DimensionBandElement extends BandElement {
 			AllBandsElement root) {
 		super(first, second, ((ClusterElement) first).getDimOverlap(second),
 				root.getSelectionMixin().getDimensionSelectionManager(), root,
-				dimBandColor);
+ dimBandColor, ((ClusterElement) first).getDimensionIDType());
 	}
 
 	@Override

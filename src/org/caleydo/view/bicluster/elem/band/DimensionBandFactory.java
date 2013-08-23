@@ -8,6 +8,7 @@ package org.caleydo.view.bicluster.elem.band;
 import gleem.linalg.Vec2f;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -460,9 +461,9 @@ public class DimensionBandFactory extends BandFactory {
 
 	@Override
 	protected Map<Integer, List<Vec2f>> getConnectionsSplines() {
-		Map<Integer, List<Vec2f>> bandsMap = new IdentityHashMap<>();
 		if (allIndices.size() == 1)
-			return bandsMap;
+			return Collections.emptyMap();
+		Map<Integer, List<Vec2f>> bandsMap = new IdentityHashMap<>();
 		int firstIndex = 0;
 		int secondIndex = 0;
 		for (List<Integer> list : firstIndices) {

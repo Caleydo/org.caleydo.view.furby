@@ -26,7 +26,7 @@ public class RecordBandElement extends BandElement {
 			AllBandsElement root) {
 		super(first, second, ((ClusterElement) first).getRecOverlap(second),
 				root.getSelectionMixin().getRecordSelectionManager(), root,
-				recBandColor);
+ recBandColor, ((ClusterElement) first).getRecordIDType());
 	}
 
 	@Override

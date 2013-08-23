@@ -13,13 +13,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.event.data.SelectionUpdateEvent;
+import org.caleydo.core.id.IDMappingManagerRegistry;
 import org.caleydo.core.id.IDType;
+import org.caleydo.core.id.IIDTypeMapper;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -29,8 +33,10 @@ import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.layout2.util.PickingPool;
+import org.caleydo.core.view.opengl.picking.IPickingLabelProvider;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.core.view.opengl.picking.PickingListenerComposite;
 import org.caleydo.core.view.opengl.util.gleem.ColoredVec3f;
 import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
@@ -42,24 +48,23 @@ import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
  * @author Michael Gillhofer
  *
  */
-public abstract class BandElement extends PickableGLElement {
+public abstract class BandElement extends PickableGLElement implements IPickingLabelProvider {
 
 	private static final float HIGH_OPACITY_FACTPOR = 1;
 	private static final float LOW_OPACITY_FACTOR = 0.15f;
-	private static final float OPACITY_CHANGE_INTERVAL = 10f;
 
 	private static final float DEFAULT_Z_DELTA = -4;
 	private static final float HOVERED_BACKGROUND_Z_DELTA = -3;
 	private static final float SELECTED_Z_DELTA = -2;
 	private static final float HOVERED_Z_DELTA = -1;
 
-	protected ClusterElement first, second;
+	protected final ClusterElement first, second;
 	protected List<Integer> overlap, sharedElementsWithSelection, sharedElementsWithHover;
 
-	protected IDType idType;
-	protected String dataDomainID;
 	protected final SelectionType selectionType;
 	protected final SelectionManager selectionManager;
+	private final IIDTypeMapper<Integer, String> id2label;
+
 	protected AllBandsElement root;
 
 	protected BandFactory secondMergeArea, bandFactory;
@@ -77,10 +82,12 @@ public abstract class BandElement extends PickableGLElement {
 	private float opacityFactor = 1;
 
 	protected BandElement(GLElement first, GLElement second, List<Integer> list, SelectionManager selectionManager,
-			AllBandsElement root, float[] defaultColor) {
+			AllBandsElement root, float[] defaultColor, IDType idType) {
 		this.first = (ClusterElement) first;
 		this.second = (ClusterElement) second;
 		this.overlap = list;
+		this.id2label = IDMappingManagerRegistry.get().getIDMappingManager(idType)
+				.getIDTypeMapper(idType, idType.getIDCategory().getHumanReadableIDType());
 		this.root = root;
 		this.selectionManager = selectionManager;
 		this.defaultColor = new Color(defaultColor);
@@ -110,17 +117,15 @@ public abstract class BandElement extends PickableGLElement {
 	@Override
 	protected void init(IGLElementContext context) {
 		pickingListener = new IPickingListener() {
-
 			@Override
 			public void pick(Pick pick) {
-				onPicked(pick);
+				onSplinePicked(pick);
 			}
 		};
-
-		pickingPool = new PickingPool(context, pickingListener);
+		pickingPool = new PickingPool(context, PickingListenerComposite.concat(pickingListener, context.getSWTLayer()
+				.createTooltip(this)));
 		super.init(context);
 	}
-
 	@Override
 	protected void takeDown() {
 		pickingPool.clear();
@@ -146,6 +151,28 @@ public abstract class BandElement extends PickableGLElement {
 		}
 	}
 
+	@Override
+	public String getLabel(Pick pick) {
+		int id = pick.getObjectID() - 1;
+		Set<String> labels = id2label.apply(id);
+		return StringUtils.join(labels, ",");
+	}
+
+	protected void onSplinePicked(Pick pick) {
+		switch (pick.getPickingMode()) {
+		case CLICKED:
+			onClicked(pick);
+			break;
+		case MOUSE_OUT:
+			onMouseOut(pick);
+			break;
+		case MOUSE_OVER:
+			onMouseOver(pick);
+			break;
+		default:
+			break;
+		}
+	}
 	@Override
 	protected void onPicked(Pick pick) {
 		switch (pick.getPickingMode()) {
@@ -268,7 +295,7 @@ public abstract class BandElement extends PickableGLElement {
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (getVisibility() == EVisibility.PICKABLE && !isAnyThingHovered && isVisible()) {
 			g.color(defaultColor);
-			if (isMouseOver == true) {
+			if (isMouseOver) {
 				for (Band b : splittedBands.values())
 					g.fillPolygon(b);
 				g.incZ();
@@ -290,17 +317,16 @@ public abstract class BandElement extends PickableGLElement {
 	protected void onClicked(Pick pick) {
 		if (pick.getObjectID() != 0)
 			return;
-		if (hasSharedElementsWithSelectedBand()) {
+		if (hasSharedElementsWithSelectedBand()) { // disable the selection again
 			sharedElementsWithSelection = new ArrayList<>();
 			root.setSelection(null);
 		} else {
 			sharedElementsWithSelection = new ArrayList<>(overlap);
 			root.setSelection(this);
 		}
-		selectElement();
 	}
 
-	protected void selectElement() {
+	protected void selectElement(int objectId) {
 		if (selectionManager == null)
 			return;
 		selectionManager.clearSelection(selectionType);
@@ -320,7 +346,7 @@ public abstract class BandElement extends PickableGLElement {
 	protected void onMouseOver(Pick pick) {
 		isMouseOver = true;
 		currSelectedSplineID = pick.getObjectID();
-		hoverElement();
+		hoverElement(pick.getObjectID());
 		EventPublisher.trigger(new MouseOverBandEvent(this, true));
 		repaintAll();
 	}
@@ -330,11 +356,11 @@ public abstract class BandElement extends PickableGLElement {
 		isMouseOver = false;
 		currSelectedSplineID = -1;
 		EventPublisher.trigger(new MouseOverBandEvent(this, false));
-		hoverElement();
+		hoverElement(pick.getObjectID());
 		repaintAll();
 	}
 
-	protected void hoverElement() {
+	protected void hoverElement(int objectId) {
 		if (selectionManager == null)
 			return;
 		selectionManager.clearSelection(SelectionType.MOUSE_OVER);
@@ -348,7 +374,7 @@ public abstract class BandElement extends PickableGLElement {
 		if (root.getSelection() != this)
 			return;
 		sharedElementsWithSelection = new ArrayList<>(overlap);
-		selectElement();
+		selectElement(0);
 	}
 
 	public abstract void updateStructure();
