@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: BiCluster Demo View
+Bundle-Name: Bicluster View
 Bundle-SymbolicName: org.caleydo.view.bicluster;singleton:=true
 Bundle-Version: 3.0.2.qualifier
 Require-Bundle: org.caleydo.core;bundle-version="3.0.2.qualifier",
