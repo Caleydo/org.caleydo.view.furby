@@ -164,13 +164,16 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected void onSplinePicked(Pick pick) {
 		switch (pick.getPickingMode()) {
 		case CLICKED:
-			onClicked(pick);
-			break;
-		case MOUSE_OUT:
-			onMouseOut(pick);
+			selectElement(SelectionType.SELECTION, pick.getObjectID(), true);
+			repaint();
 			break;
 		case MOUSE_OVER:
-			onMouseOver(pick);
+			this.currSelectedSplineID = pick.getObjectID();
+			repaint();
+			break;
+		case MOUSE_OUT:
+			this.currSelectedSplineID = -1;
+			repaint();
 			break;
 		default:
 			break;
@@ -318,23 +321,26 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 
 	@Override
 	protected void onClicked(Pick pick) {
-		if (pick.getObjectID() != 0)
-			return;
 		if (hasSharedElementsWithSelectedBand()) { // disable the selection again
 			hasSharedElementsWithSelection = false;
 			root.setSelection(null);
+			selectElement(SelectionType.SELECTION, -1, true);
 		} else {
 			hasSharedElementsWithSelection = true;
 			root.setSelection(this);
+			selectElement(SelectionType.SELECTION, -1, true);
 		}
 	}
 
-	protected void selectElement(int objectId) {
+	protected void selectElement(SelectionType type, int objectId, boolean select) {
 		if (selectionManager == null)
 			return;
-		root.clearAll(SelectionType.SELECTION);
-		if (hasSharedElementsWithSelectedBand()) {
-			selectionManager.addToType(SelectionType.SELECTION, overlap);
+		root.clearAll(type);
+		if (select) {
+			if (objectId <= 0)
+				selectionManager.addToType(type, overlap);
+			else
+				selectionManager.addToType(type, objectId - 1);
 		}
 		root.fireAllSelections(this);
 	}
@@ -347,8 +353,7 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	@Override
 	protected void onMouseOver(Pick pick) {
 		isMouseOver = true;
-		currSelectedSplineID = pick.getObjectID();
-		hoverElement(pick.getObjectID());
+		selectElement(SelectionType.MOUSE_OVER, -1, true);
 		hasSharedElementsWithHover = true;
 		EventPublisher.trigger(new MouseOverBandEvent(this, true));
 		repaintAll();
@@ -357,28 +362,11 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	@Override
 	protected void onMouseOut(Pick pick) {
 		isMouseOver = false;
-		currSelectedSplineID = -1;
 		hasSharedElementsWithHover = false;
+		this.currSelectedSplineID = -1;
 		EventPublisher.trigger(new MouseOverBandEvent(this, false));
-		hoverElement(pick.getObjectID());
+		selectElement(SelectionType.MOUSE_OVER, -1, false);
 		repaintAll();
-	}
-
-	protected void hoverElement(int objectId) {
-		if (selectionManager == null)
-			return;
-		root.clearAll(SelectionType.MOUSE_OVER);
-		if (isMouseOver) {
-			selectionManager.addToType(SelectionType.MOUSE_OVER, overlap);
-		}
-		root.fireAllSelections(this);
-	}
-
-	protected void recalculateSelection() {
-		if (root.getSelection() != this)
-			return;
-		hasSharedElementsWithSelection = true;
-		selectElement(0);
 	}
 
 	public abstract void updateStructure();

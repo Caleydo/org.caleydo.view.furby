@@ -85,8 +85,6 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		if (this.selection != null)
 			this.selection.deselect();
 		this.selection = selection;
-		if (this.selection != null)
-			selection.recalculateSelection();
 	}
 
 	/**
@@ -118,7 +116,8 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	public void updateSelection() {
 		if (selection == null)
 			return;
-		selection.recalculateSelection();
+		selection.onSelectionUpdate(getDimensionSelectionManager());
+		selection.onSelectionUpdate(getRecordSelectionManager());
 	}
 
 	@ListenTo
