@@ -57,8 +57,11 @@ import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.SearchClusterEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
+import org.caleydo.view.bicluster.physics.MyDijkstra;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 import org.eclipse.swt.widgets.Display;
+
+import com.google.common.collect.Iterables;
 
 /**
  * e.g. a class for representing a cluster
@@ -115,6 +118,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected double minScaleFactor;
 	private double preFocusScaleFactor = -1; // -1 indicator no backup
 	private boolean isFocused = false;
+
+	private int maxDistance = 1;
 
 	/**
 	 * delayed mouse out to avoid fast in / out delays
@@ -202,12 +207,16 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	@Override
 	protected final void renderPickImpl(GLGraphics g, float w, float h) {
 		g.color(Color.BLACK);
-		if (isHovered) {
-			g.fillRect(-20, -20, w < 55 ? 120 : w + 65, h < 80 ? 150 : h + 70);
-		}
+		if (isFocused) {
+			g.fillRect(-20, -20, w + 80 + 20, h + 80 + 20);
+		} else
+			g.fillRect(-10, -10, w + 20, w + 20);
 		super.renderPickImpl(g, w, h);
 	}
 
+	private int minimalDistanceTo(ClusterElement other) {
+		return MyDijkstra.minDistance(this, other, 2, this.recBandsEnabled, this.dimBandsEnabled);
+	}
 
 	@Override
 	public final void layout(int deltaTimeMs) {
@@ -375,6 +384,20 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		if (dimOverlap.containsKey(jElement))
 			return dimOverlap.get(jElement);
 		return Collections.emptyList();
+	}
+
+	/**
+	 * @return
+	 */
+	public Iterable<ClusterElement> getDimOverlappingNeighbors() {
+		return Iterables.filter(dimOverlap.keySet(), ClusterElement.class);
+	}
+
+	/**
+	 * @return
+	 */
+	public Iterable<ClusterElement> getRecOverlappingNeighbors() {
+		return Iterables.filter(recOverlap.keySet(), ClusterElement.class);
 	}
 
 	public final List<Integer> getRecOverlap(GLElement jElement) {
@@ -854,5 +877,4 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			// sublist of the real elements
 			array.addAll(indices.subList(0, Math.min(indices.size(), treshold)));
 	}
-
 }
