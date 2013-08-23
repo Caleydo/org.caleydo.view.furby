@@ -35,6 +35,7 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 		store.setDefault("view.bicluster.top.rec", UNBOUND_NUMBER);
 		store.setDefault("view.bicluster.showbands.dim", true);
 		store.setDefault("view.bicluster.showbands.rec", true);
+		store.setDefault("view.bicluster.maxdistance", 1);
 	}
 
 	/**
@@ -73,6 +74,13 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 
 	public static boolean isShowRecBands() {
 		return prefs().getBoolean("view.bicluster.showbands.rec");
+	}
+
+	/**
+	 * @return
+	 */
+	public static int getMaxDistance() {
+		return prefs().getInt("view.bicluster.maxdistance");
 	}
 
 }

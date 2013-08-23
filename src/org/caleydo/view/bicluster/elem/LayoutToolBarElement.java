@@ -14,14 +14,20 @@ import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
+import org.caleydo.core.view.opengl.layout2.basic.GLSpinner;
+import org.caleydo.core.view.opengl.layout2.basic.GLSpinner.IChangeCallback;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
+import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ForceChangeEvent;
 import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
+import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 
 /**
  *
@@ -42,7 +48,9 @@ public class LayoutToolBarElement extends AToolBarElement {
 	private GLSlider clusterDimFactorSlider, clusterRecFactorSlider;
 	private GLSlider repulsionSlider, attractionSlider, borderForceSlider;
 
+
 	private TablePerspective x;
+	private GLSpinner<Integer> maxDistance;
 
 	public LayoutToolBarElement() {
 		initSliders();
@@ -73,6 +81,20 @@ public class LayoutToolBarElement extends AToolBarElement {
 		createClusterSizeSlider();
 		createForceSliders();
 
+		GLElementContainer c = new GLElementContainer(GLLayouts.flowHorizontal(2));
+		this.maxDistance = GLSpinner.createIntegerSpinner(1, 1, 4, 1);
+		maxDistance.setCallback(new IChangeCallback<Integer>() {
+			@Override
+			public void onValueChanged(GLSpinner<? extends Integer> spinner, Integer value) {
+				EventPublisher.trigger(new ChangeMaxDistanceEvent(value.intValue()));
+			}
+		});
+		maxDistance.setTooltip("specifies the maximal distance for automatic hiding of connected clusters");
+		maxDistance.setSize(-1, -1);
+		c.add(new GLElement(GLRenderers.drawText("Max Distance: ")).setSize(100, -1));
+		c.add(maxDistance);
+		this.add(c.setSize(-1, LABEL_WIDTH));
+
 		GLButton reset = new GLButton();
 		reset.setRenderer(GLRenderers.drawText("Reset", VAlign.CENTER, new GLPadding(0, 0, 0, 2)));
 		reset.setCallback(new GLButton.ISelectionCallback() {
@@ -97,6 +119,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 		this.borderForceSlider.setValue(DEFAULT_BORDERFACTOR);
 		this.clusterDimFactorSlider.setValue(getDimScaleFactor());
 		this.clusterRecFactorSlider.setValue(getRecScaleFactor());
+		maxDistance.setValue(MyPreferences.getMaxDistance());
 	}
 
 	/**
@@ -185,7 +208,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-205, 365 + 20, 200, 236);
+		return new Rect(-205, 365 + 20, 200, 256);
 	}
 
 }

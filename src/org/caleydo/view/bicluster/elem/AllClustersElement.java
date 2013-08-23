@@ -19,6 +19,8 @@ import org.caleydo.view.bicluster.elem.layout.ForceBasedLayout;
 import org.caleydo.view.bicluster.elem.layout.IBiClusterLayout;
 import org.caleydo.view.bicluster.event.AlwaysShowToolBarEvent;
 
+import com.google.common.collect.Iterables;
+
 /**
  * @author Samuel Gratzl
  * @author Michael Gillhofer
@@ -101,5 +103,20 @@ public class AllClustersElement extends GLElementContainer {
 
 	public void setToolBars(AToolBarElement... elements) {
 		this.toolbars.addAll(Arrays.asList(elements));
+	}
+
+	/**
+	 * @return
+	 */
+	public ClusterElement findFocused() {
+		for (ClusterElement elem : allClusters()) {
+			if (elem.isFocused())
+				return elem;
+		}
+		return null;
+	}
+
+	private Iterable<ClusterElement> allClusters() {
+		return Iterables.filter(this, ClusterElement.class);
 	}
 }

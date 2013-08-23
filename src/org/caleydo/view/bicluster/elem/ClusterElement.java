@@ -49,6 +49,7 @@ import org.caleydo.core.view.opengl.layout2.layout.IHasGLLayoutData;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
@@ -57,6 +58,7 @@ import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.SearchClusterEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
+import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.physics.MyDijkstra;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 import org.eclipse.swt.widgets.Display;
@@ -119,7 +121,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	private double preFocusScaleFactor = -1; // -1 indicator no backup
 	private boolean isFocused = false;
 
-	private int maxDistance = 1;
+	private int maxDistance = MyPreferences.getMaxDistance();
 
 	/**
 	 * delayed mouse out to avoid fast in / out delays
@@ -215,7 +217,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	private int minimalDistanceTo(ClusterElement other) {
-		return MyDijkstra.minDistance(this, other, 2, this.recBandsEnabled, this.dimBandsEnabled);
+		return MyDijkstra.minDistance(this, other, maxDistance, this.recBandsEnabled, this.dimBandsEnabled);
 	}
 
 	@Override
@@ -632,7 +634,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	@ListenTo
 	private void listenTo(FocusChangeEvent e) {
 		if (e.getSender() == this) {
-			this.isFocused = !this.isFocused;
+			this.isFocused = e.gotFocus();
 			handleFocus(this.isFocused);
 		} else {
 			if (this.isFocused) {
@@ -644,10 +646,11 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 					preFocusScaleFactor = scaleFactor;
 				}
 				ClusterElement other = (ClusterElement) e.getSender();
-				float relationship = relationshipTo(other);
-				if (relationship == 0)
+				int distance = minimalDistanceTo(other);
+				if (distance > maxDistance)
 					setVisibility(EVisibility.NONE);
 				else {
+					float relationship = relationshipTo(other);
 					updateVisibility();
 					setScaleFactor(preFocusScaleFactor * Math.min(0.8f + relationship * 10, 2));
 					resize();
@@ -658,6 +661,19 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 				preFocusScaleFactor = -1;
 				resize();
 			}
+		}
+	}
+
+	private boolean anyFocussed() {
+		return preFocusScaleFactor >= 0;
+	}
+
+	@ListenTo
+	private void onChangeMaxDistanceEvent(ChangeMaxDistanceEvent event) {
+		this.maxDistance = event.getMaxDistance();
+		if (anyFocussed() && !isFocused) {
+			ClusterElement focussed = findAllClustersElement().findFocused();
+			listenTo(new FocusChangeEvent(focussed, true));
 		}
 	}
 

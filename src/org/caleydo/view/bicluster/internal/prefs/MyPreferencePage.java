@@ -17,6 +17,7 @@ import org.caleydo.core.gui.util.SpinnerFieldEditor;
 import org.caleydo.view.bicluster.internal.Activator;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -39,6 +40,7 @@ public class MyPreferencePage extends FieldEditorPreferencePage implements IWork
 	@Override
 	public void createFieldEditors() {
 		final Composite parent = getFieldEditorParent();
+		addField(new IntegerFieldEditor("view.bicluster.maxDistance", "Max Distance", parent));
 		addFields(parent, "rec", "Record");
 		addFields(parent, "dim", "Dimension");
 	}
