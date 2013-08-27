@@ -5,6 +5,8 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import gleem.linalg.Vec2f;
+
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
@@ -27,6 +29,10 @@ public abstract class AToolBarElement extends GLElementContainer implements GLBu
 	protected static final float LABEL_WIDTH = 14;
 	protected static final float SLIDER_WIDH = 16;
 	protected static final float BUTTON_WIDTH = 16;
+	/**
+	 * poll the absolute location
+	 */
+	private Vec2f lastPos;
 
 	public AToolBarElement() {
 		setLayout(new GLFlowLayout(false, 5, new GLPadding(10)));
@@ -52,14 +58,28 @@ public abstract class AToolBarElement extends GLElementContainer implements GLBu
 		boolean visible = isVisible();
 		if (visible) {
 			context.getPopupLayer().hide(this);
-		} else
+		} else {
 			context.getPopupLayer().show(
 					this,
 					getPreferredBounds(),
 					IPopupLayer.FLAG_BORDER | IPopupLayer.FLAG_MOVEABLE | IPopupLayer.FLAG_COLLAPSABLE
 							| IPopupLayer.FLAG_CLOSEABLE);
+			lastPos = null;
+		}
 	}
 
 	public abstract Rect getPreferredBounds();
+
+	/**
+	 * @return my visible absolution has changed since the last call
+	 */
+	public boolean hasMoved() {
+		if (!isVisible())
+			return false;
+		Vec2f act = getAbsoluteLocation();
+		boolean changed = lastPos != null && !act.equals(lastPos);
+		lastPos = act;
+		return changed;
+	}
 
 }

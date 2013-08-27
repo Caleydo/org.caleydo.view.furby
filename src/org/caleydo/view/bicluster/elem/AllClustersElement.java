@@ -41,6 +41,15 @@ public class AllClustersElement extends GLElementContainer {
 		this.setzDelta(0.5f);
 	}
 
+	@Override
+	public void layout(int deltaTimeMs) {
+		for (AToolBarElement toolbar : toolbars)
+			if (toolbar.hasMoved()) {
+				relayout();
+				break;
+			}
+		super.layout(deltaTimeMs);
+	}
 
 	/**
 	 * @return the isShowAlwaysToolBar, see {@link #isShowAlwaysToolBar}

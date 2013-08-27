@@ -356,7 +356,7 @@ public class GLRootElement extends GLElementContainer {
 
 	/**
 	 * checks whether any of the given ids is an active element within the given SelectionTypes
-	 * 
+	 *
 	 * @param ids
 	 * @param manager
 	 * @param toCheck
