@@ -29,9 +29,9 @@ import org.caleydo.view.bicluster.util.Vec2d;
 
 /**
  * tuned version of {@link ForceBasedLayout}
- * 
+ *
  * @author Samuel Gratzl
- * 
+ *
  */
 public class ForceBasedLayoutTuned implements IBiClusterLayout {
 	private final AllClustersElement parent;
@@ -202,7 +202,6 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 				final double distLength = distVec.length();
 				{ //repulsion
 					double rsq = distLength * distLength * distLength;
-					// why: rsq = |distVec| * (|distVec| * |distVec|) = cubic
 					double repX = distVec.x() / rsq;
 					double repY = distVec.y() / rsq;
 					// as distance symmetrical
@@ -283,16 +282,19 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 	}
 
 	private Vec2d getDistanceFromTopLeft(ForcedBody body, float w, float h) {
-		return new Vec2d(body.centerX, body.centerY);
+		return new Vec2d(body.x0(), body.y0());
 	}
 
 	private Vec2d getDistanceFromBottomRight(ForcedBody body, float w, float h) {
-		Vec2d dist = getDistanceFromTopLeft(body, w, h);
-		dist.setX(-(w - dist.x()));
-		dist.setY(-(h - dist.y()));
-		dist.setX(dist.x() + body.radiusX + 30);
-		dist.setY(dist.y() + body.radiusY + 30);
-		return dist;
+		return new Vec2d(body.centerX + body.radiusX - w, body.centerY + body.radiusY - h);
+		// Vec2d dist = getDistanceFromTopLeft(body, w, h);
+		// dist.setX(-(w - dist.x()));
+		// dist.setY(-(h - dist.y()));
+		// Vec2f size = body.size;
+		// dist.setX(dist.x() + size.x() * 0.5 + 30);
+		// dist.setY(dist.y() + size.y() * 0.5 + 30);
+		//
+		// return dist;
 	}
 
 	private void initialLayout(List<ForcedBody> bodies, float w, float h) {
@@ -315,6 +317,7 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 		repulsion = e.getRepulsionForce();
 		attractionFactor = e.getAttractionForce();
 		borderForceFactor = e.getBoarderForce();
+		parent.relayout();
 	}
 
 	@ListenTo
@@ -323,11 +326,13 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 			focusedElement = null;
 		else
 			focusedElement = (GLElement) e.getSender();
+		parent.relayout();
 	}
 
 	@ListenTo
 	private void listenTo(ClusterGetsHiddenEvent e) {
 		this.hoveredElement = null;
+		parent.relayout();
 	}
 
 	@ListenTo
@@ -336,6 +341,7 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 			this.hoveredElement = (ClusterElement) e.getSender();
 		else
 			this.hoveredElement = null;
+		parent.relayout();
 	}
 
 	private int computeNumberOfIterations() {
@@ -423,7 +429,7 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 
 		public void addFrameForce(double xForce, double yForce) {
 			frameForceX += xForce;
-			frameForceX += yForce;
+			frameForceY += yForce;
 		}
 
 		public Vec2d distanceTo(ForcedBody other) {
