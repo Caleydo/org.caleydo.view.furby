@@ -19,6 +19,7 @@ import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
+import org.caleydo.view.bicluster.event.UpdateBandsEvent;
 
 import com.google.common.collect.Iterables;
 
@@ -59,7 +60,11 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 			});
 			resortOnNextRun = false;
 		}
-		relayout(); // FIXME
+	}
+
+	@ListenTo
+	private void onUpdateBandsEvent(UpdateBandsEvent event) {
+		relayout();
 	}
 
 	@Override
@@ -129,12 +134,14 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		for (GLElement b : this) {
 			((BandElement) b).updateStructure();
 		}
+		relayout();
 	}
 
 	boolean resortOnNextRun = true;
 
 	public void triggerResort() {
 		resortOnNextRun = true;
+		relayout();
 	}
 
 	/**

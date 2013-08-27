@@ -263,7 +263,6 @@ public class GLRootElement extends GLElementContainer {
 				bands.add(new DimensionBandElement(start, specialCluster, bands));
 		}
 		bands.updateSelection();
-		relayout();
 	}
 
 	@ListenTo
@@ -280,7 +279,6 @@ public class GLRootElement extends GLElementContainer {
 			bands.add(new DimensionBandElement(start, specialCluster, bands));
 		}
 		bands.updateSelection();
-		relayout();
 	}
 
 	/**
@@ -302,7 +300,6 @@ public class GLRootElement extends GLElementContainer {
 				bands.add(new DimensionBandElement(start, specialCluster, bands));
 		}
 		bands.updateSelection();
-		relayout();
 	}
 
 	/**

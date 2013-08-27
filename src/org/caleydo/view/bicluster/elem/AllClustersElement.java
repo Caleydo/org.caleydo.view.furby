@@ -41,6 +41,7 @@ public class AllClustersElement extends GLElementContainer {
 		this.setzDelta(0.5f);
 	}
 
+
 	/**
 	 * @return the isShowAlwaysToolBar, see {@link #isShowAlwaysToolBar}
 	 */

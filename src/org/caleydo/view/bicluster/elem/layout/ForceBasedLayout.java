@@ -12,20 +12,14 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
-import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.AToolBarElement;
 import org.caleydo.view.bicluster.elem.AllClustersElement;
 import org.caleydo.view.bicluster.elem.ClusterElement;
-import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
-import org.caleydo.view.bicluster.event.FocusChangeEvent;
-import org.caleydo.view.bicluster.event.ForceChangeEvent;
-import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.physics.Physics;
 import org.caleydo.view.bicluster.util.Vec2d;
 
@@ -33,31 +27,20 @@ import org.caleydo.view.bicluster.util.Vec2d;
  * @author Samuel Gratzl
  *
  */
-public class ForceBasedLayout implements IGLLayout2 {
-	private final AllClustersElement parent;
-
-	private float repulsion = 100000f;
-	private float attractionFactor = 100f;
-	private float borderForceFactor = 200f;
-
-	double damping = 1f;
-
+public class ForceBasedLayout extends AForceBasedLayout {
 	private boolean isInitLayoutDone = false;
 	float lastW, lastH;
 
-	private GLElement focusedElement = null;
-	private ClusterElement hoveredElement = null;
-
 	public ForceBasedLayout(AllClustersElement parent) {
-		this.parent = parent;
+		super(parent);
 	}
 
 	@Override
-	public boolean doLayout(List<? extends IGLLayoutElement> children, float w, float h, IGLLayoutElement parent,
-			int deltaTimeMs) {
+	public boolean forceBasedLayout(List<? extends IGLLayoutElement> children, float w, float h, int deltaTimeMs) {
 		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
+
 			return true;
 		}
 		if (lastW > w || lastH > h)
@@ -366,41 +349,6 @@ public class ForceBasedLayout implements IGLLayout2 {
 			i++;
 		}
 		EventPublisher.trigger(new CreateBandsEvent(parent));
-	}
-
-	@ListenTo
-	private void listenTo(ForceChangeEvent e) {
-		repulsion = e.getRepulsionForce();
-		attractionFactor = e.getAttractionForce();
-		borderForceFactor = e.getBoarderForce();
-	}
-
-	@ListenTo
-	private void listenTo(FocusChangeEvent e) {
-		if (focusedElement == e.getSender())
-			focusedElement = null;
-		else
-			focusedElement = (GLElement) e.getSender();
-	}
-
-	@ListenTo
-	private void listenTo(ClusterGetsHiddenEvent e) {
-		this.hoveredElement = null;
-	}
-
-	@ListenTo
-	private void listenTo(MouseOverClusterEvent e) {
-		if (e.isMouseOver())
-			this.hoveredElement = (ClusterElement) e.getSender();
-		else
-			this.hoveredElement = null;
-	}
-
-	private static int computeNumberOfIterations(int deltaTimeMs) {
-		final float iterationFactor = 1000;
-
-		int iterations = (int) ((float) 1 / deltaTimeMs * iterationFactor) + 1;
-		return iterations;
 	}
 
 	private final static class ForceHelper {
