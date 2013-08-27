@@ -15,8 +15,8 @@ import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
 import org.caleydo.view.bicluster.elem.layout.ForceBasedLayoutTuned;
-import org.caleydo.view.bicluster.elem.layout.IBiClusterLayout;
 import org.caleydo.view.bicluster.event.AlwaysShowToolBarEvent;
 
 import com.google.common.collect.Iterables;
@@ -34,7 +34,7 @@ public class AllClustersElement extends GLElementContainer {
 	private boolean isShowAlwaysToolBar = false;
 
 	@DeepScan
-	private final IBiClusterLayout layout = new ForceBasedLayoutTuned(this);
+	private final IGLLayout2 layout = new ForceBasedLayoutTuned(this);
 
 	public AllClustersElement(GLRootElement glRootElement) {
 		setLayout(layout);
@@ -71,13 +71,6 @@ public class AllClustersElement extends GLElementContainer {
 				this.add(el);
 			}
 		}
-	}
-
-
-	@Override
-	public void layout(int deltaTimeMs) {
-		layout.addDelta(deltaTimeMs);
-		super.layout(deltaTimeMs);
 	}
 
 	/**

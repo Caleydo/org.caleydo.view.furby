@@ -16,6 +16,7 @@ import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.AToolBarElement;
 import org.caleydo.view.bicluster.elem.AllClustersElement;
@@ -32,7 +33,7 @@ import org.caleydo.view.bicluster.util.Vec2d;
  * @author Samuel Gratzl
  *
  */
-public class ForceBasedLayout implements IBiClusterLayout {
+public class ForceBasedLayout implements IGLLayout2 {
 	private final AllClustersElement parent;
 
 	private float repulsion = 100000f;
@@ -47,19 +48,17 @@ public class ForceBasedLayout implements IBiClusterLayout {
 	private GLElement focusedElement = null;
 	private ClusterElement hoveredElement = null;
 
-	private int deltaToLastFrame = 0;
-
 	public ForceBasedLayout(AllClustersElement parent) {
 		this.parent = parent;
 	}
 
 	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
+	public boolean doLayout(List<? extends IGLLayoutElement> children, float w, float h, IGLLayoutElement parent,
+			int deltaTimeMs) {
 		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(children, w, h);
 			isInitLayoutDone = true;
-			parent.relayout();
-			return;
+			return true;
 		}
 		if (lastW > w || lastH > h)
 			scaleView(children, w, h);
@@ -71,11 +70,11 @@ public class ForceBasedLayout implements IBiClusterLayout {
 		bringClustersBackToFrame(children, w, h);
 		clearClusterCollisions(children, w, h);
 
-		int iterations = computeNumberOfIterations();
+		int iterations = computeNumberOfIterations(deltaTimeMs);
 		for (int i = 0; i < iterations; i++)
 			forceDirectedLayout(children, w, h);
 
-		parent.relayout();
+		return true;
 	}
 
 	private void bringClustersBackToFrame(List<? extends IGLLayoutElement> children, float w, float h) {
@@ -397,20 +396,11 @@ public class ForceBasedLayout implements IBiClusterLayout {
 			this.hoveredElement = null;
 	}
 
-	private int computeNumberOfIterations() {
+	private static int computeNumberOfIterations(int deltaTimeMs) {
 		final float iterationFactor = 1000;
 
-		int iterations = (int) ((float) 1 / deltaToLastFrame * iterationFactor) + 1;
-		deltaToLastFrame = 0;
+		int iterations = (int) ((float) 1 / deltaTimeMs * iterationFactor) + 1;
 		return iterations;
-	}
-
-	/**
-	 * @param deltaTimeMs
-	 */
-	@Override
-	public void addDelta(int deltaTimeMs) {
-		deltaToLastFrame += deltaTimeMs;
 	}
 
 	private final static class ForceHelper {

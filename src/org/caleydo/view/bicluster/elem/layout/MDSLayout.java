@@ -11,25 +11,18 @@ import org.apache.commons.math.linear.EigenDecompositionImpl;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math.linear.RealMatrix;
 import org.apache.commons.math.linear.RealVector;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
-import org.caleydo.view.bicluster.elem.AllClustersElement;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 
 /**
  * @author Samuel Gratzl
- * 
+ *
  */
-public class MDSLayout implements IBiClusterLayout {
-	private final AllClustersElement parent;
-
-	private int deltaToLastFrame = 0;
-
-	public MDSLayout(AllClustersElement parent) {
-		this.parent = parent;
-	}
-
+public class MDSLayout implements IGLLayout2 {
 	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w_, float h_) {
+	public boolean doLayout(List<? extends IGLLayoutElement> children, float w_p, float h_p, IGLLayoutElement parent,
+			int deltaTimeMs) {
 		final int n = children.size();
 		RealMatrix a = MatrixUtils.createRealMatrix(n, n);
 
@@ -87,14 +80,7 @@ public class MDSLayout implements IBiClusterLayout {
 			IGLLayoutElement child = children.get(i);
 			child.setLocation((float) x, (float) y);
 		}
-	}
 
-
-	/**
-	 * @param deltaTimeMs
-	 */
-	@Override
-	public void addDelta(int deltaTimeMs) {
-		deltaToLastFrame += deltaTimeMs;
+		return false;
 	}
 }

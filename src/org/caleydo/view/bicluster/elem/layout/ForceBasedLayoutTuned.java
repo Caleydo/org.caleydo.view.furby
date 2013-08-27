@@ -15,6 +15,7 @@ import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.AToolBarElement;
 import org.caleydo.view.bicluster.elem.AllClustersElement;
@@ -33,7 +34,7 @@ import org.caleydo.view.bicluster.util.Vec2d;
  * @author Samuel Gratzl
  *
  */
-public class ForceBasedLayoutTuned implements IBiClusterLayout {
+public class ForceBasedLayoutTuned implements IGLLayout2 {
 	private final AllClustersElement parent;
 
 	private float repulsion = 100000f;
@@ -48,16 +49,14 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 	private GLElement focusedElement = null;
 	private ClusterElement hoveredElement = null;
 
-	private int deltaToLastFrame = 0;
-
 	public ForceBasedLayoutTuned(AllClustersElement parent) {
 		this.parent = parent;
 	}
-
 	@Override
-	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
+	public boolean doLayout(List<? extends IGLLayoutElement> children, float w, float h, IGLLayoutElement parent,
+			int deltaTimeMs) {
 		List<ForcedBody> bodies = toForcedBodies(children);
-		List<ForcedBody> toolBars = toToolBarBodies(parent.getToolbars());
+		List<ForcedBody> toolBars = toToolBarBodies(((AllClustersElement) parent.asElement()).getToolbars());
 
 		if (!isInitLayoutDone && !children.isEmpty()) {
 			initialLayout(bodies, w, h);
@@ -77,16 +76,15 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 			bringClustersBackToFrame(bodies, w, h);
 			clearClusterCollisions(bodies, toolBars, w, h);
 
-			int iterations = Math.min(1, computeNumberOfIterations());
+			int iterations = Math.max(1, computeNumberOfIterations(deltaTimeMs));
 			for (int i = 0; i < iterations; i++)
 				forceDirectedLayout(bodies, toolBars, w, h);
 		}
 		double totalDistanceSquared = 0;
 		for (ForcedBody body : bodies)
-			totalDistanceSquared += body.apply();
+			totalDistanceSquared += body.apply(damping);
 
-		if (totalDistanceSquared > 10) // FIXME damping factor
-			parent.relayout();
+		return totalDistanceSquared > 10;
 	}
 
 	/**
@@ -200,45 +198,11 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 				// calculate the repulsion between two vertices
 				final Vec2d distVec = body.distanceTo(other);
 				final double distLength = distVec.length();
-				{ //repulsion
-					double rsq = distLength * distLength * distLength;
-					double repX = distVec.x() / rsq;
-					double repY = distVec.y() / rsq;
-					// as distance symmetrical
-					body.addRepForce(repX, repY);
-					other.addRepForce(-repX, -repY);
-				}
-				{// attraction force
-					int overlap = body.getOverlap(other);
-					if (overlap > 0) {
-						// counting the attraction
-						double accX = distVec.x() * (overlap) / distLength;
-						double accY = distVec.y() * (overlap) / distLength;
-						// as distance symmetrical
-						body.addAttForce(-accX, -accY);
-						other.addAttForce(accX, accY);
-					}
-				}
+				addRepulsion(body, other, distVec, distLength);
+				addAttraction(body, other, distVec, distLength);
 			}
-			{// Border Force
-				Vec2d distFromTopLeft = getDistanceFromTopLeft(body, w, h);
-				Vec2d distFromBottomRight = getDistanceFromBottomRight(body, w, h);
-				double xForce = Math.exp(borderForceFactor / Math.abs(distFromTopLeft.x()));
-				xForce -= Math.exp(borderForceFactor / Math.abs(distFromBottomRight.x()));
-				double yForce = Math.exp(borderForceFactor / Math.abs(distFromTopLeft.y()));
-				yForce -= Math.exp(borderForceFactor / Math.abs(distFromBottomRight.y()));
-				body.addFrameForce(checkPlausibility(xForce), checkPlausibility(yForce));
-			}
-			{// Toolbar force
-				for (ForcedBody toolbar : toolBars) {
-					final Vec2d distVec = body.distanceTo(toolbar);
-					final double distLength = distVec.length();
-					double rsq = distLength * distLength * distLength;
-					double xForce = 1.5f * distVec.x() / rsq;
-					double yForce = 1.5f * distVec.y() / rsq;
-					body.addRepForce(xForce, yForce);
-				}
-			}
+			addFrame(w, h, body);
+			addToolBarRespulsion(toolBars, body);
 		}
 
 		// count forces together + apply + reset
@@ -260,20 +224,64 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 				forceX *= 0.1;
 				forceY *= 0.1;
 			}
-			System.out.println(body.elem + ": ");
-			System.out.println("  Att: " + attForceX + " " + attForceY);
-			System.out.println("  Rep: " + repForceX + " " + repForceY);
-			System.out.println("  Fra: " + body.frameForceX + " " + body.frameForceY);
-			System.out.println("  Sum: " + forceX + " " + forceY);
+			// System.out.println(body.elem + ": ");
+			// System.out.println("  Att: " + attForceX + " " + attForceY);
+			// System.out.println("  Rep: " + repForceX + " " + repForceY);
+			// System.out.println("  Fra: " + body.frameForceX + " " + body.frameForceY);
+			// System.out.println("  Sum: " + forceX + " " + forceY);
 			if (!body.isActive())
-				body.move(forceX*damping,forceY*damping);
+				body.move(forceX, forceY);
 
 			body.resetForce();
 		}
 
 	}
 
-	private double checkPlausibility(double v) {
+	private static void addToolBarRespulsion(List<ForcedBody> toolBars, final ForcedBody body) {
+		for (ForcedBody toolbar : toolBars) {
+			final Vec2d distVec = body.distanceTo(toolbar);
+			final double distLength = distVec.length();
+			double rsq = distLength * distLength * distLength;
+			double xForce = 1.5f * distVec.x() / rsq;
+			double yForce = 1.5f * distVec.y() / rsq;
+			body.addRepForce(xForce, yForce);
+		}
+	}
+
+	private void addFrame(float w, float h, final ForcedBody body) {
+		Vec2d distFromTopLeft = getDistanceFromTopLeft(body, w, h);
+		Vec2d distFromBottomRight = getDistanceFromBottomRight(body, w, h);
+		double xForce = Math.exp(borderForceFactor / Math.abs(distFromTopLeft.x()));
+		xForce -= Math.exp(borderForceFactor / Math.abs(distFromBottomRight.x()));
+		double yForce = Math.exp(borderForceFactor / Math.abs(distFromTopLeft.y()));
+		yForce -= Math.exp(borderForceFactor / Math.abs(distFromBottomRight.y()));
+		body.addFrameForce(checkPlausibility(xForce), checkPlausibility(yForce));
+	}
+
+	private static void addRepulsion(final ForcedBody body, final ForcedBody other, final Vec2d distVec,
+			final double distLength) {
+		double rsq = distLength * distLength * distLength;
+		double repX = distVec.x() / rsq;
+		double repY = distVec.y() / rsq;
+		// as distance symmetrical
+		body.addRepForce(repX, repY);
+		other.addRepForce(-repX, -repY);
+	}
+
+	private static void addAttraction(final ForcedBody body, final ForcedBody other, final Vec2d distVec,
+			final double distLength) {
+		int overlap = body.getOverlap(other);
+		if (overlap > 0) {
+			// counting the attraction
+			double accX = distVec.x() * (overlap) / distLength;
+			double accY = distVec.y() * (overlap) / distLength;
+			// as distance symmetrical
+			body.addAttForce(-accX, -accY);
+			other.addAttForce(accX, accY);
+		}
+	}
+
+	private static double checkPlausibility(double v) {
 		if (v > 1e4)
 			return 1e4;
 		if (v < -1e4)
@@ -281,11 +289,11 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 		return v;
 	}
 
-	private Vec2d getDistanceFromTopLeft(ForcedBody body, float w, float h) {
+	private static Vec2d getDistanceFromTopLeft(ForcedBody body, float w, float h) {
 		return new Vec2d(body.x0(), body.y0());
 	}
 
-	private Vec2d getDistanceFromBottomRight(ForcedBody body, float w, float h) {
+	private static Vec2d getDistanceFromBottomRight(ForcedBody body, float w, float h) {
 		return new Vec2d(body.centerX + body.radiusX - w, body.centerY + body.radiusY - h);
 		// Vec2d dist = getDistanceFromTopLeft(body, w, h);
 		// dist.setX(-(w - dist.x()));
@@ -344,20 +352,11 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 		parent.relayout();
 	}
 
-	private int computeNumberOfIterations() {
+	private static int computeNumberOfIterations(int deltaTimeMs) {
 		final float iterationFactor = 1000;
 
-		int iterations = (int) ((float) 1 / deltaToLastFrame * iterationFactor) + 1;
-		deltaToLastFrame = 0;
+		int iterations = (int) ((float) 1 / deltaTimeMs * iterationFactor) + 1;
 		return iterations;
-	}
-
-	/**
-	 * @param deltaTimeMs
-	 */
-	@Override
-	public void addDelta(int deltaTimeMs) {
-		deltaToLastFrame += deltaTimeMs;
 	}
 
 	private static class ForcedBody extends Rectangle2D {
@@ -396,19 +395,11 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 			centerY = location.y() + radiusY;
 		}
 
-		/**
-		 * @param d
-		 * @param e
-		 */
 		public void move(double x, double y) {
 			centerX += x;
 			centerY += y;
 		}
 
-		/**
-		 * @param other
-		 * @return
-		 */
 		public int getOverlap(ForcedBody other) {
 			ClusterElement o = other.asClusterElement();
 			ClusterElement c = asClusterElement();
@@ -478,18 +469,28 @@ public class ForceBasedLayoutTuned implements IBiClusterLayout {
 		}
 
 		/**
-		 * set the new location + return the difference
+		 * set the new location
 		 *
-		 * @return
+		 * @param damping
+		 *
+		 * @return the squared distance moved
 		 */
-		public double apply() {
+		public double apply(double damping) {
 			assert !isToolBar();
 			Vec2f ori = elem.getLocation();
 			double x0 = x0();
 			double y0 = y0();
+			// where we want to be
+			if (damping < 1) {
+				double dx = x0 - ori.x();
+				double dy = y0 - ori.y();
+				x0 = ori.x() + dx * damping;
+				y0 = ori.y() + dy * damping;
+			}
 			// really set the location
 			elem.setLocation((float) x0, (float) y0);
 
+			// distance moved
 			x0 -= ori.x();
 			y0 -= ori.y();
 			return x0 * x0 + y0 * y0;
