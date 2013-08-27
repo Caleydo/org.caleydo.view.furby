@@ -31,6 +31,8 @@ public class ForceBasedLayout extends AForceBasedLayout {
 	private boolean isInitLayoutDone = false;
 	float lastW, lastH;
 
+	protected double damping = 1f;
+
 	public ForceBasedLayout(AllClustersElement parent) {
 		super(parent);
 	}

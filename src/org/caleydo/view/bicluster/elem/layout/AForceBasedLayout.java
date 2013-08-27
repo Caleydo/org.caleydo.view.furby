@@ -31,8 +31,6 @@ public abstract class AForceBasedLayout implements IGLLayout2 {
 	protected float attractionFactor = 100f;
 	protected float borderForceFactor = 200f;
 
-	protected double damping = 1f;
-
 	protected GLElement focusedElement = null;
 	protected ClusterElement hoveredElement = null;
 

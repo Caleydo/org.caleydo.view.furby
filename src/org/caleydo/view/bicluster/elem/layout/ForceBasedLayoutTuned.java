@@ -32,6 +32,11 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 	private boolean isInitLayoutDone = false;
 	float lastW, lastH;
 
+	/**
+	 * counts the number of continous "another round" calls, used for damping
+	 */
+	private int continousLayoutDuration = 0;
+
 	public ForceBasedLayoutTuned(AllClustersElement parent) {
 		super(parent);
 	}
@@ -63,10 +68,30 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 				forceDirectedLayout(bodies, toolBars, w, h);
 		}
 		double totalDistanceSquared = 0;
+		double damping = time2damping(continousLayoutDuration);
 		for (ForcedBody body : bodies)
 			totalDistanceSquared += body.apply(damping);
 
-		return totalDistanceSquared > 10;
+		final boolean anotherRound = totalDistanceSquared > 5 * 5;
+		if (anotherRound)
+			continousLayoutDuration += deltaTimeMs;
+		else
+			continousLayoutDuration = 0;
+		return anotherRound;
+	}
+
+	/**
+	 * @param duration
+	 * @return
+	 */
+	private static double time2damping(int duration) {
+		if (duration == 0)
+			return 1;
+		final double maxTime = 5000; // ms
+		final double minDamping = 0.00;
+		final double maxDamping = 1;
+		double factor = Math.max(minDamping, Math.min(maxDamping, 1 - (duration / maxTime)));
+		return factor;
 	}
 
 	/**
