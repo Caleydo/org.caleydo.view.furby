@@ -16,8 +16,8 @@ import javax.media.opengl.GLProfile;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.util.color.Color;
-import org.caleydo.core.util.function.FloatFunctions;
-import org.caleydo.core.util.function.IFloatFunction;
+import org.caleydo.core.util.function.DoubleFunctions;
+import org.caleydo.core.util.function.IDoubleFunction;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
@@ -151,13 +151,13 @@ public class LZHeatmapElement extends GLElement {
 			max = Math.max(v, max);
 		}
 
-		IFloatFunction normalize = FloatFunctions.normalize(threshold, max);
-		IFloatFunction clamp = FloatFunctions.CLAMP01;
+		IDoubleFunction normalize = DoubleFunctions.normalize(threshold, max);
+		IDoubleFunction clamp = DoubleFunctions.CLAMP01;
 		for (Integer index : array) {
 			float v = lOrz.getRaw(biClusterIndex, index);
 			v = Math.abs(v);
-			v = normalize.apply(v);
-			buffer.put(clamp.apply(v));
+			v = (float) normalize.apply(v);
+			buffer.put((float) clamp.apply(v));
 		}
 
 		buffer.rewind();
