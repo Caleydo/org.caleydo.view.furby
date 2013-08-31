@@ -244,7 +244,7 @@ public class GLRootElement extends GLElementContainer {
 
 	@ListenTo
 	private void listenTo(LZThresholdChangeEvent event) {
-		bands.updateStructure();
+		bands.relayout();
 	}
 
 	@ListenTo

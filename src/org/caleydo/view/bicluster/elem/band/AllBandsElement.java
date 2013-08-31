@@ -127,13 +127,10 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 
 	@ListenTo
 	private void listenTo(RecalculateOverlapEvent event) {
-		updateStructure();
+		relayout();
 	}
 
 	public void updateStructure() {
-		for (GLElement b : this) {
-			((BandElement) b).updateStructure();
-		}
 		relayout();
 	}
 

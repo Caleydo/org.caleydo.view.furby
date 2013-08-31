@@ -63,6 +63,7 @@ import org.caleydo.view.bicluster.physics.MyDijkstra;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 import org.eclipse.swt.widgets.Display;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 /**
@@ -852,11 +853,11 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected abstract void sort(SortingType type);
 
 	public List<List<Integer>> getListOfContinousRecSequenzes(List<Integer> overlap) {
-		return getListOfContinousIDs(overlap, getRecordVirtualArray().getIDs());
+		return getListOfContinousIDs2(overlap, getRecordVirtualArray().getIDs());
 	}
 
 	public List<List<Integer>> getListOfContinousDimSequences(List<Integer> overlap) {
-		return getListOfContinousIDs(overlap, getDimensionVirtualArray().getIDs());
+		return getListOfContinousIDs2(overlap, getDimensionVirtualArray().getIDs());
 	}
 
 	protected static List<List<Integer>> getListOfContinousIDs(List<Integer> overlap, List<Integer> indices) {
@@ -874,7 +875,31 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		}
 		if (accu.size() > 0)
 			sequences.add(accu);
+		List<List<Integer>> r2 = getListOfContinousIDs2(overlap, indices);
+		assert r2.equals(sequences);
 		return sequences;
+	}
+
+	protected static List<List<Integer>> getListOfContinousIDs2(List<Integer> overlap, List<Integer> indices) {
+		if (overlap.isEmpty())
+			return Collections.emptyList();
+		if (overlap.size() == indices.size()) // all
+			return ImmutableList.of(indices);
+		List<List<Integer>> sequences = new ArrayList<List<Integer>>(1);
+		int from = 0;
+		for (int i = 0; i < indices.size(); ++i) {
+			Integer index = indices.get(i);
+			if (!overlap.contains(index)) {
+				int to = i;
+				if (from < to) {
+					sequences.add(indices.subList(from, to));
+				}
+				from = i + 1;// starting with next
+			}
+		}
+		if (from < indices.size())
+			sequences.add(indices.subList(from, indices.size()));
+		return ImmutableList.copyOf(sequences);
 	}
 
 	public abstract float getDimPosOf(int index);
