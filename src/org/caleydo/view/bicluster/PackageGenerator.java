@@ -48,7 +48,7 @@ public class PackageGenerator implements IApplication {
 	public Object start(IApplicationContext context) throws Exception {
 		// String[] programArguments = (String[]) context.getArguments().get("application.args");
 
-		final String prefix = System.getProperty("prefix", "D:/Downloads/ROS1/fabia_0000163454_0_1_Run");
+		final String prefix = System.getProperty("prefix", "D:/Documents/workspaces/rstudio_workspace/fabia/multi1");
 		final String name = prefix.substring(prefix.lastIndexOf("/") + 1);
 		final String output = prefix + ".cal";
 

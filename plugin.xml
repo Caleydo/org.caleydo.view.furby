@@ -38,16 +38,16 @@
                </command>
             </menu>
          </menu>
-         <menu
-               id="org.caleydo.menu.file"
-               label="File">
-            <command
-                  commandId="org.caleydo.view.bicluster.import"
-                  icon="resources/icons/icon.png"
-                  label="Import XLZ Data"
-                  style="push">
-            </command>
-         </menu>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.caleydo.core.gui.toolbar2">
+         <command
+               commandId="org.caleydo.view.bicluster.import"
+               icon="resources/icons/icon.png"
+               label="Import XLZ Data"
+               style="push">
+         </command>
       </menuContribution>
    </extension>
    <extension

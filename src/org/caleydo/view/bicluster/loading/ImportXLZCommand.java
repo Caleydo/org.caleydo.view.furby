@@ -26,8 +26,8 @@ import org.eclipse.ui.PlatformUI;
  *
  */
 public class ImportXLZCommand extends SimpleAction {
-	public static final String LABEL = "Import XLZ Data";
-	public static final String ICON = "resources/icons/general/save.png";
+	private static final String LABEL = "Import XLZ Data";
+	private static final String ICON = "resources/icons/general/save.png";
 
 	/**
 	 * Constructor.
