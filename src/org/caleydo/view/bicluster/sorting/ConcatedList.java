@@ -14,8 +14,10 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 
 /**
+ * concat to immutable list to a new one
+ * 
  * @author Samuel Gratzl
- *
+ * 
  */
 public class ConcatedList<T> extends AbstractList<T> implements RandomAccess {
 	private final ImmutableList<T> a;

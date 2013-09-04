@@ -9,13 +9,19 @@ import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.UNBOUND_NU
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+
 /**
+ * clustering for a specific clusterer in one dimension
+ *
  * @author Samuel Gratzl
  *
  */
 public final class FuzzyClustering {
 	private final static IntFloat ZERO = new IntFloat(0, 0);
 
+	/**
+	 * index,probability sorted by probability
+	 */
 	private final ImmutableSortedSet<IntFloat> probabilities;
 
 	public FuzzyClustering(ImmutableSortedSet<IntFloat> probabilities) {

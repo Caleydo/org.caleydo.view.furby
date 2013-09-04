@@ -17,8 +17,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 /**
+ * scan the L or Z table and produce a list of {@link FuzzyClustering} instances
+ * 
  * @author Samuel Gratzl
- *
+ * 
  */
 public class ScanLZTable implements Callable<List<FuzzyClustering>> {
 	private final Table lOrZ;
