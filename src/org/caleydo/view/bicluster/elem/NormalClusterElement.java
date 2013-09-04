@@ -41,12 +41,10 @@ import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.sorting.BandSorting;
-import org.caleydo.view.bicluster.sorting.ConcatedList;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 
 import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -97,8 +95,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.recProbailityHeatMap = new LZHeatmapElement(false);
 		this.add(this.recProbailityHeatMap);
 
-
-
+		resort();
+		updateVisibility();
 		setZValuesAccordingToState();
 	}
 
@@ -309,28 +307,19 @@ public class NormalClusterElement extends AMultiClusterElement {
 	@Override
 	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
 		super.calculateOverlap(dimBandsEnabled, recBandsEnabled);
-		if (getVisibility() == EVisibility.PICKABLE)
+		if (getVisibility() == EVisibility.PICKABLE && sortingType == SortingType.bandSorting)
 			resort();
 	}
 
 	@ListenTo
 	private void listenTo(LZThresholdChangeEvent event) {
-		if (getID().contains("Special")) {
-			System.out.println("Threshold Change");
-		}
 		if (!event.isGlobalEvent()) {
 			return;
-		}
-		if (bcNr == 0) {
-			System.out.println(recThreshold + " " + dimThreshold + " " + recNumberThreshold + " " + dimNumberThreshold);
 		}
 		recThreshold = event.getRecordThreshold();
 		dimThreshold = event.getDimensionThreshold();
 		recNumberThreshold = event.getRecordNumberThreshold();
 		dimNumberThreshold = event.getDimensionNumberThreshold();
-		if (bcNr == 0) {
-			System.out.println(recThreshold + " " + dimThreshold + " " + recNumberThreshold + " " + dimNumberThreshold);
-		}
 		refilter(event.isGlobalEvent());
 	}
 
@@ -403,17 +392,13 @@ public class NormalClusterElement extends AMultiClusterElement {
 	}
 
 	private Pair<List<IntFloat>, List<IntFloat>> filterData() {
-		ImmutableList<IntFloat> dim_negatives = dimClustering.negatives(dimThreshold, dimNumberThreshold);
-		ImmutableList<IntFloat> dim_positives = dimClustering.positives(dimThreshold, dimNumberThreshold);
-		ImmutableList<IntFloat> rec_negatives = recClustering.negatives(recThreshold, recNumberThreshold);
-		ImmutableList<IntFloat> rec_positives = recClustering.positives(recThreshold, recNumberThreshold);
-
-		List<IntFloat> dims = ConcatedList.concat(dim_negatives, dim_positives);
-		List<IntFloat> recs = ConcatedList.concat(rec_negatives, rec_positives);
+		List<IntFloat> dims = dimClustering.filter(dimThreshold, dimNumberThreshold);
+		List<IntFloat> recs = recClustering.filter(recThreshold, recNumberThreshold);
 
 		Pair<List<IntFloat>, List<IntFloat>> p = Pair.make(dims, recs);
 		return p;
 	}
+
 
 	private void updateTablePerspective(List<IntFloat> dims, List<IntFloat> recs) {
 		fill(getDimensionVirtualArray(), dims);

@@ -196,7 +196,6 @@ public class GLRootElement extends GLElementContainer {
 		for (GLElement iGL : clusters) {
 			((ClusterElement) iGL).calculateOverlap(dimBands, recBands);
 		}
-
 	}
 
 	@ListenTo

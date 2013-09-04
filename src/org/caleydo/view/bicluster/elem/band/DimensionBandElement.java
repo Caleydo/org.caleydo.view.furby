@@ -33,7 +33,7 @@ public class DimensionBandElement extends BandElement {
 
 	@Override
 	public void updateStructure() {
-		if (!isVisible())
+		if (!first.isVisible() || !second.isVisible())
 			return;
 		overlap = toFastOverlap(first.getDimOverlap(second));
 		updateVisibilityByOverlap();

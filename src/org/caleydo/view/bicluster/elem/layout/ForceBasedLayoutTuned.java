@@ -54,15 +54,14 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 			lastW = w;
 			lastH = h;
 
-			if (focusedElement != null) {
-				for (ForcedBody body : bodies) {
-					if (body.isFocussed())
-						body.setLocation(w * 0.5f, h * 0.5f);
-				}
-			}
 			bringClustersBackToFrame(bodies, w, h);
 			clearClusterCollisions(bodies, toolBars, w, h);
 
+			for (ForcedBody body : bodies) {
+				if (body.isFocussed()) {
+					body.setLocation(w * 0.5f, h * 0.5f);
+				}
+			}
 			int iterations = Math.max(1, computeNumberOfIterations(deltaTimeMs));
 			for (int i = 0; i < iterations; i++) {
 				double frameFactor = 1;
@@ -175,7 +174,7 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 	 * @param w
 	 * @param h
 	 */
-	private void forceDirectedLayout(List<ForcedBody> bodies, List<ForcedBody> toolBars, float w, float h,
+	private void forceDirectedLayout(List<ForcedBody> bodies, List<ForcedBody> fixedBodies, float w, float h,
 			double frameFactor) {
 
 		// calculate the attraction based on the size of all overlaps
@@ -211,14 +210,18 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 				addRepulsion(body, other, distVec, distLength);
 				addAttraction(body, other, distVec, distLength);
 			}
-			addFrame(w, h, body);
-			addToolBarRespulsion(toolBars, body);
+			if (!body.isFixed()) { // don't waste time if the element is active
+				addFrame(w, h, body);
+				addFixedBodyRespulsion(fixedBodies, body);
+			}
 		}
 
 		// count forces together + apply + reset
 		for (ForcedBody body : bodies) { // reset forces
-			if (!body.isVisible())
+			if (!body.isVisible() || body.isFixed()) {
+				body.resetForce();
 				continue;
+			}
 			final double repForceX = checkPlausibility(body.repForceX * repulsion);
 			final double repForceY = checkPlausibility(body.repForceY * repulsion);
 			double attForceX = checkPlausibility(body.attForceX * attractionX);
@@ -242,15 +245,13 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 			// System.out.println("  Rep: " + repForceX + " " + repForceY);
 			// System.out.println("  Fra: " + body.frameForceX + " " + body.frameForceY);
 			// System.out.println("  Sum: " + forceX + " " + forceY);
-			if (!body.isActive())
-				body.move(forceX, forceY);
-
+			body.move(forceX, forceY);
 			body.resetForce();
 		}
 
 	}
 
-	private static void addToolBarRespulsion(List<ForcedBody> toolBars, final ForcedBody body) {
+	private static void addFixedBodyRespulsion(List<ForcedBody> toolBars, final ForcedBody body) {
 		for (ForcedBody toolbar : toolBars) {
 			final Vec2d distVec = body.distanceTo(toolbar);
 			final double distLength = distVec.length();
@@ -426,7 +427,7 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 			return (flags & FLAG_FOCUSSED) != 0;
 		}
 
-		public boolean isActive() {
+		public boolean isFixed() {
 			return (flags & (FLAG_FOCUSSED | FLAG_DRAGGED | FLAG_HOVERED)) != 0;
 		}
 

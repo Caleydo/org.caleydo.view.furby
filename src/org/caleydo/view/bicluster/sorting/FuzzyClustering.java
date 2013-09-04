@@ -7,8 +7,12 @@ package org.caleydo.view.bicluster.sorting;
 
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.UNBOUND_NUMBER;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
 
 /**
  * clustering for a specific clusterer in one dimension
@@ -67,4 +71,36 @@ public final class FuzzyClustering {
 		return l.subList(l.size() - maxElements, l.size());
 	}
 
+	public List<IntFloat> filter(float threshold, int maxElements) {
+		if (threshold == 0 && maxElements == UNBOUND_NUMBER)
+			return probabilities.asList();
+		ImmutableList<IntFloat> negatives = negatives(threshold, maxElements);
+		ImmutableList<IntFloat> positives = positives(threshold, maxElements);
+		if (maxElements == UNBOUND_NUMBER || (negatives.size() + positives.size()) <= maxElements) //just add negatives and positives
+			return ConcatedList.concat(negatives, positives);
+
+		// take the abs top X elements
+		Iterator<IntFloat> negIt = negatives.iterator();
+		Iterator<IntFloat> posIt = Lists.reverse(positives).iterator();
+		IntFloat negEnd = null;
+		IntFloat negAct = negIt.next();
+		IntFloat posStart = null;
+		IntFloat posAct = posIt.next();
+
+		for(int i = 0; i < maxElements; ++i) {
+			if (negAct == null || (posAct != null && posAct.getProbability() > -negAct.getProbability())) {
+				posStart = posAct;
+				posAct = posIt.hasNext() ? posIt.next() : null;
+			} else {
+				negEnd = negAct;
+				negAct = negIt.hasNext() ? negIt.next() : null;
+			}
+		}
+
+		ImmutableSortedSet<IntFloat> headSet = negEnd == null ? ImmutableSortedSet.<IntFloat> of() : probabilities
+				.headSet(negEnd, true);
+		ImmutableSortedSet<IntFloat> tailSet = posStart == null ? ImmutableSortedSet.<IntFloat> of() : probabilities
+				.tailSet(posStart, true);
+		return ConcatedList.concat(headSet.asList(), tailSet.asList());
+	}
 }

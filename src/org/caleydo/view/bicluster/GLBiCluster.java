@@ -253,10 +253,10 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		TablePerspective z2 = xlz.get(2);
 
 		if (x2 != x || l2 != l || z2 != z) { // update x l z tables
-			EventPublisher.trigger(new DataSetSelectedEvent(x.getDataDomain()));
 			this.x = x2;
 			this.l = l2;
 			this.z = z2;
+			EventPublisher.trigger(new DataSetSelectedEvent(x.getDataDomain()));
 			List<TablePerspective> clusterTablePerspectives = initTablePerspectives();
 			Pair<List<FuzzyClustering>, List<FuzzyClustering>> clusterings = createFuzzyClustering(x, l, z);
 

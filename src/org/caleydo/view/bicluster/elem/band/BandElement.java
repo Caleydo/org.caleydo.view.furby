@@ -288,7 +288,7 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 
 
 	protected boolean isVisible() {
-		return first.isVisible() && second.isVisible() && overlap != null;
+		return first.isVisible() && second.isVisible() && overlap != null && !overlap.isEmpty();
 	}
 
 	protected boolean hasSharedElementsWithSelectedBand() {

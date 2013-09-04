@@ -32,6 +32,38 @@ public final class IntFloat {
 		return probability;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("IntFloat(").append(index).append('=').append(probability).append(')');
+		return builder.toString();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + index;
+		result = prime * result + Float.floatToIntBits(probability);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		IntFloat other = (IntFloat) obj;
+		if (index != other.index)
+			return false;
+		if (Float.floatToIntBits(probability) != Float.floatToIntBits(other.probability))
+			return false;
+		return true;
+	}
+
 	public final static Comparator<IntFloat> BY_ABS_PROBABILITY = new Comparator<IntFloat>() {
 		@Override
 		public int compare(IntFloat o1, IntFloat o2) {

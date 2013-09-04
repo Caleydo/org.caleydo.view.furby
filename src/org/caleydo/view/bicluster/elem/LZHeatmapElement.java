@@ -76,10 +76,12 @@ public class LZHeatmapElement extends GLElement {
 		final int size = texture.getWidth();
 		final float factor = 1.f / size;
 
+		float centerPos = 0;
 		gl.glBegin(GL2GL3.GL_QUADS);
-		if (spaceProvider == null || factor >= 1)
+		if (spaceProvider == null || factor >= 1) {
 			rect(0, 1, 0, 1, gl);
-		else {
+			centerPos = center * factor;
+		} else {
 			int x = 0;
 			int acc = 0;
 			float slast = Float.NaN;
@@ -100,6 +102,9 @@ public class LZHeatmapElement extends GLElement {
 				slast = si;
 				acc++;
 				sacc += si;
+				if (i == center) {
+					centerPos = (sx + sacc) * sfactor;
+				}
 			}
 			rect(x * factor, (x + acc) * factor, sx * sfactor, (sx + sacc) * sfactor, gl);
 		}
@@ -111,9 +116,9 @@ public class LZHeatmapElement extends GLElement {
 		if (center >= 0) {
 			g.lineWidth(3).color(Color.BLUE);
 			if (horizontal)
-				g.drawLine(center, 0, center, 1);
+				g.drawLine(centerPos, 0, centerPos, 1);
 			else
-				g.drawLine(0, center, 1, center);
+				g.drawLine(0, centerPos, 1, centerPos);
 			g.lineWidth(1);
 		}
 
@@ -182,7 +187,8 @@ public class LZHeatmapElement extends GLElement {
 		float max;
 		float min;
 		float last;
-		last = min = max = data.get(0);
+		last = data.get(0);
+		min = max = Math.abs(last);
 
 		int center = -1;
 		boolean multiCenter = false;
