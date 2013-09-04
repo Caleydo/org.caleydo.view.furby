@@ -29,8 +29,9 @@ public abstract class AMultiClusterElement extends ClusterElement {
 	protected final ClusterContentElement content;
 
 
-	public AMultiClusterElement(TablePerspective data, BiClustering clustering, Predicate<? super String> predicate) {
-		super(data, clustering);
+	public AMultiClusterElement(int bcNr, TablePerspective data, BiClustering clustering,
+			Predicate<? super String> predicate) {
+		super(bcNr, data, clustering);
 
 		content = createContent(predicate);
 		this.add(content);

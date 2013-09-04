@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster.elem;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,8 +41,15 @@ import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.sorting.BandSorting;
+import org.caleydo.view.bicluster.sorting.ConcatedList;
+import org.caleydo.view.bicluster.sorting.FuzzyClustering;
+import org.caleydo.view.bicluster.sorting.IntFloat;
 
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * e.g. a class for representing a cluster
@@ -55,15 +63,22 @@ public class NormalClusterElement extends AMultiClusterElement {
 	private ThresholdBar dimThreshBar;
 	private ThresholdBar recThreshBar;
 
+	private final FuzzyClustering dimClustering;
+	private final FuzzyClustering recClustering;
 	/**
 	 * elements for showing the probability heatmaps
 	 */
-	private LZHeatmapElement propabilityHeatMapHor;
-	private LZHeatmapElement propabilityHeatMapVer;
+	private LZHeatmapElement dimProbabilityHeatMap;
+	private LZHeatmapElement recProbailityHeatMap;
+
 	protected boolean showThreshold;
 
-	public NormalClusterElement(TablePerspective data, BiClustering clustering) {
-		super(data, clustering, Predicates.alwaysTrue());
+	protected SortingType sortingType = SortingType.probabilitySorting;
+
+	public NormalClusterElement(int bcNr, TablePerspective data, BiClustering clustering) {
+		super(bcNr, data, clustering, Predicates.alwaysTrue());
+		this.dimClustering = clustering.getDimClustering(bcNr);
+		this.recClustering = clustering.getRecClustering(bcNr);
 
 		this.add(createTopToolBar());
 		toolBar = new ToolBar(content.createButtonBarBuilder().layoutAs(EButtonBarLayout.SLIDE_LEFT).size(16).build()
@@ -74,10 +89,13 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
 
-		this.propabilityHeatMapHor = new LZHeatmapElement(clustering.getZ(), true);
-		this.add(this.propabilityHeatMapHor);
-		this.propabilityHeatMapVer = new LZHeatmapElement(clustering.getL(), false);
-		this.add(this.propabilityHeatMapVer);
+		dimThreshBar.updateSliders(dimClustering);
+		recThreshBar.updateSliders(recClustering);
+
+		this.dimProbabilityHeatMap = new LZHeatmapElement(true);
+		this.add(this.dimProbabilityHeatMap);
+		this.recProbailityHeatMap = new LZHeatmapElement(false);
+		this.add(this.recProbailityHeatMap);
 
 
 
@@ -118,8 +136,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 		IGLLayoutElement dimthreshbar = children.get(4);
 		IGLLayoutElement recthreshbar = children.get(5);
 
-		// shift for propability heat maps
-		float shift = 6;
+		// shift for probability heat maps
+		float shift = isFocused() ? 20 : 6;
 
 		if (isHovered || isShowAlwaysToolBar()) { // depending whether we are hovered or not, show hide the toolbar's
 			corner.setBounds(-18 - shift, -18 - shift, 18, 18 * 2);
@@ -157,8 +175,9 @@ public class NormalClusterElement extends AMultiClusterElement {
 	private void listenTo(SortingChangeEvent e) {
 		if (e.getSender() == this) {
 			// only local change
-		} else {
-			sort(e.getType());
+		} else if (this.sortingType != e.getType()) {
+			this.sortingType = e.getType();
+			resort();
 		}
 	}
 
@@ -169,7 +188,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 		private final GLSlider slider;
 		// float globalMaxThreshold;
 		private float localMaxSliderValue;
-		private float localMinSliderValue;
 
 		protected ThresholdBar(boolean layout) {
 			isHorizontal = layout;
@@ -177,7 +195,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 			setzDelta(DEFAULT_Z_DELTA);
 
 			// create buttons
-			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue : localMinSliderValue;
+			float max = 0;
 			this.slider = new GLSlider(0, max, max / 2);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
@@ -188,16 +206,17 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 		@Override
 		public void onSelectionChanged(GLSlider slider, float value) {
-			if (value <= localMinSliderValue || value >= localMaxSliderValue)
+			if (value >= localMaxSliderValue)
 				return;
 			setThresholdImpl(isHorizontal, value);
 		}
 
-		protected void updateSliders(double maxValue, double minValue) {
-			localMaxSliderValue = (float) maxValue;
-			localMinSliderValue = (float) minValue;
-			float max = localMaxSliderValue > localMinSliderValue ? localMaxSliderValue : localMinSliderValue;
-			this.slider.setMinMax(0, max);
+		/**
+		 * @param dimProbabilities
+		 */
+		public void updateSliders(FuzzyClustering clustering) {
+			localMaxSliderValue = clustering.getAbsMaxValue();
+			this.slider.setMinMax(0, localMaxSliderValue);
 		}
 
 		// @ListenTo
@@ -234,7 +253,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 			dimThreshold = value;
 		else
 			recThreshold = value;
-		rebuildMyData(false);
+		refilter(false);
 	}
 
 	public final void setThreshold(boolean isDimension, float value) {
@@ -243,19 +262,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 			dimThreshBar.setValue(value);
 		else if (!isDimension && recThreshBar != null)
 			recThreshBar.setValue(value);
-	}
-
-	@Override
-	protected void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices) {
-		VirtualArray dimArray = getDimensionVirtualArray();
-		VirtualArray recArray = getRecordVirtualArray();
-		addAll(dimArray, dimIndices, dimNumberThreshold);
-		addAll(recArray, recIndices, recNumberThreshold);
-
-		this.data.invalidateContainerStatistics();
-
-		propabilityHeatMapHor.update(dimThreshold, this.bcNr, dimArray);
-		propabilityHeatMapVer.update(recThreshold, this.bcNr, recArray);
 	}
 
 	@Override
@@ -282,63 +288,65 @@ public class NormalClusterElement extends AMultiClusterElement {
 	protected void handleFocus(boolean isFocused) {
 		super.handleFocus(isFocused);
 		if (isFocused) {
-			propabilityHeatMapHor.nonUniformLayout((content));
-			propabilityHeatMapVer.nonUniformLayout((content));
+			dimProbabilityHeatMap.nonUniformLayout((content));
+			recProbailityHeatMap.nonUniformLayout((content));
 		} else {
-			propabilityHeatMapHor.uniformLayout();
-			propabilityHeatMapVer.uniformLayout();
+			dimProbabilityHeatMap.uniformLayout();
+			recProbailityHeatMap.uniformLayout();
 		}
 	}
 
 	@Override
 	public final boolean shouldBeVisible() {
-		if (isHidden || !hasContent)
+		if (isHidden || getNumberOfDimElements() == 0 || getNumberOfRecElements() == 0)
 			return false;
-		if ((getDimensionVirtualArray().size() / elementCountBiggestCluster) < clusterSizeThreshold
-				&& (getRecordVirtualArray().size() / elementCountBiggestCluster) < clusterSizeThreshold)
+		if ((getNumberOfDimElements() / elementCountBiggestCluster) < clusterSizeThreshold
+				&& (getNumberOfRecElements() / elementCountBiggestCluster) < clusterSizeThreshold)
 			return false;
 		return true;
 	}
 
 	@Override
-	public void setData(List<Integer> dimIndices, List<Integer> recIndices, String id, int bcNr, double maxDim,
-			double maxRec, double minDim, double minRec) {
-		setLabel(id);
-		if (maxDim >= 0 && maxRec >= 0) {
-			dimThreshBar.updateSliders(maxDim, minDim);
-			recThreshBar.updateSliders(maxRec, minRec);
-		}
-		dimProbabilitySorting = new ArrayList<Integer>(dimIndices);
-		recProbabilitySorting = new ArrayList<Integer>(recIndices);
-		this.bcNr = bcNr;
-		setHasContent(dimIndices, recIndices);
-		updateVisibility();
+	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
+		super.calculateOverlap(dimBandsEnabled, recBandsEnabled);
+		if (getVisibility() == EVisibility.PICKABLE)
+			resort();
 	}
+
+	@ListenTo
+	private void listenTo(LZThresholdChangeEvent event) {
+		if (getID().contains("Special")) {
+			System.out.println("Threshold Change");
+		}
+		if (!event.isGlobalEvent()) {
+			return;
+		}
+		if (bcNr == 0) {
+			System.out.println(recThreshold + " " + dimThreshold + " " + recNumberThreshold + " " + dimNumberThreshold);
+		}
+		recThreshold = event.getRecordThreshold();
+		dimThreshold = event.getDimensionThreshold();
+		recNumberThreshold = event.getRecordNumberThreshold();
+		dimNumberThreshold = event.getDimensionNumberThreshold();
+		if (bcNr == 0) {
+			System.out.println(recThreshold + " " + dimThreshold + " " + recNumberThreshold + " " + dimNumberThreshold);
+		}
+		refilter(event.isGlobalEvent());
+	}
+
 
 	@Override
 	protected void setLabel(String id) {
 		data.setLabel(id);
 	}
 
-	@Override
-	protected void setHasContent(List<Integer> dimIndices, List<Integer> recIndices) {
-		if (dimIndices.size() > 0 && recIndices.size() > 0) {
-			hasContent = true;
-			recreateVirtualArrays(dimIndices, recIndices);
-		} else {
-			hasContent = false;
-		}
-	}
 
-	@Override
-	protected void sort(SortingType type) {
-		switch (type) {
+	private void resort() {
+		switch (sortingType) {
 		case probabilitySorting:
-			sortingType = SortingType.probabilitySorting;
 			probabilitySorting();
 			break;
 		case bandSorting:
-			sortingType = SortingType.bandSorting;
 			bandSorting();
 			break;
 		default:
@@ -346,45 +354,83 @@ public class NormalClusterElement extends AMultiClusterElement {
 	}
 
 	private void bandSorting() {
-		Set<Integer> finalDimSorting = new LinkedHashSet<Integer>();
+		Pair<List<IntFloat>, List<IntFloat>> p = filterData();
+
+		Set<IntFloat> finalDimSorting = bandSort(p.getFirst(), dimOverlap.values());
+		Set<IntFloat> finalRecSorting = bandSort(p.getSecond(), recOverlap.values());
+
+		updateTablePerspective(new ArrayList<>(finalDimSorting), new ArrayList<>(finalRecSorting));
+		fireTablePerspectiveChanged();
+	}
+
+	private Set<IntFloat> bandSort(List<IntFloat> indices, Collection<List<Integer>> bands) {
 		List<List<Integer>> nonEmptyDimBands = new ArrayList<>();
-		for (List<Integer> dimBand : dimOverlap.values()) {
+		for (List<Integer> dimBand : bands) {
 			if (dimBand.size() > 0)
 				nonEmptyDimBands.add(dimBand);
 		}
 		BandSorting dimConflicts = new BandSorting(nonEmptyDimBands);
-		for (Integer i : dimConflicts) {
-			finalDimSorting.add(i);
-		}
-		finalDimSorting.addAll(dimProbabilitySorting);
 
-		Set<Integer> finalRecSorting = new LinkedHashSet<Integer>();
-		List<List<Integer>> nonEmptyRecBands = new ArrayList<>();
-		for (List<Integer> recBand : recOverlap.values()) {
-			if (recBand.size() > 0)
-				nonEmptyRecBands.add(recBand);
+		Set<IntFloat> finalDimSorting = new LinkedHashSet<IntFloat>();
+
+		ImmutableMap<Integer, IntFloat> byIndex = Maps.uniqueIndex(indices, IntFloat.TO_INDEX);
+		for (Integer i : dimConflicts) {
+			finalDimSorting.add(byIndex.get(i));
 		}
-		BandSorting recConflicts = new BandSorting(nonEmptyRecBands);
-		for (Integer i : recConflicts) {
-			finalRecSorting.add(i);
-		}
-		finalRecSorting.addAll(recProbabilitySorting);
-		recreateVirtualArrays(new ArrayList<Integer>(finalDimSorting), new ArrayList<Integer>(finalRecSorting));
-		fireTablePerspectiveChanged();
+		// fill up rest
+		finalDimSorting.addAll(indices);
+		return finalDimSorting;
 	}
 
 	private void probabilitySorting() {
-		sortingType = SortingType.probabilitySorting;
-		recreateVirtualArrays(dimProbabilitySorting, recProbabilitySorting);
+		Pair<List<IntFloat>, List<IntFloat>> p = filterData();
+
+		updateTablePerspective(p.getFirst(), p.getSecond());
+
 		fireTablePerspectiveChanged();
 	}
 
-	@Override
-	protected void rebuildMyData(boolean isGlobal) {
-		if (isLocked)
+	protected void refilter(boolean isGlobal) {
+		if (isLocked && isGlobal)
 			return;
-		Pair<List<Integer>, List<Integer>> pair = clustering.scan(bcNr, dimThreshold, recThreshold);
-		setData(pair.getFirst(), pair.getSecond(), getID(), bcNr, -1, -1, -1, -1);
+
+		Pair<List<IntFloat>, List<IntFloat>> p = filterData();
+
+		updateTablePerspective(p.getFirst(), p.getSecond());
+
+		updateVisibility();
+		triggerDataUpdated(isGlobal);
+	}
+
+	private Pair<List<IntFloat>, List<IntFloat>> filterData() {
+		ImmutableList<IntFloat> dim_negatives = dimClustering.negatives(dimThreshold, dimNumberThreshold);
+		ImmutableList<IntFloat> dim_positives = dimClustering.positives(dimThreshold, dimNumberThreshold);
+		ImmutableList<IntFloat> rec_negatives = recClustering.negatives(recThreshold, recNumberThreshold);
+		ImmutableList<IntFloat> rec_positives = recClustering.positives(recThreshold, recNumberThreshold);
+
+		List<IntFloat> dims = ConcatedList.concat(dim_negatives, dim_positives);
+		List<IntFloat> recs = ConcatedList.concat(rec_negatives, rec_positives);
+
+		Pair<List<IntFloat>, List<IntFloat>> p = Pair.make(dims, recs);
+		return p;
+	}
+
+	private void updateTablePerspective(List<IntFloat> dims, List<IntFloat> recs) {
+		fill(getDimensionVirtualArray(), dims);
+		fill(getRecordVirtualArray(), recs);
+
+		this.data.invalidateContainerStatistics();
+
+		dimProbabilityHeatMap.update(Lists.transform(dims, IntFloat.TO_PROBABILITY));
+		recProbailityHeatMap.update(Lists.transform(recs, IntFloat.TO_PROBABILITY));
+	}
+
+	private void fill(VirtualArray va, List<IntFloat> values) {
+		va.clear();
+		va.addAll(Lists.transform(values, IntFloat.TO_INDEX));
+	}
+
+	private void triggerDataUpdated(boolean isGlobal) {
 		EventPublisher.trigger(new ClusterScaleEvent(this));
 		if (!isGlobal)
 			EventPublisher.trigger(new MouseOverClusterEvent(this, true));

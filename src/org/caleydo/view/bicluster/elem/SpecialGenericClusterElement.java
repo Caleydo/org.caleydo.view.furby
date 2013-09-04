@@ -21,7 +21,6 @@ import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.view.bicluster.BiClusterRenderStyle;
-import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
 import com.google.common.base.Predicates;
@@ -37,13 +36,14 @@ public final class SpecialGenericClusterElement extends AMultiClusterElement {
 	private final VirtualArray dimVA;
 
 	public SpecialGenericClusterElement(TablePerspective data, BiClustering clustering) {
-		super(data, clustering, Predicates.not(Predicates.in(Arrays.asList("distribution.pie", "distribution.hist"))));
+		super(-1, data, clustering, Predicates
+				.not(Predicates.in(Arrays.asList("distribution.pie", "distribution.hist"))));
 		content.setzDelta(0.5f);
 		setLabel(data.getDataDomain().getLabel() + " " + data.getLabel());
 
 		this.recordVA = createVA(clustering.getXDataDomain().getRecordIDType(), data);
 		this.dimVA = createVA(clustering.getXDataDomain().getDimensionIDType(), data);
-		setHasContent(dimVA.getIDs(), recordVA.getIDs());
+		updateVisibility();
 		this.add(createHideClusterButton());
 	}
 
@@ -112,28 +112,13 @@ public final class SpecialGenericClusterElement extends AMultiClusterElement {
 	}
 
 	@Override
-	public void setData(List<Integer> dimIndices, List<Integer> recIndices,
- String id, int bcNr, double maxDim,
-			double maxRec, double minDim, double minRec) {
-		updateVisibility();
-	}
-
-	@Override
-	protected void setHasContent(List<Integer> dimIndices,
-			List<Integer> recIndices) {
-		hasContent = dimIndices.size() > 0 || recIndices.size() > 0;
-		updateVisibility();
-	}
-
-	@Override
 	public boolean shouldBeVisible() {
-		if (isHidden || !hasContent || (getRecordOverlapSize() == 0 || recordVA.size() == 0 || !anyShown(recOverlap))
+		if (isHidden || (getRecordOverlapSize() == 0 || recordVA.size() == 0 || !anyShown(recOverlap))
 				&& (getDimensionOverlapSize() == 0 || dimVA.size() == 0 || !anyShown(dimOverlap))) {
 			return false;
 		} else {
 			return true;
 		}
-
 	}
 
 	/**
@@ -145,17 +130,6 @@ public final class SpecialGenericClusterElement extends AMultiClusterElement {
 			if (entry.getKey().getVisibility().doRender() && !entry.getValue().isEmpty())
 				return true;
 		return false;
-	}
-
-	@Override
-	protected void sort(SortingType type) {
-		// Nothing to do here
-	}
-
-	@Override
-	protected void rebuildMyData(boolean isGlobal) {
-		//
-		updateVisibility();
 	}
 
 	protected GLButton createHideClusterButton() {
@@ -178,16 +152,6 @@ public final class SpecialGenericClusterElement extends AMultiClusterElement {
 		updateVisibility();
 		findParent(AllClustersElement.class).remove(this);
 		this.mouseOut();
-	}
-
-	@Override
-	protected void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices) {
-		VirtualArray dimArray = getDimensionVirtualArray();
-		VirtualArray recArray = getRecordVirtualArray();
-		addAll(dimArray, dimIndices, dimNumberThreshold);
-		addAll(recArray, recIndices, recNumberThreshold);
-
-		this.data.invalidateContainerStatistics();
 	}
 
 	@Override

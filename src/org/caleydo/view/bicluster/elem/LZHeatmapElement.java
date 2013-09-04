@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster.elem;
 
 import java.nio.FloatBuffer;
+import java.util.List;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -13,15 +14,17 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLContext;
 import javax.media.opengl.GLProfile;
 
-import org.caleydo.core.data.collection.table.Table;
-import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.util.function.DoubleFunctions;
+import org.caleydo.core.util.function.ExpressionFunctions;
 import org.caleydo.core.util.function.IDoubleFunction;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
+import org.caleydo.view.bicluster.sorting.IntFloat;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
 
@@ -32,16 +35,15 @@ import com.jogamp.opengl.util.texture.TextureData;
  *
  */
 public class LZHeatmapElement extends GLElement {
-	private final Table lOrz;
 	private final boolean horizontal;
 	private Texture texture;
 	/**
 	 * spacer for the focus case with non uniform cells
 	 */
 	private ClusterContentElement spaceProvider;
+	private int center;
 
-	public LZHeatmapElement(Table lOrz, boolean horizontal) {
-		this.lOrz = lOrz;
+	public LZHeatmapElement(boolean horizontal) {
 		this.horizontal = horizontal;
 		setSize(horizontal ? Float.NaN : 4, horizontal ? 4 : Float.NaN);
 	}
@@ -105,6 +107,16 @@ public class LZHeatmapElement extends GLElement {
 		g.checkError();
 		texture.disable(gl);
 		g.checkError();
+
+		if (center >= 0) {
+			g.lineWidth(3).color(Color.BLUE);
+			if (horizontal)
+				g.drawLine(center, 0, center, 1);
+			else
+				g.drawLine(0, center, 1, center);
+			g.lineWidth(1);
+		}
+
 		g.restore();
 	}
 
@@ -130,45 +142,102 @@ public class LZHeatmapElement extends GLElement {
 		}
 	}
 
-	public void update(float threshold, int biClusterIndex, VirtualArray array) {
+	public void update(ImmutableList<IntFloat> negatives, ImmutableList<IntFloat> positives) {
 		if (texture == null)
 			return;
 
-		int width = array.size();
+		int width = negatives.size() + positives.size();
+		if (width <= 0) {
+			setVisibility(EVisibility.HIDDEN);
+			return;
+		}
+
+		this.center = negatives.size();
+
+		// find max = at the corners
+		float max = Math.max(-default_(negatives, 0, Float.POSITIVE_INFINITY),
+				default_(positives, -1, Float.NEGATIVE_INFINITY));
+		// finx min = nearest to zero
+		float min = Math.max(-default_(negatives, -1, Float.NEGATIVE_INFINITY),
+				default_(positives, 0, Float.POSITIVE_INFINITY));
+
+		IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
+				DoubleFunctions.normalize(min, max));
+
+		Iterable<Float> data = Iterables.transform(Iterables.concat(negatives, positives), IntFloat.TO_PROBABILITY);
+
+		update(width, transform, data);
+	}
+
+	public void update(List<Float> data) {
+		if (texture == null)
+			return;
+
+		final int width = data.size();
+		if (width <= 0) {
+			setVisibility(EVisibility.HIDDEN);
+			return;
+		}
+
+		float max;
+		float min;
+		float last;
+		last = min = max = data.get(0);
+
+		int center = -1;
+		boolean multiCenter = false;
+		for (int i = 1; i < width; ++i) {
+			float v = data.get(i);
+			float v_a = Math.abs(v);
+			if (v_a > max)
+				max = v_a;
+			if (v_a < min)
+				min = v_a;
+			if (last < 0 && v > 0 && !multiCenter) {
+				multiCenter = center >= 0; // already set a center -> multi center
+				center = i;
+			}
+			last = v;
+		}
+		this.center = multiCenter ? -1 : center;
+
+		IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
+				DoubleFunctions.normalize(min, max));
+
+		update(width, transform, data);
+	}
+
+	private void update(int width, IDoubleFunction transform, Iterable<Float> data) {
 		if (width <= 0) {
 			setVisibility(EVisibility.HIDDEN);
 			return;
 		} else
 			setVisibility(EVisibility.VISIBLE);
 
-		FloatBuffer buffer = FloatBuffer.allocate(width); // w*1*float
-
-		// find max
-		float max = Float.NEGATIVE_INFINITY;
-		for (Integer index : array) {
-			float v = lOrz.getRaw(biClusterIndex, index);
-			v = Math.abs(v);
-			max = Math.max(v, max);
-		}
-
-		IDoubleFunction normalize = DoubleFunctions.normalize(threshold, max);
-		IDoubleFunction clamp = DoubleFunctions.CLAMP01;
-		for (Integer index : array) {
-			float v = lOrz.getRaw(biClusterIndex, index);
-			v = Math.abs(v);
-			v = (float) normalize.apply(v);
-			buffer.put((float) clamp.apply(v));
+		FloatBuffer buffer = FloatBuffer.allocate(width * 3); // w*rgb*float
+		for (Float f : data) {
+			float v = Math.abs(f.floatValue());
+			v = (float) transform.apply(v);
+			buffer.put(v);
+			buffer.put(v);
+			buffer.put(v);
 		}
 
 		buffer.rewind();
-		TextureData texData = new TextureData(GLProfile.getDefault(), GL2.GL_INTENSITY /* internalFormat */, width, 1,
-				0 /* border */, GL.GL_LUMINANCE /* pixelFormat */, GL.GL_FLOAT /* pixelType */,
+		TextureData texData = new TextureData(GLProfile.getDefault(), GL.GL_RGB /* internalFormat */, width, 1,
+				0 /* border */, GL.GL_RGB /* pixelFormat */, GL.GL_FLOAT /* pixelType */,
 				false /* mipmap */,
 				false /* dataIsCompressed */, false /* mustFlipVertically */, buffer, null);
 		texture.updateImage(GLContext.getCurrentGL(), texData);
 		texData.destroy();
 
 		repaint();
+	}
+
+	private static float default_(ImmutableList<IntFloat> list, int index, float default_) {
+		if (list.isEmpty())
+			return default_;
+		return list.get(index < 0 ? list.size() - index : index).getProbability();
 	}
 
 	/**

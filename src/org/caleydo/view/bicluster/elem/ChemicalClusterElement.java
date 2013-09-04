@@ -13,14 +13,9 @@ import java.util.Set;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
-import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
-import org.caleydo.view.bicluster.event.ClusterScaleEvent;
-import org.caleydo.view.bicluster.event.CreateBandsEvent;
-import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
-import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 
 public final class ChemicalClusterElement extends ASpecialClusterElement {
 
@@ -40,10 +35,12 @@ public final class ChemicalClusterElement extends ASpecialClusterElement {
 		for (Integer i : elementToClusterMap.keySet()) {
 			elements.add(i);
 		}
-		setHasContent(elements, null);
 
 		this.add(new SpecialClusterContent().setzDelta(0.5f));
 		setLabel("Chemical clusters");
+
+		this.elements = new VirtualArray(clustering.getXDataDomain().getDimensionIDType(), elements);
+		((SpecialClusterContent) get(2)).update();
 	}
 
 	@Override
@@ -54,22 +51,8 @@ public final class ChemicalClusterElement extends ASpecialClusterElement {
 	}
 
 	@Override
-	protected void setHasContent(List<Integer> dimIndices,
-			List<Integer> recIndices) {
-		if (dimIndices.size() > 0) {
-			hasContent = true;
-			recreateVirtualArrays(dimIndices, recIndices);
-		} else {
-			hasContent = false;
-		}
-	}
-
-	@Override
-	protected void recreateVirtualArrays(List<Integer> dimIndices,
-			List<Integer> recIndices) {
-		this.elements = new VirtualArray(clustering.getXDataDomain()
-				.getDimensionGroupIDType(), dimIndices);
-		((SpecialClusterContent) get(2)).update();
+	public final boolean shouldBeVisible() {
+		return !isHidden && elements.size() > 0;
 	}
 
 	@Override
@@ -90,20 +73,6 @@ public final class ChemicalClusterElement extends ASpecialClusterElement {
 	@Override
 	public int getNumberOfRecElements() {
 		return 0;
-	}
-
-	@Override
-	protected void rebuildMyData(boolean isGlobal) {
-		if (isLocked)
-			return;
-		setData(elements.getIDs(), elements.getIDs(), getID(), bcNr, -1, -1, -1, -1);
-		EventPublisher.trigger(new ClusterScaleEvent(this));
-		if (!isGlobal)
-			EventPublisher.trigger(new MouseOverClusterEvent(this, true));
-		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal,
-				dimBandsEnabled, recBandsEnabled));
-		EventPublisher.trigger(new CreateBandsEvent(this));
-
 	}
 
 	private class SpecialClusterContent extends AnimatedGLElementContainer {

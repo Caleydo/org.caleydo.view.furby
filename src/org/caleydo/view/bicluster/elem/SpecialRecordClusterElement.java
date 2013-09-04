@@ -11,14 +11,9 @@ import java.util.List;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
-import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
-import org.caleydo.view.bicluster.event.ClusterScaleEvent;
-import org.caleydo.view.bicluster.event.CreateBandsEvent;
-import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
-import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 
 public final class SpecialRecordClusterElement extends ASpecialClusterElement {
 
@@ -27,10 +22,12 @@ public final class SpecialRecordClusterElement extends ASpecialClusterElement {
 
 	public SpecialRecordClusterElement(TablePerspective data, BiClustering clustering, List<Integer> elements) {
 		super(data, clustering);
-		setHasContent(null, elements);
 
 		this.add(new SpecialClusterContent().setzDelta(0.5f));
 		setLabel("Special " + clustering.getXDataDomain().getRecordIDCategory().getDenominationPlural().toString());
+
+		this.elements = new VirtualArray(getXDataDomain().getRecordIDType(), elements);
+		((SpecialClusterContent) get(2)).update();
 	}
 
 	@Override
@@ -40,28 +37,8 @@ public final class SpecialRecordClusterElement extends ASpecialClusterElement {
 		super.setClusterSize(x, y, maxClusterSize, causer);
 	}
 
-	@Override
-	protected void setHasContent(List<Integer> dimIndices,
-			List<Integer> recIndices) {
-		if (recIndices.size() > 0) {
-			hasContent = true;
-			recreateVirtualArrays(dimIndices, recIndices);
-		} else {
-			hasContent = false;
-		}
-	}
-
-
 	private ATableBasedDataDomain getXDataDomain() {
 		return clustering.getXDataDomain();
-	}
-
-	@Override
-	protected void recreateVirtualArrays(List<Integer> dimIndices,
-			List<Integer> recIndices) {
-		this.elements = new VirtualArray(getXDataDomain()
-				.getRecordGroupIDType(), recIndices);
-		((SpecialClusterContent) get(2)).update();
 	}
 
 	@Override
@@ -84,21 +61,11 @@ public final class SpecialRecordClusterElement extends ASpecialClusterElement {
 		return elements.size();
 	}
 
-
-
 	@Override
-	protected void rebuildMyData(boolean isGlobal) {
-		if (isLocked)
-			return;
-		setData(elements.getIDs(), elements.getIDs(), getID(), bcNr, -1, -1, -1, -1);
-		EventPublisher.trigger(new ClusterScaleEvent(this));
-		if (!isGlobal)
-			EventPublisher.trigger(new MouseOverClusterEvent(this, true));
-		EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal,
-				dimBandsEnabled, recBandsEnabled));
-		EventPublisher.trigger(new CreateBandsEvent(this));
-
+	public boolean shouldBeVisible() {
+		return !isHidden && elements.size() > 0;
 	}
+
 
 	private class SpecialClusterContent extends AnimatedGLElementContainer {
 

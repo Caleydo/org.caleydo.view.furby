@@ -5,7 +5,6 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
@@ -18,7 +17,6 @@ import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.view.bicluster.BiClusterRenderStyle;
-import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 
 public abstract class ASpecialClusterElement extends ClusterElement {
@@ -27,7 +25,7 @@ public abstract class ASpecialClusterElement extends ClusterElement {
 
 	public ASpecialClusterElement(TablePerspective data,
  BiClustering clustering) {
-		super(data, clustering);
+		super(-1, data, clustering);
 		minScaleFactor = 3;
 		setScaleFactor(3);
 
@@ -62,21 +60,6 @@ public abstract class ASpecialClusterElement extends ClusterElement {
 
 	}
 
-	@Override
-	public final void setData(List<Integer> dimIndices, List<Integer> recIndices,
- String id, int bcNr, double maxDim,
-			double maxRec, double minDim, double minRec) {
-		setLabel(id);
-		recProbabilitySorting = new ArrayList<Integer>(recIndices);
-		this.bcNr = bcNr;
-		setHasContent(dimIndices, recIndices);
-		updateVisibility();
-	}
-
-	@Override
-	public final boolean shouldBeVisible() {
-		return !isHidden && hasContent;
-	}
 
 	@Override
 	protected final void setLabel(String id) {
@@ -97,11 +80,6 @@ public abstract class ASpecialClusterElement extends ClusterElement {
 		scaleFactor += 1.2;
 	}
 
-
-	@Override
-	protected final void sort(SortingType type) {
-		// Nothing to do here
-	}
 
 	private GLButton createHideClusterButton() {
 		GLButton hide = new GLButton();

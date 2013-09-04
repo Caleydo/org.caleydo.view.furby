@@ -64,8 +64,10 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 			clearClusterCollisions(bodies, toolBars, w, h);
 
 			int iterations = Math.max(1, computeNumberOfIterations(deltaTimeMs));
-			for (int i = 0; i < iterations; i++)
-				forceDirectedLayout(bodies, toolBars, w, h);
+			for (int i = 0; i < iterations; i++) {
+				double frameFactor = 1;
+				forceDirectedLayout(bodies, toolBars, w, h, frameFactor);
+			}
 		}
 		double totalDistanceSquared = 0;
 		double damping = time2damping(continousLayoutDuration);
@@ -173,7 +175,8 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 	 * @param w
 	 * @param h
 	 */
-	private void forceDirectedLayout(List<ForcedBody> bodies, List<ForcedBody> toolBars, float w, float h) {
+	private void forceDirectedLayout(List<ForcedBody> bodies, List<ForcedBody> toolBars, float w, float h,
+			double frameFactor) {
 
 		// calculate the attraction based on the size of all overlaps
 		double xOverlapSize = 0, yOverlapSize = 0;
@@ -216,16 +219,19 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 		for (ForcedBody body : bodies) { // reset forces
 			if (!body.isVisible())
 				continue;
-			double repForceX = checkPlausibility(body.repForceX * repulsion);
-			double repForceY = checkPlausibility(body.repForceY * repulsion);
+			final double repForceX = checkPlausibility(body.repForceX * repulsion);
+			final double repForceY = checkPlausibility(body.repForceY * repulsion);
 			double attForceX = checkPlausibility(body.attForceX * attractionX);
 			double attForceY = checkPlausibility(body.attForceY * attractionY);
 			if (xOverlapSize < 3) {
 				attForceX *= 0.2;
 				attForceY *= 0.2;
 			}
-			double forceX = repForceX + attForceX + body.frameForceX;
-			double forceY = repForceY + attForceY + body.frameForceY;
+			final double frameForceX = frameFactor * body.frameForceX;
+			final double frameForceY = frameFactor * body.frameForceY;
+
+			double forceX = repForceX + attForceX + frameForceX;
+			double forceY = repForceY + attForceY + frameForceY;
 
 			while ((forceX * forceX + forceY * forceY) > 20 * 20) {
 				forceX *= 0.1;

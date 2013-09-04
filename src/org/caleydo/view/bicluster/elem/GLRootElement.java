@@ -10,9 +10,7 @@ import gleem.linalg.Vec2f;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
-import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
@@ -63,11 +61,11 @@ public class GLRootElement extends GLElementContainer {
 	private double scaleFactor = MyPreferences.getScaleFactor();
 
 	private BiClustering clustering;
-	private TablePerspective x;
 
 	private final GLElement zoomLayer = new GLElement().setVisibility(EVisibility.PICKABLE)
 .setPicker(
 			GLRenderers.fillRect(Color.CYAN));
+	private TablePerspective x;
 
 	public GLRootElement() {
 		setLayout(GLLayouts.LAYERS);
@@ -82,6 +80,8 @@ public class GLRootElement extends GLElementContainer {
 			}
 		});
 		this.add(zoomLayer);
+
+		clusters.setToolBars(parameterToolBar, layoutToolBar);
 	}
 
 	@Override
@@ -103,36 +103,39 @@ public class GLRootElement extends GLElementContainer {
 		clusters.relayout();
 	}
 
-	public void setData(List<TablePerspective> list, TablePerspective x, TablePerspective l, TablePerspective z,
-			ExecutorService executor) {
+
+		/**
+	 * @param biClustering
+	 */
+	public void init(BiClustering biClustering, TablePerspective x) {
 		this.x = x;
-		this.clustering = new BiClustering(toTable(x), toTable(l), toTable(z), executor);
+		this.clustering = biClustering;
 
 		parameterToolBar.setXTablePerspective(x);
 		layoutToolBar.setXTablePerspective(x);
 
-		if (clusters.size() > 0)
-			clusters.clear();
-		this.clear();
 		bands = new AllBandsElement(x);
 		this.add(zoomLayer);
 		this.add(bands);
 		this.add(clusters);
 
-		if (list != null) {
-			System.out.println(list.size() + " Cluster geladen.");
-			for (TablePerspective p : list) {
-				final ClusterElement el = new NormalClusterElement(p, clustering);
-				clusters.add(el);
-			}
+		System.out.println(biClustering.getBiClusterCount() + " bi clusters loaded.");
+		for (int i = 0; i < biClustering.getBiClusterCount(); ++i) {
+			final ClusterElement el = new NormalClusterElement(i, clustering.getData(i), clustering);
+			clusters.add(el);
 		}
-		clusters.setToolBars(parameterToolBar, layoutToolBar);
 	}
 
-	private static Table toTable(TablePerspective t) {
-		if (t == null)
-			return null;
-		return t.getDataDomain().getTable();
+	/**
+	 *
+	 */
+	public void reset() {
+		this.x = null;
+		this.clustering = null;
+
+		this.clear();
+		clusters.clear();
+		this.bands = null;
 	}
 
 	public void createBands() {

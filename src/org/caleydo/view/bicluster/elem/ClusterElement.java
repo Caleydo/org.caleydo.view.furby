@@ -5,7 +5,6 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.UNBOUND_NUMBER;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimThreshold;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimTopNElements;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThreshold;
@@ -52,12 +51,10 @@ import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.FocusChangeEvent;
-import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.SearchClusterEvent;
-import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.physics.MyDijkstra;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
@@ -73,8 +70,6 @@ import com.google.common.collect.Iterables;
  * @author Samuel Gratzl
  */
 public abstract class ClusterElement extends AnimatedGLElementContainer implements IGLLayout, ILabeled {
-	protected static final IHasGLLayoutData GROW_LEFT = GLLayoutDatas.combine(new MoveTransitions.MoveTransitionBase(
-			Transitions.LINEAR, Transitions.NO, Transitions.LINEAR, Transitions.NO), DEFAULT_DURATION);
 	protected static final IHasGLLayoutData GROW_UP = GLLayoutDatas.combine(new MoveTransitions.MoveTransitionBase(
 			Transitions.NO, Transitions.LINEAR, Transitions.NO, Transitions.LINEAR), DEFAULT_DURATION);
 
@@ -92,18 +87,13 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected boolean isHovered = false;
 	protected boolean isHidden = false;
 	protected boolean isLocked = false;
-	protected boolean hasContent = false;
 	protected boolean dimBandsEnabled, recBandsEnabled;
 	protected float curOpacityFactor = 1f;
 	protected float opacityfactor = 1;
 
 	protected Map<GLElement, List<Integer>> dimOverlap, recOverlap;
 
-	protected SortingType sortingType = SortingType.probabilitySorting;
-	protected List<Integer> dimProbabilitySorting;
-	protected List<Integer> recProbabilitySorting;
-
-	protected int bcNr = -1;
+	protected final int bcNr;
 	protected HeaderBar headerBar;
 
 	protected float recThreshold = getRecThreshold();
@@ -129,9 +119,11 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 */
 	private int mouseOutDelay = Integer.MAX_VALUE;
 
-	public ClusterElement(TablePerspective data, BiClustering clustering) {
+	public ClusterElement(int bcNr, TablePerspective data, BiClustering clustering) {
 		setLayout(this);
 		setAnimateByDefault(false);
+
+		this.bcNr = bcNr;
 
 		this.headerBar = new HeaderBar();
 		this.add(headerBar);
@@ -314,13 +306,11 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		}
 	}
 
-	protected abstract void recreateVirtualArrays(List<Integer> dimIndices, List<Integer> recIndices);
-
 	private AllClustersElement findAllClustersElement() {
 		return findParent(AllClustersElement.class);
 	}
 
-	final void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
+	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
 		this.dimBandsEnabled = dimBandsEnabled;
 		this.recBandsEnabled = recBandsEnabled;
 		dimOverlap = new HashMap<>();
@@ -349,8 +339,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 				recordOverlapSize += eIndizes.size();
 			}
 		}
-		if (getVisibility() == EVisibility.PICKABLE)
-			sort(sortingType);
 		fireTablePerspectiveChanged();
 		updateVisibility();
 	}
@@ -771,8 +759,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	/**
-	 * @param first
-	 * @param second
+	 * whether the the first clusterelement is near enough to the second one given the stored maxDistance
+	 *
 	 * @return
 	 */
 	public boolean nearEnough(ClusterElement first, ClusterElement second) {
@@ -800,28 +788,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	@ListenTo
-	private void listenTo(LZThresholdChangeEvent event) {
-		if (getID().contains("Special")) {
-			System.out.println("Threshold Change");
-		}
-		if (!event.isGlobalEvent()) {
-			return;
-		}
-		if (bcNr == 0) {
-			System.out.println(recThreshold + " " + dimThreshold + " " + recNumberThreshold + " " + dimNumberThreshold);
-		}
-		recThreshold = event.getRecordThreshold();
-		dimThreshold = event.getDimensionThreshold();
-		recNumberThreshold = event.getRecordNumberThreshold();
-		dimNumberThreshold = event.getDimensionNumberThreshold();
-		if (bcNr == 0) {
-			System.out.println(recThreshold + " " + dimThreshold + " " + recNumberThreshold + " " + dimNumberThreshold);
-		}
-		rebuildMyData(event.isGlobalEvent());
-
-	}
-
-	@ListenTo
 	private void listenTo(MinClusterSizeThresholdChangeEvent event) {
 		this.clusterSizeThreshold = event.getMinClusterSize();
 		updateVisibility();
@@ -838,19 +804,12 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	public abstract boolean shouldBeVisible();
 
-	public abstract void setData(List<Integer> dimIndices, List<Integer> recIndices, String id, int bcNr,
-			double maxDim, double maxRec, double minDim, double minRec);
-
 	protected abstract void setLabel(String id);
 
 	@Override
 	public String getLabel() {
 		return getID();
 	}
-
-	protected abstract void setHasContent(List<Integer> dimIndices, List<Integer> recIndices);
-
-	protected abstract void sort(SortingType type);
 
 	public List<List<Integer>> getListOfContinousRecSequenzes(List<Integer> overlap) {
 		return getListOfContinousIDs2(overlap, getRecordVirtualArray().getIDs());
@@ -906,8 +865,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	public abstract float getRecPosOf(int index);
 
-	protected abstract void rebuildMyData(boolean isGlobal);
-
 	public int getDimIndexOf(int value) {
 		return getDimensionVirtualArray().indexOf(value);
 	}
@@ -952,14 +909,5 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		setLocation(getLocation().x() + pick.getDx(), getLocation().y() + pick.getDy());
 		relayout();
 		repaintPick();
-	}
-
-	protected static void addAll(VirtualArray array, List<Integer> indices, int treshold) {
-		array.clear();
-		if (treshold == UNBOUND_NUMBER) // unbound flush all
-			array.addAll(indices);
-		else
-			// sublist of the real elements
-			array.addAll(indices.subList(0, Math.min(indices.size(), treshold)));
 	}
 }

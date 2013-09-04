@@ -7,7 +7,6 @@ package org.caleydo.view.bicluster;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -36,15 +35,12 @@ import org.caleydo.core.view.opengl.canvas.ATableBasedView;
 import org.caleydo.core.view.opengl.canvas.IGLCanvas;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.view.AMultiTablePerspectiveElementView;
-import org.caleydo.view.bicluster.concurrent.ScanProbabilityMatrix;
-import org.caleydo.view.bicluster.concurrent.ScanResult;
-import org.caleydo.view.bicluster.elem.ClusterElement;
+import org.caleydo.view.bicluster.elem.BiClustering;
 import org.caleydo.view.bicluster.elem.GLRootElement;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
-import org.caleydo.view.bicluster.sorting.ASortingStrategy;
-import org.caleydo.view.bicluster.sorting.ProbabilityStrategy;
+import org.caleydo.view.bicluster.sorting.FuzzyClustering;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
@@ -69,14 +65,13 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 
 	private TablePerspective x, l, z;
 
-	private ExecutorService executorService = Executors.newFixedThreadPool(4);
-
 	private float dimThreshold = MyPreferences.getDimThreshold(); // 4.5f;
 	private float recThreshold = MyPreferences.getRecThreshold(); // 0.08f;
 	double maxDimThreshold = 0, maxRecThreshold = 0;
 	ASerializedView view;
 
 	GLRootElement rootElement;
+	private List<String> biClusterLabels = new ArrayList<>();
 
 	public GLBiCluster(IGLCanvas glCanvas, ASerializedView serializedView) {
 		super(glCanvas, VIEW_TYPE, VIEW_NAME);
@@ -84,9 +79,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	}
 
 	private List<TablePerspective> initTablePerspectives() {
-
 		List<TablePerspective> persp = new ArrayList<>();
-		if (x.getDataDomain().getAllTablePerspectives().size() == 1) {
+		if (x.getDataDomain().getAllTablePerspectives().size() == 1) { // first time
 			int bcCountData = l.getDataDomain().getTable().getColumnIDList()
 					.size(); // Nr of BCs in L & Z
 			ATableBasedDataDomain xDataDomain = x.getDataDomain();
@@ -113,15 +107,14 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 				rec.setLabel(z.getDataDomain().getDimensionLabel(i) + " Z");
 				persp.add(custom);
 			}
-		} else {
+		} else { // reuse
 			int i = 0;
 			int bcCount = l.getDataDomain().getTable().getColumnIDList().size();
 			for (i = 0; i < bcCount; i++) {
 				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i) + " L");
 			}
 //			System.out.println(biClusterLabels);
-			for (TablePerspective p : x.getDataDomain()
-					.getAllTablePerspectives()) {
+			for (TablePerspective p : x.getDataDomain().getAllTablePerspectives()) {
 				String name = p.getDimensionPerspective().getLabel();
 //				System.out.println(name);
 				if (biClusterLabels.contains(name)) {
@@ -132,57 +125,43 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		return persp;
 	}
 
-	private List<String> biClusterLabels = new ArrayList<>();
 
-	protected void createBiClusterPerspectives(TablePerspective x,
+	private Pair<List<FuzzyClustering>, List<FuzzyClustering>> createFuzzyClustering(TablePerspective x,
 			TablePerspective l, TablePerspective z) {
 
 		Table L = l.getDataDomain().getTable();
 		Table Z = z.getDataDomain().getTable();
-		int bcCountData = L.getColumnIDList().size(); // Nr of BCs in L & Z
+		int bcCountData = L.size(); // Nr of BCs in L & Z
 
-		// Tables indices for Genes and Tables of a specific BiCluster.
-		Map<Integer, Future<ScanResult>> bcDimScanFut = new HashMap<>();
-		Map<Integer, Future<ScanResult>> bcRecScanFut = new HashMap<>();
-		for (int bcNr = 0; bcNr < bcCountData; bcNr++) {
-			ASortingStrategy strategy = new ProbabilityStrategy(L, bcNr);
-			Future<ScanResult> recList = executorService
-					.submit(new ScanProbabilityMatrix(recThreshold, L, bcNr,
-							strategy));
-			strategy = new ProbabilityStrategy(Z, bcNr);
-			Future<ScanResult> dimList = executorService
-					.submit(new ScanProbabilityMatrix(dimThreshold, Z, bcNr,
-							strategy));
+		ExecutorService service = Executors.newFixedThreadPool(2);
+		Future<List<FuzzyClustering>> lClusterings = service.submit(new ScanLZTable(L));
+		Future<List<FuzzyClustering>> zClusterings = service.submit(new ScanLZTable(Z));
 
-			bcRecScanFut.put(bcNr, recList);
-			bcDimScanFut.put(bcNr, dimList);
-		}
-
-		// actually alter the cluster perspectives
-
-		for (Integer i : bcDimScanFut.keySet()) {
-			try {
-				ScanResult dimResult = bcDimScanFut.get(i).get();
-				ScanResult recResult = bcRecScanFut.get(i).get();
-				List<Integer> dimIndices = dimResult.getIndices();
-				List<Integer> recIndices = recResult.getIndices();
-				if (dimResult.getMax() > maxDimThreshold)
-					maxDimThreshold = dimResult.getMax();
-				if (recResult.getMax() > maxRecThreshold)
-					maxRecThreshold = recResult.getMax();
-				ClusterElement el = (ClusterElement) rootElement.getClusters()
-						.get(i);
-
+		try {
+			List<FuzzyClustering> lClustering = lClusterings.get();
+			List<FuzzyClustering> zClustering = zClusterings.get();
+			assert lClustering.size() == zClustering.size() && lClustering.size() == bcCountData;
+			float maxL = Float.NEGATIVE_INFINITY;
+			float maxZ = Float.NEGATIVE_INFINITY;
+			for(int i = 0; i < bcCountData; ++i) {
+				FuzzyClustering l_i = lClustering.get(i);
+				FuzzyClustering z_i = zClustering.get(i);
+				maxL = Math.max(maxL, l_i.getAbsMaxValue());
+				maxZ = Math.max(maxZ, z_i.getAbsMaxValue());
 				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i) + "L");
-				el.setData(dimIndices, recIndices, el.getTablePerspective().getLabel(), i, dimResult
-						.getMax(), recResult.getMax(), dimResult.getMin(),
-						recResult.getMin());
-			} catch (InterruptedException | ExecutionException
-					| NullPointerException e) {
-				e.printStackTrace();
 			}
+			maxRecThreshold = maxL;
+			maxDimThreshold = maxZ;
+			return Pair.make(lClustering, zClustering);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			throw new IllegalStateException(e);
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+			throw new IllegalStateException(e);
+		} finally {
+			service.shutdown();
 		}
-		rootElement.recalculateOverlap(MyPreferences.isShowDimBands(), MyPreferences.isShowRecBands());
 	}
 
 	/**
@@ -242,7 +221,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 
 	@Override
 	public String toString() {
-		return "BiCluster";
+		return "Furbi";
 	}
 
 	@Override
@@ -264,7 +243,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 				DataSupportDefinitions.numericalTables.asTablePerspectivePredicate()));
 
 		if (numerical.size() != 3) { // abort on on data
-			rootElement.setData(null, null, null, null, executorService);
+			rootElement.reset();
 			return;
 		}
 
@@ -274,27 +253,37 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 		TablePerspective z2 = xlz.get(2);
 
 		if (x2 != x || l2 != l || z2 != z) { // update x l z tables
+			EventPublisher.trigger(new DataSetSelectedEvent(x.getDataDomain()));
 			this.x = x2;
 			this.l = l2;
 			this.z = z2;
-			rootElement.setData(initTablePerspectives(), x, l, z,
-					executorService);
-			EventPublisher.trigger(new DataSetSelectedEvent(x.getDataDomain()));
-			// signal that we now use that data domain
-			createBiClusterPerspectives(x, l, z);
+			List<TablePerspective> clusterTablePerspectives = initTablePerspectives();
+			Pair<List<FuzzyClustering>, List<FuzzyClustering>> clusterings = createFuzzyClustering(x, l, z);
+
+			BiClustering biClustering = new BiClustering(asTable(x), asTable(l), asTable(z), clusterings.getFirst(),
+					clusterings.getSecond(), clusterTablePerspectives);
+			// actually alter the cluster perspectives
 			// createBiClusterPerspectives(x, l, z);
-			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold,
-					maxRecThreshold));
-			EventPublisher.trigger(new LZThresholdChangeEvent(recThreshold,
- dimThreshold,
- MyPreferences
-					.getRecTopNElements(), MyPreferences.getDimTopNElements(), true));
+			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold, maxRecThreshold));
+			EventPublisher.trigger(new LZThresholdChangeEvent(recThreshold, dimThreshold, MyPreferences.getRecTopNElements(), MyPreferences.getDimTopNElements(), true));
 			// rootElement.createBands();
+
+			// signal that we now use that data domain
+			rootElement.init(biClustering, x);
+			rootElement.recalculateOverlap(MyPreferences.isShowDimBands(), MyPreferences.isShowRecBands());
 			rootElement.setClusterSizes(null);
 		}
 
 		handleSpecialClusters(added, removed);
 		handleThresholds(added, removed);
+	}
+
+	/**
+	 * @param x2
+	 * @return
+	 */
+	private static Table asTable(TablePerspective x2) {
+		return x2.getDataDomain().getTable();
 	}
 
 	private void handleThresholds(List<TablePerspective> added, List<TablePerspective> removed) {

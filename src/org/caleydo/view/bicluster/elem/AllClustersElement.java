@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.DeepScan;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -70,17 +69,6 @@ public class AllClustersElement extends GLElementContainer {
 	 */
 	public List<AToolBarElement> getToolbars() {
 		return toolbars;
-	}
-
-	public void setData(List<TablePerspective> list, BiClustering clustering) {
-		this.clear();
-		if (list != null) {
-			System.out.println("List size: " + list.size());
-			for (TablePerspective p : list) {
-				final ClusterElement el = new NormalClusterElement(p, clustering);
-				this.add(el);
-			}
-		}
 	}
 
 	/**
