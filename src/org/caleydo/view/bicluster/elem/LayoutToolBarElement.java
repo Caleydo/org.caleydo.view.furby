@@ -82,7 +82,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 		createForceSliders();
 
 		GLElementContainer c = new GLElementContainer(GLLayouts.flowHorizontal(2));
-		this.maxDistance = GLSpinner.createIntegerSpinner(1, 1, 4, 1);
+		this.maxDistance = GLSpinner.createIntegerSpinner(1, 0, 4, 1);
 		maxDistance.setCallback(new IChangeCallback<Integer>() {
 			@Override
 			public void onValueChanged(GLSpinner<? extends Integer> spinner, Integer value) {

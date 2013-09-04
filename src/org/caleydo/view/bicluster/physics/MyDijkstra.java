@@ -32,9 +32,11 @@ public class MyDijkstra {
 			boolean recBands, boolean dimBands) {
 		if (source == target)
 			return 0;
+		final int invalid = Math.min(maxDistance + 1, Integer.MAX_VALUE);
+		if (maxDistance <= 0)
+			return invalid;
 		if (hasNeighbor(source, target, recBands, dimBands))
 			return 1;
-		final int invalid = Math.min(maxDistance + 1,Integer.MAX_VALUE);
 		if (maxDistance < 2)
 			return invalid;
 		Set<ClusterElement> done = Sets.newIdentityHashSet();
