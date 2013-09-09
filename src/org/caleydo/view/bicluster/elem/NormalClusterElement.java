@@ -95,6 +95,9 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.add(this.dimProbabilityHeatMap);
 		this.recProbailityHeatMap = new LZHeatmapElement(false);
 		this.add(this.recProbailityHeatMap);
+
+		this.add(new HeatMapLabelElement(true, data.getDimensionPerspective(), content));
+		this.add(new HeatMapLabelElement(false, data.getRecordPerspective(), content));
 	}
 
 	@Override
@@ -139,6 +142,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 		IGLLayoutElement left = children.get(3);
 		IGLLayoutElement dimthreshbar = children.get(4);
 		IGLLayoutElement recthreshbar = children.get(5);
+		IGLLayoutElement dimLabel = children.get(6);
+		IGLLayoutElement recLabel = children.get(7);
 
 		// shift for probability heat maps
 		float shift = isFocused() ? 20 : 6;
@@ -168,10 +173,14 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 		children.get(6).setBounds(-1, -shift, w + 2, shift);
 		children.get(7).setBounds(-shift, -1, shift, h + 2);
-		if (isFocused() && doesShowLabels(content.asElement())) {
-			content.setBounds(0, 0, w + 79, h + 79);
+
+		content.setBounds(0, 0, w, h);
+		if (isFocused()) {
+			dimLabel.setBounds(w, 0, 80, h);
+			recLabel.setBounds(0, h, w, 80);
 		} else {
-			content.setBounds(0, 0, w, h);
+			dimLabel.setBounds(w, 0, 0, h);
+			recLabel.setBounds(0, h, w, 0);
 		}
 	}
 

@@ -16,6 +16,7 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator;
 import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
 import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories;
@@ -28,9 +29,10 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.IAct
 import org.caleydo.view.heatmap.v2.AHeatMapElement;
 import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.CellSpace;
-import org.caleydo.view.heatmap.v2.EShowLabels;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.IBlockColorer;
+import org.caleydo.view.heatmap.v2.ISpacingStrategy;
+import org.caleydo.view.heatmap.v2.LinearBarHeatMapElement;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
 
 import com.google.common.base.Predicate;
@@ -42,8 +44,14 @@ import com.google.common.collect.Iterables;
  *
  */
 public class ClusterContentElement extends GLElementDecorator {
+	/**
+	 *
+	 */
+	private static final ISpacingStrategy FISH_EYE = SpacingStrategies.fishEye(18);
 	private final Collection<GLElement> repaintOnRepaint = new ArrayList<>(2);
 	private final TablePerspective data;
+	private final GLElementFactorySwitcher switcher;
+	private final ScrollingDecorator scroller;
 
 	/**
 	 * @param builder
@@ -57,24 +65,25 @@ public class ClusterContentElement extends GLElementDecorator {
 		this.data = context.getData();
 		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",
  filter);
-		GLElementFactorySwitcher content = new GLElementFactorySwitcher(extensions, ELazyiness.NONE);
-
-
-		setContent(content);
+		this.switcher = new GLElementFactorySwitcher(extensions, ELazyiness.NONE);
+		this.scroller = ScrollingDecorator.wrap(this.switcher, 10);
+		this.scroller.setEnabled(false);
+		setContent(this.scroller);
 	}
 
 	@Override
 	public void repaint() {
 		super.repaint();
-		GLElementAccessor.repaintDown(getContent());
+		GLElementAccessor.repaintDown(this.switcher);
 		for (GLElement r : repaintOnRepaint)
-			r.repaint();
+			if (r.getVisibility().doRender())
+				r.repaint();
 	}
 
 	@Override
 	public void repaintPick() {
 		super.repaintPick();
-		GLElementAccessor.repaintPickDown(getContent());
+		GLElementAccessor.repaintDown(this.switcher);
 	}
 
 	public void addRepaintOnRepaint(GLElement elem) {
@@ -88,46 +97,25 @@ public class ClusterContentElement extends GLElementDecorator {
 	/**
 	 * @param right
 	 */
-	public boolean showLabels(EShowLabels right) {
+	public boolean changeFocus(boolean focus) {
 		boolean any = false;
-		for (AHeatMapElement heatmap : Iterables.filter(getSwitcher().getInstances(), AHeatMapElement.class)) {
-			heatmap.setDimensionLabels(EShowLabels.RIGHT);
-			heatmap.setRecordLabels(EShowLabels.RIGHT);
-			heatmap.setRecordSpacingStrategy(SpacingStrategies.fishEye(18));
-			heatmap.setDimensionSpacingStrategy(SpacingStrategies.fishEye(18));
+		for (AHeatMapElement heatmap : Iterables.filter(switcher.getInstances(), AHeatMapElement.class)) {
+			if (focus) {
+				heatmap.setRecordSpacingStrategy(FISH_EYE);
+				heatmap.setDimensionSpacingStrategy(FISH_EYE);
+			} else {
+				heatmap.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
+				heatmap.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
+			}
 			any = true;
 		}
+		scroller.setEnabled(focus);
 		return any;
-	}
-
-	/**
-	 *
-	 */
-	public boolean hideLabels() {
-		boolean any = false;
-		for (AHeatMapElement elem : Iterables.filter(getSwitcher().getInstances(), AHeatMapElement.class)) {
-			elem.setDimensionLabels(EShowLabels.NONE);
-			elem.setRecordLabels(EShowLabels.NONE);
-			elem.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
-			elem.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
-			any = true;
-		}
-		return any;
-	}
-
-	boolean doesShowLabels() {
-		AHeatMapElement h = getHeatMap();
-		return h != null && h.getRecordLabels() == EShowLabels.RIGHT;
-	}
-
-	private GLElementFactorySwitcher getSwitcher() {
-		return (GLElementFactorySwitcher) getContent();
 	}
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		boolean labels = doesShowLabels();
-		g.color(Color.WHITE).fillRect(0, 0, w - (labels ? 79 : 0), h - (labels ? 79 : 0));
+		g.color(Color.WHITE).fillRect(0, 0, w, h);
 		super.renderImpl(g, w, h);
 
 		// render blend out overlay
@@ -144,7 +132,11 @@ public class ClusterContentElement extends GLElementDecorator {
 	}
 
 	boolean isShowingHeatMap() {
-		return getSwitcher().getActiveElement() instanceof HeatMapElement;
+		return switcher.getActiveElement() instanceof HeatMapElement;
+	}
+
+	boolean isShowingLinearPlot() {
+		return switcher.getActiveElement() instanceof LinearBarHeatMapElement;
 	}
 
 	public Vec2f getMinSize() {
@@ -157,8 +149,7 @@ public class ClusterContentElement extends GLElementDecorator {
 	 * @return
 	 */
 	private AHeatMapElement getHeatMap() {
-		GLElementFactorySwitcher s = getSwitcher();
-		GLElement activeElement = s.getActiveElement();
+		GLElement activeElement = switcher.getActiveElement();
 		if (activeElement instanceof AHeatMapElement)
 			return (AHeatMapElement) activeElement;
 		return null;
@@ -208,13 +199,13 @@ public class ClusterContentElement extends GLElementDecorator {
 	 * @param iActiveChangedCallback
 	 */
 	public void onActiveChanged(IActiveChangedCallback callback) {
-		getSwitcher().onActiveChanged(callback);
+		switcher.onActiveChanged(callback);
 	}
 
 	/**
 	 * @return
 	 */
 	public ButtonBarBuilder createButtonBarBuilder() {
-		return getSwitcher().createButtonBarBuilder();
+		return switcher.createButtonBarBuilder();
 	}
 }

@@ -182,11 +182,19 @@ public class GLRootElement extends GLElementContainer {
 		final double maxSize = maxDimClusterElements < maxRecClusterElements ? maxRecClusterElements
 				: maxDimClusterElements;
 
+		final Vec2f size = getSize();
 		for (GLElement iGL : clusters) {
 			ClusterElement i = (ClusterElement) iGL;
 			Vec2f preferredSize = i.getPreferredSize(dimScaleFactor, recScaleFactor);
 			double recSize = preferredSize.y() * scaleFactor;
 			double dimSize = preferredSize.x() * scaleFactor;
+			if (i.isFocused()) { // limit size for focused elements
+				double s = i.getScaleFactor();
+				double finalH = recSize * s;
+				double finalW = dimSize * s;
+				dimSize = Math.min(size.x() * 0.5, finalW) / s;
+				recSize = Math.min(size.y() * 0.5, finalH) / s;
+			}
 			i.setClusterSize(dimSize, recSize, maxSize, causer);
 			i.updateVisibility();
 			i.relayout();

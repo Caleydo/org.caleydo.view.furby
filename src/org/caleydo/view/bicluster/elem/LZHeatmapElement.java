@@ -21,9 +21,7 @@ import org.caleydo.core.util.function.IDoubleFunction;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
-import org.caleydo.view.bicluster.sorting.IntFloat;
 
-import com.google.common.collect.ImmutableList;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
 
@@ -221,12 +219,6 @@ public class LZHeatmapElement extends GLElement {
 		repaint();
 	}
 
-	private static float default_(ImmutableList<IntFloat> list, int index, float default_) {
-		if (list.isEmpty())
-			return default_;
-		return list.get(index < 0 ? list.size() - index : index).getProbability();
-	}
-
 	/**
 	 * @param clusterContentElement
 	 */
@@ -241,7 +233,7 @@ public class LZHeatmapElement extends GLElement {
 	 */
 	public void uniformLayout() {
 		if (spaceProvider != null)
-			spaceProvider.addRepaintOnRepaint(this);
+			spaceProvider.removeRepaintOnRepaint(this);
 		this.spaceProvider = null;
 		repaint();
 	}

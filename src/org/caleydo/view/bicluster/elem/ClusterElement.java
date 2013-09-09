@@ -569,6 +569,13 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	/**
+	 * @return the scaleFactor, see {@link #scaleFactor}
+	 */
+	public double getScaleFactor() {
+		return scaleFactor;
+	}
+
+	/**
 	 * @return the isFocused, see {@link #isFocused}
 	 */
 	public boolean isFocused() {

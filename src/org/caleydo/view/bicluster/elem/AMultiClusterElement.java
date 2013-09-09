@@ -10,12 +10,10 @@ import gleem.linalg.Vec2f;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
-import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
-import org.caleydo.view.heatmap.v2.EShowLabels;
 
 import com.google.common.base.Predicate;
 
@@ -35,14 +33,6 @@ public abstract class AMultiClusterElement extends ClusterElement {
 
 		content = createContent(predicate);
 		this.add(content);
-	}
-
-	/**
-	 * @param asElement
-	 * @return
-	 */
-	protected static boolean doesShowLabels(GLElement asElement) {
-		return (asElement instanceof ClusterContentElement && ((ClusterContentElement) asElement).doesShowLabels());
 	}
 
 	@Override
@@ -73,11 +63,7 @@ public abstract class AMultiClusterElement extends ClusterElement {
 	@Override
 	protected void handleFocus(boolean isFocused) {
 		super.handleFocus(isFocused);
-		if (isFocused) {
-			content.showLabels(EShowLabels.RIGHT);
-		} else {
-			content.hideLabels();
-		}
+		content.changeFocus(isFocused);
 	}
 
 	@Override
@@ -102,10 +88,13 @@ public abstract class AMultiClusterElement extends ClusterElement {
 
 	@Override
 	public final Vec2f getPreferredSize(float scaleX, float scaleY) {
-		if (!(content.isShowingHeatMap())) {
-			ClusterContentElement c = (content);
-			return c.getMinSize();
+		if (content.isShowingHeatMap()) {
+			return new Vec2f(getNumberOfDimElements() * scaleX, getNumberOfRecElements() * scaleY);
 		}
-		return new Vec2f(getNumberOfDimElements() * scaleX, getNumberOfRecElements() * scaleY);
+		if (content.isShowingLinearPlot()) {
+			return new Vec2f(getNumberOfDimElements() * scaleX, getNumberOfRecElements() * 2 * scaleY);
+		}
+		ClusterContentElement c = (content);
+		return c.getMinSize();
 	}
 }
