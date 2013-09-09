@@ -14,6 +14,8 @@ import org.caleydo.view.bicluster.util.Vec2d;
  *
  */
 public class Physics {
+	private static final double ENCLOSED_ELLIPSE_FACTOR = 0.5 * Math.sqrt(2);
+
 	/**
 	 * @return
 	 */
@@ -21,21 +23,26 @@ public class Physics {
 		return false; // change to true if you use circles
 	}
 
-	public static Vec2d distance(Rectangle2D a, Rectangle2D b) {
+	public static Distance distance(Rectangle2D a, Rectangle2D b) {
 		final Vec2d distVec = new Vec2d();
 		distVec.setX(a.getCenterX() - b.getCenterX());
 		distVec.setY(a.getCenterY() - b.getCenterY());
 		final double d = distVec.length();
 		distVec.scale(1. / d); // aka normalize
 
-		// final double d_real = aabbDistance(a, b, distVec, d);
-		final double d_real = ellipseDistance(a, b, distVec, d);
+		final double r1 = ellipseRadius(distVec, a.getWidth() * ENCLOSED_ELLIPSE_FACTOR, a.getHeight()
+				* ENCLOSED_ELLIPSE_FACTOR);
+		final double r2 = ellipseRadius(distVec, b.getWidth() * ENCLOSED_ELLIPSE_FACTOR, b.getHeight()
+				* ENCLOSED_ELLIPSE_FACTOR);
+		final double d_real = d - r1 - r2;
+		// // final double d_real = aabbDistance(a, b, distVec, d);
+		// // final double d_real = ellipseDistance(a, b, distVec, d);
 		// final double d_real = enclosedEllipseDistance(a, b, distVec, d);
-		// final double d_real = circleDistance(a, b, distVec, d);
-		// final double d_real = circleDiameterDistance(a, b, distVec, d);
+		// // final double d_real = circleDistance(a, b, distVec, d);
+		// // final double d_real = circleDiameterDistance(a, b, distVec, d);
 
 		distVec.scale(d_real);
-		return distVec;
+		return new Distance(distVec, d_real, r1, r2);
 	}
 
 	private static double aabbDistance(Rectangle2D a, Rectangle2D b, final Vec2d ray_dir, final double d) {
@@ -104,7 +111,7 @@ public class Physics {
 
 	private static double ellipseDistance(Rectangle2D a, Rectangle2D b, final Vec2d ray_dir, final double d) {
 		double r1 = ellipseRadius(ray_dir, a.getWidth() * 0.5, a.getHeight() * 0.5);
-		double r2 = ellipseRadius(ray_dir, b.getWidth() * 0.5, b.getHeight() * 0.5f);
+		double r2 = ellipseRadius(ray_dir, b.getWidth() * 0.5, b.getHeight() * 0.5);
 		final double d_real = d - r1 - r2;
 		return d_real;
 	}
@@ -119,8 +126,9 @@ public class Physics {
 
 	private static double enclosedEllipseDistance(Rectangle2D a, Rectangle2D b, final Vec2d ray_dir, final double d) {
 		// FIXME compute from the diameter of the rect a ellipse that touches it
-		double r1 = ellipseRadius(ray_dir, a.getWidth() * 0.5, a.getHeight() * 0.5);
-		double r2 = ellipseRadius(ray_dir, b.getWidth() * 0.5, b.getHeight() * 0.5);
+		final double factor = ENCLOSED_ELLIPSE_FACTOR;
+		double r1 = ellipseRadius(ray_dir, a.getWidth() * factor, a.getHeight() * factor);
+		double r2 = ellipseRadius(ray_dir, b.getWidth() * factor, b.getHeight() * factor);
 		final double d_real = d - r1 - r2;
 		return d_real;
 	}
@@ -177,6 +185,45 @@ public class Physics {
 		final double c_real = circleDistance(a, b, distVec, d);
 		final double d_real = circleDiameterDistance(a, b, distVec, d);
 		System.out.format("%f\t%f\t%f\t%f\t%f\n", a_real, e_real, e2_real, c_real, d_real);
+
+	}
+
+	public static final class Distance extends Vec2d {
+		private final double distance;
+		private final double r1;
+		private final double r2;
+
+		public Distance(Vec2d v, double distance, double r1, double r2) {
+			super(v);
+			this.distance = distance;
+			this.r1 = r1;
+			this.r2 = r2;
+		}
+
+		/**
+		 * @return the r1, see {@link #r1}
+		 */
+		public double getR1() {
+			return r1;
+		}
+
+		/**
+		 * @return the r2, see {@link #r2}
+		 */
+		public double getR2() {
+			return r2;
+		}
+
+		/**
+		 * @return the distance, see {@link #distance}
+		 */
+		public double getDistance() {
+			return distance;
+		}
+
+		public boolean isIntersection() {
+			return distance < 0;
+		}
 
 	}
 }

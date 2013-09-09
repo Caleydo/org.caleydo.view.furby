@@ -73,15 +73,22 @@ public class GLRootElement extends GLElementContainer {
 			@Override
 			public void pick(Pick pick) {
 				if (pick.getPickingMode() == PickingMode.MOUSE_WHEEL && ((IMouseEvent) pick).isCtrlDown()) {
-					scaleFactor = Math.max(0.2, scaleFactor
-							* (((IMouseEvent) pick).getWheelRotation() > 0 ? 1.1 : 1 / 1.1));
-					setClusterSizes(null);
+					setScaleFactor(Math.max(0.2, scaleFactor
+							* (((IMouseEvent) pick).getWheelRotation() > 0 ? 1.1 : 1 / 1.1)));
 				}
 			}
 		});
 		this.add(zoomLayer);
 
 		clusters.setToolBars(parameterToolBar, layoutToolBar);
+	}
+
+	/**
+	 * @param max
+	 */
+	protected void setScaleFactor(double factor) {
+		scaleFactor = factor;
+		setClusterSizes(null);
 	}
 
 	@Override

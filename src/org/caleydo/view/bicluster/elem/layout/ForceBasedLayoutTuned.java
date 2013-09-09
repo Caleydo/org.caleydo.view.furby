@@ -57,15 +57,26 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 			bringClustersBackToFrame(bodies, w, h);
 			clearClusterCollisions(bodies, toolBars, w, h);
 
+			// calculate the attraction based on the size of all overlaps
+			int xOverlapSize = 0, yOverlapSize = 0;
 			for (ForcedBody body : bodies) {
 				if (body.isFocussed()) {
 					body.setLocation(w * 0.5f, h * 0.5f);
 				}
+				ClusterElement v = body.asClusterElement();
+				xOverlapSize += v.getDimensionOverlapSize();
+				yOverlapSize += v.getRecordOverlapSize();
 			}
+			final double attraction = attractionFactor / (xOverlapSize + yOverlapSize);
+
+			// TODO: magic numbers?
+			xOverlapSize *= 2;
+			yOverlapSize /= 3;
+
 			int iterations = Math.max(1, computeNumberOfIterations(deltaTimeMs));
 			for (int i = 0; i < iterations; i++) {
 				double frameFactor = 1;
-				forceDirectedLayout(bodies, toolBars, w, h, frameFactor);
+				forceDirectedLayout(bodies, toolBars, w, h, frameFactor, attraction, xOverlapSize);
 			}
 		}
 		double totalDistanceSquared = 0;
@@ -173,24 +184,11 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 	 * @param children2
 	 * @param w
 	 * @param h
+	 * @param attraction
 	 */
 	private void forceDirectedLayout(List<ForcedBody> bodies, List<ForcedBody> fixedBodies, float w, float h,
-			double frameFactor) {
+			double frameFactor, double attraction, int xOverlapSize) {
 
-		// calculate the attraction based on the size of all overlaps
-		double xOverlapSize = 0, yOverlapSize = 0;
-		for (ForcedBody body : bodies) {
-			ClusterElement v = body.asClusterElement();
-			xOverlapSize += v.getDimensionOverlapSize();
-			yOverlapSize += v.getRecordOverlapSize();
-		}
-		final double attractionX = attractionFactor / (xOverlapSize + yOverlapSize);
-		final double attractionY = attractionFactor / (yOverlapSize + xOverlapSize);
-		// -> attractionX = attrationY
-		// TODO: magic numbers?
-
-		xOverlapSize *= 2;
-		yOverlapSize /= 3;
 
 		final int size = bodies.size();
 
@@ -224,8 +222,8 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 			}
 			final double repForceX = checkPlausibility(body.repForceX * repulsion);
 			final double repForceY = checkPlausibility(body.repForceY * repulsion);
-			double attForceX = checkPlausibility(body.attForceX * attractionX);
-			double attForceY = checkPlausibility(body.attForceY * attractionY);
+			double attForceX = checkPlausibility(body.attForceX * attraction);
+			double attForceY = checkPlausibility(body.attForceY * attraction);
 			if (xOverlapSize < 3) {
 				attForceX *= 0.2;
 				attForceY *= 0.2;
