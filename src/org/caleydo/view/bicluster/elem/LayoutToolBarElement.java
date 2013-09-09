@@ -208,7 +208,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-205, 365 + 20, 200, 256);
+		return new Rect(-205, 365 + 20 + 20, 200, 256);
 	}
 
 }

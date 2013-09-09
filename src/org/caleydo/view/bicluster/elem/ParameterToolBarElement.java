@@ -26,12 +26,17 @@ import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.EButtonMode;
+import org.caleydo.core.view.opengl.layout2.basic.GLComboBox;
+import org.caleydo.core.view.opengl.layout2.basic.GLComboBox.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.basic.GLSpinner;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementSupplier;
+import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
@@ -41,6 +46,7 @@ import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
+import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.util.ImportChemicalClustersDialog;
 import org.caleydo.view.bicluster.util.ImportExternalDialog;
@@ -74,6 +80,8 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 	private GLElement clusterMinSizeLabel;
 	private GLSlider clusterMinSizeThresholdSlider;
 
+	private GLComboBox<GLElementSupplier> visualizationSwitcher;
+	private List<GLElementSupplier> visualizationSwitcherModel = new ArrayList<>();
 
 	private TablePerspective x;
 
@@ -134,8 +142,37 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		recBandVisibilityButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(recBandVisibilityButton);
 
+		visualizationSwitcher = new GLComboBox<>(visualizationSwitcherModel, new IGLRenderer() {
+
+			@Override
+			public void render(GLGraphics g, float w, float h, GLElement parent) {
+				float wi = h - 2;
+				GLElementSupplier elem = parent.getLayoutDataAs(GLElementSupplier.class, null);
+				g.fillImage(elem.getIcon(), 1, 1, wi, wi);
+				g.drawText(elem.getLabel(), wi + 3, 1, w - wi - 5, h - 2);
+			}
+		}, GLRenderers.fillRect(Color.WHITE));
+		visualizationSwitcher.setCallback(new ISelectionCallback<GLElementSupplier>() {
+			@Override
+			public void onSelectionChanged(GLComboBox<? extends GLElementSupplier> widget, GLElementSupplier item) {
+				EventPublisher.trigger(new SwitchVisualizationEvent(item.getId()));
+			}
+		});
+		visualizationSwitcher.setSize(Float.NaN, BUTTON_WIDTH);
+		visualizationSwitcher.setzDelta(0.2f);
+		this.add(visualizationSwitcher);
+
 		createThresholdSlider();
 		createMinimumClusterSizeSlider();
+	}
+
+	/**
+	 * @return
+	 */
+	private static List<GLElementSupplier> createSupplier(TablePerspective data) {
+		GLElementFactoryContext.Builder builder = GLElementFactoryContext.builder();
+		builder.withData(data);
+		return GLElementFactories.getExtensions(builder.build(), "bicluster", null);
 	}
 
 	private GLElement createHorizontalLine() {
@@ -335,6 +372,9 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 				+ " Bands"));
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(x.getDataDomain().getDimensionIDCategory()
 				.toString()));
+
+		this.visualizationSwitcherModel.addAll(createSupplier(x));
+		this.visualizationSwitcher.setSelected(0);
 	}
 
 	/**
@@ -342,7 +382,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-205, 0, 200, 365);
+		return new Rect(-205, 0, 200, 365 + 20);
 	}
 
 	private static class MyTextRender implements IGLRenderer {

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
@@ -27,11 +28,10 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Build
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.ELazyiness;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.IActiveChangedCallback;
+import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.heatmap.v2.AHeatMapElement;
-import org.caleydo.view.heatmap.v2.BasicBlockColorer;
 import org.caleydo.view.heatmap.v2.CellSpace;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
-import org.caleydo.view.heatmap.v2.IBlockColorer;
 import org.caleydo.view.heatmap.v2.ISpacingStrategy;
 import org.caleydo.view.heatmap.v2.LinearBarHeatMapElement;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
@@ -61,7 +61,6 @@ public class ClusterContentElement extends GLElementDecorator {
 	public ClusterContentElement(Builder builder, Predicate<? super String> filter) {
 		builder.set("histogram.showColorMapper", false); // don't show the color mapper
 		builder.set("heatmap.linearBar.scaleLocally"); // scale plot per table perspective
-		builder.put(IBlockColorer.class, BasicBlockColorer.INSTANCE);
 		GLElementFactoryContext context = builder.build();
 		this.data = context.getData();
 		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",
@@ -95,6 +94,16 @@ public class ClusterContentElement extends GLElementDecorator {
 		this.repaintOnRepaint.remove(elem);
 	}
 
+	@ListenTo
+	private void onSwitchVisualizationEvent(SwitchVisualizationEvent event) {
+		String target = event.getId();
+		for (GLElementSupplier s : switcher) {
+			if (s.getId().equals(target)) {
+				switcher.setActive(s);
+				break;
+			}
+		}
+	}
 	/**
 	 * @param right
 	 */
@@ -141,7 +150,7 @@ public class ClusterContentElement extends GLElementDecorator {
 	}
 
 	public Vec2f getMinSize() {
-		IHasMinSize minSize = getContent().getLayoutDataAs(IHasMinSize.class, null);
+		IHasMinSize minSize = switcher.getLayoutDataAs(IHasMinSize.class, null);
 		if (minSize != null)
 			return minSize.getMinSize();
 		return getContent().getLayoutDataAs(Vec2f.class, new Vec2f(data.getNrDimensions(), data.getNrRecords()));
