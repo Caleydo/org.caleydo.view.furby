@@ -198,7 +198,7 @@ public class LZHeatmapElement extends GLElement {
 				min = v_a;
 			if (last < 0 && v > 0 && !multiCenter) {
 				multiCenter = center >= 0; // already set a center -> multi center
-				center = i;
+				center = i - 1; // before me
 			}
 			last = v;
 		}
