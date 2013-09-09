@@ -7,6 +7,7 @@ package org.caleydo.view.bicluster;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,6 +25,7 @@ import org.caleydo.core.data.datadomain.IDataSupportDefinition;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.perspective.variable.Perspective;
 import org.caleydo.core.data.perspective.variable.PerspectiveInitializationData;
+import org.caleydo.core.event.EventListenerManager.DeepScan;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.event.data.DataSetSelectedEvent;
 import org.caleydo.core.id.IDCategory;
@@ -32,7 +34,9 @@ import org.caleydo.core.serialize.ASerializedView;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.view.opengl.canvas.AGLView;
 import org.caleydo.core.view.opengl.canvas.ATableBasedView;
+import org.caleydo.core.view.opengl.canvas.GLThreadListenerWrapper;
 import org.caleydo.core.view.opengl.canvas.IGLCanvas;
+import org.caleydo.core.view.opengl.canvas.IGLKeyListener;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.view.AMultiTablePerspectiveElementView;
 import org.caleydo.view.bicluster.elem.BiClustering;
@@ -43,6 +47,7 @@ import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -59,7 +64,7 @@ import com.google.common.collect.Lists;
  * @author Marc Streit
  */
 
-public class GLBiCluster extends AMultiTablePerspectiveElementView {
+public class GLBiCluster extends AMultiTablePerspectiveElementView implements IGLKeyListener {
 	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
 	public static final String VIEW_NAME = "Bicluster";
 
@@ -71,58 +76,82 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 	ASerializedView view;
 
 	GLRootElement rootElement;
-	private List<String> biClusterLabels = new ArrayList<>();
+
+	@DeepScan
+	private final IGLKeyListener focusSwitcher = GLThreadListenerWrapper.wrap(this);
 
 	public GLBiCluster(IGLCanvas glCanvas, ASerializedView serializedView) {
 		super(glCanvas, VIEW_TYPE, VIEW_NAME);
 		this.view = serializedView;
+		glCanvas.addKeyListener(focusSwitcher);
+	}
+
+	@Override
+	public void keyPressed(IKeyEvent e) {
+		// dummy
+	}
+
+	@Override
+	public void keyReleased(IKeyEvent e) {
+		if (rootElement == null)
+			return;
+		if (e.isKey(ESpecialKey.LEFT))
+			rootElement.focusPrevious();
+		else if (e.isKey(ESpecialKey.RIGHT))
+			rootElement.focusNext();
 	}
 
 	private List<TablePerspective> initTablePerspectives() {
 		List<TablePerspective> persp = new ArrayList<>();
-		if (x.getDataDomain().getAllTablePerspectives().size() == 1) { // first time
-			int bcCountData = l.getDataDomain().getTable().getColumnIDList()
-					.size(); // Nr of BCs in L & Z
-			ATableBasedDataDomain xDataDomain = x.getDataDomain();
-			Table xtable = xDataDomain.getTable();
-			IDType xdimtype = xDataDomain.getDimensionIDType();
-			IDType xrectype = xDataDomain.getRecordIDType();
-			for (Integer i = 0; i < bcCountData; i++) {
-				Perspective dim = new Perspective(xDataDomain, xdimtype);
-				Perspective rec = new Perspective(xDataDomain, xrectype);
-				PerspectiveInitializationData dim_init = new PerspectiveInitializationData();
-				PerspectiveInitializationData rec_init = new PerspectiveInitializationData();
-				dim_init.setData(new ArrayList<Integer>());
-				rec_init.setData(new ArrayList<Integer>());
-				dim.init(dim_init);
-				rec.init(rec_init);
-				xtable.registerDimensionPerspective(dim, false);
-				xtable.registerRecordPerspective(rec, false);
-				String dimKey = dim.getPerspectiveID();
-				String recKey = rec.getPerspectiveID();
-				TablePerspective custom = xDataDomain.getTablePerspective(
-						recKey, dimKey, false);
-				custom.setLabel(l.getDataDomain().getDimensionLabel(i));
-				dim.setLabel(l.getDataDomain().getDimensionLabel(i) + " L");
-				rec.setLabel(z.getDataDomain().getDimensionLabel(i) + " Z");
-				persp.add(custom);
-			}
-		} else { // reuse
-			int i = 0;
-			int bcCount = l.getDataDomain().getTable().getColumnIDList().size();
-			for (i = 0; i < bcCount; i++) {
-				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i) + " L");
-			}
-//			System.out.println(biClusterLabels);
-			for (TablePerspective p : x.getDataDomain().getAllTablePerspectives()) {
+		ATableBasedDataDomain xDataDomain = x.getDataDomain();
+		Table xtable = xDataDomain.getTable();
+		IDType xdimtype = xDataDomain.getDimensionIDType();
+		IDType xrectype = xDataDomain.getRecordIDType();
+
+		final Collection<TablePerspective> existing = ImmutableList.copyOf(x.getDataDomain().getAllTablePerspectives());
+		final int bcCount = l.getDataDomain().getTable().getColumnIDList().size(); // Nr of BCs in L & Z
+
+		for (int i = 0; i < bcCount; i++) {
+			final String act = l.getDataDomain().getDimensionLabel(i) + " L";
+
+			// slower but preserves the correct order
+			boolean found = false;
+			for (TablePerspective p : existing) {
 				String name = p.getDimensionPerspective().getLabel();
-//				System.out.println(name);
-				if (biClusterLabels.contains(name)) {
+				// System.out.println(name);
+				if (act.equals(name)) {
 					persp.add(p);
+					found = true;
+					break;
 				}
+			}
+			if (!found) {// create new one
+				persp.add(createTablePerspective(xDataDomain, xtable, xdimtype, xrectype, i));
 			}
 		}
 		return persp;
+	}
+
+	private TablePerspective createTablePerspective(ATableBasedDataDomain xDataDomain, Table xtable, IDType xdimtype,
+			IDType xrectype, int i) {
+		Perspective dim = new Perspective(xDataDomain, xdimtype);
+		Perspective rec = new Perspective(xDataDomain, xrectype);
+		PerspectiveInitializationData dim_init = new PerspectiveInitializationData();
+		PerspectiveInitializationData rec_init = new PerspectiveInitializationData();
+		dim_init.setData(new ArrayList<Integer>());
+		rec_init.setData(new ArrayList<Integer>());
+		dim.init(dim_init);
+		rec.init(rec_init);
+		xtable.registerDimensionPerspective(dim, false);
+		xtable.registerRecordPerspective(rec, false);
+		String dimKey = dim.getPerspectiveID();
+		String recKey = rec.getPerspectiveID();
+		TablePerspective custom = xDataDomain.getTablePerspective(
+				recKey, dimKey, false);
+		custom.setLabel(l.getDataDomain().getDimensionLabel(i));
+		dim.setLabel(l.getDataDomain().getDimensionLabel(i) + " L");
+		rec.setLabel(z.getDataDomain().getDimensionLabel(i) + " Z");
+		return custom;
 	}
 
 
@@ -148,7 +177,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView {
 				FuzzyClustering z_i = zClustering.get(i);
 				maxL = Math.max(maxL, l_i.getAbsMaxValue());
 				maxZ = Math.max(maxZ, z_i.getAbsMaxValue());
-				biClusterLabels.add(l.getDataDomain().getDimensionLabel(i) + "L");
 			}
 			maxRecThreshold = maxL;
 			maxDimThreshold = maxZ;

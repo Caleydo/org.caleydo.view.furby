@@ -8,6 +8,8 @@ package org.caleydo.view.bicluster.elem;
 import gleem.linalg.Vec2f;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -383,6 +385,48 @@ public class GLRootElement extends GLElementContainer {
 
 	public boolean isAnyDimSelected(Collection<Integer> ids, SelectionType... toCheck) {
 		return isAnySelected(ids, bands.getRecordSelectionManager(), toCheck);
+	}
+
+	/**
+	 * focus on the next logical cluster
+	 */
+	public void focusPrevious() {
+		NormalClusterElement prev = null;
+		for (NormalClusterElement cluster : getSortedClusters()) {
+			if (cluster.isFocused() && prev != null) {
+				cluster.setFocus(false);
+				prev.setFocus(true);
+				break;
+			}
+			prev = cluster;
+		}
+	}
+
+	private List<NormalClusterElement> getSortedClusters() {
+		List<NormalClusterElement> c = Lists.newArrayList(Iterables.filter(clusters, NormalClusterElement.class));
+		Collections.sort(c, new Comparator<NormalClusterElement>() {
+			@Override
+			public int compare(NormalClusterElement o1, NormalClusterElement o2) {
+				return o1.getBiClusterNumber() - o2.getBiClusterNumber();
+			}
+		});
+		return c;
+	}
+
+	/**
+	 * focus on the previous logical cluster
+	 */
+	public void focusNext() {
+		NormalClusterElement act = null;
+		for (NormalClusterElement cluster : getSortedClusters()) {
+			if (act != null) {
+				act.setFocus(false);
+				cluster.setFocus(true);
+				break;
+			}
+			if (cluster.isFocused())
+				act = cluster;
+		}
 	}
 
 }

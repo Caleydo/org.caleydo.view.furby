@@ -508,7 +508,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 				reduceScaleFactor();
 				resize();
 			} else if (button == focus) {
-				EventPublisher.trigger(new FocusChangeEvent(NormalClusterElement.this, selected));
+				setFocus(selected);
 			} else if (button == lock) {
 				isLocked = !isLocked;
 				lock.setTooltip(isLocked ? "UnLock this cluster. It will again recieve threshold updates."
@@ -516,5 +516,12 @@ public class NormalClusterElement extends AMultiClusterElement {
 			}
 		}
 
+	}
+
+	/**
+	 * @param b
+	 */
+	public void setFocus(boolean doFocus) {
+		EventPublisher.trigger(new FocusChangeEvent(NormalClusterElement.this, doFocus));
 	}
 }
