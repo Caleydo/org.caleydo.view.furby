@@ -24,7 +24,6 @@ import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
 
@@ -80,7 +79,7 @@ public class LZHeatmapElement extends GLElement {
 		gl.glBegin(GL2GL3.GL_QUADS);
 		if (spaceProvider == null || factor >= 1) {
 			rect(0, 1, 0, 1, gl);
-			centerPos = center * factor;
+			centerPos = center > 0 ? center * factor : 0;
 		} else {
 			int x = 0;
 			int acc = 0;
@@ -113,7 +112,8 @@ public class LZHeatmapElement extends GLElement {
 		texture.disable(gl);
 		g.checkError();
 
-		if (center >= 0) {
+		// System.out.println(center + " " + centerPos);
+		if (center != -2) {
 			g.lineWidth(3).color(Color.BLUE);
 			if (horizontal)
 				g.drawLine(centerPos, 0, centerPos, 1);
@@ -147,33 +147,6 @@ public class LZHeatmapElement extends GLElement {
 		}
 	}
 
-	public void update(ImmutableList<IntFloat> negatives, ImmutableList<IntFloat> positives) {
-		if (texture == null)
-			return;
-
-		int width = negatives.size() + positives.size();
-		if (width <= 0) {
-			setVisibility(EVisibility.HIDDEN);
-			return;
-		}
-
-		this.center = negatives.size();
-
-		// find max = at the corners
-		float max = Math.max(-default_(negatives, 0, Float.POSITIVE_INFINITY),
-				default_(positives, -1, Float.NEGATIVE_INFINITY));
-		// finx min = nearest to zero
-		float min = Math.max(-default_(negatives, -1, Float.NEGATIVE_INFINITY),
-				default_(positives, 0, Float.POSITIVE_INFINITY));
-
-		IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
-				DoubleFunctions.normalize(min, max));
-
-		Iterable<Float> data = Iterables.transform(Iterables.concat(negatives, positives), IntFloat.TO_PROBABILITY);
-
-		update(width, transform, data);
-	}
-
 	public void update(List<Float> data) {
 		if (texture == null)
 			return;
@@ -205,7 +178,15 @@ public class LZHeatmapElement extends GLElement {
 			}
 			last = v;
 		}
-		this.center = multiCenter ? -1 : center;
+		if (multiCenter)
+			this.center = -2;
+		else if (center != -1)
+			this.center = center;//in the middle
+		else if (last > 0) // all positive
+			this.center = -1; //first
+		else
+			// all negative
+			this.center = width-1; //last
 
 		IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
 				DoubleFunctions.normalize(min, max));

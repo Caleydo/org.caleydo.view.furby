@@ -21,6 +21,7 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.EButtonMode;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
@@ -94,6 +95,11 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.add(this.dimProbabilityHeatMap);
 		this.recProbailityHeatMap = new LZHeatmapElement(false);
 		this.add(this.recProbailityHeatMap);
+	}
+
+	@Override
+	protected void init(IGLElementContext context) {
+		super.init(context);
 
 		resort();
 		updateVisibility();
