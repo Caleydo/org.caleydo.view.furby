@@ -18,6 +18,7 @@ import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator;
 import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
+import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementSupplier;
@@ -207,5 +208,20 @@ public class ClusterContentElement extends GLElementDecorator {
 	 */
 	public ButtonBarBuilder createButtonBarBuilder() {
 		return switcher.createButtonBarBuilder();
+	}
+
+	/**
+	 * @return
+	 *
+	 */
+	public Rect getClippingArea() {
+		return scroller.getClipingArea();
+	}
+
+	/**
+	 * @param iHasMinSize
+	 */
+	public void setMinSizeProvider(IHasMinSize minSizeProvider) {
+		scroller.setMinSizeProvider(minSizeProvider);
 	}
 }

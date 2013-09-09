@@ -11,9 +11,12 @@ import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.view.heatmap.v2.CellSpace;
 
 /**
+ * element for rendering the label of a heatmap or linear plot
+ *
  * @author Samuel Gratzl
  *
  */
@@ -37,29 +40,42 @@ public class HeatMapLabelElement extends GLElement {
 		final ATableBasedDataDomain dataDomain = (ATableBasedDataDomain) perspective.getDataDomain();
 		VirtualArray va = perspective.getVirtualArray();
 
+		Rect clipingArea = spaceProvider.getClippingArea();
 		if (horizontal) {
 			g.save();
 			g.gl.glRotatef(-90, 0, 0, 1);
+			float offset = -clipingArea.x();
 			for (int i = 0; i < va.size(); ++i) {
 				Integer id = va.get(i);
 				String text = dataDomain.getDimensionLabel(id);
 				CellSpace cell = spaceProvider.getDimensionCell(i);
 				float x = cell.getPosition();
 				float fieldWidth = cell.getSize();
+				if (fieldWidth < 5)
+					continue;
+				if (x < clipingArea.x() || (x + fieldWidth) > clipingArea.x2())
+					continue;
+
 				float textHeight = Math.min(fieldWidth, MAX_TEXT_HEIGHT);
-				g.drawText(text, -h - MAX_TEXT_WIDTH, x + (fieldWidth - textHeight) * 0.5f, MAX_TEXT_WIDTH
+				g.drawText(text, -MAX_TEXT_WIDTH, offset + x + (fieldWidth - textHeight) * 0.5f, MAX_TEXT_WIDTH
 						- TEXT_OFFSET, textHeight, VAlign.RIGHT);
 			}
 			g.restore();
 		} else {
+			float offset = -clipingArea.y();
 			for (int i = 0; i < va.size(); ++i) {
 				Integer id = va.get(i);
 				String text = dataDomain.getRecordLabel(id);
 				CellSpace cell = spaceProvider.getRecordCell(i);
 				float y = cell.getPosition();
 				float fieldHeight = cell.getSize();
+				if (fieldHeight < 5)
+					continue;
+				if (y < clipingArea.y() || (y + fieldHeight) > clipingArea.y2())
+					continue;
 				float textHeight = Math.min(fieldHeight, MAX_TEXT_HEIGHT);
-				g.drawText(text, w + TEXT_OFFSET, y + (fieldHeight - textHeight) * 0.5f, MAX_TEXT_WIDTH, textHeight,
+				g.drawText(text, TEXT_OFFSET, offset + y + (fieldHeight - textHeight) * 0.5f, MAX_TEXT_WIDTH,
+						textHeight,
 						VAlign.LEFT);
 			}
 		}

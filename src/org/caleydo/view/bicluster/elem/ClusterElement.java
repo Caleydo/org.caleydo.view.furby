@@ -564,7 +564,17 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	protected void resize() {
-		setSize((float) (dimSize * scaleFactor), (float) (recSize * scaleFactor));
+		float targetX = (float) (dimSize * scaleFactor);
+		float targetY = (float) (recSize * scaleFactor);
+		setLayoutData(new Vec2f(targetX, targetY));
+		IGLLayoutElement layoutElement = GLElementAccessor.asLayoutElement(this);
+		if (isFocused()) {
+			Vec2f size = getParent().getSize();
+			targetX = Math.min(targetX, size.x() * 0.7f);
+			targetY = Math.min(targetY, size.y() * 0.9f);
+		}
+		layoutElement.setSize(targetX, targetY);
+		relayoutParent();
 		relayout();
 	}
 
@@ -869,9 +879,9 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return ImmutableList.copyOf(sequences);
 	}
 
-	public abstract float getDimPosOf(int index);
+	public abstract float getDimPosOf(int id);
 
-	public abstract float getRecPosOf(int index);
+	public abstract float getRecPosOf(int id);
 
 	public int getDimIndexOf(int value) {
 		return getDimensionVirtualArray().indexOf(value);

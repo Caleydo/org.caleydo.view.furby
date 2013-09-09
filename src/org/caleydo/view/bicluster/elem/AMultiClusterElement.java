@@ -10,6 +10,7 @@ import gleem.linalg.Vec2f;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
+import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
@@ -56,6 +57,12 @@ public abstract class AMultiClusterElement extends ClusterElement {
 				EventPublisher.trigger(new ClusterScaleEvent(AMultiClusterElement.this));
 			}
 		});
+		c.setMinSizeProvider(new IHasMinSize() {
+			@Override
+			public Vec2f getMinSize() {
+				return getLayoutDataAs(Vec2f.class, getPreferredSize(1, 1));
+			}
+		});
 		return c;
 	}
 
@@ -67,22 +74,22 @@ public abstract class AMultiClusterElement extends ClusterElement {
 	}
 
 	@Override
-	public final float getDimPosOf(int index) {
+	public final float getDimPosOf(int id) {
 		if (isFocused()) {
-			int ind = getDimensionVirtualArray().indexOf(index);
+			int ind = getDimensionVirtualArray().indexOf(id);
 			return content.getDimensionPos(ind);
 		} else {
-			return getDimIndexOf(index) * getSize().x() / getDimensionVirtualArray().size();
+			return getDimIndexOf(id) * getSize().x() / getDimensionVirtualArray().size();
 		}
 	}
 
 	@Override
-	public final float getRecPosOf(int index) {
+	public final float getRecPosOf(int id) {
 		if (isFocused()) {
-			int ind = getRecordVirtualArray().indexOf(index);
+			int ind = getRecordVirtualArray().indexOf(id);
 			return content.getRecordPos(ind);
 		} else {
-			return getRecIndexOf(index) * getSize().y() / getRecordVirtualArray().size();
+			return getRecIndexOf(id) * getSize().y() / getRecordVirtualArray().size();
 		}
 	}
 

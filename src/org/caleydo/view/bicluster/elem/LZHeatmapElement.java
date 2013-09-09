@@ -21,6 +21,8 @@ import org.caleydo.core.util.function.IDoubleFunction;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
+import org.caleydo.core.view.opengl.layout2.geom.Rect;
+import org.caleydo.view.heatmap.v2.CellSpace;
 
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
@@ -69,77 +71,101 @@ public class LZHeatmapElement extends GLElement {
 		g.color(Color.WHITE);
 		g.save();
 		gl.glTranslatef(0, 0, g.z());
-		gl.glScalef(w, h, 1.f);
-		final int size = texture.getWidth();
-		final float factor = 1.f / size;
+
+		final float s_factor = 1.f / texture.getWidth();
+		final float size = horizontal ? w : h;
+		final float op_size = horizontal ? h : w;
 
 		float centerPos = 0;
 		gl.glBegin(GL2GL3.GL_QUADS);
-		if (spaceProvider == null || factor >= 1) {
-			rect(0, 1, 0, 1, gl);
-			centerPos = center > 0 ? center * factor : 0;
+		if (spaceProvider == null) {
+			rect(0, 1, 0, size, op_size, gl);
+			centerPos = center > 0 ? center * size * s_factor : 0;
 		} else {
-			int x = 0;
-			int acc = 0;
-			float slast = Float.NaN;
-			float sfactor = 1.f / (horizontal ? w : h);
-			float sx = 0;
-			float sacc = 0;
+			final Rect clippingArea = spaceProvider.getClippingArea();
+			final float clippingStart = horizontal ? clippingArea.x() : clippingArea.y();
+			final float clippingEnd = horizontal ? clippingArea.x2() : clippingArea.y2();
+
+			int s = 0;
+			int s_acc = 0;
+			float p_last = Float.NaN;
+			float p_x = 0;
+			float p_acc = 0;
 			for (int i = 0; i < size; ++i) {
-				float si = (horizontal ? spaceProvider.getDimensionCell(i) : spaceProvider.getRecordCell(i)).getSize();
-				if (Float.isNaN(slast) || Math.abs(si - slast) < 0.3) {
+				final CellSpace cell = horizontal ? spaceProvider.getDimensionCell(i) : spaceProvider.getRecordCell(i);
+				float p_i = cell.getSize();
+				if (cell.getPosition() + p_i < clippingStart) {
+					s++; // move texel
+					continue;
+				}
+				if (cell.getPosition() > clippingEnd)
+					break;
+				if (cell.getPosition() < clippingStart) // reduce size on corner cases
+					p_i -= clippingStart - cell.getPosition();
+				if (cell.getPosition() + p_i > clippingEnd)
+					p_i = clippingEnd - cell.getPosition();
+
+				if (Float.isNaN(p_last) || Math.abs(p_i - p_last) < 0.3) {
 					// uniform continue
 				} else { // flush intermediate rect
-					rect(x * factor, (x + acc) * factor, sx * sfactor, (sx + sacc) * sfactor, gl);
-					x += acc;
-					sx += sacc;
-					acc = 0;
-					sacc = 0;
+					rect(s * s_factor, (s + s_acc) * s_factor, p_x, (p_x + p_acc), op_size, gl);
+					s += s_acc;
+					p_x += p_acc;
+					s_acc = 0;
+					p_acc = 0;
 				}
-				slast = si;
-				acc++;
-				sacc += si;
+				p_last = p_i;
+				s_acc++;
+				p_acc += p_i;
 				if (i == center) {
-					centerPos = (sx + sacc) * sfactor;
+					centerPos = (p_x + p_acc);
 				}
 			}
-			rect(x * factor, (x + acc) * factor, sx * sfactor, (sx + sacc) * sfactor, gl);
+			rect(s * s_factor, (s + s_acc) * s_factor, p_x, (p_x + p_acc), op_size, gl);
 		}
 		gl.glEnd();
 		g.checkError();
 		texture.disable(gl);
 		g.checkError();
+		g.restore();
 
 		// System.out.println(center + " " + centerPos);
 		if (center != -2) {
 			g.lineWidth(3).color(Color.BLUE);
 			if (horizontal)
-				g.drawLine(centerPos, 0, centerPos, 1);
+				g.drawLine(centerPos, 0, centerPos, h);
 			else
-				g.drawLine(0, centerPos, 1, centerPos);
+				g.drawLine(0, centerPos, w, centerPos);
 			g.lineWidth(1);
 		}
-
-		g.restore();
 	}
 
-	private void rect(float s1, float s2, float x, float x2, GL2 gl) {
+	/**
+	 * s ... texel x ... vertex
+	 *
+	 * @param s1
+	 * @param s2
+	 * @param x
+	 * @param x2
+	 * @param gl
+	 */
+	private void rect(float s1, float s2, float x, float x2, float y, GL2 gl) {
 		if (horizontal) {
 			gl.glTexCoord2f(s1, 1f);
 			gl.glVertex2f(x, 0);
 			gl.glTexCoord2f(s2, 1f);
 			gl.glVertex2f(x2, 0);
 			gl.glTexCoord2f(s2, 0f);
-			gl.glVertex2f(x2, 1);
+			gl.glVertex2f(x2, y);
 			gl.glTexCoord2f(s1, 0f);
-			gl.glVertex2f(x, 1);
+			gl.glVertex2f(x, y);
 		} else {
 			gl.glTexCoord2f(s1, 0);
 			gl.glVertex2f(0, x);
 			gl.glTexCoord2f(s1, 1);
-			gl.glVertex2f(1, x);
+			gl.glVertex2f(y, x);
 			gl.glTexCoord2f(s2, 1);
-			gl.glVertex2f(1, x2);
+			gl.glVertex2f(y, x2);
 			gl.glTexCoord2f(s2, 0);
 			gl.glVertex2f(0, x2);
 		}

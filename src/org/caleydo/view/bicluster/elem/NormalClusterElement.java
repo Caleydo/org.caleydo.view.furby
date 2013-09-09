@@ -142,8 +142,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 		IGLLayoutElement left = children.get(3);
 		IGLLayoutElement dimthreshbar = children.get(4);
 		IGLLayoutElement recthreshbar = children.get(5);
-		IGLLayoutElement dimLabel = children.get(6);
-		IGLLayoutElement recLabel = children.get(7);
 
 		// shift for probability heat maps
 		float shift = isFocused() ? 20 : 6;
@@ -175,12 +173,15 @@ public class NormalClusterElement extends AMultiClusterElement {
 		children.get(7).setBounds(-shift, -1, shift, h + 2);
 
 		content.setBounds(0, 0, w, h);
+
+		IGLLayoutElement dimLabel = children.get(8);
+		IGLLayoutElement recLabel = children.get(9);
 		if (isFocused()) {
-			dimLabel.setBounds(w, 0, 80, h);
-			recLabel.setBounds(0, h, w, 80);
+			dimLabel.setBounds(0, h, w, 80);
+			recLabel.setBounds(w, 0, 80, h);
 		} else {
-			dimLabel.setBounds(w, 0, 0, h);
-			recLabel.setBounds(0, h, w, 0);
+			dimLabel.setBounds(0, h, w, 0);
+			recLabel.setBounds(w, 0, 0, h);
 		}
 	}
 
