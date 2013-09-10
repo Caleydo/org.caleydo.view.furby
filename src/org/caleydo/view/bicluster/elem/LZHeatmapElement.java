@@ -229,6 +229,7 @@ public class LZHeatmapElement extends GLElement {
 		for (Float f : data) {
 			float v = Math.abs(f.floatValue());
 			v = (float) transform.apply(v);
+			v = 1 - f; // invert color mapping
 			buffer.put(v);
 			buffer.put(v);
 			buffer.put(v);
