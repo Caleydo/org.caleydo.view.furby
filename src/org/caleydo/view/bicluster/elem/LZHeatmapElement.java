@@ -62,7 +62,6 @@ public class LZHeatmapElement extends GLElement {
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		g.color(Color.GRAY).drawRect(0, 0, w, h);
 		GL2 gl = g.gl;
 		texture.enable(gl);
 		texture.bind(gl);
@@ -138,6 +137,8 @@ public class LZHeatmapElement extends GLElement {
 				g.drawLine(0, centerPos, w, centerPos);
 			g.lineWidth(1);
 		}
+
+		g.color(Color.GRAY).drawRect(0, 0, w, h);
 	}
 
 	/**
@@ -229,7 +230,7 @@ public class LZHeatmapElement extends GLElement {
 		for (Float f : data) {
 			float v = Math.abs(f.floatValue());
 			v = (float) transform.apply(v);
-			v = 1 - f; // invert color mapping
+			v = 1 - v; // invert color mapping
 			buffer.put(v);
 			buffer.put(v);
 			buffer.put(v);
