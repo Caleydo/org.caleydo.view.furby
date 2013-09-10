@@ -69,11 +69,11 @@ public class LZHeatmapElement extends GLElement {
 		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST);
 		g.color(Color.WHITE);
 		g.save();
-		gl.glTranslatef(0, 0, g.z());
+		gl.glTranslatef(1, 1, g.z());
 
 		final float s_factor = 1.f / texture.getWidth();
 		final float size = horizontal ? w : h;
-		final float op_size = horizontal ? h : w;
+		final float op_size = -2 + (horizontal ? h : w);
 
 		float centerPos = 0;
 		gl.glBegin(GL2GL3.GL_QUADS);
@@ -90,7 +90,7 @@ public class LZHeatmapElement extends GLElement {
 			float p_last = Float.NaN;
 			float p_x = 0;
 			float p_acc = 0;
-			for (int i = 0; i < size; ++i) {
+			for (int i = 0; i < texture.getWidth(); ++i) {
 				final CellSpace cell = horizontal ? spaceProvider.getDimensionCell(i) : spaceProvider.getRecordCell(i);
 				float p_i = cell.getSize();
 				if (cell.getPosition() + p_i < clippingStart) {
@@ -138,7 +138,7 @@ public class LZHeatmapElement extends GLElement {
 			g.lineWidth(1);
 		}
 
-		g.color(Color.GRAY).drawRect(0, 0, w, h);
+		g.color(Color.GRAY).drawRect(1, 1, w - 2, h - 2);
 	}
 
 	/**
