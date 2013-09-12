@@ -119,9 +119,17 @@ public class Physics {
 	private static double ellipseRadius(Vec2d ray_dir, double a, double b) {
 		// https://en.wikipedia.org/wiki/Ellipse#Polar_form_relative_to_center
 		// r(\theta)=\frac{ab}{\sqrt{(b \cos \theta)^2 + (a\sin \theta)^2}}
-		double r = (a * b) / (Math.sqrt(Math.pow(a * ray_dir.x(), 2) + Math.pow(b * ray_dir.y(), 2)));
+		double r = (a * b) / (Math.sqrt(pow2(a * ray_dir.x()) + pow2(b * ray_dir.y())));
 
 		return r;
+	}
+
+	/**
+	 * @param d
+	 * @return
+	 */
+	private static double pow2(double d) {
+		return d * d;
 	}
 
 	private static double enclosedEllipseDistance(Rectangle2D a, Rectangle2D b, final Vec2d ray_dir, final double d) {
@@ -152,7 +160,7 @@ public class Physics {
 	}
 
 	private static double circleDiameterRadius(Rectangle2D a) {
-		return Math.sqrt(Math.pow(a.getWidth() * 0.5f, 2) + Math.pow(a.getHeight() * 0.5f, 2));
+		return Math.sqrt(pow2(a.getWidth() * 0.5f) + pow2(a.getHeight() * 0.5f));
 
 	}
 
