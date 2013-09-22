@@ -9,7 +9,7 @@
             class="org.caleydo.view.bicluster.RcpGLBiClusterView"
             icon="resources/icons/icon.png"
             id="org.caleydo.view.bicluster"
-            name="Bicluster">
+            name="Furby">
       </view>
    </extension>
    <extension

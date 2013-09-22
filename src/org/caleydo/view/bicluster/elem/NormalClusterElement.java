@@ -35,7 +35,6 @@ import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
-import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
@@ -299,8 +298,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 	}
 
 	@Override
-	protected void handleFocus(boolean isFocused) {
-		super.handleFocus(isFocused);
+	public void setFocus(boolean isFocused) {
+		super.setFocus(isFocused);
 		if (isFocused) {
 			dimProbabilityHeatMap.nonUniformLayout((content));
 			recProbailityHeatMap.nonUniformLayout((content));
@@ -508,7 +507,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 				reduceScaleFactor();
 				resize();
 			} else if (button == focus) {
-				setFocus(selected);
+				changeFocus(selected);
 			} else if (button == lock) {
 				isLocked = !isLocked;
 				lock.setTooltip(isLocked ? "UnLock this cluster. It will again recieve threshold updates."
@@ -519,9 +518,9 @@ public class NormalClusterElement extends AMultiClusterElement {
 	}
 
 	/**
-	 * @param b
+	 * @param selected
 	 */
-	public void setFocus(boolean doFocus) {
-		EventPublisher.trigger(new FocusChangeEvent(NormalClusterElement.this, doFocus));
+	void changeFocus(boolean selected) {
+		findAllClustersElement().setFocus(selected ? this : null);
 	}
 }

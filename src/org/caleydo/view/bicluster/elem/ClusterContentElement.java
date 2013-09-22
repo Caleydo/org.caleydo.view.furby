@@ -132,7 +132,7 @@ public class ClusterContentElement extends GLElementDecorator {
 		ClusterElement cluster = findParent(ClusterElement.class);
 		float a = 1.0f;
 		if (!cluster.isFocused()) {
-			a *= cluster.curOpacityFactor;
+			a *= cluster.actOpacityFactor;
 		}
 		if (a < 1) {
 			g.incZ(5);

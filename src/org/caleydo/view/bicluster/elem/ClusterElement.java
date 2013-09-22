@@ -48,14 +48,11 @@ import org.caleydo.core.view.opengl.layout2.layout.IHasGLLayoutData;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
-import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
-import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.SearchClusterEvent;
-import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.physics.MyDijkstra;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 import org.eclipse.swt.widgets.Display;
@@ -83,13 +80,12 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected final TablePerspective data;
 	protected final BiClustering clustering;
 
-	protected boolean isDragged = false;
 	protected boolean isHovered = false;
 	protected boolean isHidden = false;
 	protected boolean isLocked = false;
-	protected boolean dimBandsEnabled, recBandsEnabled;
-	protected float curOpacityFactor = 1f;
-	protected float opacityfactor = 1;
+
+	protected float actOpacityFactor = 1;
+	protected float targetOpacityfactor = 1;
 
 	protected Map<GLElement, List<Integer>> dimOverlap, recOverlap;
 
@@ -103,16 +99,13 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected double clusterSizeThreshold;
 	protected double elementCountBiggestCluster;
 
-	int dimensionOverlapSize;
-	int recordOverlapSize;
+	private int dimensionOverlapSize;
+	private int recordOverlapSize;
 	private double dimSize;
 	private double recSize;
 	protected double scaleFactor;
 	protected double minScaleFactor;
 	private double preFocusScaleFactor = -1; // -1 indicator no backup
-	private boolean isFocused = false;
-
-	private int maxDistance = MyPreferences.getMaxDistance();
 
 	/**
 	 * delayed mouse out to avoid fast in / out delays
@@ -143,7 +136,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	protected final boolean isShowAlwaysToolBar() {
-		AllClustersElement p = findAllClustersElement();
+		GLRootElement p = findRootElement();
 		return p != null && p.isShowAlwaysToolBar();
 	}
 
@@ -188,9 +181,9 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	public abstract String getID();
 
 	protected final void setZValuesAccordingToState() {
-		if (isDragged) {
+		if (isDragged()) {
 			setzDelta(DRAGGING_Z_DELTA);
-		} else if (isFocused) {
+		} else if (isFocused()) {
 			setzDelta(FOCUSED_Z_DELTA);
 		} else if (isHovered) {
 			setzDelta(HOVERED_NOT_FOCUSED_Z_DELTA);
@@ -202,7 +195,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	@Override
 	protected final void renderPickImpl(GLGraphics g, float w, float h) {
 		g.color(Color.BLACK);
-		if (isFocused) {
+		if (isFocused()) {
 			g.fillRect(-20, -20, w + 80 + 20, h + 80 + 20);
 		} else
 			g.fillRect(-10, -10, w + 20, w + 20);
@@ -210,7 +203,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	public int minimalDistanceTo(ClusterElement other, int maxDistance) {
-		return MyDijkstra.minDistance(this, other, maxDistance, this.recBandsEnabled, this.dimBandsEnabled);
+		GLRootElement r = findRootElement();
+		return MyDijkstra.minDistance(this, other, maxDistance, r.isRecBandsEnabled(), r.isDimBandsEnabled());
 	}
 
 	@Override
@@ -228,19 +222,19 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	private void updateOpacticy(int deltaTimeMs) {
-		float delta = Math.abs(curOpacityFactor - opacityfactor);
+		float delta = Math.abs(actOpacityFactor - targetOpacityfactor);
 		if (delta < 0.01f) // done
 			return;
 		final float speed = 0.002f; // [units/ms]
-		float back = curOpacityFactor;
+		float back = actOpacityFactor;
 
 		final float change = deltaTimeMs * speed;
 
-		if (opacityfactor < curOpacityFactor)
-			curOpacityFactor = Math.max(opacityfactor, curOpacityFactor - change);
+		if (targetOpacityfactor < actOpacityFactor)
+			actOpacityFactor = Math.max(targetOpacityfactor, actOpacityFactor - change);
 		else
-			curOpacityFactor = Math.min(opacityfactor, curOpacityFactor + change);
-		if (back != curOpacityFactor) {
+			actOpacityFactor = Math.min(targetOpacityfactor, actOpacityFactor + change);
+		if (back != actOpacityFactor) {
 			repaint();
 			repaintChildren();
 		}
@@ -250,12 +244,12 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
 		Color color = null;
-		if (isFocused)
+		if (isFocused())
 			color = new Color(0, 0, 0, 1.0f);
 		else if (isHovered) {
 			color = SelectionType.MOUSE_OVER.getColor();
 		} else
-			color = new Color(0, 0, 0, curOpacityFactor);
+			color = new Color(0, 0, 0, actOpacityFactor);
 		g.color(color);
 		g.drawRect(-1, -1, w + 2, h + 2);
 	}
@@ -299,20 +293,22 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			isHovered = false;
 			if (wasResizedWhileHovered)
 				setClusterSize(newDimSize, newRecSize, elementCountBiggestCluster, this);
-			opacityfactor = highOpacityFactor;
+			targetOpacityfactor = highOpacityFactor;
 			repaintChildren();
 			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
 			relayout(); // for hiding the bars
 		}
 	}
 
-	private AllClustersElement findAllClustersElement() {
+	protected final AllClustersElement findAllClustersElement() {
 		return findParent(AllClustersElement.class);
 	}
 
+	protected final GLRootElement findRootElement() {
+		return findParent(GLRootElement.class);
+	}
+
 	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
-		this.dimBandsEnabled = dimBandsEnabled;
-		this.recBandsEnabled = recBandsEnabled;
 		dimOverlap = new HashMap<>();
 		recOverlap = new HashMap<>();
 		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
@@ -362,10 +358,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	public abstract int getNumberOfDimElements();
 
 	public abstract int getNumberOfRecElements();
-
-	public final boolean isDragged() {
-		return isDragged;
-	}
 
 	public final boolean isVisible() {
 		return getVisibility().doRender();
@@ -429,7 +421,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 				@Override
 				public void render(GLGraphics g, float w, float h, GLElement parent) {
-					if (isFocused) {
+					if (isFocused()) {
 						g.color(SelectionType.SELECTION.getColor());
 						g.fillRoundedRect(0, 0, w, h, 2);
 						g.textColor(Color.BLACK);
@@ -437,7 +429,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 						g.color(SelectionType.MOUSE_OVER.getColor());
 						g.fillRoundedRect(0, 0, w, h, 2);
 					} else
-						g.textColor(new Color(0, 0, 0, curOpacityFactor));
+						g.textColor(new Color(0, 0, 0, actOpacityFactor));
 
 					String text = getID();
 					if (scaleFactor > minScaleFactor && Math.round(scaleFactor * 100) != 100)
@@ -471,8 +463,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			case MOUSE_RELEASED:
 				pick.setDoDragging(false);
 				clicked = false;
-				isDragged = false;
-				findAllClustersElement().setDragedLayoutElement(null);
+				findAllClustersElement().setDragedElement(null);
 				setzDelta(DEFAULT_Z_DELTA);
 				if (isClusterCollision())
 					mouseOut();
@@ -480,8 +471,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			default:
 				if (!pick.isDoDragging())
 					return;
-				isDragged = false;
-				findAllClustersElement().setDragedLayoutElement(null);
+				findAllClustersElement().setDragedElement(null);
 			}
 			setZValuesAccordingToState();
 		}
@@ -588,21 +578,12 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	/**
 	 * @return the isFocused, see {@link #isFocused}
 	 */
-	public boolean isFocused() {
-		return isFocused;
+	public final boolean isFocused() {
+		return findAllClustersElement().isFocussed(this);
 	}
 
-	protected void handleFocus(boolean isFocused) {
-		if (isFocused) {
-			preFocusScaleFactor = scaleFactor;
-			scaleFactor = defaultFocusScaleFactor();
-			resize();
-		} else {
-			setScaleFactor(preFocusScaleFactor);
-			preFocusScaleFactor = -1;
-			resize();
-			mouseOut();
-		}
+	public final boolean isDragged() {
+		return findAllClustersElement().isDragged(this);
 	}
 
 	/**
@@ -639,51 +620,44 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		relayout();
 	}
 
-	@ListenTo
-	private void listenTo(FocusChangeEvent e) {
-		if (e.getSender() == this) {
-			this.isFocused = e.gotFocus();
-			handleFocus(this.isFocused);
+	public void setFocus(boolean isFocused) {
+		if (isFocused) {
+			preFocusScaleFactor = scaleFactor;
+			scaleFactor = defaultFocusScaleFactor();
+			resize();
 		} else {
-			if (this.isFocused) {
-				this.isFocused = false;
-				handleFocus(false);
+			setScaleFactor(preFocusScaleFactor);
+			preFocusScaleFactor = -1;
+			resize();
+			mouseOut();
+		}
+	}
+
+	public void focusChanged(ClusterElement elem) {
+		assert this != elem;
+		if (this.isFocused())
+			setFocus(false);
+		if (elem != null) {
+			if (preFocusScaleFactor < 0) {// backup
+				preFocusScaleFactor = scaleFactor;
 			}
-			if (e.gotFocus()) {
-				if (preFocusScaleFactor < 0) {// backup
-					preFocusScaleFactor = scaleFactor;
-				}
-				ClusterElement other = (ClusterElement) e.getSender();
-				int distance = minimalDistanceTo(other, maxDistance);
-				if (distance > maxDistance) {
-					forceHide = true;
-				} else {
-					float relationship = relationshipTo(other);
-					forceHide = false;
-					setScaleFactor(preFocusScaleFactor * Math.min(0.8f + relationship * 10, 2));
-					resize();
-				}
+			int maxDistance = findRootElement().getMaxDistance();
+			int distance = minimalDistanceTo(elem, maxDistance);
+			if (distance > maxDistance) {
+				forceHide = true;
 			} else {
-				setScaleFactor(preFocusScaleFactor);
-				preFocusScaleFactor = -1;
-				resize();
+				float relationship = relationshipTo(elem);
 				forceHide = false;
+				setScaleFactor(preFocusScaleFactor * Math.min(0.8f + relationship * 10, 2));
+				resize();
 			}
-			updateVisibility();
+		} else {
+			setScaleFactor(preFocusScaleFactor);
+			preFocusScaleFactor = -1;
+			resize();
+			forceHide = false;
 		}
-	}
-
-	private boolean anyFocussed() {
-		return preFocusScaleFactor >= 0;
-	}
-
-	@ListenTo
-	private void onChangeMaxDistanceEvent(ChangeMaxDistanceEvent event) {
-		this.maxDistance = event.getMaxDistance();
-		if (anyFocussed() && !isFocused) {
-			ClusterElement focussed = findAllClustersElement().findFocused();
-			listenTo(new FocusChangeEvent(focussed, true));
-		}
+		updateVisibility();
 	}
 
 	/**
@@ -695,6 +669,10 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	private float relationshipTo(ClusterElement other) {
 		if (other == this)
 			return 1;
+		GLRootElement r = findRootElement();
+		final boolean dimBandsEnabled = r.isDimBandsEnabled();
+		final boolean recBandsEnabled = r.isRecBandsEnabled();
+
 		if (!dimBandsEnabled && !recBandsEnabled)
 			return 0;
 		int dimIntersection = getDimOverlap(other).size();
@@ -725,17 +703,18 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	@ListenTo
 	private void listenTo(MouseOverClusterEvent event) {
 		if (!event.isMouseOver()) {
-			opacityfactor = highOpacityFactor;
+			targetOpacityfactor = highOpacityFactor;
 			return;
 		}
 
 		ClusterElement hoveredElement = (ClusterElement) event.getSender();
 
+		final int maxDistance = findRootElement().getMaxDistance();
 		if (minimalDistanceTo(hoveredElement, maxDistance) <= maxDistance || areBandsSelected()) {
-			opacityfactor = highOpacityFactor;
+			targetOpacityfactor = highOpacityFactor;
 			return;
 		} else
-			opacityfactor = lowOpacityFactor;
+			targetOpacityfactor = lowOpacityFactor;
 	}
 
 	/**
@@ -745,15 +724,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 * @return
 	 */
 	private boolean areBandsSelected() {
-		GLRootElement root = findParent(GLRootElement.class);
-
-		if (recBandsEnabled) {
+		GLRootElement root = findRootElement();
+		if (root.isRecBandsEnabled()) {
 			for (List<Integer> shared : recOverlap.values()) {
 				if (root.isAnyRecSelected(shared, SelectionType.SELECTION, SelectionType.MOUSE_OVER))
 					return true;
 			}
 		}
-		if (dimBandsEnabled) {
+		if (root.isDimBandsEnabled()) {
 			for (List<Integer> shared : dimOverlap.values()) {
 				if (root.isAnyDimSelected(shared, SelectionType.SELECTION, SelectionType.MOUSE_OVER))
 					return true;
@@ -765,14 +743,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	@ListenTo
 	private void listenTo(MouseOverBandEvent event) {
 		if (!event.isMouseOver()) {
-			opacityfactor = highOpacityFactor;
+			targetOpacityfactor = highOpacityFactor;
 			return;
 		}
 		if (nearEnough(event.getFirst(), event.getSecond()) || areBandsSelected()) {
-			opacityfactor = highOpacityFactor;
+			targetOpacityfactor = highOpacityFactor;
 			return;
 		} else
-			opacityfactor = lowOpacityFactor;
+			targetOpacityfactor = lowOpacityFactor;
 	}
 
 	/**
@@ -781,6 +759,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 * @return
 	 */
 	public boolean nearEnough(ClusterElement first, ClusterElement second) {
+		final int maxDistance = findRootElement().getMaxDistance();
+
 		int dist = minimalDistanceTo(first, maxDistance + 1);
 		if (dist > maxDistance + 1) // unbound
 			return false;
@@ -793,12 +773,12 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	@ListenTo
 	private void onSearchClusterEvent(SearchClusterEvent event) {
 		if (event.isClear()) {
-			opacityfactor = highOpacityFactor;
+			targetOpacityfactor = highOpacityFactor;
 		} else if (StringUtils.containsIgnoreCase(getLabel(), event.getText())) {
-			opacityfactor = highOpacityFactor;
+			targetOpacityfactor = highOpacityFactor;
 			System.out.println(getLabel() + " matches " + event.getText());
 		} else {
-			opacityfactor = lowOpacityFactor;
+			targetOpacityfactor = lowOpacityFactor;
 			System.out.println(getLabel() + " not matches " + event.getText());
 		}
 		repaintChildren();
@@ -919,10 +899,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	private void drag(Pick pick) {
-		if (isDragged == false) {
-			findAllClustersElement().setDragedLayoutElement(this);
-		}
-		isDragged = true;
+		findAllClustersElement().setDragedElement(this);
 		setzDelta(DRAGGING_Z_DELTA);
 		setLocation(getLocation().x() + pick.getDx(), getLocation().y() + pick.getDy());
 		relayout();

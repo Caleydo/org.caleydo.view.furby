@@ -50,7 +50,7 @@ public abstract class ASpecialClusterElement extends ClusterElement {
 	@Override
 	protected final void renderImpl(GLGraphics g, float w, float h) {
 		super.renderImpl(g, w, h);
-		float[] color = { 0, 0, 0, curOpacityFactor };
+		float[] color = { 0, 0, 0, actOpacityFactor };
 		Color highlightedColor = SelectionType.MOUSE_OVER.getColor();
 		g.color(color);
 		if (isHovered) {

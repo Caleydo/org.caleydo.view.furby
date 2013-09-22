@@ -49,8 +49,9 @@ public class ForceBasedLayout extends AForceBasedLayout {
 			scaleView(children, w, h);
 		lastW = w;
 		lastH = h;
-		if (focusedElement != null) {
-			setLocation(focusedElement, w / 2, h / 2, w, h);
+		GLElement focus = parent.getFocussedElement();
+		if (focus != null) {
+			setLocation(focus, w / 2, h / 2, w, h);
 		}
 		bringClustersBackToFrame(children, w, h);
 		clearClusterCollisions(children, w, h);
@@ -81,7 +82,7 @@ public class ForceBasedLayout extends AForceBasedLayout {
 			Rectangle2D iRec = new Rectangle2D.Float(iLoc.x() - 10, iLoc.y() - 10, iSize.x() + 20, iSize.y() + 20);
 			for (IGLLayoutElement jIGL : children) {
 				ClusterElement j = (ClusterElement) jIGL.asElement();
-				if (j == i || !j.isVisible() || (j == parent.getDragedElement() || j == focusedElement))
+				if (j == i || !j.isVisible() || (j == parent.getDraggedElement() || j == parent.getFocussedElement()))
 					continue;
 
 				Vec2f jSize = j.getSize();
@@ -262,7 +263,7 @@ public class ForceBasedLayout extends AForceBasedLayout {
 	 * @return
 	 */
 	private boolean isActiveCluster(ClusterElement i) {
-		return i == parent.getDragedElement() || i == hoveredElement || i == focusedElement;
+		return i == parent.getDraggedElement() || i == parent.getHoveredElement() || i == parent.getFocussedElement();
 	}
 
 	private Vec2d checkPlausibility(Vec2d vec2d) {

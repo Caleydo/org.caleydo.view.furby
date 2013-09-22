@@ -20,6 +20,7 @@ import org.caleydo.view.bicluster.elem.AllClustersElement;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.physics.Physics;
+import org.caleydo.view.bicluster.physics.Physics.Distance;
 import org.caleydo.view.bicluster.util.Vec2d;
 
 /**
@@ -28,16 +29,21 @@ import org.caleydo.view.bicluster.util.Vec2d;
  * @author Samuel Gratzl
  *
  */
-public class ForceBasedLayoutTuned extends AForceBasedLayout {
+public class ForceBasedLayout3 extends AForceBasedLayout {
+	/**
+	 *
+	 */
+	private static final double MIN_REPULSION_DISTANCE = 0.1;
+
 	private boolean isInitLayoutDone = false;
 	float lastW, lastH;
 
 	/**
-	 * counts the number of continous "another round" calls, used for damping
+	 * counts the number of continuous "another round" calls, used for damping
 	 */
 	private int continousLayoutDuration = 0;
 
-	public ForceBasedLayoutTuned(AllClustersElement parent) {
+	public ForceBasedLayout3(AllClustersElement parent) {
 		super(parent);
 	}
 	@Override
@@ -203,8 +209,8 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 					continue;
 				// squared distance between "u" and "v" in 2D space
 				// calculate the repulsion between two vertices
-				final Vec2d distVec = body.distanceTo(other);
-				final double distLength = distVec.length();
+				final Distance distVec = body.distanceTo(other);
+				final double distLength = distVec.getDistance();
 				addRepulsion(body, other, distVec, distLength);
 				addAttraction(body, other, distVec, distLength);
 			}
@@ -251,8 +257,8 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 
 	private static void addFixedBodyRespulsion(List<ForcedBody> toolBars, final ForcedBody body) {
 		for (ForcedBody toolbar : toolBars) {
-			final Vec2d distVec = body.distanceTo(toolbar);
-			final double distLength = distVec.length();
+			final Distance distVec = body.distanceTo(toolbar);
+			final double distLength = Math.max(MIN_REPULSION_DISTANCE, distVec.getDistance());
 			double rsq = distLength * distLength * distLength;
 			double xForce = 1.5f * distVec.x() / rsq;
 			double yForce = 1.5f * distVec.y() / rsq;
@@ -283,10 +289,11 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 	private static void addAttraction(final ForcedBody body, final ForcedBody other, final Vec2d distVec,
 			final double distLength) {
 		int overlap = body.getOverlap(other);
-		if (overlap > 0) {
+		if (overlap > 0 && distLength > 0) {
 			// counting the attraction
-			double accX = distVec.x() * (overlap) / distLength;
-			double accY = distVec.y() * (overlap) / distLength;
+			double factor = (overlap) / distLength;
+			double accX = distVec.x() * factor;
+			double accY = distVec.y() * factor;
 			// as distance symmetrical
 			body.addAttForce(-accX, -accY);
 			other.addAttForce(accX, accY);
@@ -306,15 +313,7 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 	}
 
 	private static Vec2d getDistanceFromBottomRight(ForcedBody body, float w, float h) {
-		return new Vec2d(body.centerX + body.radiusX - w, body.centerY + body.radiusY - h);
-		// Vec2d dist = getDistanceFromTopLeft(body, w, h);
-		// dist.setX(-(w - dist.x()));
-		// dist.setY(-(h - dist.y()));
-		// Vec2f size = body.size;
-		// dist.setX(dist.x() + size.x() * 0.5 + 30);
-		// dist.setY(dist.y() + size.y() * 0.5 + 30);
-		//
-		// return dist;
+		return new Vec2d(w - body.getMaxX(), h - body.getMaxY());
 	}
 
 	private void initialLayout(List<ForcedBody> bodies, float w, float h) {
@@ -396,7 +395,7 @@ public class ForceBasedLayoutTuned extends AForceBasedLayout {
 			frameForceY += yForce;
 		}
 
-		public Vec2d distanceTo(ForcedBody other) {
+		public Distance distanceTo(ForcedBody other) {
 			return Physics.distance(this, other);
 		}
 

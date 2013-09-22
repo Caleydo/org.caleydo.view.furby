@@ -9,15 +9,10 @@ import java.util.List;
 
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
-import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.AllClustersElement;
-import org.caleydo.view.bicluster.elem.ClusterElement;
-import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
-import org.caleydo.view.bicluster.event.FocusChangeEvent;
 import org.caleydo.view.bicluster.event.ForceChangeEvent;
-import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.UpdateBandsEvent;
 
 /**
@@ -30,9 +25,6 @@ public abstract class AForceBasedLayout implements IGLLayout2 {
 	protected float repulsion = 100000f;
 	protected float attractionFactor = 100f;
 	protected float borderForceFactor = 200f;
-
-	protected GLElement focusedElement = null;
-	protected ClusterElement hoveredElement = null;
 
 	public AForceBasedLayout(AllClustersElement parent) {
 		this.parent = parent;
@@ -54,30 +46,6 @@ public abstract class AForceBasedLayout implements IGLLayout2 {
 		repulsion = e.getRepulsionForce();
 		attractionFactor = e.getAttractionForce();
 		borderForceFactor = e.getBoarderForce();
-		parent.relayout();
-	}
-
-	@ListenTo
-	private void listenTo(FocusChangeEvent e) {
-		if (focusedElement == e.getSender())
-			focusedElement = null;
-		else
-			focusedElement = (GLElement) e.getSender();
-		parent.relayout();
-	}
-
-	@ListenTo
-	private void listenTo(ClusterGetsHiddenEvent e) {
-		this.hoveredElement = null;
-		parent.relayout();
-	}
-
-	@ListenTo
-	private void listenTo(MouseOverClusterEvent e) {
-		if (e.isMouseOver())
-			this.hoveredElement = (ClusterElement) e.getSender();
-		else
-			this.hoveredElement = null;
 		parent.relayout();
 	}
 

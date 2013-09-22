@@ -66,7 +66,7 @@ import com.google.common.collect.Lists;
 
 public class GLBiCluster extends AMultiTablePerspectiveElementView implements IGLKeyListener {
 	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
-	public static final String VIEW_NAME = "Bicluster";
+	public static final String VIEW_NAME = "Furby";
 
 	private TablePerspective x, l, z;
 

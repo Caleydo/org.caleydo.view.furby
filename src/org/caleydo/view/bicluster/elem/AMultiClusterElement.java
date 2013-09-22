@@ -68,8 +68,8 @@ public abstract class AMultiClusterElement extends ClusterElement {
 
 
 	@Override
-	protected void handleFocus(boolean isFocused) {
-		super.handleFocus(isFocused);
+	public void setFocus(boolean isFocused) {
+		super.setFocus(isFocused);
 		content.changeFocus(isFocused);
 	}
 

@@ -75,7 +75,7 @@ public final class SpecialRecordClusterElement extends ASpecialClusterElement {
 		@Override
 		protected void renderImpl(GLGraphics g, float w, float h) {
 			int i = 0;
-			float[] color = { 0, 0, 0, curOpacityFactor };
+			float[] color = { 0, 0, 0, actOpacityFactor };
 			g.textColor(color);
 			for (String s: recordNames) {
 				g.drawText(s, 1, i*width-2, w, width);

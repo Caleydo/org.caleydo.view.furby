@@ -43,7 +43,7 @@ import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
-import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
+import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
@@ -222,11 +222,9 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 	@Override
 	public void onSelectionChanged(GLButton button, boolean selected) {
 		if (button == dimBandVisibilityButton) {
-			EventPublisher.trigger(new RecalculateOverlapEvent(this, false, selected, recBandVisibilityButton
-					.isSelected()));
+			EventPublisher.trigger(new ShowHideBandsEvent(selected, recBandVisibilityButton.isSelected()));
 		} else if (button == recBandVisibilityButton) {
-			EventPublisher.trigger(new RecalculateOverlapEvent(this, false, dimBandVisibilityButton.isSelected(),
-					selected));
+			EventPublisher.trigger(new ShowHideBandsEvent(dimBandVisibilityButton.isSelected(), selected));
 		} else if (button == bandSortingModeButton) {
 			bandSortingModeButton.setSelected(selected);
 			probabilitySortingModeButton.setSelected(!selected);

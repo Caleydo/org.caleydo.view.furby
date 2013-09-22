@@ -7,6 +7,7 @@ package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,8 +20,10 @@ import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.color.Color;
+import org.caleydo.core.util.logging.Logger;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout2.GLElement;
+import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
@@ -31,13 +34,15 @@ import org.caleydo.core.view.opengl.picking.PickingMode;
 import org.caleydo.view.bicluster.elem.band.AllBandsElement;
 import org.caleydo.view.bicluster.elem.band.DimensionBandElement;
 import org.caleydo.view.bicluster.elem.band.RecordBandElement;
+import org.caleydo.view.bicluster.event.AlwaysShowToolBarEvent;
+import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ChemicalClusterAddedEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
-import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
+import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
@@ -52,8 +57,16 @@ import com.google.common.collect.Lists;
  *
  */
 public class GLRootElement extends GLElementContainer {
+	private static final Logger log = Logger.create(GLRootElement.class);
+
 	private AllBandsElement bands;
 	private final AllClustersElement clusters = new AllClustersElement(this);
+
+	private boolean dimBands = MyPreferences.isShowDimBands();
+	private boolean recBands = MyPreferences.isShowRecBands();
+
+	int bandCount = 0;
+	int count = 0;
 
 	private final ParameterToolBarElement parameterToolBar = new ParameterToolBarElement();
 	private final LayoutToolBarElement layoutToolBar = new LayoutToolBarElement();
@@ -69,6 +82,10 @@ public class GLRootElement extends GLElementContainer {
 			GLRenderers.fillRect(Color.CYAN));
 	private TablePerspective x;
 
+	private int maxDistance = MyPreferences.getMaxDistance();
+
+	private boolean isShowAlwaysToolBar = false;
+
 	public GLRootElement() {
 		setLayout(GLLayouts.LAYERS);
 		zoomLayer.onPick(new IPickingListener() {
@@ -81,8 +98,60 @@ public class GLRootElement extends GLElementContainer {
 			}
 		});
 		this.add(zoomLayer);
+	}
 
-		clusters.setToolBars(parameterToolBar, layoutToolBar);
+
+	@Override
+	public void layout(int deltaTimeMs) {
+		for (AToolBarElement toolbar : Arrays.asList(parameterToolBar, layoutToolBar))
+			if (toolbar.hasMoved()) {
+				clusters.relayout();
+				bands.relayout();
+				break;
+			}
+		super.layout(deltaTimeMs);
+	}
+
+	/**
+	 * @return the isShowAlwaysToolBar, see {@link #isShowAlwaysToolBar}
+	 */
+	public boolean isShowAlwaysToolBar() {
+		return isShowAlwaysToolBar;
+	}
+
+	@ListenTo
+	private void onAlwaysShowToolBarEvent(AlwaysShowToolBarEvent event) {
+		this.isShowAlwaysToolBar = !isShowAlwaysToolBar;
+		for (GLElement elem : clusters)
+			GLElementAccessor.relayoutDown(elem);
+	}
+
+	/**
+	 * @return the toolbars, see {@link #toolbars}
+	 */
+	public List<AToolBarElement> getToolbars() {
+		return Arrays.asList(parameterToolBar, layoutToolBar);
+	}
+
+	public boolean isRecBandsEnabled() {
+		return recBands;
+	}
+
+	public boolean isDimBandsEnabled() {
+		return dimBands;
+	}
+
+	/**
+	 * @return the maxDistance, see {@link #maxDistance}
+	 */
+	public int getMaxDistance() {
+		return maxDistance;
+	}
+
+	@ListenTo
+	private void onChangeMaxDistanceEvent(ChangeMaxDistanceEvent event) {
+		this.maxDistance = event.getMaxDistance();
+		this.clusters.onChangeMaxDistance();
 	}
 
 	/**
@@ -128,7 +197,7 @@ public class GLRootElement extends GLElementContainer {
 		this.add(bands);
 		this.add(clusters);
 
-		System.out.println(biClustering.getBiClusterCount() + " bi clusters loaded.");
+		log.info(biClustering.getBiClusterCount() + " bi clusters loaded.");
 		for (int i = 0; i < biClustering.getBiClusterCount(); ++i) {
 			final ClusterElement el = new NormalClusterElement(i, clustering.getData(i), clustering);
 			clusters.add(el);
@@ -205,6 +274,14 @@ public class GLRootElement extends GLElementContainer {
 		for (GLElement iGL : clusters) {
 			((ClusterElement) iGL).calculateOverlap(dimBands, recBands);
 		}
+
+		/**
+		 * @param object
+		 */
+		private void recalculateOverlapTo(Object object) {
+			// TODO Auto-generated method stub
+
+		}
 	}
 
 	@ListenTo
@@ -212,8 +289,6 @@ public class GLRootElement extends GLElementContainer {
 		setClusterSizes(event.getSender());
 	}
 
-	int bandCount = 0;
-	int count = 0;
 
 
 	@ListenTo
@@ -223,7 +298,6 @@ public class GLRootElement extends GLElementContainer {
 		setClusterSizes(null);
 	}
 
-	boolean dimBands, recBands;
 
 	@ListenTo
 	private void listenTo(CreateBandsEvent event) {
@@ -239,19 +313,14 @@ public class GLRootElement extends GLElementContainer {
 	}
 
 	@ListenTo
-	private void listenTo(RecalculateOverlapEvent event) {
-		if (event.isGlobal())
-			count++;
-		else {
-			recalculateOverlap(event.isDimBandEnabled(), event.isRecBandEnabled());
-			count = 0;
-			return;
-		}
-		if (count == clusters.size()) {
-			recalculateOverlap(event.isDimBandEnabled(), event.isRecBandEnabled());
-			count = 0;
-		}
+	private void onShowHideBandsEvent(ShowHideBandsEvent event) {
+		this.dimBands = event.isShowDimBand();
+		this.recBands = event.isShowRecBand();
+		recalculateOverlapTo(null);
+		bands.relayout();
 	}
+
+
 
 	@ListenTo
 	private void listenTo(LZThresholdChangeEvent event) {
@@ -388,45 +457,16 @@ public class GLRootElement extends GLElementContainer {
 	}
 
 	/**
-	 * focus on the next logical cluster
+	 *
 	 */
 	public void focusPrevious() {
-		NormalClusterElement prev = null;
-		for (NormalClusterElement cluster : getSortedClusters()) {
-			if (cluster.isFocused() && prev != null) {
-				cluster.setFocus(false);
-				prev.setFocus(true);
-				break;
-			}
-			prev = cluster;
-		}
+		if (clusters != null)
+			clusters.focusPrevious();
 	}
 
-	private List<NormalClusterElement> getSortedClusters() {
-		List<NormalClusterElement> c = Lists.newArrayList(Iterables.filter(clusters, NormalClusterElement.class));
-		Collections.sort(c, new Comparator<NormalClusterElement>() {
-			@Override
-			public int compare(NormalClusterElement o1, NormalClusterElement o2) {
-				return o1.getBiClusterNumber() - o2.getBiClusterNumber();
-			}
-		});
-		return c;
-	}
-
-	/**
-	 * focus on the previous logical cluster
-	 */
 	public void focusNext() {
-		NormalClusterElement act = null;
-		for (NormalClusterElement cluster : getSortedClusters()) {
-			if (act != null) {
-				act.setFocus(false);
-				cluster.setFocus(true);
-				break;
-			}
-			if (cluster.isFocused())
-				act = cluster;
-		}
+		if (clusters != null)
+			clusters.focusNext();
 	}
 
 }

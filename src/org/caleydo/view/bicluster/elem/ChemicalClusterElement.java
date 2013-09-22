@@ -82,7 +82,7 @@ public final class ChemicalClusterElement extends ASpecialClusterElement {
 		@Override
 		protected void renderImpl(GLGraphics g, float w, float h) {
 			int i = chemicalClusterNames.size();
-			float[] color = { 0, 0, 0, curOpacityFactor };
+			float[] color = { 0, 0, 0, actOpacityFactor };
 			g.textColor(color);
 			g.save().gl.glRotatef(90, 0, 0, 1);
 
