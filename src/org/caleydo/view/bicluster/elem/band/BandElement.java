@@ -229,7 +229,7 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 		if (!overlap.isEmpty())
 			setVisibility(EVisibility.PICKABLE);
 		else
-			setVisibility(EVisibility.NONE);
+			setVisibility(EVisibility.HIDDEN);
 	}
 
 	@Override

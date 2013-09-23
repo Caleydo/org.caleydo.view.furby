@@ -321,6 +321,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 	void setLocalThreshold(EDimension dimension, float t) {
 		setThreshold(dimension, t);
 		updateMyEdges(dimension.isHorizontal(), dimension.isVertical());
+		findAllClustersElement().relayout();
 	}
 
 	@Override
