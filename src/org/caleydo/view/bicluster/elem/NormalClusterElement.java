@@ -337,6 +337,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 	@Override
 	public void setFocus(boolean isFocused) {
 		super.setFocus(isFocused);
+		this.toolBar.setFocus(isFocused);
 		if (isFocused) {
 			for (ALZHeatmapElement annotation : annotations)
 				annotation.nonUniformLayout(content);
@@ -559,7 +560,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 			smaller.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_OUT));
 			smaller.setCallback(this);
 			this.add(smaller);
+		}
 
+		public void setFocus(boolean focus) {
+			this.focus.setCallback(null).setSelected(focus).setCallback(this);
 		}
 
 		@Override

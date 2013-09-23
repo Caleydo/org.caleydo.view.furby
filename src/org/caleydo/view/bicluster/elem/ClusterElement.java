@@ -631,12 +631,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			preFocusScaleFactor = scaleFactor;
 			scaleFactor = defaultFocusScaleFactor();
 			resize();
+			forceHide = false;
 		} else {
 			setScaleFactor(preFocusScaleFactor);
 			preFocusScaleFactor = -1;
 			resize();
 			mouseOut();
 		}
+		updateVisibility();
 	}
 
 	public void focusChanged(ClusterElement elem) {
