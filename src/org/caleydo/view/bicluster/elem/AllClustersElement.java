@@ -61,7 +61,7 @@ public class AllClustersElement extends GLElementContainer {
 		relayout();
 	}
 
-	private Iterable<ClusterElement> allClusters() {
+	Iterable<ClusterElement> allClusters() {
 		return Iterables.filter(this, ClusterElement.class);
 	}
 

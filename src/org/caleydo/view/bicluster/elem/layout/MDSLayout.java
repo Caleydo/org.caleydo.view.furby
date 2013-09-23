@@ -35,14 +35,14 @@ public class MDSLayout implements IGLLayout2 {
 
 		for (int i = 0; i < n; ++i) {
 			ClusterElement ci = (ClusterElement) children.get(i).asElement();
-			int c_ii = ci.getNumberOfDimElements() + ci.getNumberOfRecElements();
+			int c_ii = ci.getDimSize() + ci.getRecSize();
 
 			for (int j = i + 1; j < n; ++j) {
 				ClusterElement cj = (ClusterElement) children.get(j).asElement();
-				int recOverlap = ci.getRecOverlap(cj).size();
-				int dimOverlap = ci.getDimOverlap(cj).size();
+				int recOverlap = ci.getRecOverlap(cj);
+				int dimOverlap = ci.getDimOverlap(cj);
 
-				int c_jj = cj.getNumberOfDimElements() + cj.getNumberOfRecElements();
+				int c_jj = cj.getDimSize() + cj.getRecSize();
 				int c_ij = recOverlap + dimOverlap;
 
 				double d_ij = Math.sqrt(c_ii + c_jj - 2 * c_ij);

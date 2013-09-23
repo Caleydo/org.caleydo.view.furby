@@ -7,6 +7,7 @@ package org.caleydo.view.bicluster.event;
 
 import org.caleydo.core.event.ADirectedEvent;
 import org.caleydo.view.bicluster.elem.ClusterElement;
+import org.caleydo.view.bicluster.elem.EDimension;
 
 public class SpecialClusterRemoveEvent extends ADirectedEvent {
 
@@ -19,6 +20,10 @@ public class SpecialClusterRemoveEvent extends ADirectedEvent {
 
 	public boolean isDimCluster() {
 		return isDimCluster;
+	}
+
+	public EDimension getDimension() {
+		return isDimCluster ? EDimension.DIMENSION : EDimension.RECORD;
 	}
 
 	@Override

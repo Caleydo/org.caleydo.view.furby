@@ -92,33 +92,34 @@ public final class SpecialGenericClusterElement extends AMultiClusterElement {
 	}
 
 	@Override
-	protected VirtualArray getDimensionVirtualArray() {
+	protected VirtualArray getDimVirtualArray() {
 		return dimVA;
 	}
 
 	@Override
-	public int getNumberOfDimElements() {
+	public int getDimSize() {
 		return Math.max(1, dimVA.size());
 	}
 
 	@Override
-	protected VirtualArray getRecordVirtualArray() {
+	protected VirtualArray getRecVirtualArray() {
 		return recordVA;
 	}
 
 	@Override
-	public int getNumberOfRecElements() {
+	public int getRecSize() {
 		return Math.max(1, recordVA.size());
 	}
 
 	@Override
 	public boolean shouldBeVisible() {
-		if (isHidden || (getRecordOverlapSize() == 0 || recordVA.size() == 0 || !anyShown(recOverlap))
-				&& (getDimensionOverlapSize() == 0 || dimVA.size() == 0 || !anyShown(dimOverlap))) {
-			return false;
-		} else {
-			return true;
-		}
+		return true; // FIXME obsolete
+		// if (isHidden || (getRecTotalOverlaps() == 0 || recordVA.size() == 0 || !anyShown(recOverlap))
+		// && (getDimTotalOverlaps() == 0 || dimVA.size() == 0 || !anyShown(dimOverlap))) {
+		// return false;
+		// } else {
+		// return true;
+		// }
 	}
 
 	/**

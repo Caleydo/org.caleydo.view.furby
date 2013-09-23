@@ -79,7 +79,6 @@ public class MyDijkstra {
 
 	private static boolean hasNeighbor(final ClusterElement source, final ClusterElement target, boolean recBands,
 			boolean dimBands) {
-		return (dimBands && !source.getDimOverlap(target).isEmpty())
-				|| (recBands && !source.getRecOverlap(target).isEmpty());
+		return (dimBands && source.getDimOverlap(target) > 0) || (recBands && source.getRecOverlap(target) > 0);
 	}
 }

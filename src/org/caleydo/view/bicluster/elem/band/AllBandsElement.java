@@ -18,6 +18,7 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
+import org.caleydo.view.bicluster.elem.GLRootElement;
 import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
 import org.caleydo.view.bicluster.event.UpdateBandsEvent;
 
@@ -47,9 +48,14 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-		for (GLElement b : this) {
-			b.setBounds(0,0,w, h);
-			((BandElement) b).updatePosition();
+		GLRootElement root = findParent(GLRootElement.class);
+		for (IGLLayoutElement child : children) {
+			BandElement b = (BandElement) child.asElement();
+			if (!root.isBandsEnabled(b.getDimension()))
+				child.hide();
+			else
+				child.setBounds(0, 0, w, h);
+			b.updatePosition();
 		}
 		if (resortOnNextRun) {
 			sortBy(new Comparator<GLElement>() {

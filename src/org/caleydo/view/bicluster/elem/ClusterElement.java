@@ -14,7 +14,7 @@ import gleem.linalg.Vec2f;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +49,6 @@ import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
-import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.SearchClusterEvent;
@@ -57,6 +56,7 @@ import org.caleydo.view.bicluster.physics.MyDijkstra;
 import org.caleydo.view.bicluster.util.ClusterRenameEvent;
 import org.eclipse.swt.widgets.Display;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -77,6 +77,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected static final float HOVERED_NOT_FOCUSED_Z_DELTA = 2;
 	protected static final float DRAGGING_Z_DELTA = 4;
 
+	protected final int bcNr;
 	protected final TablePerspective data;
 	protected final BiClustering clustering;
 
@@ -87,20 +88,17 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected float actOpacityFactor = 1;
 	protected float targetOpacityfactor = 1;
 
-	protected Map<GLElement, List<Integer>> dimOverlap, recOverlap;
+	private final Map<ClusterElement, Edge> edges = new IdentityHashMap<>();
+	private int totalDimOverlaps = 0;
+	private int totalRecOverlaps = 0;
 
-	protected final int bcNr;
 	protected HeaderBar headerBar;
 
 	protected float recThreshold = getRecThreshold();
 	protected int recNumberThreshold = getRecTopNElements();
 	protected float dimThreshold = getDimThreshold();
 	protected int dimNumberThreshold = getDimTopNElements();
-	protected double clusterSizeThreshold;
-	protected double elementCountBiggestCluster;
 
-	private int dimensionOverlapSize;
-	private int recordOverlapSize;
 	private double dimSize;
 	private double recSize;
 	protected double scaleFactor;
@@ -148,6 +146,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			s = minScaleFactor;
 		scaleFactor = s;
 	}
+
 	/**
 	 * @return the bcNr, see {@link #bcNr}
 	 */
@@ -164,11 +163,11 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	public final IDType getDimensionIDType() {
-		return getDimensionVirtualArray().getIdType();
+		return getDimVirtualArray().getIdType();
 	}
 
 	public final IDType getRecordIDType() {
-		return getRecordVirtualArray().getIdType();
+		return getRecVirtualArray().getIdType();
 	}
 
 	public final String getDataDomainID() {
@@ -292,7 +291,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		if (isHovered && !headerBar.isClicked()) {
 			isHovered = false;
 			if (wasResizedWhileHovered)
-				setClusterSize(newDimSize, newRecSize, elementCountBiggestCluster, this);
+				setClusterSize(newDimSize, newRecSize, this);
 			targetOpacityfactor = highOpacityFactor;
 			repaintChildren();
 			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
@@ -308,34 +307,20 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return findParent(GLRootElement.class);
 	}
 
-	void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
-		dimOverlap = new HashMap<>();
-		recOverlap = new HashMap<>();
-		List<Integer> myDimIndizes = getDimensionVirtualArray().getIDs();
-		List<Integer> myRecIndizes = getRecordVirtualArray().getIDs();
-		dimensionOverlapSize = 0;
-		recordOverlapSize = 0;
-		for (GLElement element : findAllClustersElement()) {
-			if (element == this)
-				continue;
-			ClusterElement e = (ClusterElement) element;
-			List<Integer> eIndizes = null;
-			if (dimBandsEnabled) {
-				eIndizes = new ArrayList<Integer>(myDimIndizes);
-				eIndizes.retainAll(e.getDimensionVirtualArray().getIDs());
-				if (!eIndizes.isEmpty())
-					dimOverlap.put(element, eIndizes);
-				dimensionOverlapSize += eIndizes.size();
-			}
-			if (recBandsEnabled) {
-				eIndizes = new ArrayList<Integer>(myRecIndizes);
-				eIndizes.retainAll(e.getRecordVirtualArray().getIDs());
-				if (!eIndizes.isEmpty())
-					recOverlap.put(element, eIndizes);
-				recordOverlapSize += eIndizes.size();
-			}
-		}
-		fireTablePerspectiveChanged();
+	public void addEdge(ClusterElement target, Edge edge) {
+		this.edges.put(target, edge);
+	}
+
+	public void updateOverlap(ClusterElement to, boolean dim, boolean rec) {
+		if (!dim && !rec)
+			return;
+		Edge edge = edges.get(to);
+		if (edge == null)
+			return;
+		if (dim)
+			totalDimOverlaps += edge.updateDim();
+		if (rec)
+			totalRecOverlaps += edge.updateRec();
 		updateVisibility();
 	}
 
@@ -351,53 +336,75 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 				.getDimensionPerspective().getPerspectiveID(), this));
 	}
 
-	protected abstract VirtualArray getDimensionVirtualArray();
+	protected abstract VirtualArray getDimVirtualArray();
 
-	protected abstract VirtualArray getRecordVirtualArray();
+	protected abstract VirtualArray getRecVirtualArray();
 
-	public abstract int getNumberOfDimElements();
+	public abstract int getDimSize();
 
-	public abstract int getNumberOfRecElements();
+	public abstract int getRecSize();
 
 	public final boolean isVisible() {
 		return getVisibility().doRender();
 	}
 
-	public final List<Integer> getDimOverlap(GLElement jElement) {
-		if (dimOverlap.containsKey(jElement))
-			return dimOverlap.get(jElement);
-		return Collections.emptyList();
+	public final int getDimOverlap(ClusterElement elem) {
+		if (findRootElement().isDimBandsEnabled())
+			return 0;
+		Edge edge = edges.get(elem);
+		return edge != null ? edge.getDimOverlap() : 0;
+	}
+
+	public final int getRecOverlap(ClusterElement elem) {
+		if (findRootElement().isRecBandsEnabled())
+			return 0;
+		Edge edge = edges.get(elem);
+		return edge != null ? edge.getRecOverlap() : 0;
 	}
 
 	/**
 	 * @return
 	 */
 	public Iterable<ClusterElement> getDimOverlappingNeighbors() {
-		return Iterables.filter(dimOverlap.keySet(), ClusterElement.class);
+		if (findRootElement().isDimBandsEnabled())
+			return Collections.emptyList();
+		return Iterables.filter(edges.keySet(), new Predicate<ClusterElement>() {
+			@Override
+			public boolean apply(ClusterElement input) {
+				return input != null && edges.get(input).getDimOverlap() > 0;
+			}
+		});
 	}
 
 	/**
 	 * @return
 	 */
 	public Iterable<ClusterElement> getRecOverlappingNeighbors() {
-		return Iterables.filter(recOverlap.keySet(), ClusterElement.class);
+		if (findRootElement().isRecBandsEnabled())
+			return Collections.emptyList();
+		return Iterables.filter(edges.keySet(), new Predicate<ClusterElement>() {
+			@Override
+			public boolean apply(ClusterElement input) {
+				return input != null && edges.get(input).getRecOverlap() > 0;
+			}
+		});
 	}
 
-	public final List<Integer> getRecOverlap(GLElement jElement) {
-		if (recOverlap.containsKey(jElement))
-			return recOverlap.get(jElement);
-		return Collections.emptyList();
+	/**
+	 * @return the totalDimOverlaps, see {@link #totalDimOverlaps}
+	 */
+	public final int getDimTotalOverlaps() {
+		return totalDimOverlaps;
 	}
 
-	public final int getDimensionOverlapSize() {
-		return dimensionOverlapSize;
+	/**
+	 * @return the totalRecOverlaps, see {@link #totalRecOverlaps}
+	 */
+	public final int getRecTotalOverlaps() {
+		return totalRecOverlaps;
 	}
 
-	public final int getRecordOverlapSize() {
-		return recordOverlapSize;
-	}
-
-	protected IGLLayoutElement getIGLayoutElement() {
+	protected final IGLLayoutElement getIGLayoutElement() {
 		return GLElementAccessor.asLayoutElement(this);
 	}
 
@@ -537,7 +544,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	// whether hiding is enforced
 	private boolean forceHide = false;
 
-	public void setClusterSize(double x, double y, double maxClusterSize, Object causer) {
+	public void setClusterSize(double x, double y, Object causer) {
 		if ((isHovered || isLocked) && (causer != this)) {
 			wasResizedWhileHovered = true;
 			newRecSize = y;
@@ -550,7 +557,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			recSize = y;
 			resize();
 		}
-		elementCountBiggestCluster = maxClusterSize;
 	}
 
 	protected void resize() {
@@ -593,8 +599,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 */
 	private double defaultFocusScaleFactor() {
 		double s = 0;
-		double ws = focusSize(getNumberOfDimElements()) / dimSize;
-		double hs = focusSize(getNumberOfRecElements()) / recSize;
+		double ws = focusSize(getDimSize()) / dimSize;
+		double hs = focusSize(getRecSize()) / recSize;
 		s = Math.max(ws, hs);
 		return Math.max(scaleFactor, s);
 	}
@@ -675,13 +681,13 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 		if (!dimBandsEnabled && !recBandsEnabled)
 			return 0;
-		int dimIntersection = getDimOverlap(other).size();
-		int recIntersection = getRecOverlap(other).size();
+		int dimIntersection = getDimOverlap(other);
+		int recIntersection = getRecOverlap(other);
 		int intersection = dimIntersection + recIntersection;
 		if (intersection == 0)
 			return 0;
-		int dimUnion = getNumberOfDimElements() + other.getNumberOfDimElements() - dimIntersection;
-		int recUnion = getNumberOfRecElements() + other.getNumberOfRecElements() - recIntersection;
+		int dimUnion = getDimSize() + other.getDimSize() - dimIntersection;
+		int recUnion = getRecSize() + other.getRecSize() - recIntersection;
 		float jaccard = 0;
 		// some kind of jaccard
 		if (dimBandsEnabled && recBandsEnabled)
@@ -726,14 +732,20 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	private boolean areBandsSelected() {
 		GLRootElement root = findRootElement();
 		if (root.isRecBandsEnabled()) {
-			for (List<Integer> shared : recOverlap.values()) {
-				if (root.isAnyRecSelected(shared, SelectionType.SELECTION, SelectionType.MOUSE_OVER))
+			for (Edge shared : edges.values()) {
+				if (shared.getRecOverlap() == 0)
+					continue;
+				if (root.isAnyRecSelected(shared.getRecOverlapIndices(), SelectionType.SELECTION,
+						SelectionType.MOUSE_OVER))
 					return true;
 			}
 		}
 		if (root.isDimBandsEnabled()) {
-			for (List<Integer> shared : dimOverlap.values()) {
-				if (root.isAnyDimSelected(shared, SelectionType.SELECTION, SelectionType.MOUSE_OVER))
+			for (Edge shared : edges.values()) {
+				if (shared.getDimOverlap() == 0)
+					continue;
+				if (root.isAnyDimSelected(shared.getDimOverlapIndices(), SelectionType.SELECTION,
+						SelectionType.MOUSE_OVER))
 					return true;
 			}
 		}
@@ -784,12 +796,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		repaintChildren();
 	}
 
-	@ListenTo
-	private void listenTo(MinClusterSizeThresholdChangeEvent event) {
-		this.clusterSizeThreshold = event.getMinClusterSize();
-		updateVisibility();
-	}
-
 	/**
 	 *
 	 */
@@ -809,11 +815,21 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	public List<List<Integer>> getListOfContinousRecSequenzes(List<Integer> overlap) {
-		return getListOfContinousIDs2(overlap, getRecordVirtualArray().getIDs());
+		return getListOfContinousIDs2(overlap, getRecVirtualArray().getIDs());
 	}
 
 	public List<List<Integer>> getListOfContinousDimSequences(List<Integer> overlap) {
-		return getListOfContinousIDs2(overlap, getDimensionVirtualArray().getIDs());
+		return getListOfContinousIDs2(overlap, getDimVirtualArray().getIDs());
+	}
+
+	/**
+	 * @param dimension
+	 * @param overlap
+	 * @return
+	 */
+	public List<List<Integer>> getListOfContinousSequences(EDimension dim, List<Integer> overlap) {
+		return dim == EDimension.DIMENSION ? getListOfContinousDimSequences(overlap)
+				: getListOfContinousRecSequenzes(overlap);
 	}
 
 	protected static List<List<Integer>> getListOfContinousIDs(List<Integer> overlap, List<Integer> indices) {
@@ -864,19 +880,19 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	public abstract float getRecPosOf(int id);
 
 	public int getDimIndexOf(int value) {
-		return getDimensionVirtualArray().indexOf(value);
+		return getDimVirtualArray().indexOf(value);
 	}
 
 	public int getRecIndexOf(int value) {
-		return getRecordVirtualArray().indexOf(value);
+		return getRecVirtualArray().indexOf(value);
 	}
 
 	public float getDimensionElementSize() {
-		return getSize().x() / getDimensionVirtualArray().size();
+		return getSize().x() / getDimVirtualArray().size();
 	}
 
 	public float getRecordElementSize() {
-		return getSize().y() / getRecordVirtualArray().size();
+		return getSize().y() / getRecVirtualArray().size();
 	}
 
 	public int getNrOfElements(List<Integer> band) {
@@ -894,8 +910,9 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		builder.append("]");
 		return builder.toString();
 	}
+
 	public Vec2f getPreferredSize(float scaleX, float scaleY) {
-		return new Vec2f(getNumberOfDimElements() * scaleX, getNumberOfRecElements() * scaleY);
+		return new Vec2f(getDimSize() * scaleX, getRecSize() * scaleY);
 	}
 
 	private void drag(Pick pick) {
@@ -905,4 +922,5 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		relayout();
 		repaintPick();
 	}
+
 }

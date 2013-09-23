@@ -12,14 +12,12 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.AToolBarElement;
 import org.caleydo.view.bicluster.elem.AllClustersElement;
 import org.caleydo.view.bicluster.elem.ClusterElement;
-import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.physics.Physics;
 import org.caleydo.view.bicluster.util.Vec2d;
 
@@ -127,8 +125,8 @@ public class ForceBasedLayout extends AForceBasedLayout {
 		for (IGLLayoutElement iGLE : children) {
 			GLElement vGL = iGLE.asElement();
 			ClusterElement v = (ClusterElement) vGL;
-			xOverlapSize += v.getDimensionOverlapSize();
-			yOverlapSize += v.getRecordOverlapSize();
+			xOverlapSize += v.getDimTotalOverlaps();
+			yOverlapSize += v.getRecTotalOverlaps();
 		}
 		double attractionX = 1;
 		double attractionY = 1;
@@ -179,12 +177,10 @@ public class ForceBasedLayout extends AForceBasedLayout {
 				ClusterElement j = (ClusterElement) jElement;
 				if (i == j)
 					continue;
-				List<Integer> xOverlap = i.getDimOverlap(j);
-				List<Integer> yOverlap = i.getRecOverlap(j);
-				if (xOverlap.size() == 0 && yOverlap.size() == 0)
+				int overlapSizeX = i.getDimOverlap(j);
+				int overlapSizeY = i.getRecOverlap(j);
+				if (overlapSizeX == 0 && overlapSizeY == 0)
 					continue;
-				int overlapSizeX = xOverlap.size();
-				int overlapSizeY = yOverlap.size();
 				Vec2d distVec = getDistance(j, i);
 				double dist = distVec.length/* Squared */();
 				// counting the attraction
@@ -351,7 +347,6 @@ public class ForceBasedLayout extends AForceBasedLayout {
 			setLocation(child, pos.x(), pos.y(), w, h);
 			i++;
 		}
-		EventPublisher.trigger(new CreateBandsEvent(parent));
 	}
 
 	private final static class ForceHelper {

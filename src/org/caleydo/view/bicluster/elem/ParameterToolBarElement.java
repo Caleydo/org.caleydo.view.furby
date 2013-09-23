@@ -242,8 +242,8 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 			addChemicalClusters();
 		}
 		boolean isBandSorting = bandSortingModeButton.isSelected();
-		EventPublisher.trigger(new SortingChangeEvent(isBandSorting ? SortingType.bandSorting
-				: SortingType.probabilitySorting, this));
+		EventPublisher.trigger(new SortingChangeEvent(isBandSorting ? SortingType.BY_BAND
+				: SortingType.BY_PROPABILITY, this));
 	}
 
 	private void addChemicalClusters() {

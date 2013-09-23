@@ -298,7 +298,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 
 			// signal that we now use that data domain
 			rootElement.init(biClustering, x);
-			rootElement.recalculateOverlap(MyPreferences.isShowDimBands(), MyPreferences.isShowRecBands());
 			rootElement.setClusterSizes(null);
 		}
 

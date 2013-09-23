@@ -31,10 +31,10 @@ public final class SpecialRecordClusterElement extends ASpecialClusterElement {
 	}
 
 	@Override
-	public void setClusterSize(double x, double y, double maxClusterSize, Object causer) {
+	public void setClusterSize(double x, double y, Object causer) {
 		x = 100f/scaleFactor;
 		y = width*elements.size()/scaleFactor;
-		super.setClusterSize(x, y, maxClusterSize, causer);
+		super.setClusterSize(x, y, causer);
 	}
 
 	private ATableBasedDataDomain getXDataDomain() {
@@ -42,22 +42,22 @@ public final class SpecialRecordClusterElement extends ASpecialClusterElement {
 	}
 
 	@Override
-	protected VirtualArray getDimensionVirtualArray() {
+	protected VirtualArray getDimVirtualArray() {
 		return new VirtualArray(getXDataDomain().getDimensionIDType());
 	}
 
 	@Override
-	protected VirtualArray getRecordVirtualArray() {
+	protected VirtualArray getRecVirtualArray() {
 		return elements;
 	}
 
 	@Override
-	public int getNumberOfDimElements() {
+	public int getDimSize() {
 		return 0;
 	}
 
 	@Override
-	public int getNumberOfRecElements() {
+	public int getRecSize() {
 		return elements.size();
 	}
 
@@ -100,12 +100,12 @@ public final class SpecialRecordClusterElement extends ASpecialClusterElement {
 
 	@Override
 	public float getDimPosOf(int index) {
-		return getDimIndexOf(index) * getSize().x() / getDimensionVirtualArray().size();
+		return getDimIndexOf(index) * getSize().x() / getDimVirtualArray().size();
 	}
 
 	@Override
 	public float getRecPosOf(int index) {
-		return getRecIndexOf(index) * getSize().y() / getRecordVirtualArray().size();
+		return getRecIndexOf(index) * getSize().y() / getRecVirtualArray().size();
 	}
 
 }

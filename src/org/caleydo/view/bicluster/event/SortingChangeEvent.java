@@ -30,7 +30,7 @@ public class SortingChangeEvent extends AEvent {
 	}
 
 	public enum SortingType {
-		probabilitySorting, bandSorting
+		BY_PROPABILITY, BY_BAND
 	}
 
 }

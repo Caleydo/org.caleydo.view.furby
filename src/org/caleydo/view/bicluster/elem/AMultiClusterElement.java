@@ -76,30 +76,30 @@ public abstract class AMultiClusterElement extends ClusterElement {
 	@Override
 	public final float getDimPosOf(int id) {
 		if (isFocused()) {
-			int ind = getDimensionVirtualArray().indexOf(id);
+			int ind = getDimVirtualArray().indexOf(id);
 			return content.getDimensionPos(ind);
 		} else {
-			return getDimIndexOf(id) * getSize().x() / getDimensionVirtualArray().size();
+			return getDimIndexOf(id) * getSize().x() / getDimVirtualArray().size();
 		}
 	}
 
 	@Override
 	public final float getRecPosOf(int id) {
 		if (isFocused()) {
-			int ind = getRecordVirtualArray().indexOf(id);
+			int ind = getRecVirtualArray().indexOf(id);
 			return content.getRecordPos(ind);
 		} else {
-			return getRecIndexOf(id) * getSize().y() / getRecordVirtualArray().size();
+			return getRecIndexOf(id) * getSize().y() / getRecVirtualArray().size();
 		}
 	}
 
 	@Override
 	public final Vec2f getPreferredSize(float scaleX, float scaleY) {
 		if (content.isShowingHeatMap()) {
-			return new Vec2f(getNumberOfDimElements() * scaleX, getNumberOfRecElements() * scaleY);
+			return new Vec2f(getDimSize() * scaleX, getRecSize() * scaleY);
 		}
 		if (content.isShowingLinearPlot()) {
-			return new Vec2f(getNumberOfDimElements() * scaleX, getNumberOfRecElements() * 2 * scaleY);
+			return new Vec2f(getDimSize() * scaleX, getRecSize() * 2 * scaleY);
 		}
 		ClusterContentElement c = (content);
 		return c.getMinSize();

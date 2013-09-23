@@ -44,10 +44,10 @@ public final class ChemicalClusterElement extends ASpecialClusterElement {
 	}
 
 	@Override
-	public void setClusterSize(double x, double y, double maxClusterSize, Object causer) {
+	public void setClusterSize(double x, double y, Object causer) {
 		y = 70f / scaleFactor;
 		x = TEXT_SIZE * elements.size() / scaleFactor / 2;
-		super.setClusterSize(x, y, maxClusterSize, causer);
+		super.setClusterSize(x, y, causer);
 	}
 
 	@Override
@@ -56,22 +56,22 @@ public final class ChemicalClusterElement extends ASpecialClusterElement {
 	}
 
 	@Override
-	protected VirtualArray getDimensionVirtualArray() {
+	protected VirtualArray getDimVirtualArray() {
 		return elements;
 	}
 
 	@Override
-	protected VirtualArray getRecordVirtualArray() {
+	protected VirtualArray getRecVirtualArray() {
 		return new VirtualArray(clustering.getXDataDomain().getRecordIDType());
 	}
 
 	@Override
-	public int getNumberOfDimElements() {
+	public int getDimSize() {
 		return elements.size();
 	}
 
 	@Override
-	public int getNumberOfRecElements() {
+	public int getRecSize() {
 		return 0;
 	}
 
@@ -115,7 +115,7 @@ public final class ChemicalClusterElement extends ASpecialClusterElement {
 
 	@Override
 	public float getRecPosOf(int index) {
-		return getRecIndexOf(index) * getSize().y() / getRecordVirtualArray().size();
+		return getRecIndexOf(index) * getSize().y() / getRecVirtualArray().size();
 	}
 
 	@Override

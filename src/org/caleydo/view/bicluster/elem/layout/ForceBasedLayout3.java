@@ -11,14 +11,12 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.AToolBarElement;
 import org.caleydo.view.bicluster.elem.AllClustersElement;
 import org.caleydo.view.bicluster.elem.ClusterElement;
-import org.caleydo.view.bicluster.event.CreateBandsEvent;
 import org.caleydo.view.bicluster.physics.Physics;
 import org.caleydo.view.bicluster.physics.Physics.Distance;
 import org.caleydo.view.bicluster.util.Vec2d;
@@ -70,8 +68,8 @@ public class ForceBasedLayout3 extends AForceBasedLayout {
 					body.setLocation(w * 0.5f, h * 0.5f);
 				}
 				ClusterElement v = body.asClusterElement();
-				xOverlapSize += v.getDimensionOverlapSize();
-				yOverlapSize += v.getRecordOverlapSize();
+				xOverlapSize += v.getDimTotalOverlaps();
+				yOverlapSize += v.getRecTotalOverlaps();
 			}
 			final double attraction = attractionFactor / (xOverlapSize + yOverlapSize);
 
@@ -328,7 +326,6 @@ public class ForceBasedLayout3 extends AForceBasedLayout {
 			child.setLocation(row * wFactor + 200, col * hFactor + 100);
 			i++;
 		}
-		EventPublisher.trigger(new CreateBandsEvent(parent));
 	}
 
 	private static class ForcedBody extends Rectangle2D {
@@ -375,8 +372,8 @@ public class ForceBasedLayout3 extends AForceBasedLayout {
 		public int getOverlap(ForcedBody other) {
 			ClusterElement o = other.asClusterElement();
 			ClusterElement c = asClusterElement();
-			int rsize = c.getRecOverlap(o).size();
-			int csize = c.getDimOverlap(o).size();
+			int rsize = c.getRecOverlap(o);
+			int csize = c.getDimOverlap(o);
 			return rsize + csize;
 		}
 
