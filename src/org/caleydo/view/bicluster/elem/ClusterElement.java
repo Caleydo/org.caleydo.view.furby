@@ -27,6 +27,7 @@ import org.caleydo.core.gui.util.RenameNameDialog;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.base.ILabeled;
 import org.caleydo.core.util.color.Color;
+import org.caleydo.core.util.logging.Logger;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
@@ -62,6 +63,7 @@ import com.google.common.collect.Iterables;
 public abstract class ClusterElement extends AnimatedGLElementContainer implements IGLLayout, ILabeled {
 	protected static final IHasGLLayoutData GROW_UP = GLLayoutDatas.combine(new MoveTransitions.MoveTransitionBase(
 			Transitions.NO, Transitions.LINEAR, Transitions.NO, Transitions.LINEAR), DEFAULT_DURATION);
+	private static final Logger log = Logger.create(ClusterElement.class);
 
 	protected static final float highOpacityFactor = 1;
 	protected static final float lowOpacityFactor = 0.2f;
@@ -348,6 +350,10 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected abstract VirtualArray getDimVirtualArray();
 
 	protected abstract VirtualArray getRecVirtualArray();
+
+	protected final VirtualArray getVirtualArray(EDimension dim) {
+		return dim.isHorizontal() ? getDimVirtualArray() : getRecVirtualArray();
+	}
 
 	public abstract int getDimSize();
 
@@ -636,7 +642,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		isHovered = false;
 		updateVisibility();
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
-		relayout();
+		relayoutParent();
 	}
 
 	public void setFocus(boolean isFocused) {
@@ -652,6 +658,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			mouseOut();
 		}
 		updateVisibility();
+		relayoutParent();
 	}
 
 	public void focusChanged(ClusterElement elem) {
@@ -719,6 +726,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			return;
 		isHidden = false;
 		updateVisibility();
+		relayoutParent();
 	}
 
 	@ListenTo
@@ -803,17 +811,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			targetOpacityfactor = highOpacityFactor;
 		} else if (StringUtils.containsIgnoreCase(getLabel(), event.getText())) {
 			targetOpacityfactor = highOpacityFactor;
-			System.out.println(getLabel() + " matches " + event.getText());
+			log.debug(getLabel() + " matches " + event.getText());
 		} else {
 			targetOpacityfactor = lowOpacityFactor;
-			System.out.println(getLabel() + " not matches " + event.getText());
+			log.debug(getLabel() + " not matches " + event.getText());
 		}
 		repaintChildren();
 	}
 
-	/**
-	 *
-	 */
 	protected final void updateVisibility() {
 		boolean should = shouldBeVisible();
 		boolean v = should && !forceHide;
@@ -829,22 +834,13 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return getID();
 	}
 
-	public List<List<Integer>> getListOfContinousRecSequenzes(List<Integer> overlap) {
-		return getListOfContinousIDs2(overlap, getRecVirtualArray().getIDs());
-	}
-
-	public List<List<Integer>> getListOfContinousDimSequences(List<Integer> overlap) {
-		return getListOfContinousIDs2(overlap, getDimVirtualArray().getIDs());
-	}
-
 	/**
 	 * @param dimension
 	 * @param overlap
 	 * @return
 	 */
 	public List<List<Integer>> getListOfContinousSequences(EDimension dim, List<Integer> overlap) {
-		return dim == EDimension.DIMENSION ? getListOfContinousDimSequences(overlap)
-				: getListOfContinousRecSequenzes(overlap);
+		return getListOfContinousIDs2(overlap, getVirtualArray(dim).getIDs());
 	}
 
 	protected static List<List<Integer>> getListOfContinousIDs(List<Integer> overlap, List<Integer> indices) {
@@ -914,18 +910,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return band.size();
 	}
 
-	public final TablePerspective getTablePerspective() {
-		return data;
-	}
-
-	@Override
-	public final String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("ClusterElement [").append(getLabel());
-		builder.append("]");
-		return builder.toString();
-	}
-
 	public Vec2f getPreferredSize(float scaleX, float scaleY) {
 		return new Vec2f(getDimSize() * scaleX, getRecSize() * scaleY);
 	}
@@ -934,9 +918,13 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		findAllClustersElement().setDragedElement(this);
 		setzDelta(DRAGGING_Z_DELTA);
 		setLocation(getLocation().x() + pick.getDx(), getLocation().y() + pick.getDy());
-		relayout();
-		repaintPick();
 	}
 
+	@Override
+	public final String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("ClusterElement [").append(getLabel()).append(']');
+		return builder.toString();
+	}
 
 }
