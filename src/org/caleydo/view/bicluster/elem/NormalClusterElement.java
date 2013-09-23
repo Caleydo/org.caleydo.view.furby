@@ -7,6 +7,7 @@ package org.caleydo.view.bicluster.elem;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,8 +65,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 	/**
 	 * elements for showing the probability heatmaps
 	 */
-	private LZHeatmapElement dimProbabilityHeatMap;
-	private LZHeatmapElement recProbailityHeatMap;
+	private Collection<ALZHeatmapElement> annotations = new ArrayList<>(4);
 
 	protected boolean showThreshold;
 
@@ -88,13 +88,16 @@ public class NormalClusterElement extends AMultiClusterElement {
 		dimThreshBar.updateSliders(dimClustering);
 		recThreshBar.updateSliders(recClustering);
 
-		this.dimProbabilityHeatMap = new LZHeatmapElement(true);
-		this.add(this.dimProbabilityHeatMap);
-		this.recProbailityHeatMap = new LZHeatmapElement(false);
-		this.add(this.recProbailityHeatMap);
-
 		this.add(new HeatMapLabelElement(true, data.getDimensionPerspective(), content));
 		this.add(new HeatMapLabelElement(false, data.getRecordPerspective(), content));
+
+		ProbabilityLZHeatmapElement p = new ProbabilityLZHeatmapElement(EDimension.DIMENSION);
+		this.annotations.add(p);
+		this.add(p);
+		p = new ProbabilityLZHeatmapElement(EDimension.RECORD);
+		this.annotations.add(p);
+		this.add(p);
+
 	}
 
 	@Override
@@ -139,40 +142,44 @@ public class NormalClusterElement extends AMultiClusterElement {
 		IGLLayoutElement left = children.get(3);
 		IGLLayoutElement dimthreshbar = children.get(4);
 		IGLLayoutElement recthreshbar = children.get(5);
+		IGLLayoutElement dimLabel = children.get(6);
+		IGLLayoutElement recLabel = children.get(7);
 
 		// shift for probability heat maps
-		float shift = isFocused() ? 20 : 6;
+		final int firstAnnotation = 8;
+		final int dimAnnotations = count(children.subList(firstAnnotation, children.size()), EDimension.DIMENSION);
+		final int recAnnotations = count(children.subList(firstAnnotation, children.size()), EDimension.RECORD);
+
+		final int annotationWidth = isFocused() ? 20 : 6;
+		final float shift_x = annotationWidth * dimAnnotations;
+		final float shift_y = annotationWidth * recAnnotations;
 
 		if (isHovered || isShowAlwaysToolBar()) { // depending whether we are hovered or not, show hide the toolbar's
-			corner.setBounds(-18 - shift, -18 - shift, 18, 18 * 2);
+			corner.setBounds(-18 - shift_x, -18 - shift_y, 18, 18 * 2);
 			if (showThreshold) {
-				top.setBounds(0, -shift, w < 50 ? 50 : w, 0);
-				left.setBounds(-18 - shift, 18, 0, left.getSetHeight());
-				dimthreshbar.setBounds(0, -18 - shift, 180, 17);
-				recthreshbar.setBounds(-18 - shift, 18, 17, 180);
+				top.setBounds(0, -shift_y, w < 50 ? 50 : w, 0);
+				left.setBounds(-18 - shift_x, 18, 0, left.getSetHeight());
+				dimthreshbar.setBounds(0, -18 - shift_y, 180, 17);
+				recthreshbar.setBounds(-18 - shift_x, 18, 17, 180);
 			} else {
-				top.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
-				left.setBounds(-18 - shift, 18, 18, left.getSetHeight());
+				top.setBounds(0, -18 - shift_y, w < 50 ? 50 : w, 17);
+				left.setBounds(-18 - shift_x, 18, 18, left.getSetHeight());
 				dimthreshbar.hide();
 				recthreshbar.hide();
 			}
 		} else {
 			// hide by setting the width to 0
-			corner.setBounds(-18 - shift, -shift, 0, 18 * 2);
-			top.setBounds(0, -18 - shift, w < 50 ? 50 : w, 17);
-			left.setBounds(-18 - shift, 20, 0, left.getSetHeight());
+			corner.setBounds(-18 - shift_x, -shift_y, 0, 18 * 2);
+			top.setBounds(0, -18 - shift_y, w < 50 ? 50 : w, 17);
+			left.setBounds(-18 - shift_x, 20, 0, left.getSetHeight());
 
 			dimthreshbar.hide();
 			recthreshbar.hide();
 		}
 
-		children.get(6).setBounds(-1, -shift, w + 2, shift);
-		children.get(7).setBounds(-shift, -1, shift, h + 2);
 
 		content.setBounds(0, 0, w, h);
 
-		IGLLayoutElement dimLabel = children.get(8);
-		IGLLayoutElement recLabel = children.get(9);
 		if (isFocused()) {
 			dimLabel.setBounds(0, h, w, 80);
 			recLabel.setBounds(w, 0, 80, h);
@@ -180,6 +187,36 @@ public class NormalClusterElement extends AMultiClusterElement {
 			dimLabel.setBounds(0, h, w, 0);
 			recLabel.setBounds(w, 0, 0, h);
 		}
+
+		int actDimAnnotation = 0;
+		int actRecAnnotation = 0;
+		for (IGLLayoutElement elem : children.subList(firstAnnotation, children.size())) {
+			EDimension dim = elem.getLayoutDataAs(EDimension.class, null);
+			if (dim == null)
+				continue;
+			if (dim.isHorizontal()) {
+				elem.setBounds(-1, -annotationWidth * actDimAnnotation, w + 2, annotationWidth);
+				actDimAnnotation++;
+			} else {
+				elem.setBounds(-annotationWidth * actRecAnnotation, -1, annotationWidth, h + 2);
+				actRecAnnotation++;
+			}
+		}
+
+
+	}
+
+	/**
+	 * @param subList
+	 * @param dimension
+	 * @return
+	 */
+	private static int count(List<? extends IGLLayoutElement> l, EDimension dimension) {
+		int c = 0;
+		for (IGLLayoutElement elem : l)
+			if (dimension == elem.getLayoutDataAs(EDimension.class, null))
+				c++;
+		return c;
 	}
 
 	@ListenTo
@@ -299,11 +336,11 @@ public class NormalClusterElement extends AMultiClusterElement {
 	public void setFocus(boolean isFocused) {
 		super.setFocus(isFocused);
 		if (isFocused) {
-			dimProbabilityHeatMap.nonUniformLayout((content));
-			recProbailityHeatMap.nonUniformLayout((content));
+			for (ALZHeatmapElement annotation : annotations)
+				annotation.nonUniformLayout(content);
 		} else {
-			dimProbabilityHeatMap.uniformLayout();
-			recProbailityHeatMap.uniformLayout();
+			for (ALZHeatmapElement annotation : annotations)
+				annotation.uniformLayout();
 		}
 	}
 
@@ -426,8 +463,28 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 		this.data.invalidateContainerStatistics();
 
-		dimProbabilityHeatMap.update(Lists.transform(dims, IntFloat.TO_PROBABILITY));
-		recProbailityHeatMap.update(Lists.transform(recs, IntFloat.TO_PROBABILITY));
+		for (ALZHeatmapElement annotation : annotations)
+			if (annotation.getDim().isHorizontal())
+				annotation.update(dims);
+			else
+				annotation.update(recs);
+	}
+
+	public void addAnnotation(ALZHeatmapElement annotation) {
+		this.add(annotation);
+		this.annotations.add(annotation);
+	}
+
+	/**
+	 * @return the annotations, see {@link #annotations}
+	 */
+	public Collection<ALZHeatmapElement> getAnnotations() {
+		return Collections.unmodifiableCollection(annotations);
+	}
+
+	public void removeAnnotation(ALZHeatmapElement annotation) {
+		if (this.annotations.remove(annotation))
+			this.remove(annotation);
 	}
 
 	private void fill(VirtualArray va, List<IntFloat> values) {

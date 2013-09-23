@@ -18,6 +18,13 @@ public enum EDimension {
 		return dimension ? DIMENSION : RECORD;
 	}
 
+	public boolean isHorizontal() {
+		return this == DIMENSION;
+	}
+
+	public boolean isVertical() {
+		return !isHorizontal();
+	}
 
 	public Color getBandColor() {
 		switch(this) {
@@ -34,4 +41,15 @@ public enum EDimension {
 		return this == DIMENSION ? dim : rec;
 	}
 
+	public float select(float dim, float rec) {
+		return this == DIMENSION ? dim : rec;
+	}
+
+	public double select(double dim, double rec) {
+		return this == DIMENSION ? dim : rec;
+	}
+
+	public <T> T select(T dim, T rec) {
+		return this == DIMENSION ? dim : rec;
+	}
 }
