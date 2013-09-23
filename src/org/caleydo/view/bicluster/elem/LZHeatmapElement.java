@@ -16,7 +16,6 @@ import javax.media.opengl.GLProfile;
 
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.util.function.DoubleFunctions;
-import org.caleydo.core.util.function.ExpressionFunctions;
 import org.caleydo.core.util.function.IDoubleFunction;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
@@ -213,8 +212,9 @@ public class LZHeatmapElement extends GLElement {
 			// all negative
 			this.center = width-1; //last
 
-		IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
-				DoubleFunctions.normalize(min, max));
+		IDoubleFunction transform = DoubleFunctions.CLAMP01;
+		// IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
+		// DoubleFunctions.normalize(min, max));
 
 		update(width, transform, data);
 	}
