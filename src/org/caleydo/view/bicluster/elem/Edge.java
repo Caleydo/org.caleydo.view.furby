@@ -100,7 +100,11 @@ public class Edge {
 		for (Integer id : smaller)
 			if (opposite.contains(id))
 				dimOverlap.add(id);
-		return getDimOverlap() - bak;
+		final int delta = getDimOverlap() - bak;
+
+		a.incTotalDimOverlap(delta);
+		b.incTotalDimOverlap(delta);
+		return delta;
 	}
 
 	public int updateRec() {
@@ -116,7 +120,11 @@ public class Edge {
 			if (opposite.contains(id))
 				recOverlap.add(id);
 
-		return getRecOverlap() - bak;
+		final int delta = getRecOverlap() - bak;
+
+		a.incTotalRecOverlap(delta);
+		b.incTotalRecOverlap(delta);
+		return delta;
 	}
 
 	public IDType getIDType(EDimension dim) {

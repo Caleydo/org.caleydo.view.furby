@@ -295,14 +295,10 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		if (edge == null)
 			return;
 		if (dim) {
-			int delta = edge.updateDim();
-			totalDimOverlaps += delta;
-			edge.getOpposite(this).totalDimOverlaps += delta;
+			edge.updateDim();
 		}
 		if (rec) {
-			int delta = edge.updateRec();
-			totalRecOverlaps += delta;
-			edge.getOpposite(this).totalRecOverlaps += delta;
+			edge.updateRec();
 		}
 		updateVisibility();
 		edge.getOpposite(this).updateVisibility();
@@ -362,14 +358,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	public final int getDimOverlap(ClusterElement elem) {
-		if (findRootElement().isDimBandsEnabled())
+		if (!findRootElement().isDimBandsEnabled())
 			return 0;
 		Edge edge = edges.get(elem);
 		return edge != null ? edge.getDimOverlap() : 0;
 	}
 
 	public final int getRecOverlap(ClusterElement elem) {
-		if (findRootElement().isRecBandsEnabled())
+		if (!findRootElement().isRecBandsEnabled())
 			return 0;
 		Edge edge = edges.get(elem);
 		return edge != null ? edge.getRecOverlap() : 0;
@@ -379,7 +375,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 * @return
 	 */
 	public Iterable<ClusterElement> getDimOverlappingNeighbors() {
-		if (findRootElement().isDimBandsEnabled())
+		if (!findRootElement().isDimBandsEnabled())
 			return Collections.emptyList();
 		return Iterables.filter(edges.keySet(), new Predicate<ClusterElement>() {
 			@Override
@@ -393,7 +389,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 * @return
 	 */
 	public Iterable<ClusterElement> getRecOverlappingNeighbors() {
-		if (findRootElement().isRecBandsEnabled())
+		if (!findRootElement().isRecBandsEnabled())
 			return Collections.emptyList();
 		return Iterables.filter(edges.keySet(), new Predicate<ClusterElement>() {
 			@Override
@@ -407,14 +403,28 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 * @return the totalDimOverlaps, see {@link #totalDimOverlaps}
 	 */
 	public final int getDimTotalOverlaps() {
+		if (!findRootElement().isDimBandsEnabled())
+			return 0;
 		return totalDimOverlaps;
 	}
 
 	/**
+	 * @param delta
+	 */
+	final void incTotalDimOverlap(int delta) {
+		this.totalDimOverlaps += delta;
+	}
+	/**
 	 * @return the totalRecOverlaps, see {@link #totalRecOverlaps}
 	 */
 	public final int getRecTotalOverlaps() {
+		if (!findRootElement().isRecBandsEnabled())
+			return 0;
 		return totalRecOverlaps;
+	}
+
+	final void incTotalRecOverlap(int delta) {
+		this.totalRecOverlaps += delta;
 	}
 
 	protected final IGLLayoutElement getIGLayoutElement() {

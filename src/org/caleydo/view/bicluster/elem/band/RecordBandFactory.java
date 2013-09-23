@@ -40,8 +40,8 @@ public class RecordBandFactory extends BandFactory {
 		super(cluster, other, firstSubIndices, secondSubIndices, cluster
 				.getRecordElementSize(), overlap);
 		calcClusterDirectionVectorsAndAngle();
-		calculateRotationMatrixFirst();
-		calculateRotationMatrixSecond();
+		calculateRotationMatrix(rotationMatrixFirst, firstAngle);
+		calculateRotationMatrix(rotationMatrixSecond, secondAngle);
 		firstElementSize = first.getRecordElementSize();
 		secondElementSize = second.getRecordElementSize();
 	}
@@ -74,21 +74,6 @@ public class RecordBandFactory extends BandFactory {
 		// // System.out.println(cluster.getID() + " " + other.getID());
 		// }
 
-	}
-
-	private void calculateRotationMatrixFirst() {
-		// TODO what about Rotf class
-		rotationMatrixFirst[0] = (float) Math.cos(firstAngle);
-		rotationMatrixFirst[1] = (float) Math.sin(firstAngle);
-		rotationMatrixFirst[2] = (float) -Math.sin(firstAngle);
-		rotationMatrixFirst[3] = (float) Math.cos(firstAngle);
-	}
-
-	private void calculateRotationMatrixSecond() {
-		rotationMatrixSecond[0] = (float) Math.cos(secondAngle);
-		rotationMatrixSecond[1] = (float) Math.sin(secondAngle);
-		rotationMatrixSecond[2] = (float) -Math.sin(secondAngle);
-		rotationMatrixSecond[3] = (float) Math.cos(secondAngle);
 	}
 
 	// delivers indicator whether the bands directly leaving a cluster are
@@ -139,8 +124,7 @@ public class RecordBandFactory extends BandFactory {
 	}
 
 	@Override
-	protected Map<List<Integer>, Band> getNonSplitableBands() {
-		Map<List<Integer>, Band> bandsMap = new IdentityHashMap<>();
+	protected Band getSimpleBand() {
 		List<Vec2f> bandPoints = new ArrayList<>(4);
 
 		// there is only one band from first cluster to the second cluster
@@ -176,9 +160,7 @@ public class RecordBandFactory extends BandFactory {
 		final Band band = band(bandPoints, 0,
 		allIndices.size() / 2f * firstElementSize, allIndices.size() / 2f * secondElementSize, MAINBAND_POLYGONS);
 
-		bandsMap.put(allIndices, band);
-
-		return bandsMap;
+		return band;
 	}
 
 	@Override
