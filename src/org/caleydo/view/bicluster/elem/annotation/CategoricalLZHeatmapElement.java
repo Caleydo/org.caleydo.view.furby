@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.caleydo.core.data.collection.table.Table;
+import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.view.bicluster.elem.EDimension;
@@ -53,5 +54,9 @@ public class CategoricalLZHeatmapElement extends ALZHeatmapElement {
 			return table.getColor(id, oppositeID);
 		else
 			return table.getColor(oppositeID, id);
+	}
+
+	public boolean is(Integer oppositeID, IDType target) {
+		return oppositeID.equals(oppositeID) && target.equals(id2colorId.getTarget());
 	}
 }

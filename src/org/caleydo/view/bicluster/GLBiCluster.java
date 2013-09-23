@@ -387,7 +387,14 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 				rootElement.addAnnotation(EDimension.DIMENSION, t);
 			}
 		}
-		rootElement.removeAnnotation(removed);
+		for (TablePerspective t : removed) {
+			if (findGroupings(t.getRecordPerspective())) {
+				rootElement.removeAnnotation(EDimension.RECORD, t);
+			}
+			if (findGroupings(t.getDimensionPerspective())) {
+				rootElement.removeAnnotation(EDimension.DIMENSION, t);
+			}
+		}
 	}
 
 

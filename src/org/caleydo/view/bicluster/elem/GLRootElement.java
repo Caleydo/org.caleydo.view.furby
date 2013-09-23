@@ -213,8 +213,9 @@ public class GLRootElement extends GLElementContainer {
 		this.add(bands);
 		this.add(clusters);
 
-		log.info(biClustering.getBiClusterCount() + " bi clusters loaded.");
-		for (int i = 0; i < biClustering.getBiClusterCount(); ++i) {
+		final int count = biClustering.getBiClusterCount();
+		log.info(count + " bi clusters loaded.");
+		for (int i = 0; i < count; ++i) {
 			final ClusterElement el = new NormalClusterElement(i, clustering.getData(i), clustering);
 			clusters.add(el);
 		}
@@ -227,11 +228,8 @@ public class GLRootElement extends GLElementContainer {
 				Edge edge = new Edge(start, end);
 				start.addEdge(end, edge);
 				end.addEdge(start, edge);
-				edge.updateDim();
-				edge.updateRec();
 				bands.add(new BandElement(edge, EDimension.RECORD, bands.getRecordSelectionManager(), rec2label));
 				bands.add(new BandElement(edge, EDimension.DIMENSION, bands.getDimensionSelectionManager(), dim2label));
-
 			}
 		}
 		bands.updateSelection();
@@ -459,22 +457,36 @@ public class GLRootElement extends GLElementContainer {
 	}
 
 	/**
-	 * @param removed
+	 * @param record
+	 * @param t
 	 */
-	public void removeAnnotation(List<TablePerspective> removed) {
-		if (removed == null || removed.isEmpty())
-			return;
-		// FIXME
-		// for (NormalClusterElement cluster : Lists.newArrayList(Iterables.filter(clusters,
-		// NormalClusterElement.class))) {
-		// for(CategoricalLZHeatmapElement ann :
-		// Iterables.filter(cluster.getAnnotations(),CategoricalLZHeatmapElement.class)) {
-		// if (ann.get)
-		// }
-		// cluster.removeAnnotation(annotation);
-		// if (parents.contains(cluster.getTablePerspective().getParentTablePerspective()))
-		// cluster.remove();
-		// }
+	public void removeAnnotation(EDimension dimension, TablePerspective t) {
+		final Integer oppositeID = dimension.select(t.getRecordPerspective(), t.getDimensionPerspective())
+				.getVirtualArray().get(0);
+		final IDType target = dimension.select(t.getDataDomain().getDimensionIDType(), t.getDataDomain()
+				.getRecordIDType());
+		ATableBasedDataDomain source = clustering.getXDataDomain();
+		if (source.getDimensionIDCategory().isOfCategory(target)) {
+			for (NormalClusterElement cluster : allNormalClusters()) {
+				for (CategoricalLZHeatmapElement h : Iterables.filter(cluster.getAnnotations(),
+						CategoricalLZHeatmapElement.class)) {
+					if (h.is(oppositeID, target)) {
+						cluster.removeAnnotation(h);
+						break;
+					}
+				}
+			}
+		} else if (source.getRecordIDCategory().isOfCategory(target)) {
+			for (NormalClusterElement cluster : allNormalClusters()) {
+				for (CategoricalLZHeatmapElement h : Iterables.filter(cluster.getAnnotations(),
+						CategoricalLZHeatmapElement.class)) {
+					if (h.is(oppositeID, target)) {
+						cluster.removeAnnotation(h);
+						break;
+					}
+				}
+			}
+		}
 	}
 
 }

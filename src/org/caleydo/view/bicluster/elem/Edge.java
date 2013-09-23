@@ -25,6 +25,8 @@ public class Edge {
 	public Edge(ClusterElement a, ClusterElement b) {
 		this.a = a;
 		this.b = b;
+		updateDim();
+		updateRec();
 	}
 
 	/**
