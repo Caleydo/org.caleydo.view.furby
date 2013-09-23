@@ -8,6 +8,7 @@ package org.caleydo.view.bicluster.elem.toolbar;
 import gleem.linalg.Vec2f;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
@@ -18,6 +19,7 @@ import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLFlowLayout;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.view.bicluster.event.ResetSettingsEvent;
 
 /**
  *
@@ -45,6 +47,11 @@ public abstract class AToolBarElement extends GLElementContainer implements GLBu
 	}
 
 	public abstract void reset();
+
+	@ListenTo
+	private void onResetSettingsEvent(ResetSettingsEvent event) {
+		reset();
+	}
 
 	public abstract void init(final TablePerspective x);
 

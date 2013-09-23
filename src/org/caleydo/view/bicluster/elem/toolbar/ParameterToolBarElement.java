@@ -45,6 +45,7 @@ import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
+import org.caleydo.view.bicluster.event.ResetSettingsEvent;
 import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
@@ -58,6 +59,8 @@ import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
  *
  */
 public class ParameterToolBarElement extends AToolBarElement implements GLSpinner.IChangeCallback<Integer> {
+
+	private static final SortingType DEFAULT_SORTING_MODE = SortingType.BY_PROBABILITY;
 
 	private final GLButton bandSortingModeButton;
 	private final GLButton probabilitySortingModeButton;
@@ -85,14 +88,14 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 	public ParameterToolBarElement() {
 		this.bandSortingModeButton = new GLButton(EButtonMode.CHECKBOX);
 		bandSortingModeButton.setRenderer(GLButton.createRadioRenderer("Sort by Bands"));
-		bandSortingModeButton.setSelected(false);
+		bandSortingModeButton.setSelected(DEFAULT_SORTING_MODE == SortingType.BY_BAND);
 		bandSortingModeButton.setCallback(this);
 		bandSortingModeButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(bandSortingModeButton);
 
 		this.probabilitySortingModeButton = new GLButton(EButtonMode.CHECKBOX);
 		probabilitySortingModeButton.setRenderer(GLButton.createRadioRenderer("Sort by Probability"));
-		probabilitySortingModeButton.setSelected(true);
+		probabilitySortingModeButton.setSelected(DEFAULT_SORTING_MODE == SortingType.BY_PROBABILITY);
 		probabilitySortingModeButton.setCallback(this);
 		probabilitySortingModeButton.setSize(Float.NaN, BUTTON_WIDTH);
 		this.add(probabilitySortingModeButton);
@@ -164,7 +167,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		reset.setCallback(new GLButton.ISelectionCallback() {
 			@Override
 			public void onSelectionChanged(GLButton button, boolean selected) {
-				reset();
+				EventPublisher.trigger(new ResetSettingsEvent());
 			}
 		});
 		reset.setTooltip("Reset the layout parameters to their default value");
@@ -174,7 +177,23 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 
 	@Override
 	public void reset() {
-		maxDistance.setValue(MyPreferences.getMaxDistance());
+		this.dimBandVisibilityButton.setSelected(isShowDimBands());
+		this.recBandVisibilityButton.setSelected(isShowRecBands());
+		this.bandSortingModeButton.setCallback(null).setSelected(DEFAULT_SORTING_MODE == SortingType.BY_BAND).setCallback(this);
+		this.probabilitySortingModeButton.setSelected(DEFAULT_SORTING_MODE == SortingType.BY_PROBABILITY);
+
+		this.maxDistance.setValue(MyPreferences.getMaxDistance());
+		this.visualizationSwitcher.setSelected(0);
+
+		this.clusterMinSizeThresholdSlider.setValue(0);
+
+		this.dimensionNumberThresholdSpinner.setCallback(null).setValue(getDimTopNElements()).setCallback(this);
+		this.dimensionThresholdSlider.setCallback(null).setValue(getDimThreshold()).setCallback(this);
+		this.recordNumberThresholdSpinner.setCallback(null).setValue(getRecTopNElements()).setCallback(this);
+		this.recordThresholdSlider.setValue(getRecThreshold());
+
+		setClearHiddenButtonRenderer();
+		EventPublisher.trigger(new UnhidingClustersEvent());
 	}
 
 	/**
@@ -250,7 +269,8 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		}
 		boolean isBandSorting = bandSortingModeButton.isSelected();
 		EventPublisher.trigger(new SortingChangeEvent(isBandSorting ? SortingType.BY_BAND
-				: SortingType.BY_PROPABILITY, this));
+ : SortingType.BY_PROBABILITY,
+				this));
 	}
 
 	@ListenTo

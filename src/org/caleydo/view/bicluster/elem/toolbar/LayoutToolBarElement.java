@@ -71,10 +71,10 @@ public class LayoutToolBarElement extends AToolBarElement {
 
 	@Override
 	public void reset() {
-		this.repulsionSlider.setValue(DEFAULT_REPULSION);
-		this.attractionSlider.setValue(DEFAULT_ATTRACTION);
-		this.borderForceSlider.setValue(DEFAULT_BORDERFACTOR);
-		this.clusterDimFactorSlider.setValue(getDimScaleFactor());
+		this.repulsionSlider.setCallback(null).setValue(DEFAULT_REPULSION).setCallback(this);
+		this.attractionSlider.setCallback(null).setValue(DEFAULT_ATTRACTION).setCallback(this);
+		this.borderForceSlider.setCallback(null).setValue(DEFAULT_BORDERFACTOR).setCallback(this);
+		this.clusterDimFactorSlider.setCallback(null).setValue(getDimScaleFactor()).setCallback(this);
 		this.clusterRecFactorSlider.setValue(getRecScaleFactor());
 	}
 
@@ -154,7 +154,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-205, 365 + 20 + 20, 200, 256);
+		return new Rect(-205, 365 + 20 + 20, 200, 216);
 	}
 
 }

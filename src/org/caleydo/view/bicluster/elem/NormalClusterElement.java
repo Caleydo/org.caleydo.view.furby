@@ -71,7 +71,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	protected boolean showThreshold;
 
-	protected SortingType sortingType = SortingType.BY_PROPABILITY;
+	protected SortingType sortingType = SortingType.BY_PROBABILITY;
 
 	public NormalClusterElement(int bcNr, TablePerspective data, BiClustering clustering) {
 		super(bcNr, data, clustering, Predicates.alwaysTrue());
@@ -391,7 +391,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	private void resort() {
 		switch (sortingType) {
-		case BY_PROPABILITY:
+		case BY_PROBABILITY:
 			probabilitySorting();
 			break;
 		case BY_BAND:
