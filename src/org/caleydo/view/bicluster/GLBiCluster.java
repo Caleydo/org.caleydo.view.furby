@@ -378,17 +378,15 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 
 		assert this.x != null;
 
+		// FIXME add as annotation items to the elements
 		for (TablePerspective t : added) {
 			if (findGroupings(t.getRecordPerspective())) {
-				for (TablePerspective group : t.getRecordSubTablePerspectives())
-					rootElement.addSpecialCluster(t.getRecordPerspective().getIdType(), group);
+
 			}
 			if (findGroupings(t.getDimensionPerspective())) {
-				for (TablePerspective group : t.getDimensionSubTablePerspectives())
-					rootElement.addSpecialCluster(t.getDimensionPerspective().getIdType(), group);
+
 			}
 		}
-		rootElement.removeSpecialClusters(removed);
 	}
 
 

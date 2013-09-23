@@ -48,8 +48,6 @@ import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
-import org.caleydo.view.bicluster.util.ImportChemicalClustersDialog;
-import org.caleydo.view.bicluster.util.ImportExternalDialog;
 
 /**
  *
@@ -66,10 +64,6 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 
 	private GLButton clearHiddenClusterButton;
 	private List<String> clearHiddenButtonTooltipList = new ArrayList<>();
-
-	private GLButton specialRecordButton;
-	private GLButton specialDimensionButton;
-
 
 	private GLElement recordLabel;
 	private GLSpinner<Integer> recordNumberThresholdSpinner;
@@ -110,23 +104,6 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 			this.add(clearHiddenClusterButton);
 		}
 		this.add(createHorizontalLine());
-
-		{
-			specialRecordButton = new GLButton(EButtonMode.BUTTON);
-			specialRecordButton.setRenderer(new MyTextRender("Add special record cluster"));
-			specialRecordButton.setCallback(this);
-			specialRecordButton.setTooltip("Add special record Elements");
-			specialRecordButton.setSize(Float.NaN, BUTTON_WIDTH);
-			this.add(specialRecordButton);
-		}
-		{
-			specialDimensionButton = new GLButton(EButtonMode.BUTTON);
-			specialDimensionButton.setRenderer(new MyTextRender("Add chemical clusters"));
-			specialDimensionButton.setCallback(this);
-			specialDimensionButton.setTooltip("Add chemical Clusters");
-			specialDimensionButton.setSize(Float.NaN, BUTTON_WIDTH);
-			this.add(specialDimensionButton);
-		}
 
 		this.dimBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer("Dimension Bands"));
@@ -236,23 +213,10 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 			clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
 			setClearHiddenButtonRenderer();
 			EventPublisher.trigger(new UnhidingClustersEvent());
-		} else if (button == specialRecordButton) {
-			addSpecialRecords();
-		} else if (button == specialDimensionButton) {
-			addChemicalClusters();
 		}
 		boolean isBandSorting = bandSortingModeButton.isSelected();
 		EventPublisher.trigger(new SortingChangeEvent(isBandSorting ? SortingType.BY_BAND
 				: SortingType.BY_PROPABILITY, this));
-	}
-
-	private void addChemicalClusters() {
-		ImportChemicalClustersDialog.open(this.x.getDimensionPerspective().getIdType());
-
-	}
-
-	private void addSpecialRecords() {
-		ImportExternalDialog.open(this.x.getRecordPerspective().getIdType());
 	}
 
 	@ListenTo

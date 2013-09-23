@@ -7,7 +7,6 @@ package org.caleydo.view.bicluster.elem;
 
 import gleem.linalg.Vec2f;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -36,7 +35,6 @@ import org.caleydo.view.bicluster.elem.band.AllBandsElement;
 import org.caleydo.view.bicluster.elem.band.BandElement;
 import org.caleydo.view.bicluster.event.AlwaysShowToolBarEvent;
 import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
-import org.caleydo.view.bicluster.event.ChemicalClusterAddedEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
@@ -44,7 +42,6 @@ import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
 import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.ShowToolBarEvent;
-import org.caleydo.view.bicluster.event.SpecialClusterAddedEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.util.SetUtils;
@@ -343,49 +340,6 @@ public class GLRootElement extends GLElementContainer {
 		bands.relayout();
 	}
 
-	@ListenTo
-	private void listenTo(SpecialClusterAddedEvent event) {
-		ClusterElement specialCluster = new SpecialRecordClusterElement(x, clustering, event.getElements());
-		addSpecialCluster(specialCluster, !event.isDimensionCluster());
-	}
-
-	@ListenTo
-	private void listenTo(ChemicalClusterAddedEvent e) {
-		ClusterElement specialCluster = new ChemicalClusterElement(x, clustering, e.getClusterList(),
-				e.getElementToClusterMap());
-		addSpecialCluster(specialCluster, false);
-	}
-	public void addSpecialCluster(IDType idType, TablePerspective group) {
-		SpecialGenericClusterElement specialCluster = new SpecialGenericClusterElement(group, clustering);
-		final boolean isRecord = clustering.getXDataDomain().getRecordIDType().resolvesTo(idType);
-		addSpecialCluster(specialCluster, isRecord);
-	}
-
-	private void initialPosition(ClusterElement specialCluster) {
-		specialCluster.setLocation(1000, 1000); // FIXME
-	}
-
-	private void addSpecialCluster(ClusterElement specialCluster, final boolean isRecord) {
-		initialPosition(specialCluster);
-		// create band to all others
-		for (ClusterElement start : clusters.allClusters()) {
-			Edge edge = new Edge(start, specialCluster);
-			start.addEdge(specialCluster, edge);
-			specialCluster.addEdge(start, edge);
-
-			if (isRecord) {
-				edge.updateRec();
-				bands.add(new BandElement(edge, EDimension.RECORD, bands.getRecordSelectionManager(), rec2label));
-			} else {
-				edge.updateDim();
-				bands.add(new BandElement(edge, EDimension.DIMENSION, bands.getDimensionSelectionManager(), dim2label));
-			}
-		}
-		clusters.add(specialCluster);
-		setClusterSizes(specialCluster);
-		bands.updateSelection();
-	}
-
 	/**
 	 *
 	 * @param isDimensionThresholds
@@ -400,22 +354,6 @@ public class GLRootElement extends GLElementContainer {
 				elem.setThreshold(isDimensionThresholds, t);
 			}
 		}
-	}
-
-	/**
-	 * @param removed
-	 */
-	public void removeSpecialClusters(List<TablePerspective> parents) {
-		if (parents.isEmpty())
-			return;
-		List<SpecialGenericClusterElement> toDelete = new ArrayList<>(parents.size());
-		for (SpecialGenericClusterElement cluster : Iterables.filter(clusters, SpecialGenericClusterElement.class)) {
-			if (parents.contains(cluster.getTablePerspective().getParentTablePerspective())) {
-				toDelete.add(cluster);
-			}
-		}
-		for (SpecialGenericClusterElement d : toDelete)
-			d.remove();
 	}
 
 	@ListenTo

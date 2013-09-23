@@ -37,7 +37,6 @@ import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.Edge;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
-import org.caleydo.view.bicluster.event.SpecialClusterRemoveEvent;
 import org.caleydo.view.bicluster.util.SetUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -418,17 +417,6 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 
 	public void updatePosition() {
 		updateStructure();
-	}
-
-	@ListenTo
-	private void listenTo(SpecialClusterRemoveEvent e) {
-		if (e.getDimension() != dimension)
-			return;
-		if (e.getSender() == getFirst() || e.getSender() == getSecond()) {
-			setVisibility(EVisibility.NONE);
-			overlap = null;
-			findAllBands().remove(this);
-		}
 	}
 
 	public void onSelectionUpdate(SelectionManager manager) {
