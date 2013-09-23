@@ -40,6 +40,7 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementS
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
+import org.caleydo.view.bicluster.elem.ui.MySlider;
 import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
@@ -58,7 +59,8 @@ import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
  * @author Samuel Gratzl
  *
  */
-public class ParameterToolBarElement extends AToolBarElement implements GLSpinner.IChangeCallback<Integer> {
+public class ParameterToolBarElement extends AToolBarElement implements GLSpinner.IChangeCallback<Integer>,
+		MySlider.ISelectionCallback {
 
 	private static final SortingType DEFAULT_SORTING_MODE = SortingType.BY_PROBABILITY;
 
@@ -73,10 +75,10 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 
 	private GLElement recordLabel;
 	private GLSpinner<Integer> recordNumberThresholdSpinner;
-	private GLSlider recordThresholdSlider;
+	private MySlider recordThresholdSlider;
 	private GLElement dimensionLabel;
 	private GLSpinner<Integer> dimensionNumberThresholdSpinner;
-	private GLSlider dimensionThresholdSlider;
+	private MySlider dimensionThresholdSlider;
 	private GLElement clusterMinSizeLabel;
 	private GLSlider clusterMinSizeThresholdSlider;
 
@@ -230,10 +232,14 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 
 	@Override
 	public void onSelectionChanged(GLSlider slider, float value) {
-		if (slider == dimensionThresholdSlider || slider == recordThresholdSlider)
-			updateGeneSampleThresholds();
 		if (slider == clusterMinSizeThresholdSlider)
 			EventPublisher.trigger(new MinClusterSizeThresholdChangeEvent(slider.getValue() / 100f));
+	}
+
+	@Override
+	public void onSelectionChanged(MySlider slider, float value) {
+		if (slider == dimensionThresholdSlider || slider == recordThresholdSlider)
+			updateGeneSampleThresholds();
 	}
 
 	private void updateGeneSampleThresholds() {
@@ -331,15 +337,13 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		this.dimensionNumberThresholdSpinner = GLSpinner.createIntegerSpinner(getDimTopNElements(), UNBOUND_NUMBER,
 				Integer.MAX_VALUE, 1,
 				SPINNER_UNBOUND);
-		this.dimensionNumberThresholdSpinner.setRenderer(null);
 		this.dimensionNumberThresholdSpinner.setCallback(this);
 		this.dimensionNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.dimensionNumberThresholdSpinner));
 
-		this.dimensionThresholdSlider = new GLSlider(0, 5f, getDimThreshold());
+		this.dimensionThresholdSlider = new MySlider(true, 0, 5f, getDimThreshold());
 		dimensionThresholdSlider.setCallback(this);
 		dimensionThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
-		dimensionThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(dimensionThresholdSlider);
 
 		this.recordLabel = new GLElement();
@@ -349,15 +353,13 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 
 		this.recordNumberThresholdSpinner = GLSpinner.createIntegerSpinner(getRecTopNElements(), UNBOUND_NUMBER,
 				Integer.MAX_VALUE, 1, SPINNER_UNBOUND);
-		this.recordNumberThresholdSpinner.setRenderer(null);
 		this.recordNumberThresholdSpinner.setCallback(this);
 		this.recordNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.recordNumberThresholdSpinner));
 
-		this.recordThresholdSlider = new GLSlider(0.02f, 0.2f, getRecThreshold());
+		this.recordThresholdSlider = new MySlider(true, 0.02f, 0.2f, getRecThreshold());
 		recordThresholdSlider.setCallback(this);
 		recordThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
-		recordThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(recordThresholdSlider);
 
 	}
