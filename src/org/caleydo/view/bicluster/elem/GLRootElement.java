@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.caleydo.core.data.collection.table.Table;
+import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
@@ -31,6 +33,7 @@ import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.picking.PickingMode;
+import org.caleydo.view.bicluster.elem.annotation.CategoricalLZHeatmapElement;
 import org.caleydo.view.bicluster.elem.band.AllBandsElement;
 import org.caleydo.view.bicluster.elem.band.BandElement;
 import org.caleydo.view.bicluster.elem.toolbar.AToolBarElement;
@@ -414,6 +417,50 @@ public class GLRootElement extends GLElementContainer {
 	public void focusNext() {
 		if (clusters != null)
 			clusters.focusNext();
+	}
+
+	/**
+	 * @param record
+	 * @param t
+	 */
+	public void addAnnotation(EDimension dimension, TablePerspective t) {
+		final Integer oppositeID = dimension.select(t.getRecordPerspective(), t.getDimensionPerspective())
+				.getVirtualArray()
+				.get(0);
+		final Table table = t.getDataDomain().getTable();
+		final IDType target = dimension.select(t.getDataDomain().getDimensionIDType(), t.getDataDomain()
+				.getRecordIDType());
+		ATableBasedDataDomain source = clustering.getXDataDomain();
+		if (source.getDimensionIDCategory().isOfCategory(target)) {
+			final IIDTypeMapper<Integer, Integer> mapper = source.getDimensionIDMappingManager().getIDTypeMapper(
+					source.getDimensionIDType(), target);
+			for (NormalClusterElement cluster : Iterables.filter(clusters, NormalClusterElement.class))
+				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.DIMENSION, oppositeID, table, mapper));
+		} else if (source.getRecordIDCategory().isOfCategory(target)) {
+			final IIDTypeMapper<Integer, Integer> mapper = source.getRecordIDMappingManager().getIDTypeMapper(
+					source.getRecordIDType(), target);
+			for (NormalClusterElement cluster : Iterables.filter(clusters, NormalClusterElement.class))
+				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.RECORD, oppositeID, table, mapper));
+		}
+	}
+
+	/**
+	 * @param removed
+	 */
+	public void removeAnnotation(List<TablePerspective> removed) {
+		if (removed == null || removed.isEmpty())
+			return;
+		// FIXME
+		// for (NormalClusterElement cluster : Lists.newArrayList(Iterables.filter(clusters,
+		// NormalClusterElement.class))) {
+		// for(CategoricalLZHeatmapElement ann :
+		// Iterables.filter(cluster.getAnnotations(),CategoricalLZHeatmapElement.class)) {
+		// if (ann.get)
+		// }
+		// cluster.removeAnnotation(annotation);
+		// if (parents.contains(cluster.getTablePerspective().getParentTablePerspective()))
+		// cluster.remove();
+		// }
 	}
 
 }

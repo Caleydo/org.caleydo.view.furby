@@ -40,6 +40,7 @@ import org.caleydo.core.view.opengl.canvas.IGLKeyListener;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.view.AMultiTablePerspectiveElementView;
 import org.caleydo.view.bicluster.elem.BiClustering;
+import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.GLRootElement;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
@@ -378,15 +379,15 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 
 		assert this.x != null;
 
-		// FIXME add as annotation items to the elements
 		for (TablePerspective t : added) {
 			if (findGroupings(t.getRecordPerspective())) {
-
+				rootElement.addAnnotation(EDimension.RECORD, t);
 			}
 			if (findGroupings(t.getDimensionPerspective())) {
-
+				rootElement.addAnnotation(EDimension.DIMENSION, t);
 			}
 		}
+		rootElement.removeAnnotation(removed);
 	}
 
 

@@ -153,8 +153,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 		final int recAnnotations = count(children.subList(firstAnnotation, children.size()), EDimension.RECORD);
 
 		final int annotationWidth = isFocused() ? 20 : 6;
-		final float shift_x = annotationWidth * dimAnnotations;
-		final float shift_y = annotationWidth * recAnnotations;
+		final float shift_x = annotationWidth * recAnnotations;
+		final float shift_y = annotationWidth * dimAnnotations;
 
 		if (isHovered || isShowAlwaysToolBar()) { // depending whether we are hovered or not, show hide the toolbar's
 			corner.setBounds(-18 - shift_x, -18 - shift_y, 18, 18 * 2);
@@ -190,8 +190,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 			recLabel.setBounds(w, 0, 0, h);
 		}
 
-		int actDimAnnotation = 0;
-		int actRecAnnotation = 0;
+		int actDimAnnotation = 1;
+		int actRecAnnotation = 1;
 		for (IGLLayoutElement elem : children.subList(firstAnnotation, children.size())) {
 			EDimension dim = elem.getLayoutDataAs(EDimension.class, null);
 			if (dim == null)
@@ -475,6 +475,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 	public void addAnnotation(ALZHeatmapElement annotation) {
 		this.add(annotation);
 		this.annotations.add(annotation);
+		resort();
 	}
 
 	/**
