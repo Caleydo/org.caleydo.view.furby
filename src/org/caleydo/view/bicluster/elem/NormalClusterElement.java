@@ -34,6 +34,8 @@ import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder.EButtonBarLa
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.BiClusterRenderStyle;
+import org.caleydo.view.bicluster.elem.annotation.ALZHeatmapElement;
+import org.caleydo.view.bicluster.elem.annotation.ProbabilityLZHeatmapElement;
 import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;

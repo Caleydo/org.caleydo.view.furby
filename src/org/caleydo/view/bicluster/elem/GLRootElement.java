@@ -33,6 +33,9 @@ import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.picking.PickingMode;
 import org.caleydo.view.bicluster.elem.band.AllBandsElement;
 import org.caleydo.view.bicluster.elem.band.BandElement;
+import org.caleydo.view.bicluster.elem.toolbar.AToolBarElement;
+import org.caleydo.view.bicluster.elem.toolbar.LayoutToolBarElement;
+import org.caleydo.view.bicluster.elem.toolbar.ParameterToolBarElement;
 import org.caleydo.view.bicluster.event.AlwaysShowToolBarEvent;
 import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
@@ -55,9 +58,8 @@ import com.google.common.collect.Iterables;
 public class GLRootElement extends GLElementContainer {
 	private static final Logger log = Logger.create(GLRootElement.class);
 
-	private final ParameterToolBarElement parameterToolBar = new ParameterToolBarElement();
-	private final LayoutToolBarElement layoutToolBar = new LayoutToolBarElement();
-
+	private final List<AToolBarElement> toolbars = Arrays.asList(new ParameterToolBarElement(),
+			new LayoutToolBarElement());
 
 	private boolean dimBands = MyPreferences.isShowDimBands();
 	private boolean recBands = MyPreferences.isShowRecBands();
@@ -107,7 +109,7 @@ public class GLRootElement extends GLElementContainer {
 
 	@Override
 	public void layout(int deltaTimeMs) {
-		for (AToolBarElement toolbar : Arrays.asList(parameterToolBar, layoutToolBar))
+		for (AToolBarElement toolbar : toolbars)
 			if (toolbar.hasMoved()) {
 				clusters.relayout();
 				bands.relayout();
@@ -134,7 +136,7 @@ public class GLRootElement extends GLElementContainer {
 	 * @return the toolbars, see {@link #toolbars}
 	 */
 	public List<AToolBarElement> getToolbars() {
-		return Arrays.asList(parameterToolBar, layoutToolBar);
+		return toolbars;
 	}
 
 	public boolean isRecBandsEnabled() {
@@ -174,7 +176,7 @@ public class GLRootElement extends GLElementContainer {
 	protected void init(IGLElementContext context) {
 		super.init(context);
 		// show the global toolbar as a popup
-		parameterToolBar.toggle(context);
+		toolbars.get(0).toggle(context);
 	}
 
 	@ListenTo
@@ -183,9 +185,9 @@ public class GLRootElement extends GLElementContainer {
 			return;
 		boolean parameters = event.isShowParameter();
 		if (parameters)
-			parameterToolBar.toggle(context);
+			toolbars.get(0).toggle(context);
 		else
-			layoutToolBar.toggle(context);
+			toolbars.get(1).toggle(context);
 		clusters.relayout();
 	}
 
@@ -199,8 +201,8 @@ public class GLRootElement extends GLElementContainer {
 		this.dim2label = x2Label(this.x.getDimensionPerspective().getIdType());
 		this.rec2label = x2Label(this.x.getRecordPerspective().getIdType());
 
-		parameterToolBar.setXTablePerspective(x);
-		layoutToolBar.setXTablePerspective(x);
+		for (AToolBarElement toolbar : getToolbars())
+			toolbar.init(x);
 
 		bands = new AllBandsElement(x);
 		this.clear();

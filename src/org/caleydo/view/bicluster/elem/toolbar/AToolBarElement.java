@@ -3,10 +3,11 @@
  * Copyright (c) The Caleydo Team. All rights reserved.
  * Licensed under the new BSD license, available at http://caleydo.org/license
  ******************************************************************************/
-package org.caleydo.view.bicluster.elem;
+package org.caleydo.view.bicluster.elem.toolbar;
 
 import gleem.linalg.Vec2f;
 
+import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
@@ -42,6 +43,10 @@ public abstract class AToolBarElement extends GLElementContainer implements GLBu
 	public final boolean isVisible() {
 		return getParent() != null;
 	}
+
+	public abstract void reset();
+
+	public abstract void init(final TablePerspective x);
 
 	@Override
 	public void onSelectionChanged(GLSlider slider, float value) {

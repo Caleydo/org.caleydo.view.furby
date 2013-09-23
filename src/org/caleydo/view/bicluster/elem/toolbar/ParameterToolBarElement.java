@@ -3,7 +3,7 @@
  * Copyright (c) The Caleydo Team. All rights reserved.
  * Licensed under the new BSD license, available at http://caleydo.org/license
  ******************************************************************************/
-package org.caleydo.view.bicluster.elem;
+package org.caleydo.view.bicluster.elem.toolbar;
 
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.UNBOUND_NUMBER;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimThreshold;
@@ -31,6 +31,7 @@ import org.caleydo.core.view.opengl.layout2.basic.GLComboBox.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.basic.GLSpinner;
+import org.caleydo.core.view.opengl.layout2.basic.GLSpinner.IChangeCallback;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
@@ -39,6 +40,7 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementS
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
+import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
@@ -48,6 +50,7 @@ import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
+import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 
 /**
  *
@@ -56,14 +59,14 @@ import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
  */
 public class ParameterToolBarElement extends AToolBarElement implements GLSpinner.IChangeCallback<Integer> {
 
-	private GLButton bandSortingModeButton;
-	private GLButton probabilitySortingModeButton;
+	private final GLButton bandSortingModeButton;
+	private final GLButton probabilitySortingModeButton;
 
-	private GLButton dimBandVisibilityButton;
-	private GLButton recBandVisibilityButton;
+	private final GLButton dimBandVisibilityButton;
+	private final GLButton recBandVisibilityButton;
 
-	private GLButton clearHiddenClusterButton;
-	private List<String> clearHiddenButtonTooltipList = new ArrayList<>();
+	private final GLButton clearHiddenClusterButton;
+	private final List<String> clearHiddenButtonTooltipList = new ArrayList<>();
 
 	private GLElement recordLabel;
 	private GLSpinner<Integer> recordNumberThresholdSpinner;
@@ -74,10 +77,10 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 	private GLElement clusterMinSizeLabel;
 	private GLSlider clusterMinSizeThresholdSlider;
 
-	private GLComboBox<GLElementSupplier> visualizationSwitcher;
-	private List<GLElementSupplier> visualizationSwitcherModel = new ArrayList<>();
+	private final GLComboBox<GLElementSupplier> visualizationSwitcher;
+	private final List<GLElementSupplier> visualizationSwitcherModel = new ArrayList<>();
 
-	private TablePerspective x;
+	private final GLSpinner<Integer> maxDistance;
 
 	public ParameterToolBarElement() {
 		this.bandSortingModeButton = new GLButton(EButtonMode.CHECKBOX);
@@ -141,6 +144,37 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 
 		createThresholdSlider();
 		createMinimumClusterSizeSlider();
+
+		GLElementContainer c = new GLElementContainer(GLLayouts.flowHorizontal(2));
+		this.maxDistance = GLSpinner.createIntegerSpinner(1, 0, 4, 1);
+		maxDistance.setCallback(new IChangeCallback<Integer>() {
+			@Override
+			public void onValueChanged(GLSpinner<? extends Integer> spinner, Integer value) {
+				EventPublisher.trigger(new ChangeMaxDistanceEvent(value.intValue()));
+			}
+		});
+		maxDistance.setTooltip("specifies the maximal distance for automatic hiding of connected clusters");
+		maxDistance.setSize(-1, -1);
+		c.add(new GLElement(GLRenderers.drawText("Max Distance: ")).setSize(100, -1));
+		c.add(maxDistance);
+		this.add(c.setSize(-1, LABEL_WIDTH));
+
+		GLButton reset = new GLButton();
+		reset.setRenderer(GLRenderers.drawText("Reset", VAlign.CENTER, new GLPadding(0, 0, 0, 2)));
+		reset.setCallback(new GLButton.ISelectionCallback() {
+			@Override
+			public void onSelectionChanged(GLButton button, boolean selected) {
+				reset();
+			}
+		});
+		reset.setTooltip("Reset the layout parameters to their default value");
+		reset.setSize(Float.NaN, LABEL_WIDTH);
+		this.add(reset);
+	}
+
+	@Override
+	public void reset() {
+		maxDistance.setValue(MyPreferences.getMaxDistance());
 	}
 
 	/**
@@ -209,7 +243,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 			probabilitySortingModeButton.setSelected(selected);
 			bandSortingModeButton.setSelected(!selected);
 		} else if (button == clearHiddenClusterButton) {
-			clearHiddenButtonTooltipList = new ArrayList<>();
+			clearHiddenButtonTooltipList.clear();
 			clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
 			setClearHiddenButtonRenderer();
 			EventPublisher.trigger(new UnhidingClustersEvent());
@@ -321,19 +355,16 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		return c;
 	}
 
-	public void setXTablePerspective(final TablePerspective x) {
-		if (x == null)
-			return;
-		else
-			this.x = x;
-		setText(dimensionLabel, x.getDataDomain().getDimensionIDCategory().toString() + " Threshold");
-		setText(recordLabel, x.getDataDomain().getRecordIDCategory().toString() + " Threshold");
+	@Override
+	public void init(final TablePerspective x) {
+		final String dimensionIDCategory = x.getDataDomain().getDimensionIDCategory().getCategoryName();
+		final String recordIDCategory = x.getDataDomain().getRecordIDCategory().getCategoryName();
 
-		recBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(x.getDataDomain().getRecordIDCategory()
-				.toString()
-				+ " Bands"));
-		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(x.getDataDomain().getDimensionIDCategory()
-				.toString()));
+		setText(dimensionLabel, dimensionIDCategory + " Threshold");
+		setText(recordLabel, recordIDCategory + " Threshold");
+
+		recBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(recordIDCategory + " Bands"));
+		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(dimensionIDCategory + " Bands"));
 
 		this.visualizationSwitcherModel.addAll(createSupplier(x));
 		this.visualizationSwitcher.setSelected(0);

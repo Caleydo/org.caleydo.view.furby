@@ -3,7 +3,7 @@
  * Copyright (c) The Caleydo Team. All rights reserved.
  * Licensed under the new BSD license, available at http://caleydo.org/license
  *******************************************************************************/
-package org.caleydo.view.bicluster.elem;
+package org.caleydo.view.bicluster.elem.annotation;
 
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -12,6 +12,7 @@ import java.util.Set;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.id.IIDTypeMapper;
 import org.caleydo.core.util.color.Color;
+import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 
 /**

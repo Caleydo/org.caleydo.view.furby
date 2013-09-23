@@ -14,6 +14,7 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
 import org.caleydo.view.bicluster.elem.layout.ForceBasedLayoutTuned;
+import org.caleydo.view.bicluster.elem.toolbar.AToolBarElement;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;

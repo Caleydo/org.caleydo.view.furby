@@ -3,7 +3,7 @@
  * Copyright (c) The Caleydo Team. All rights reserved.
  * Licensed under the new BSD license, available at http://caleydo.org/license
  *******************************************************************************/
-package org.caleydo.view.bicluster.elem;
+package org.caleydo.view.bicluster.elem.annotation;
 
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -19,6 +19,8 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
+import org.caleydo.view.bicluster.elem.ClusterContentElement;
+import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 import org.caleydo.view.heatmap.v2.CellSpace;
 
