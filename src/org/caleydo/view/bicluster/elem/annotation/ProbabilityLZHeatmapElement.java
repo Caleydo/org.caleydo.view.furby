@@ -9,7 +9,6 @@ import java.nio.FloatBuffer;
 import java.util.List;
 
 import org.caleydo.core.util.function.DoubleFunctions;
-import org.caleydo.core.util.function.ExpressionFunctions;
 import org.caleydo.core.util.function.IDoubleFunction;
 import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.sorting.IntFloat;
@@ -60,8 +59,9 @@ public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
 			// all negative
 			this.center = width-1; //last
 
-		IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
-				DoubleFunctions.normalize(min, max));
+		IDoubleFunction transform = DoubleFunctions.CLAMP01;
+		// IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
+		// DoubleFunctions.normalize(min, max));
 
 		for (IntFloat f : values) {
 			float v = Math.abs(f.getProbability());
