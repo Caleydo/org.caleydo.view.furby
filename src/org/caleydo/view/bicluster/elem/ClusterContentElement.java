@@ -33,7 +33,7 @@ import org.caleydo.view.heatmap.v2.AHeatMapElement;
 import org.caleydo.view.heatmap.v2.CellSpace;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.ISpacingStrategy;
-import org.caleydo.view.heatmap.v2.LinearBarHeatMapElement;
+import org.caleydo.view.heatmap.v2.BarPlotElement;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
 
 import com.google.common.base.Predicate;
@@ -146,7 +146,7 @@ public class ClusterContentElement extends GLElementDecorator {
 	}
 
 	boolean isShowingLinearPlot() {
-		return switcher.getActiveElement() instanceof LinearBarHeatMapElement;
+		return switcher.getActiveElement() instanceof BarPlotElement;
 	}
 
 	public Vec2f getMinSize() {

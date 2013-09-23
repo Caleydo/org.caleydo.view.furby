@@ -5,10 +5,6 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimThreshold;
-import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimTopNElements;
-import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThreshold;
-import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecTopNElements;
 import gleem.linalg.Vec2f;
 
 import java.awt.Rectangle;
@@ -28,7 +24,6 @@ import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.event.data.DataSetSelectedEvent;
 import org.caleydo.core.gui.util.RenameNameDialog;
-import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.base.ILabeled;
 import org.caleydo.core.util.color.Color;
@@ -36,16 +31,14 @@ import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
 import org.caleydo.core.view.opengl.layout2.animation.MoveTransitions;
 import org.caleydo.core.view.opengl.layout2.animation.Transitions;
-import org.caleydo.core.view.opengl.layout2.basic.GLButton;
-import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayoutDatas;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.layout.IHasGLLayoutData;
-import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
@@ -88,16 +81,11 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected float actOpacityFactor = 1;
 	protected float targetOpacityfactor = 1;
 
-	private final Map<ClusterElement, Edge> edges = new IdentityHashMap<>();
+	protected final Map<ClusterElement, Edge> edges = new IdentityHashMap<>();
 	private int totalDimOverlaps = 0;
 	private int totalRecOverlaps = 0;
 
 	protected HeaderBar headerBar;
-
-	protected float recThreshold = getRecThreshold();
-	protected int recNumberThreshold = getRecTopNElements();
-	protected float dimThreshold = getDimThreshold();
-	protected int dimNumberThreshold = getDimTopNElements();
 
 	private double dimSize;
 	private double recSize;
@@ -154,13 +142,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return bcNr;
 	}
 
-	public final IDCategory getRecordIDCategory() {
-		return data.getDataDomain().getRecordIDCategory();
-	}
-
-	public final IDCategory getDimensionIDCategory() {
-		return data.getDataDomain().getDimensionIDCategory();
-	}
 
 	public final IDType getDimensionIDType() {
 		return getDimVirtualArray().getIdType();
@@ -168,10 +149,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	public final IDType getRecordIDType() {
 		return getRecVirtualArray().getIdType();
-	}
-
-	public final String getDataDomainID() {
-		return data.getDataDomain().getDataDomainID();
 	}
 
 	/**
@@ -201,14 +178,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		super.renderPickImpl(g, w, h);
 	}
 
-	public int minimalDistanceTo(ClusterElement other, int maxDistance) {
+	public final int minimalDistanceTo(ClusterElement other, int maxDistance) {
 		GLRootElement r = findRootElement();
 		return MyDijkstra.minDistance(this, other, maxDistance, r.isRecBandsEnabled(), r.isDimBandsEnabled());
 	}
 
 	@Override
 	public final void layout(int deltaTimeMs) {
-		updateOpacticy(deltaTimeMs);
+		updateOpacity(deltaTimeMs);
 		if (mouseOutDelay != Integer.MAX_VALUE) {
 			mouseOutDelay -= deltaTimeMs;
 			if (mouseOutDelay <= 0) {
@@ -220,7 +197,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	}
 
-	private void updateOpacticy(int deltaTimeMs) {
+	private void updateOpacity(int deltaTimeMs) {
 		float delta = Math.abs(actOpacityFactor - targetOpacityfactor);
 		if (delta < 0.01f) // done
 			return;
@@ -307,21 +284,57 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return findParent(GLRootElement.class);
 	}
 
-	public void addEdge(ClusterElement target, Edge edge) {
+	public final void addEdge(ClusterElement target, Edge edge) {
 		this.edges.put(target, edge);
 	}
 
-	public void updateOverlap(ClusterElement to, boolean dim, boolean rec) {
+	public void updateEdge(ClusterElement to, boolean dim, boolean rec) {
 		if (!dim && !rec)
 			return;
 		Edge edge = edges.get(to);
 		if (edge == null)
 			return;
-		if (dim)
-			totalDimOverlaps += edge.updateDim();
-		if (rec)
-			totalRecOverlaps += edge.updateRec();
+		if (dim) {
+			int delta = edge.updateDim();
+			totalDimOverlaps += delta;
+			edge.getOpposite(this).totalDimOverlaps += delta;
+		}
+		if (rec) {
+			int delta = edge.updateRec();
+			totalRecOverlaps += delta;
+			edge.getOpposite(this).totalRecOverlaps += delta;
+		}
 		updateVisibility();
+		edge.getOpposite(this).updateVisibility();
+	}
+
+	/**
+	 *
+	 */
+	public void updateOutgoingEdges(boolean dim, boolean rec) {
+		updateEdges(dim, rec, true);
+	}
+
+	private void updateEdges(boolean dim, boolean rec, boolean justOutgoing) {
+		if (!dim && !rec)
+			return;
+		for (Edge edge : edges.values()) {
+			if (!justOutgoing || (edge.getA() == this)) {
+				updateEdge(edge.getB(), dim, rec);
+			}
+		}
+	}
+
+	protected void updateMyEdges(boolean dim, boolean rec) {
+		updateEdges(dim, rec, false);
+		onEdgeUpdateDone();
+		for (Edge edge : edges.values()) {
+			edge.getOpposite(this).onEdgeUpdateDone();
+		}
+	}
+
+	public void onEdgeUpdateDone() {
+		// nothing todo
 	}
 
 	public final void setPerspectiveLabel(String dimensionName, String recordName) {
@@ -408,7 +421,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return GLElementAccessor.asLayoutElement(this);
 	}
 
-	protected class HeaderBar extends GLButton implements ISelectionCallback {
+	protected class HeaderBar extends PickableGLElement {
 
 		private boolean clicked = false;
 
@@ -418,36 +431,30 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 		public HeaderBar() {
 			setzDelta(DEFAULT_Z_DELTA);
-			createButtons();
 			setSize(Float.NaN, 20);
 			this.setLayoutData(GROW_UP);
 		}
 
-		protected void createButtons() {
-			setRenderer(new IGLRenderer() {
+		@Override
+		protected void renderImpl(GLGraphics g, float w, float h) {
+			super.renderImpl(g, w, h);
+			if (isFocused()) {
+				g.color(SelectionType.SELECTION.getColor());
+				g.fillRoundedRect(0, 0, w, h, 2);
+				g.textColor(Color.BLACK);
+			} else if (isHovered) {
+				g.color(SelectionType.MOUSE_OVER.getColor());
+				g.fillRoundedRect(0, 0, w, h, 2);
+			} else
+				g.textColor(new Color(0, 0, 0, actOpacityFactor));
 
-				@Override
-				public void render(GLGraphics g, float w, float h, GLElement parent) {
-					if (isFocused()) {
-						g.color(SelectionType.SELECTION.getColor());
-						g.fillRoundedRect(0, 0, w, h, 2);
-						g.textColor(Color.BLACK);
-					} else if (isHovered) {
-						g.color(SelectionType.MOUSE_OVER.getColor());
-						g.fillRoundedRect(0, 0, w, h, 2);
-					} else
-						g.textColor(new Color(0, 0, 0, actOpacityFactor));
-
-					String text = getID();
-					if (scaleFactor > minScaleFactor && Math.round(scaleFactor * 100) != 100)
-						text += String.format(" (%d%%)", (int) (100 * scaleFactor));
-					if (isHovered)
-						text = " " + text;
-					g.drawText(text, 0, 0, g.text.getTextWidth(text, 12) + 2, 12);
-					g.textColor(Color.BLACK);
-
-				}
-			});
+			String text = getID();
+			if (scaleFactor > minScaleFactor && Math.round(scaleFactor * 100) != 100)
+				text += String.format(" (%d%%)", (int) (100 * scaleFactor));
+			if (isHovered)
+				text = " " + text;
+			g.drawText(text, 0, 0, g.text.getTextWidth(text, 12) + 2, 12);
+			g.textColor(Color.BLACK);
 		}
 
 		@Override
@@ -482,13 +489,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			}
 			setZValuesAccordingToState();
 		}
-
-		@Override
-		public void onSelectionChanged(GLButton button, boolean selected) {
-			// TODO Auto-generated method stub
-
-		}
-
 	}
 
 	private boolean isClusterCollision() {
@@ -618,11 +618,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	protected final void hideThisCluster() {
+		if (isHidden)
+			return;
+		if (isHovered)
+			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
 		isHidden = true;
 		isHovered = false;
 		updateVisibility();
 		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
-		EventPublisher.trigger(new MouseOverClusterEvent(this, false));
 		relayout();
 	}
 
@@ -924,5 +927,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		relayout();
 		repaintPick();
 	}
+
 
 }

@@ -5,6 +5,11 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimThreshold;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimTopNElements;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThreshold;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecTopNElements;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,7 +20,6 @@ import java.util.Set;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
-import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -36,9 +40,6 @@ import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.elem.annotation.ALZHeatmapElement;
 import org.caleydo.view.bicluster.elem.annotation.ProbabilityLZHeatmapElement;
-import org.caleydo.view.bicluster.event.ClusterScaleEvent;
-import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
-import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.sorting.BandSorting;
@@ -64,6 +65,12 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	private final FuzzyClustering dimClustering;
 	private final FuzzyClustering recClustering;
+
+	protected float recThreshold = getRecThreshold();
+	protected int recNumberThreshold = getRecTopNElements();
+	protected float dimThreshold = getDimThreshold();
+	protected int dimNumberThreshold = getDimTopNElements();
+
 	/**
 	 * elements for showing the probability heatmaps
 	 */
@@ -179,7 +186,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 			recthreshbar.hide();
 		}
 
-
 		content.setBounds(0, 0, w, h);
 
 		if (isFocused()) {
@@ -205,7 +211,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 			}
 		}
 
-
 	}
 
 	/**
@@ -229,89 +234,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 			this.sortingType = e.getType();
 			resort();
 		}
-	}
-
-	protected class ThresholdBar extends GLElementDecorator implements
-			org.caleydo.core.view.opengl.layout2.basic.GLSlider.ISelectionCallback {
-
-		private final boolean isHorizontal;
-		private final GLSlider slider;
-		// float globalMaxThreshold;
-		private float localMaxSliderValue;
-
-		protected ThresholdBar(boolean layout) {
-			isHorizontal = layout;
-			// move to the top
-			setzDelta(DEFAULT_Z_DELTA);
-
-			// create buttons
-			float max = 0;
-			this.slider = new GLSlider(0, max, max / 2);
-			slider.setCallback(this);
-			slider.setHorizontal(isHorizontal);
-			slider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
-			setContent(slider);
-			setVisibility(EVisibility.PICKABLE); // for parent
-		}
-
-		@Override
-		public void onSelectionChanged(GLSlider slider, float value) {
-			if (value >= localMaxSliderValue)
-				return;
-			setThresholdImpl(isHorizontal, value);
-		}
-
-		/**
-		 * @param dimProbabilities
-		 */
-		public void updateSliders(FuzzyClustering clustering) {
-			localMaxSliderValue = clustering.getAbsMaxValue();
-			this.slider.setMinMax(0, localMaxSliderValue);
-		}
-
-		// @ListenTo
-		// public void listenTo(MaxThresholdChangeEvent event) {
-		// globalMaxThreshold = (float) (isHorizontal ? event.getDimThreshold() : event.getRecThreshold());
-		// createButtons();
-		// }
-
-		@ListenTo
-		public void listenTo(LZThresholdChangeEvent event) {
-			if (event.isGlobalEvent()) {
-				setValue(isHorizontal ? event.getDimensionThreshold() : event.getRecordThreshold());
-			}
-		}
-
-		/**
-		 * @param value
-		 */
-		public void setValue(float value) {
-			slider.setCallback(null); // to avoid that we will be callbacked
-			slider.setValue(value);
-			slider.setCallback(this);
-		}
-	}
-
-	/**
-	 * @param isDimension
-	 * @param value
-	 */
-	final void setThresholdImpl(boolean isDimension, float value) {
-		if ((isDimension && dimThreshold == value) || (!isDimension && recThreshold == value))
-			return;
-		if (isDimension)
-			dimThreshold = value;
-		else
-			recThreshold = value;
-		refilter(false);
-	}
-
-	public final void setThreshold(boolean isDimension, float value) {
-		setThresholdImpl(isDimension, value);
-		if (isDimension && dimThreshBar != null)
-			dimThreshBar.setValue(value);
-		else if (!isDimension && recThreshBar != null)
-			recThreshBar.setValue(value);
 	}
 
 	@Override
@@ -363,32 +285,48 @@ public class NormalClusterElement extends AMultiClusterElement {
 		return true;
 	}
 
-	// FIXME when me or any of my neigbors updates its overlap, we need to do a resort
-	// @Override
-	// void calculateOverlap(boolean dimBandsEnabled, boolean recBandsEnabled) {
-	// super.calculateOverlap(dimBandsEnabled, recBandsEnabled);
-	// if (getVisibility() == EVisibility.PICKABLE && sortingType == SortingType.bandSorting)
-	// resort();
-	// }
-
-	@ListenTo
-	private void listenTo(LZThresholdChangeEvent event) {
-		if (!event.isGlobalEvent()) {
-			return;
-		}
-		recThreshold = event.getRecordThreshold();
-		dimThreshold = event.getDimensionThreshold();
-		recNumberThreshold = event.getRecordNumberThreshold();
-		dimNumberThreshold = event.getDimensionNumberThreshold();
-		refilter(event.isGlobalEvent());
+	@Override
+	public void onEdgeUpdateDone() {
+		super.onEdgeUpdateDone();
+		if (getVisibility() == EVisibility.PICKABLE && sortingType == SortingType.BY_BAND)
+			resort();
 	}
 
+
+	public void setThresholds(float dimThreshold, int dimNumberThreshold, float recThreshold, int recNumberThreshold) {
+		this.dimThreshold = dimThreshold;
+		this.dimNumberThreshold = dimNumberThreshold;
+		this.recThreshold = recThreshold;
+		this.recNumberThreshold = recNumberThreshold;
+
+		this.recThreshBar.setValue(recThreshold);
+		this.dimThreshBar.setValue(dimThreshold);
+
+		refilter(false);
+	}
+
+	/**
+	 * @param dimension
+	 * @param t
+	 */
+	public void setThreshold(EDimension dimension, float t) {
+		setThresholds(dimension.select(t, dimThreshold), dimNumberThreshold, dimension.select(recThreshold, t),
+				recNumberThreshold);
+	}
+
+	/**
+	 * @param dimension
+	 * @param t
+	 */
+	void setLocalThreshold(EDimension dimension, float t) {
+		setThreshold(dimension, t);
+		updateMyEdges(dimension.isHorizontal(), dimension.isVertical());
+	}
 
 	@Override
 	protected void setLabel(String id) {
 		data.setLabel(id);
 	}
-
 
 	private void resort() {
 		switch (sortingType) {
@@ -403,20 +341,20 @@ public class NormalClusterElement extends AMultiClusterElement {
 	}
 
 	private void bandSorting() {
-		// Pair<List<IntFloat>, List<IntFloat>> p = filterData();
-		//
-		// Set<IntFloat> finalDimSorting = bandSort(p.getFirst(), dimOverlap.values());
-		// Set<IntFloat> finalRecSorting = bandSort(p.getSecond(), recOverlap.values());
-		//
-		// updateTablePerspective(new ArrayList<>(finalDimSorting), new ArrayList<>(finalRecSorting));
+		Pair<List<IntFloat>, List<IntFloat>> p = filterData();
+
+		Set<IntFloat> finalDimSorting = bandSort(p.getFirst(), EDimension.DIMENSION);
+		Set<IntFloat> finalRecSorting = bandSort(p.getSecond(), EDimension.RECORD);
+
+		updateTablePerspective(new ArrayList<>(finalDimSorting), new ArrayList<>(finalRecSorting));
 		fireTablePerspectiveChanged();
 	}
 
-	private Set<IntFloat> bandSort(List<IntFloat> indices, Collection<List<Integer>> bands) {
-		List<List<Integer>> nonEmptyDimBands = new ArrayList<>();
-		for (List<Integer> dimBand : bands) {
-			if (dimBand.size() > 0)
-				nonEmptyDimBands.add(dimBand);
+	private Set<IntFloat> bandSort(List<IntFloat> indices, EDimension dim) {
+		List<Collection<Integer>> nonEmptyDimBands = new ArrayList<>();
+		for (Edge edge : edges.values()) {
+			if (edge.getOverlap(dim) > 0)
+				nonEmptyDimBands.add(edge.getOverlapIndices(dim));
 		}
 		BandSorting dimConflicts = new BandSorting(nonEmptyDimBands);
 
@@ -439,7 +377,13 @@ public class NormalClusterElement extends AMultiClusterElement {
 		fireTablePerspectiveChanged();
 	}
 
-	protected void refilter(boolean isGlobal) {
+	/**
+	 * triggers a refiltering
+	 *
+	 * @param isGlobal
+	 *            whether this is a local change or a global one
+	 */
+	private void refilter(boolean isGlobal) {
 		if (isLocked && isGlobal)
 			return;
 
@@ -448,9 +392,13 @@ public class NormalClusterElement extends AMultiClusterElement {
 		updateTablePerspective(p.getFirst(), p.getSecond());
 
 		updateVisibility();
-		triggerDataUpdated(isGlobal);
 	}
 
+	/**
+	 * filter the data according to the current thresholds
+	 *
+	 * @return
+	 */
 	private Pair<List<IntFloat>, List<IntFloat>> filterData() {
 		List<IntFloat> dims = dimClustering.filter(dimThreshold, dimNumberThreshold);
 		List<IntFloat> recs = recClustering.filter(recThreshold, recNumberThreshold);
@@ -459,7 +407,12 @@ public class NormalClusterElement extends AMultiClusterElement {
 		return p;
 	}
 
-
+	/**
+	 * applies the filtered data to the {@link TablePerspective}s
+	 *
+	 * @param dims
+	 * @param recs
+	 */
 	private void updateTablePerspective(List<IntFloat> dims, List<IntFloat> recs) {
 		fill(getDimVirtualArray(), dims);
 		fill(getRecVirtualArray(), recs);
@@ -471,6 +424,11 @@ public class NormalClusterElement extends AMultiClusterElement {
 				annotation.update(dims);
 			else
 				annotation.update(recs);
+	}
+
+	private static void fill(VirtualArray va, List<IntFloat> values) {
+		va.clear();
+		va.addAll(Lists.transform(values, IntFloat.TO_INDEX));
 	}
 
 	public void addAnnotation(ALZHeatmapElement annotation) {
@@ -491,19 +449,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 			this.remove(annotation);
 	}
 
-	private void fill(VirtualArray va, List<IntFloat> values) {
-		va.clear();
-		va.addAll(Lists.transform(values, IntFloat.TO_INDEX));
-	}
 
-	private void triggerDataUpdated(boolean isGlobal) {
-		EventPublisher.trigger(new ClusterScaleEvent(this));
-		if (!isGlobal)
-			EventPublisher.trigger(new MouseOverClusterEvent(this, true));
-		// FIXME
-		// EventPublisher.trigger(new RecalculateOverlapEvent(this, isGlobal, dimBandsEnabled, recBandsEnabled));
-		// update bands
-	}
 
 	private GLButton createHideClusterButton() {
 		GLButton hide = new GLButton();
@@ -519,6 +465,57 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 		});
 		return hide;
+	}
+
+	public void toggleLocked() {
+		isLocked = !isLocked;
+	}
+
+	protected class ThresholdBar extends GLElementDecorator implements GLSlider.ISelectionCallback {
+
+		private final boolean isHorizontal;
+		private final GLSlider slider;
+		// float globalMaxThreshold;
+		private float localMaxSliderValue;
+
+		protected ThresholdBar(boolean layout) {
+			isHorizontal = layout;
+			// move to the top
+			setzDelta(DEFAULT_Z_DELTA);
+
+			// create buttons
+			float max = 0;
+			this.slider = new GLSlider(0, max, max / 2);
+			slider.setCallback(this);
+			slider.setHorizontal(isHorizontal);
+			slider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
+			setContent(slider);
+			setVisibility(EVisibility.PICKABLE); // for parent
+		}
+
+		@Override
+		public void onSelectionChanged(GLSlider slider, float value) {
+			if (value >= localMaxSliderValue)
+				return;
+			setLocalThreshold(EDimension.get(isHorizontal), value);
+		}
+
+		/**
+		 * @param dimProbabilities
+		 */
+		public void updateSliders(FuzzyClustering clustering) {
+			localMaxSliderValue = clustering.getAbsMaxValue();
+			this.slider.setMinMax(0, localMaxSliderValue);
+		}
+
+		/**
+		 * @param value
+		 */
+		public void setValue(float value) {
+			slider.setCallback(null); // to avoid that we will be callbacked
+			slider.setValue(value);
+			slider.setCallback(this);
+		}
 	}
 
 	protected class ToolBar extends GLElementContainer implements ISelectionCallback {
@@ -575,7 +572,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 				reduceScaleFactor();
 				resize();
 			} else if (button == focus) {
-				changeFocus(selected);
+				findAllClustersElement().setFocus(selected ? NormalClusterElement.this : null);
 			} else if (button == lock) {
 				toggleLocked();
 				lock.setTooltip(isLocked ? "UnLock this cluster. It will again recieve threshold updates."
@@ -583,13 +580,5 @@ public class NormalClusterElement extends AMultiClusterElement {
 			}
 		}
 
-	}
-
-	void changeFocus(boolean selected) {
-		findAllClustersElement().setFocus(selected ? this : null);
-	}
-
-	public void toggleLocked() {
-		isLocked = !isLocked;
 	}
 }

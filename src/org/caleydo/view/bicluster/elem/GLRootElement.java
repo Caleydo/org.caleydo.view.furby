@@ -320,22 +320,24 @@ public class GLRootElement extends GLElementContainer {
 		setClusterSizes(null);
 	}
 
-	// @ListenTo
-	// private void listenTo(CreateBandsEvent event) {
-	// if (!(event.getSender() instanceof ClusterElement)) {
-	// createBands();
-	// return;
-	// }
-	// bandCount++;
-	// if (bandCount == clusters.size()) {
-	// createBands();
-	// bandCount = 0;
-	// }
-	// }
-
 	@ListenTo
 	private void listenTo(LZThresholdChangeEvent event) {
-		bands.relayout();
+		final int dimNumberThreshold = event.getDimensionNumberThreshold();
+		final float dimThreshold = event.getDimensionThreshold();
+		final int recNumberThreshold = event.getRecordNumberThreshold();
+		final float recThreshold = event.getRecordThreshold();
+
+		// 1. update thresholds
+		Iterable<NormalClusterElement> allNormalClusters = allNormalClusters();
+		for (NormalClusterElement cluster : allNormalClusters) {
+			cluster.setThresholds(dimThreshold, dimNumberThreshold, recThreshold, recNumberThreshold);
+		}
+		// 2. update overlaps
+		updateAllEdges();
+	}
+
+	private Iterable<NormalClusterElement> allNormalClusters() {
+		return Iterables.filter(clusters, NormalClusterElement.class);
 	}
 
 	@ListenTo
@@ -351,14 +353,26 @@ public class GLRootElement extends GLElementContainer {
 	 * @param thresholds
 	 *            bicluster id x threshold
 	 */
-	public void setThresholds(boolean isDimensionThresholds, Map<Integer, Float> thresholds) {
-		for (NormalClusterElement elem : Iterables.filter(clusters, NormalClusterElement.class)) {
+	public void setThresholds(EDimension dimension, Map<Integer, Float> thresholds) {
+		for (NormalClusterElement elem : allNormalClusters()) {
 			int number = elem.getBiClusterNumber();
 			if (thresholds.containsKey(number)) {
 				float t = thresholds.get(number);
-				elem.setThreshold(isDimensionThresholds, t);
+				elem.setThreshold(dimension, t);
 			}
 		}
+		updateAllEdges();
+	}
+
+	private void updateAllEdges() {
+		// update all edges
+		for (ClusterElement elem : clusters.allClusters()) {
+			elem.updateOutgoingEdges(true, true);
+		}
+		for (ClusterElement elem : clusters.allClusters()) {
+			elem.onEdgeUpdateDone();
+		}
+		bands.relayout();
 	}
 
 	@ListenTo
@@ -434,12 +448,12 @@ public class GLRootElement extends GLElementContainer {
 		if (source.getDimensionIDCategory().isOfCategory(target)) {
 			final IIDTypeMapper<Integer, Integer> mapper = source.getDimensionIDMappingManager().getIDTypeMapper(
 					source.getDimensionIDType(), target);
-			for (NormalClusterElement cluster : Iterables.filter(clusters, NormalClusterElement.class))
+			for (NormalClusterElement cluster : allNormalClusters())
 				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.DIMENSION, oppositeID, table, mapper));
 		} else if (source.getRecordIDCategory().isOfCategory(target)) {
 			final IIDTypeMapper<Integer, Integer> mapper = source.getRecordIDMappingManager().getIDTypeMapper(
 					source.getRecordIDType(), target);
-			for (NormalClusterElement cluster : Iterables.filter(clusters, NormalClusterElement.class))
+			for (NormalClusterElement cluster : allNormalClusters())
 				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.RECORD, oppositeID, table, mapper));
 		}
 	}

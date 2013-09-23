@@ -350,7 +350,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 					continue;
 				thresholds.put(row, t);
 			}
-			rootElement.setThresholds(isZ, thresholds);
+			rootElement.setThresholds(EDimension.get(isZ), thresholds);
 		}
 	}
 	/**
