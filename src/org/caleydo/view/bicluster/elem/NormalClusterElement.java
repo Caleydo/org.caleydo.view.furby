@@ -30,8 +30,6 @@ import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.EButtonMode;
 import org.caleydo.core.view.opengl.layout2.basic.GLButton.ISelectionCallback;
-import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
-import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder.EButtonBarLayout;
@@ -40,6 +38,7 @@ import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.elem.annotation.ALZHeatmapElement;
 import org.caleydo.view.bicluster.elem.annotation.ProbabilityLZHeatmapElement;
+import org.caleydo.view.bicluster.elem.ui.MySlider;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.sorting.BandSorting;
@@ -168,8 +167,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 			if (showThreshold) {
 				top.setBounds(0, -shift_y, w < 50 ? 50 : w, 0);
 				left.setBounds(-18 - shift_x, 18, 0, left.getSetHeight());
-				dimthreshbar.setBounds(0, -18 - shift_y, 180, 17);
-				recthreshbar.setBounds(-18 - shift_x, 18, 17, 180);
+				dimthreshbar.setBounds(Math.max(0, w * 0.5f - 90), -18 - shift_y, 180, 17);
+				recthreshbar.setBounds(-18 - shift_x, Math.max(18, h * 0.5f - 90), 17, 180);
 			} else {
 				top.setBounds(0, -18 - shift_y, w < 50 ? 50 : w, 17);
 				left.setBounds(-18 - shift_x, 18, 18, left.getSetHeight());
@@ -474,10 +473,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 		isLocked = !isLocked;
 	}
 
-	protected class ThresholdBar extends GLElementDecorator implements GLSlider.ISelectionCallback {
+	protected class ThresholdBar extends GLElementDecorator implements MySlider.ISelectionCallback {
 
 		private final boolean isHorizontal;
-		private final GLSlider slider;
+		private final MySlider slider;
 		// float globalMaxThreshold;
 		private float localMaxSliderValue;
 
@@ -488,16 +487,15 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 			// create buttons
 			float max = 0;
-			this.slider = new GLSlider(0, max, max / 2);
+			this.slider = new MySlider(true, 0, max, max / 2);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
-			slider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 			setContent(slider);
 			setVisibility(EVisibility.PICKABLE); // for parent
 		}
 
 		@Override
-		public void onSelectionChanged(GLSlider slider, float value) {
+		public void onSelectionChanged(MySlider slider, float value) {
 			if (value >= localMaxSliderValue)
 				return;
 			setLocalThreshold(EDimension.get(isHorizontal), value);

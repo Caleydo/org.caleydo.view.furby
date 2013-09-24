@@ -13,6 +13,8 @@ import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.core.view.opengl.util.gleem.ColoredVec2f;
+import org.caleydo.core.view.opengl.util.text.ETextStyle;
 
 /**
  * custom slider implementation with inversion support
@@ -173,40 +175,54 @@ public class MySlider extends PickableGLElement {
 
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
-		if (hovered || dragged)
-			g.color(Color.GRAY);
-		else
-			g.color(Color.LIGHT_GRAY);
 		final boolean showText = true;
 		final boolean showMinMaxText = hovered;
+
+		{
+			Color a = invert ? Color.BLACK : Color.WHITE;
+			Color b = !invert ? Color.BLACK : Color.WHITE;
+			if (isHorizontal)
+				g.fillPolygon(new ColoredVec2f(0, 0, a), new ColoredVec2f(w, 0, b), new ColoredVec2f(w, h, b),
+						new ColoredVec2f(0, h, a));
+			else
+				g.fillPolygon(new ColoredVec2f(0, 0, a), new ColoredVec2f(w, 0, a), new ColoredVec2f(w, h, b),
+						new ColoredVec2f(0, h, b));
+		}
+
+		if (hovered || dragged)
+			g.color(Color.BLUE);
+		else
+			g.color(Color.LIGHT_BLUE);
 
 		if (isHorizontal) {
 			float x = mapValue(w) + 1;
 			g.fillRect(x, 0, Math.min(BAR_WIDTH, w - x), h);
 			if (showMinMaxText) {
-				g.textColor(Color.DARK_GRAY);
+				g.textColor(invert ? Color.WHITE : Color.BLACK);
 				g.drawText(format(invert ? max : min), 2, 3, w - 4, h - 9, VAlign.LEFT);
+				g.textColor(!invert ? Color.WHITE : Color.BLACK);
 				g.drawText(format(invert ? min : max), 2, 3, w - 5, h - 9, VAlign.RIGHT);
-				g.textColor(Color.BLACK);
 			}
 			if (showText)
-				g.drawText(format(value), 2, 2, w - 4, h - 8, VAlign.CENTER);
+				g.textColor(Color.BLUE).drawText(format(value), 2, 2, w - 3, h - 6, VAlign.CENTER, ETextStyle.BOLD);
 		} else {
 			float y = mapValue(h) + 1;
 			g.fillRect(0, y, w, Math.min(BAR_WIDTH, h - y));
 			if (showText)
 				g.save().gl.glRotatef(90, 0, 0, 1);
 			if (showMinMaxText) {
-				g.textColor(Color.DARK_GRAY);
+				g.textColor(invert ? Color.WHITE : Color.BLACK);
 				g.drawText(format(invert ? max : min), 2, 3 - w, h - 4, w - 9, VAlign.LEFT);
+				g.textColor(!invert ? Color.WHITE : Color.BLACK);
 				g.drawText(format(invert ? min : max), 2, 3 - w, h - 5, w - 9, VAlign.RIGHT);
-				g.textColor(Color.BLACK);
 			}
 			if (showText)
-				g.drawText(format(value), 2, 2 - w, h - 4, w - 8, VAlign.CENTER);
+				g.textColor(Color.BLUE)
+						.drawText(format(value), 2, 2 - w, h - 3, w - 6, VAlign.CENTER, ETextStyle.BOLD);
 			if (showText)
 				g.restore();
 		}
+		g.textColor(Color.BLACK);
 		g.color(Color.BLACK).drawRect(0, 0, w, h);
 	}
 
