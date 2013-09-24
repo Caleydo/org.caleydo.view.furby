@@ -234,12 +234,18 @@ class ForcedBody extends Rectangle2D {
 		// distance moved
 		x0 -= ori.x();
 		y0 -= ori.y();
+		// if (java.lang.Double.isNaN(x0) || java.lang.Double.isNaN(y0))
+		// System.err.println();
 		return x0 * x0 + y0 * y0;
 	}
 
 	public void setLocation(double x, double y) {
 		centerX = x;
 		centerY = y;
+		double x0 = centerX - elem.getWidth() * 0.5;
+		double y0 = centerY - elem.getHeight() * 0.5;
+		// really set the location
+		elem.setLocation((float) x0, (float) y0);
 	}
 
 	public boolean isVisible() {

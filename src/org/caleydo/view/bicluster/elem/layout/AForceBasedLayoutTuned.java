@@ -50,7 +50,7 @@ public abstract class AForceBasedLayoutTuned extends AForceBasedLayout {
 
 			// init uninitialized bodies
 			for (ForcedBody body : bodies) {
-				if (body.isInvalid())
+				if (body.isInvalid() && body.isVisible())
 					initialPosition(body, w, h, bodies);
 			}
 		}

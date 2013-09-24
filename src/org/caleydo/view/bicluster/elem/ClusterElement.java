@@ -242,6 +242,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 					relayout(); // for showing the bars
 				}
 				isHovered = true;
+				findAllClustersElement().setHoveredElement(this);
 				mouseOutDelay = Integer.MAX_VALUE;
 			}
 			break;
@@ -825,11 +826,12 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		boolean should = shouldBeVisible();
 		boolean v = should && !forceHide;
 		final boolean bak = getVisibility() == EVisibility.PICKABLE;
-		if (v != bak) {
-			if (v) // reset location if become visible
-				setLocation(Float.NaN, Float.NaN);
-			setVisibility(v ? EVisibility.PICKABLE : EVisibility.NONE);
-		}
+		if (v == bak)
+			return;
+		if (v) // reset location if become visible
+			setLocation(Float.NaN, Float.NaN);
+		setVisibility(v ? EVisibility.PICKABLE : EVisibility.NONE);
+		// System.out.println(toString() + " " + v);
 	}
 
 	public abstract boolean shouldBeVisible();

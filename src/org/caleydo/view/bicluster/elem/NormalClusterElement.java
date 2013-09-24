@@ -321,6 +321,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 	void setLocalThreshold(EDimension dimension, float t) {
 		setThreshold(dimension, t);
 		updateMyEdges(dimension.isHorizontal(), dimension.isVertical());
+		findRootElement().setClusterSizes(this);
 		findAllClustersElement().relayout();
 	}
 
@@ -391,6 +392,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 		Pair<List<IntFloat>, List<IntFloat>> p = filterData();
 
 		updateTablePerspective(p.getFirst(), p.getSecond());
+		fireTablePerspectiveChanged();
 
 		updateVisibility();
 	}

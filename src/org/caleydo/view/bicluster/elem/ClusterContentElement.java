@@ -30,10 +30,10 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.ELaz
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.IActiveChangedCallback;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.heatmap.v2.AHeatMapElement;
+import org.caleydo.view.heatmap.v2.BarPlotElement;
 import org.caleydo.view.heatmap.v2.CellSpace;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.ISpacingStrategy;
-import org.caleydo.view.heatmap.v2.BarPlotElement;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
 
 import com.google.common.base.Predicate;
@@ -60,7 +60,7 @@ public class ClusterContentElement extends GLElementDecorator {
 	 */
 	public ClusterContentElement(Builder builder, Predicate<? super String> filter) {
 		builder.set("histogram.showColorMapper", false); // don't show the color mapper
-		builder.set("heatmap.linearBar.scaleLocally"); // scale plot per table perspective
+		// bbuilder.set("heatmap.linearBar.scaleLocally"); // scale plot per table perspective
 		GLElementFactoryContext context = builder.build();
 		this.data = context.getData();
 		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",

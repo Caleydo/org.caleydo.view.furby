@@ -259,7 +259,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		if (distLength < min_distance) // at least the min distance
 			distLength = min_distance;
 
-		double scale = (body.isFixed() || other.isFixed() ? 2 : 1);
+		double scale = (body.isDraggedOrFocussed() || other.isDraggedOrFocussed() ? 2 : 1);
 		scale /= (distLength * distLength);
 		repX = v.x() * scale;
 		repY = v.y() * scale;
@@ -355,6 +355,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 
 	@Override
 	protected void initialPosition(ForcedBody body, float w, float h, List<ForcedBody> bodies) {
+		System.out.println("init position of " + body);
 		for(ForcedBody neighbor : body.neighbors(bodies)) {
 			if (!neighbor.isInvalid()) { //near the first valid neighbor
 				int rec = body.getRecOverlap(neighbor);

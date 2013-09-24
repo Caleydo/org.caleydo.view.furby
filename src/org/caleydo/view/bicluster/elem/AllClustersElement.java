@@ -59,6 +59,17 @@ public class AllClustersElement extends GLElementContainer {
 	}
 
 	/**
+	 * @param hoveredElement
+	 *            setter, see {@link hoveredElement}
+	 */
+	public void setHoveredElement(ClusterElement hoveredElement) {
+		if (this.hoveredElement == hoveredElement)
+			return;
+		this.hoveredElement = hoveredElement;
+		relayout();
+	}
+
+	/**
 	 * @param fixLayout
 	 *            setter, see {@link fixLayout}
 	 */
@@ -127,6 +138,7 @@ public class AllClustersElement extends GLElementContainer {
 			add(this.focussedElement); // sounds strange but moves the cluster at the end of the cluster list
 		}
 		focusChanged();
+		relayout();
 	}
 
 	private void focusChanged() {
