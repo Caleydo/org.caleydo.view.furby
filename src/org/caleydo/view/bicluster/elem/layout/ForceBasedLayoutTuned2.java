@@ -28,28 +28,38 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 	}
 
 	@Override
-	public void forcedBasedLayout(List<ForcedBody> bodies, List<ForcedBody> toolBars, final int iterations, float w,
+	public void forcedBasedLayout(List<ForcedBody> bodies, List<ForcedBody> fixed, final int iterations, float w,
 			float h) {
 
 		// calculate the attraction based on the size of all overlaps
-		int xOverlapSize = 0, yOverlapSize = 0;
+		int dimOverlapSize = 0, recOverlapSize = 0;
+		double areaFilled = 0;
+		for (ForcedBody fix : fixed) {
+			areaFilled += fix.getArea();
+		}
 		for (ForcedBody body : bodies) {
 			if (body.isFocussed()) {
 				body.setLocation(w * 0.5f, h * 0.5f);
 			}
 			ClusterElement v = body.asClusterElement();
-			xOverlapSize += v.getDimTotalOverlaps();
-			yOverlapSize += v.getRecTotalOverlaps();
+			dimOverlapSize += v.getDimTotalOverlaps();
+			recOverlapSize += v.getRecTotalOverlaps();
+
+			areaFilled += body.getArea();
+			if (body.isFixed())
+				fixed.add(body); // handle fixed bodies as fixed objects
 		}
 
+		areaFilled /= (w * h);
+
 		for (int i = 0; i < iterations; i++) {
-			double frameFactor = 1;
-			forceDirectedLayout(bodies, toolBars, w, h, frameFactor, xOverlapSize, yOverlapSize);
+			double frameAlpha = 1;
+			forceDirectedLayout(bodies, fixed, w, h, frameAlpha, dimOverlapSize, recOverlapSize, areaFilled);
 		}
 	}
 
 	private void forceDirectedLayout(List<ForcedBody> bodies, List<ForcedBody> fixedBodies, float w, float h,
-			double frameFactor, int overlapX, int overlapY) {
+			double frameAlpha, int overlapDim, int overlapRec, double areaFilled) {
 
 		final int size = bodies.size();
 
@@ -67,31 +77,38 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 				final Distance distVec = body.distanceTo(other);
 				final double distLength = distVec.getDistance();
 				addRepulsion(body, other, distVec, distLength);
-				addAttraction(body, other, distVec, distLength, overlapX, overlapY);
+				addAttraction(body, other, distVec, distLength, overlapDim, overlapRec);
 			}
 			if (!body.isFixed()) { // don't waste time if the element is active
-				addFrame(w, h, body);
+				addFrame(w, h, body, frameAlpha);
 				addGravity(w, h, body);
 				addFixedBodyRespulsion(fixedBodies, body);
 			}
 		}
 
-		applyForce(bodies, frameFactor, overlapX, overlapY);
+		applyForce(bodies, frameAlpha, overlapDim, overlapRec, areaFilled);
 
 	}
 
 
-	private void applyForce(List<ForcedBody> bodies, double frameFactor, double attraction, int xOverlapSize) {
+	private void applyForce(List<ForcedBody> bodies, double frameFactor, int overlapDim, int overlapRec,
+			double areaFilled) {
+		// use the area filled as an indicator how repulsive the elements should be
+		// the less filled the more repulsion
+		// the less filled the less attraction
+		final double attraction = clamp(0.20 * areaFilled, 0.01, 0.1);
+		final double repulsion = clamp((1 - areaFilled) * 50, 5, 80);
+		System.out.println();
 		// count forces together + apply + reset
 		for (ForcedBody body : bodies) { // reset forces
 			if (!body.isVisible() || body.isFixed()) {
 				body.resetForce();
 				continue;
 			}
-			final double repForceX = checkPlausibility(body.getRepForceX() * 20);
-			final double repForceY = checkPlausibility(body.getRepForceY() * 20);
-			double attForceX = checkPlausibility(body.getAttForceX() * 1);
-			double attForceY = checkPlausibility(body.getAttForceY() * 1);
+			final double repForceX = checkPlausibility(body.getRepForceX() * repulsion);
+			final double repForceY = checkPlausibility(body.getRepForceY() * repulsion);
+			double attForceX = checkPlausibility(body.getAttForceX() * attraction);
+			double attForceY = checkPlausibility(body.getAttForceY() * attraction);
 
 			final double frameForceX = 1 * body.getFrameForceX();
 			final double frameForceY = 1 * body.getFrameForceY();
@@ -109,6 +126,14 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		}
 	}
 
+	private double clamp(double v, double min, double max) {
+		if (v < min)
+			return min;
+		if (v > max)
+			return max;
+		return v;
+	}
+
 	private static void addFixedBodyRespulsion(List<ForcedBody> toolBars, final ForcedBody body) {
 		for (ForcedBody toolbar : toolBars) {
 			final Distance distVec = body.distanceTo(toolbar);
@@ -116,13 +141,18 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		}
 	}
 
-	private void addFrame(float w, float h, final ForcedBody body) {
+	private void addFrame(float w, float h, final ForcedBody body, double frameAlpha) {
 		Vec2d distFromTopLeft = getDistanceFromTopLeft(body, w, h);
 		Vec2d distFromBottomRight = getDistanceFromBottomRight(body, w, h);
-		final double left = distFromTopLeft.x() - 20;
-		final double top = distFromTopLeft.y() - 20;
-		final double right = -distFromBottomRight.x() - 20;
-		final double bottom = -distFromBottomRight.y() - 20;
+
+		// in earlier frames simulate a larger space (twice as large in the first iteration)
+		final double offsetX = 20 * frameAlpha - w * (1 - frameAlpha);
+		final double offsetY = 20 * frameAlpha - h * (1 - frameAlpha);
+
+		final double left = distFromTopLeft.x() - offsetX;
+		final double top = distFromTopLeft.y() - offsetY;
+		final double right = -distFromBottomRight.x() - offsetX;
+		final double bottom = -distFromBottomRight.y() - offsetY;
 
 		double xForce = 0;
 		double yForce = 0;
@@ -239,31 +269,71 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 	}
 
 	private static void addAttraction(final ForcedBody body, final ForcedBody other, final Distance distVec,
-			final double distLength, int overlapX, int overlapY) {
+			final double distLength, int dimOverlapTotal, int recOverlapTotal) {
 		if (distVec.isIntersection()) // too close
 			return;
-		final int xoverlap = body.getDimOverlap(other);
-		final int yoverlap = body.getRecOverlap(other);
-		final int totalOverlap = xoverlap + yoverlap;
+		final int dimOverlap = body.getDimOverlap(other);
+		final int recOverlap = body.getRecOverlap(other);
+		final int totalOverlap = recOverlap + dimOverlap;
 
 		if (totalOverlap <= 0) // no overlap
 			return;
 
-		addAttractionX(body, other, distVec, distLength, overlapX / (double) xoverlap);
-		addAttractionX(body, other, distVec, distLength, overlapY / (double) yoverlap);
-	}
+		final double recPercent = recOverlap == 0 ? 0 : recOverlap / (double) recOverlapTotal;
+		final double dimPercent = dimOverlap == 0 ? 0 : dimOverlap / (double) dimOverlapTotal;
 
-	private static void addAttractionX(final ForcedBody body, final ForcedBody other, final Distance distVec,
-			final double distLength, double overlap) {
-		if (!Double.isNaN(overlap) && !Double.isInfinite(overlap) && overlap > 0) {
-			// counting the attraction
-			double factor = overlap / distLength;
+		// central force
+		{
+			double factor = 0.5 * (recPercent + dimPercent);
 			double accX = distVec.x() * factor;
 			double accY = distVec.y() * factor;
 			// as distance symmetrical
 			body.addAttForce(-accX, -accY);
 			other.addAttForce(accX, accY);
 		}
+
+		final double offset = 20; // [px]
+		// overlap specific force
+		if (recOverlap > 0) { // rec overlap connector in x dimension
+			double b_l = body.x0() - offset;
+			double b_r = body.x1() + offset;
+			double o_l = other.x0() - offset;
+			double o_r = other.x1() + offset;
+
+			double y = body.getCenterY() - body.getCenterY();
+			addAttractionConnector(body, other, recPercent, b_l - o_r, y, b_r - o_l, y);
+		}
+
+		if (dimOverlap > 0) {
+			double b_l = body.y0() - offset;
+			double b_r = body.y1() + offset;
+			double o_l = other.y0() - offset;
+			double o_r = other.y1() + offset;
+
+			double x = body.getCenterX() - body.getCenterX();
+			addAttractionConnector(body, other, recPercent, x, b_l - o_r, x, b_r - o_l);
+		}
+	}
+
+	private static void addAttractionConnector(final ForcedBody body, final ForcedBody other, double factor,
+			final double x1, double y1, final double x2, double y2) {
+
+		final double d0 = x1 * x1 + y1 * y1;
+		final double d1 = x2 * x2 + y2 * y2;
+
+		Vec2d d;
+		if (d0 < d1)
+			d = new Vec2d(x1, y1);
+		else
+			d = new Vec2d(x2, y1);
+
+		// factor /= d.length();
+
+		double accX = d.x() * factor;
+		double accY = d.y() * factor;
+		// as distance symmetrical
+		body.addAttForce(-accX, -accY);
+		other.addAttForce(accX, accY);
 	}
 
 	private static double checkPlausibility(double v) {

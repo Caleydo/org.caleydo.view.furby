@@ -49,11 +49,15 @@ class ForcedBody extends Rectangle2D {
 		this.elem = elem;
 		this.flags = flags;
 		Vec2f location = ((flags & FLAG_TOOLBAR) != 0) ? elem.asElement().getAbsoluteLocation() : elem.getLocation();
+		double rX = elem.getWidth() * 0.5;
+		double rY = elem.getHeight() * 0.5;
+		centerX = location.x() + rX;
+		centerY = location.y() + rY;
+
 		// enlarge toolbars
-		radiusX = elem.getWidth() * 0.5 + ((flags & FLAG_TOOLBAR) != 0 ? 1.2 : 1);
-		radiusY = elem.getHeight() * 0.5 + ((flags & FLAG_TOOLBAR) != 0 ? 1.2 : 1);
-		centerX = location.x() + radiusX;
-		centerY = location.y() + radiusY;
+		final double scale = ((flags & FLAG_TOOLBAR) != 0 ? 1.5 : 1.2);
+		radiusX = rX * scale;
+		radiusY = rY * scale;
 	}
 
 	/**
@@ -203,8 +207,8 @@ class ForcedBody extends Rectangle2D {
 	public double apply(double damping) {
 		assert !isToolBar();
 		Vec2f ori = elem.getLocation();
-		double x0 = x0();
-		double y0 = y0();
+		double x0 = centerX - elem.getWidth() * 0.5;
+		double y0 = centerY - elem.getHeight() * 0.5;
 		// where we want to be
 		if (damping < 1) {
 			double dx = x0 - ori.x();
@@ -315,5 +319,12 @@ class ForcedBody extends Rectangle2D {
 	 */
 	public boolean isInvalid() {
 		return java.lang.Double.isNaN(centerX) || java.lang.Double.isNaN(centerY);
+	}
+
+	/**
+	 * @return
+	 */
+	public double getArea() {
+		return radiusX * radiusY * 4;
 	}
 }
