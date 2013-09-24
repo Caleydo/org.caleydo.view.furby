@@ -98,6 +98,8 @@ class ForcedBody extends Rectangle2D {
 	}
 
 	public void move(double x, double y) {
+		if (java.lang.Double.isNaN(x))
+			System.err.println();
 		centerX += x;
 		centerY += y;
 	}

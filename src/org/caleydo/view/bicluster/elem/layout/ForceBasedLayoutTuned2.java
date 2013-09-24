@@ -71,6 +71,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 			}
 			if (!body.isFixed()) { // don't waste time if the element is active
 				addFrame(w, h, body);
+				addGravity(w, h, body);
 				addFixedBodyRespulsion(fixedBodies, body);
 			}
 		}
@@ -79,6 +80,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 
 	}
 
+
 	private void applyForce(List<ForcedBody> bodies, double frameFactor, double attraction, int xOverlapSize) {
 		// count forces together + apply + reset
 		for (ForcedBody body : bodies) { // reset forces
@@ -86,13 +88,13 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 				body.resetForce();
 				continue;
 			}
-			final double repForceX = checkPlausibility(body.getRepForceX() * 10);
-			final double repForceY = checkPlausibility(body.getRepForceY() * 10);
+			final double repForceX = checkPlausibility(body.getRepForceX() * 20);
+			final double repForceY = checkPlausibility(body.getRepForceY() * 20);
 			double attForceX = checkPlausibility(body.getAttForceX() * 1);
 			double attForceY = checkPlausibility(body.getAttForceY() * 1);
 
-			final double frameForceX = 0.25 * body.getFrameForceX();
-			final double frameForceY = 0.25 * body.getFrameForceY();
+			final double frameForceX = 1 * body.getFrameForceX();
+			final double frameForceY = 1 * body.getFrameForceY();
 
 			double forceX = repForceX + attForceX + frameForceX;
 			double forceY = repForceY + attForceY + frameForceY;
@@ -121,15 +123,15 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 	private void addFrame(float w, float h, final ForcedBody body) {
 		Vec2d distFromTopLeft = getDistanceFromTopLeft(body, w, h);
 		Vec2d distFromBottomRight = getDistanceFromBottomRight(body, w, h);
-		final double left = distFromTopLeft.x();
-		final double top = distFromTopLeft.y();
-		final double right = -distFromBottomRight.x();
-		final double bottom = -distFromBottomRight.y();
+		final double left = distFromTopLeft.x() - 20;
+		final double top = distFromTopLeft.y() - 20;
+		final double right = -distFromBottomRight.x() - 20;
+		final double bottom = -distFromBottomRight.y() - 20;
 
 		double xForce = 0;
 		double yForce = 0;
 
-		final double border = 1. / Math.min(w, h) * 0.25;
+		final double border = 1. / (Math.min(w, h) * 0.15);
 
 		xForce += borderForce(left, border);
 		xForce -= borderForce(right, border);
@@ -140,7 +142,39 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		body.addFrameForce(xForce, yForce);
 	}
 
-	private static double borderForce(final double dist, final double border) {
+	/**
+	 * small force in the center
+	 *
+	 * @param w
+	 * @param h
+	 * @param body
+	 */
+	private void addGravity(float w, float h, ForcedBody body) {
+		final double cx = body.getCenterX() - w * 0.5;
+		final double cy = body.getCenterY() - h * 0.5;
+
+		final double centerForce = -0.001;
+		body.addFrameForce(cx * centerForce, cy * centerForce);
+	}
+
+	/**
+	 * compute the border force, such as it will look like
+	 *
+	 * <pre>
+	 * \
+	 *   \
+	 *     \ real border, sharp drop off
+	 *      \
+	 *       \
+	 *        ____
+	 * </pre>
+	 *
+	 * @param dist
+	 *            distance to border
+	 * @param dropOff
+	 * @return
+	 */
+	private static double borderForce(final double dist, final double dropOff) {
 		final double k = .1;
 		final int pow = 3;
 		final double c = pow;
@@ -148,7 +182,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		if (dist < 0) {
 			return c - dist * k;
 		} else {
-			double t = 1 - Math.min(dist * border, 1);
+			double t = 1 - Math.min(dist * dropOff, 1);
 			return c * pow(t, pow);
 		}
 	}
@@ -186,16 +220,23 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 			double distLength) {
 		double repX;
 		double repY;
-		// if we have an intersection or too close together
-		if (distVec.isIntersection() || distLength < (distVec.getR1() + distVec.getR2()) * 0.2) {
-			repX = distVec.x() * 0.2;
-			repY = distVec.y() * 0.2;
-		} else {
-			double rsq = distLength * distLength;
-			repX = distVec.x() / rsq;
-			repY = distVec.y() / rsq;
-		}
+		// min distance for two elements
+		final double min_distance = (distVec.getR1() + distVec.getR2()) * 0.25;
+
+		Vec2d v;
+		if (distVec.isIntersection())
+			v = distVec.times(-1); // as the dist vec has the wrong direction
+		else
+			v = distVec;
+		if (distLength < min_distance) // at least the min distance
+			distLength = min_distance;
+
+		double rsq = distLength * distLength;
+		repX = v.x() / rsq;
+		repY = v.y() / rsq;
 		// as distance symmetrical
+		if (Double.isNaN(repX))
+			System.err.println();
 		body.addRepForce(repX, repY);
 		other.addRepForce(-repX, -repY);
 	}

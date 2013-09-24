@@ -680,7 +680,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 				resize();
 			}
 		} else {
-			setScaleFactor(preFocusScaleFactor);
+			if (preFocusScaleFactor > 0)
+				setScaleFactor(preFocusScaleFactor);
 			preFocusScaleFactor = -1;
 			resize();
 			forceHide = false;
