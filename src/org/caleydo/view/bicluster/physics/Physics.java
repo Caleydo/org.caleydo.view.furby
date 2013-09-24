@@ -27,7 +27,12 @@ public class Physics {
 		final Vec2d distVec = new Vec2d();
 		distVec.setX(a.getCenterX() - b.getCenterX());
 		distVec.setY(a.getCenterY() - b.getCenterY());
-		final double d = distVec.length();
+		double d = distVec.length();
+		if (d <= 0) { // if the same position randomly shift
+			distVec.setX(Math.random() * 20 - 10);
+			distVec.setY(Math.random() * 20 - 10);
+			d = distVec.length();
+		}
 		distVec.scale(1. / d); // aka normalize
 
 		final double r1 = ellipseRadius(distVec, a.getWidth() * ENCLOSED_ELLIPSE_FACTOR, a.getHeight()
