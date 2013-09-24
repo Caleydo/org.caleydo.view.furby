@@ -49,8 +49,9 @@ class ForcedBody extends Rectangle2D {
 		this.elem = elem;
 		this.flags = flags;
 		Vec2f location = ((flags & FLAG_TOOLBAR) != 0) ? elem.asElement().getAbsoluteLocation() : elem.getLocation();
-		radiusX = elem.getWidth() * 0.5;
-		radiusY = elem.getHeight() * 0.5;
+		// enlarge toolbars
+		radiusX = elem.getWidth() * 0.5 + ((flags & FLAG_TOOLBAR) != 0 ? 1.2 : 1);
+		radiusY = elem.getHeight() * 0.5 + ((flags & FLAG_TOOLBAR) != 0 ? 1.2 : 1);
 		centerX = location.x() + radiusX;
 		centerY = location.y() + radiusY;
 	}
@@ -169,7 +170,7 @@ class ForcedBody extends Rectangle2D {
 	}
 
 	public boolean isFixed() {
-		return (flags & (FLAG_FOCUSSED | FLAG_DRAGGED | FLAG_HOVERED)) != 0;
+		return (flags & (FLAG_FOCUSSED | FLAG_DRAGGED | FLAG_HOVERED | FLAG_TOOLBAR)) != 0;
 	}
 
 	public boolean isToolBar() {
@@ -182,6 +183,14 @@ class ForcedBody extends Rectangle2D {
 
 	public double x0() {
 		return centerX - radiusX;
+	}
+
+	public double x1() {
+		return centerX + radiusX;
+	}
+
+	public double y1() {
+		return centerY + radiusY;
 	}
 
 	/**
@@ -299,5 +308,12 @@ class ForcedBody extends Rectangle2D {
 	@Override
 	public String toString() {
 		return String.format("%s %2f %2f", elem.toString(), centerX, centerY);
+	}
+
+	/**
+	 * @return
+	 */
+	public boolean isInvalid() {
+		return java.lang.Double.isNaN(centerX) || java.lang.Double.isNaN(centerY);
 	}
 }

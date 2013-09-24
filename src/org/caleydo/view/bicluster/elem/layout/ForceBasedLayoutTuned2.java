@@ -111,12 +111,8 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 
 	private static void addFixedBodyRespulsion(List<ForcedBody> toolBars, final ForcedBody body) {
 		for (ForcedBody toolbar : toolBars) {
-			final Vec2d distVec = body.distanceTo(toolbar);
-			final double distLength = distVec.length();
-			double rsq = distLength * distLength * distLength;
-			double xForce = 1.5f * distVec.x() / rsq;
-			double yForce = 1.5f * distVec.y() / rsq;
-			body.addRepForce(xForce, yForce);
+			final Distance distVec = body.distanceTo(toolbar);
+			addRepulsion(body, toolbar, distVec, distVec.getDistance());
 		}
 	}
 
@@ -231,9 +227,10 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		if (distLength < min_distance) // at least the min distance
 			distLength = min_distance;
 
-		double rsq = distLength * distLength;
-		repX = v.x() / rsq;
-		repY = v.y() / rsq;
+		double scale = (body.isFixed() || other.isFixed() ? 2 : 1);
+		scale /= (distLength * distLength);
+		repX = v.x() * scale;
+		repY = v.y() * scale;
 		// as distance symmetrical
 		if (Double.isNaN(repX))
 			System.err.println();
@@ -243,10 +240,15 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 
 	private static void addAttraction(final ForcedBody body, final ForcedBody other, final Distance distVec,
 			final double distLength, int overlapX, int overlapY) {
-		if (distVec.isIntersection())
+		if (distVec.isIntersection()) // too close
 			return;
-		int yoverlap = body.getRecOverlap(other);
-		int xoverlap = body.getDimOverlap(other);
+		final int xoverlap = body.getDimOverlap(other);
+		final int yoverlap = body.getRecOverlap(other);
+		final int totalOverlap = xoverlap + yoverlap;
+
+		if (totalOverlap <= 0) // no overlap
+			return;
+
 		addAttractionX(body, other, distVec, distLength, overlapX / (double) xoverlap);
 		addAttractionX(body, other, distVec, distLength, overlapY / (double) yoverlap);
 	}

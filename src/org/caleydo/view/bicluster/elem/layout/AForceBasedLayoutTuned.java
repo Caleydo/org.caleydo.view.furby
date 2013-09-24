@@ -85,7 +85,10 @@ public abstract class AForceBasedLayoutTuned extends AForceBasedLayout {
 		for (AToolBarElement elem : toolbars) {
 			if (!elem.isVisible())
 				continue;
-			b.add(new ForcedBody(GLElementAccessor.asLayoutElement(elem), ForcedBody.FLAG_TOOLBAR));
+			ForcedBody body = new ForcedBody(GLElementAccessor.asLayoutElement(elem), ForcedBody.FLAG_TOOLBAR);
+			if (body.isInvalid()) // no position yet, skip it
+				continue;
+			b.add(body);
 		}
 		return b;
 	}
