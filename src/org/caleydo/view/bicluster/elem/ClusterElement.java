@@ -657,6 +657,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			resize();
 			mouseOut();
 		}
+		setZValuesAccordingToState();
 		updateVisibility();
 		relayoutParent();
 	}

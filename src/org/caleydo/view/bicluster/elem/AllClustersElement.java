@@ -29,6 +29,13 @@ public class AllClustersElement extends GLElementContainer {
 	private ClusterElement focussedElement = null;
 	private ClusterElement hoveredElement = null;
 
+	private static final Comparator<NormalClusterElement> BY_BI_CLUSTER_NUMBER = new Comparator<NormalClusterElement>() {
+		@Override
+		public int compare(NormalClusterElement o1, NormalClusterElement o2) {
+			return o1.getBiClusterNumber() - o2.getBiClusterNumber();
+		}
+	};
+
 	@DeepScan
 	private final IGLLayout2 layout = new ForceBasedLayoutTuned2(this);
 
@@ -69,12 +76,7 @@ public class AllClustersElement extends GLElementContainer {
 
 	private List<NormalClusterElement> getSortedClusters() {
 		List<NormalClusterElement> c = Lists.newArrayList(Iterables.filter(this, NormalClusterElement.class));
-		Collections.sort(c, new Comparator<NormalClusterElement>() {
-			@Override
-			public int compare(NormalClusterElement o1, NormalClusterElement o2) {
-				return o1.getBiClusterNumber() - o2.getBiClusterNumber();
-			}
-		});
+		Collections.sort(c, BY_BI_CLUSTER_NUMBER);
 		return c;
 	}
 
@@ -120,8 +122,10 @@ public class AllClustersElement extends GLElementContainer {
 		if (this.focussedElement != null)
 			this.focussedElement.setFocus(false);
 		this.focussedElement = elem;
-		if (this.focussedElement != null)
+		if (this.focussedElement != null) {
 			this.focussedElement.setFocus(true);
+			add(this.focussedElement); // sounds strange but moves the cluster at the end of the cluster list
+		}
 		focusChanged();
 	}
 

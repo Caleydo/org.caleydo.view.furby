@@ -32,7 +32,16 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	@DeepScan
 	private final TablePerspectiveSelectionMixin selectionMixin;
 
+	private static final Comparator<GLElement> byZDelta = new Comparator<GLElement>() {
+		@Override
+		public int compare(GLElement o1, GLElement o2) {
+			return Float.compare(o1.getzDelta(), o2.getzDelta());
+		}
+	};
+
 	private BandElement selection;
+
+	boolean resortOnNextRun = true;
 
 	/**
 	 * @param savedData
@@ -57,15 +66,15 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 				b.updatePosition();
 			}
 		}
+	}
+
+	@Override
+	public void layout(int deltaTimeMs) {
 		if (resortOnNextRun) {
-			sortBy(new Comparator<GLElement>() {
-				@Override
-				public int compare(GLElement o1, GLElement o2) {
-					return Float.compare(o1.getzDelta(), o2.getzDelta());
-				}
-			});
+			sortBy(byZDelta);
 			resortOnNextRun = false;
 		}
+		super.layout(deltaTimeMs);
 	}
 
 	@ListenTo
@@ -135,11 +144,8 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		relayout();
 	}
 
-	boolean resortOnNextRun = true;
-
 	public void triggerResort() {
 		resortOnNextRun = true;
-		relayout();
 	}
 
 	/**
