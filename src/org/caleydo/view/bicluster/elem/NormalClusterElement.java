@@ -93,19 +93,24 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
 
-		dimThreshBar.updateSliders(dimClustering);
-		recThreshBar.updateSliders(recClustering);
+		dimThreshBar.updateSliders(clustering.getMaxAbsProbability(EDimension.DIMENSION));
+		recThreshBar.updateSliders(clustering.getMaxAbsProbability(EDimension.RECORD));
 
 		this.add(new HeatMapLabelElement(true, data.getDimensionPerspective(), content));
 		this.add(new HeatMapLabelElement(false, data.getRecordPerspective(), content));
 
-		ProbabilityLZHeatmapElement p = new ProbabilityLZHeatmapElement(EDimension.DIMENSION);
+		ProbabilityLZHeatmapElement p = new ProbabilityLZHeatmapElement(EDimension.DIMENSION,
+				clustering.getMaxAbsProbability(EDimension.DIMENSION));
 		this.annotations.add(p);
 		this.add(p);
-		p = new ProbabilityLZHeatmapElement(EDimension.RECORD);
+		p = new ProbabilityLZHeatmapElement(EDimension.RECORD, clustering.getMaxAbsProbability(EDimension.RECORD));
 		this.annotations.add(p);
 		this.add(p);
 
+	}
+
+	public float getProbability(EDimension dim, int index) {
+		return clustering.getProbability(dim, bcNr, getVirtualArray(dim).get(index));
 	}
 
 	@Override
@@ -504,8 +509,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 		/**
 		 * @param dimProbabilities
 		 */
-		public void updateSliders(FuzzyClustering clustering) {
-			localMaxSliderValue = clustering.getAbsMaxValue();
+		public void updateSliders(double max) {
+			localMaxSliderValue = (float) max;
 			this.slider.setMinMax(0, localMaxSliderValue);
 		}
 

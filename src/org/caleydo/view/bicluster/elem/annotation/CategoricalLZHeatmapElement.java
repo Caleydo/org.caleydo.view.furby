@@ -9,11 +9,13 @@ import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.Set;
 
+import org.caleydo.core.data.collection.table.CategoricalTable;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.view.bicluster.elem.EDimension;
+import org.caleydo.view.bicluster.elem.NormalClusterElement;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 
 /**
@@ -35,6 +37,18 @@ public class CategoricalLZHeatmapElement extends ALZHeatmapElement {
 		this.table = table;
 		this.id2colorId = id2colorId;
 	}
+
+	@Override
+	protected String getLabel(int pos) {
+		NormalClusterElement p = (NormalClusterElement) getParent();
+		int index = p.getVirtualArray(dim).get(pos);
+		Set<Integer> r = id2colorId.apply(index);
+		if (r == null || r.isEmpty())
+			return null;
+		index = r.iterator().next();
+		return getCategory(index);
+	}
+
 	@Override
 	protected void updateImpl(FloatBuffer buffer, List<IntFloat> values) {
 		center = NO_CENTER;
@@ -54,6 +68,16 @@ public class CategoricalLZHeatmapElement extends ALZHeatmapElement {
 			return table.getColor(id, oppositeID);
 		else
 			return table.getColor(oppositeID, id);
+	}
+
+	private String getCategory(Integer id) {
+		CategoricalTable<?> t = (CategoricalTable<?>) table;
+		Object category;
+		if (table.getDataDomain().getDimensionIDType().equals(id2colorId.getTarget()))
+			category = t.getRaw(id, oppositeID);
+		else
+			category = t.getRaw(oppositeID, id);
+		return category == null ? null : t.getCategoryDescriptions().getCategoryProperty(category).getCategoryName();
 	}
 
 	public boolean is(Integer oppositeID, IDType target) {

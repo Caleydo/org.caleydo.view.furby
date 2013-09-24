@@ -5,6 +5,8 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.elem.annotation;
 
+import gleem.linalg.Vec2f;
+
 import java.nio.FloatBuffer;
 import java.util.List;
 
@@ -19,6 +21,8 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
+import org.caleydo.core.view.opengl.picking.IPickingLabelProvider;
+import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.elem.ClusterContentElement;
 import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.sorting.IntFloat;
@@ -33,9 +37,9 @@ import com.jogamp.opengl.util.texture.TextureData;
  * @author Samuel Gratzl
  *
  */
-public abstract class ALZHeatmapElement extends GLElement {
+public abstract class ALZHeatmapElement extends GLElement implements IPickingLabelProvider {
 	protected static final int NO_CENTER = -2;
-	private final EDimension dim;
+	protected final EDimension dim;
 	private Texture texture;
 	/**
 	 * spacer for the focus case with non uniform cells
@@ -47,6 +51,7 @@ public abstract class ALZHeatmapElement extends GLElement {
 		this.dim = dim;
 		setSize(dim.isHorizontal() ? Float.NaN : 4, dim.isHorizontal() ? 4 : Float.NaN);
 		setLayoutData(dim);
+		setVisibility(EVisibility.PICKABLE);
 	}
 
 	/**
@@ -60,8 +65,25 @@ public abstract class ALZHeatmapElement extends GLElement {
 	protected void init(IGLElementContext context) {
 		super.init(context);
 		texture = new Texture(GL.GL_TEXTURE_2D);
-
+		onPick(context.getSWTLayer().createTooltip(this));
 	}
+
+	@Override
+	public final String getLabel(Pick pick) {
+		Vec2f r = toRelative(pick.getPickedPoint());
+		float coord = dim.select(r.x(), r.y());
+		int pos;
+		if (spaceProvider == null) {
+			pos = Math.round(coord / texture.getWidth());
+		} else if (this.dim.isHorizontal()) {
+			pos = spaceProvider.getDimensionIndex(coord);
+		} else {
+			pos = spaceProvider.getRecordIndex(coord);
+		}
+		return getLabel(pos);
+	}
+
+	protected abstract String getLabel(int pos);
 
 	@Override
 	protected void takeDown() {

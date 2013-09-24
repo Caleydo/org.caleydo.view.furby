@@ -352,7 +352,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	protected abstract VirtualArray getRecVirtualArray();
 
-	protected final VirtualArray getVirtualArray(EDimension dim) {
+	public final VirtualArray getVirtualArray(EDimension dim) {
 		return dim.isHorizontal() ? getDimVirtualArray() : getRecVirtualArray();
 	}
 

@@ -7,9 +7,11 @@ package org.caleydo.view.bicluster.elem;
 
 import java.util.List;
 
+import org.caleydo.core.data.collection.table.NumericalTable;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.util.function.DoubleStatistics;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
 
 /**
@@ -63,6 +65,14 @@ public class BiClustering {
 	}
 
 	/**
+	 * @param dimension
+	 * @return
+	 */
+	public DoubleStatistics getStats(EDimension dimension) {
+		return ((NumericalTable) dimension.select(z, l)).getDatasetStatistics();
+	}
+
+	/**
 	 * @return
 	 */
 	public ATableBasedDataDomain getXDataDomain() {
@@ -80,4 +90,22 @@ public class BiClustering {
 	public FuzzyClustering getRecClustering(int bcNr) {
 		return lClusterings.get(bcNr);
 	}
+
+	public FuzzyClustering getClustering(EDimension dim, int bcNr) {
+		return dim.isHorizontal() ? getDimClustering(bcNr) : zClusterings.get(bcNr);
+	}
+
+	public float getProbability(EDimension dim, int bcNr, int index) {
+		return dim.select(l, z).getRaw(bcNr, index);
+	}
+
+	/**
+	 * @param dimension
+	 * @return
+	 */
+	public double getMaxAbsProbability(EDimension dimension) {
+		DoubleStatistics stats = getStats(dimension);
+		return Math.max(Math.abs(stats.getMin()), Math.abs(stats.getMax()));
+	}
+
 }

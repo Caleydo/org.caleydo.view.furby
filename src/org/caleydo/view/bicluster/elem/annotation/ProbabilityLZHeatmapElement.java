@@ -11,6 +11,7 @@ import java.util.List;
 import org.caleydo.core.util.function.DoubleFunctions;
 import org.caleydo.core.util.function.IDoubleFunction;
 import org.caleydo.view.bicluster.elem.EDimension;
+import org.caleydo.view.bicluster.elem.NormalClusterElement;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 
 /**
@@ -20,8 +21,18 @@ import org.caleydo.view.bicluster.sorting.IntFloat;
  *
  */
 public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
-	public ProbabilityLZHeatmapElement(EDimension dim) {
+	private final IDoubleFunction transform;
+
+	public ProbabilityLZHeatmapElement(EDimension dim, double max) {
 		super(dim);
+		this.transform = DoubleFunctions.normalize(0, max);
+	}
+
+	@Override
+	protected String getLabel(int pos) {
+		NormalClusterElement p = (NormalClusterElement) getParent();
+		float probability = p.getProbability(dim, pos);
+		return Float.isNaN(probability) ? null : String.valueOf(probability);
 	}
 
 	@Override
@@ -59,13 +70,15 @@ public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
 			// all negative
 			this.center = width-1; //last
 
-		IDoubleFunction transform = DoubleFunctions.CLAMP01;
+		System.out.println(dim + " " + min + " " + max);
+		System.out.println(dim + " " + transform);
 		// IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
 		// DoubleFunctions.normalize(min, max));
 
 		for (IntFloat f : values) {
 			float v = Math.abs(f.getProbability());
 			v = (float) transform.apply(v);
+			System.out.print(v + " ");
 			v = 1 - v; // invert color mapping
 			buffer.put(v);
 			buffer.put(v);

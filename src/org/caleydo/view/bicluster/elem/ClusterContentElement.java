@@ -176,6 +176,13 @@ public class ClusterContentElement extends GLElementDecorator {
 		return getDimensionCell(index).getPosition();
 	}
 
+	public int getDimensionIndex(float position) {
+		AHeatMapElement heatmap = getHeatMap();
+		if (heatmap != null)
+			return heatmap.getDimensionIndex(position);
+		return Math.round(position / getSize().x());
+	}
+
 	public CellSpace getDimensionCell(int index) {
 		AHeatMapElement heatmap = getHeatMap();
 		if (heatmap != null)
@@ -194,6 +201,13 @@ public class ClusterContentElement extends GLElementDecorator {
 		if (heatmap != null)
 			return heatmap.getRecordCellSpace(index).getPosition();
 		return getRecordCell(index).getPosition();
+	}
+
+	public int getRecordIndex(float position) {
+		AHeatMapElement heatmap = getHeatMap();
+		if (heatmap != null)
+			return heatmap.getRecordIndex(position);
+		return Math.round(position / getSize().y());
 	}
 
 	public CellSpace getRecordCell(int index) {

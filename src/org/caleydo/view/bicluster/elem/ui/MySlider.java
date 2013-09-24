@@ -199,9 +199,9 @@ public class MySlider extends PickableGLElement {
 			g.fillRect(x, 0, Math.min(BAR_WIDTH, w - x), h);
 			if (showMinMaxText) {
 				g.textColor(invert ? Color.WHITE : Color.BLACK);
-				g.drawText(format(invert ? max : min), 2, 3, w - 4, h - 9, VAlign.LEFT);
+				g.drawText(format(invert ? max : min), 2, 3, w - 3, h - 6, VAlign.LEFT);
 				g.textColor(!invert ? Color.WHITE : Color.BLACK);
-				g.drawText(format(invert ? min : max), 2, 3, w - 5, h - 9, VAlign.RIGHT);
+				g.drawText(format(invert ? min : max), 2, 3, w - 3, h - 6, VAlign.RIGHT);
 			}
 			if (showText)
 				g.textColor(Color.BLUE).drawText(format(value), 2, 2, w - 3, h - 6, VAlign.CENTER, ETextStyle.BOLD);
@@ -212,9 +212,9 @@ public class MySlider extends PickableGLElement {
 				g.save().gl.glRotatef(90, 0, 0, 1);
 			if (showMinMaxText) {
 				g.textColor(invert ? Color.WHITE : Color.BLACK);
-				g.drawText(format(invert ? max : min), 2, 3 - w, h - 4, w - 9, VAlign.LEFT);
+				g.drawText(format(invert ? max : min), 2, 3 - w, h - 3, w - 6, VAlign.LEFT);
 				g.textColor(!invert ? Color.WHITE : Color.BLACK);
-				g.drawText(format(invert ? min : max), 2, 3 - w, h - 5, w - 9, VAlign.RIGHT);
+				g.drawText(format(invert ? min : max), 2, 3 - w, h - 3, w - 6, VAlign.RIGHT);
 			}
 			if (showText)
 				g.textColor(Color.BLUE)
