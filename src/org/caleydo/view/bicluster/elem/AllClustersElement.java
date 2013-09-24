@@ -13,7 +13,7 @@ import org.caleydo.core.event.EventListenerManager.DeepScan;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
-import org.caleydo.view.bicluster.elem.layout.ForceBasedLayoutTuned;
+import org.caleydo.view.bicluster.elem.layout.ForceBasedLayoutTuned2;
 import org.caleydo.view.bicluster.elem.toolbar.AToolBarElement;
 
 import com.google.common.collect.Iterables;
@@ -30,7 +30,7 @@ public class AllClustersElement extends GLElementContainer {
 	private ClusterElement hoveredElement = null;
 
 	@DeepScan
-	private final IGLLayout2 layout = new ForceBasedLayoutTuned(this);
+	private final IGLLayout2 layout = new ForceBasedLayoutTuned2(this);
 
 
 	public AllClustersElement(GLRootElement glRootElement) {

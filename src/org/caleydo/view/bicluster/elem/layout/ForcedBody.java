@@ -110,6 +110,18 @@ class ForcedBody extends Rectangle2D {
 		return rsize + csize;
 	}
 
+	public int getRecOverlap(ForcedBody other) {
+		ClusterElement o = other.asClusterElement();
+		ClusterElement c = asClusterElement();
+		return c.getRecOverlap(o);
+	}
+
+	public int getDimOverlap(ForcedBody other) {
+		ClusterElement o = other.asClusterElement();
+		ClusterElement c = asClusterElement();
+		return c.getDimOverlap(o);
+	}
+
 	public void addAttForce(double attX, double attY) {
 		attForceX += attX;
 		attForceY += attY;
