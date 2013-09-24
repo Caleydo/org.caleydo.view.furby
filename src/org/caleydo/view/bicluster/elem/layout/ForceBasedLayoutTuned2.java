@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster.elem.layout;
 
 import java.util.List;
+import java.util.Random;
 
 import org.caleydo.view.bicluster.elem.AllClustersElement;
 import org.caleydo.view.bicluster.elem.ClusterElement;
@@ -346,16 +347,37 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 
 	@Override
 	protected void initialLayout(List<ForcedBody> bodies, float w, float h) {
-		final int rowCount = (int) (Math.sqrt(bodies.size())) + 1;
-		int i = 0;
+		Random r = new Random();
 
-		float hFactor = (h - 200) / rowCount;
-		float wFactor = (w - 300) / (bodies.size() / rowCount + 1);
-		for (ForcedBody child : bodies) {
-			int row = i / rowCount;
-			int col = (i % rowCount);
-			child.setLocation(row * wFactor + 200, col * hFactor + 100);
-			i++;
+		for(ForcedBody body : bodies) {
+			for(ForcedBody neighbor : body.neighbors(bodies)) {
+				if (!neighbor.isInvalid()) { //near the first valid neighbor
+					int rec = body.getRecOverlap(neighbor);
+					int dim = body.getDimOverlap(neighbor);
+					double offsetX = (body.radiusX + neighbor.radiusX) * 1.2;
+					double offsetY = (body.radiusX + neighbor.radiusX) * 1.2;
+					if (rec <= 0)
+						offsetX = 0;
+					if (dim <= 0)
+						offsetY = 0;
+					body.setLocation(neighbor.getCenterX() + offsetX * (r.nextBoolean() ? 1 : -1),
+							neighbor.getCenterY() + offsetY * (r.nextBoolean() ? 1 : -1));
+					break;
+				}
+			}
+			body.setLocation(r.nextDouble() * w - 2 * body.radiusX + body.radiusX, r.nextDouble() * h - 2
+					* body.radiusY + body.radiusY);
 		}
+//		final int rowCount = (int) (Math.sqrt(bodies.size())) + 1;
+//		int i = 0;
+//
+//		float hFactor = (h - 200) / rowCount;
+//		float wFactor = (w - 300) / (bodies.size() / rowCount + 1);
+//		for (ForcedBody child : bodies) {
+//			int row = i / rowCount;
+//			int col = (i % rowCount);
+//			child.setLocation(row * wFactor + 200, col * hFactor + 100);
+//			i++;
+//		}
 	}
 }

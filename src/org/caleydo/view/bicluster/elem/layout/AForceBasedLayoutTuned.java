@@ -34,16 +34,22 @@ public abstract class AForceBasedLayoutTuned extends AForceBasedLayout {
 	}
 	@Override
 	public boolean forceBasedLayout(List<? extends IGLLayoutElement> children, float w, float h, int deltaTimeMs) {
+		if (children.isEmpty())
+			return false;
+
 		List<ForcedBody> bodies = toForcedBodies(children);
 		List<ForcedBody> toolBars = toToolBarBodies(parent.getToolbars());
 
-		if (!isInitLayoutDone && !children.isEmpty()) {
+		int iterations;
+		if (!isInitLayoutDone) {
 			initialLayout(bodies, w, h);
 			isInitLayoutDone = true;
+			iterations = 20;
 		} else {
-			final int iterations = Math.max(1, computeNumberOfIterations(deltaTimeMs));
-			forcedBasedLayout(bodies, toolBars, iterations, w, h);
+			iterations = Math.max(1, computeNumberOfIterations(deltaTimeMs));
 		}
+		forcedBasedLayout(bodies, toolBars, iterations, w, h);
+
 		double totalDistanceSquared = 0;
 		double damping = time2damping(continousLayoutDuration);
 		for (ForcedBody body : bodies)
@@ -114,6 +120,8 @@ public abstract class AForceBasedLayoutTuned extends AForceBasedLayout {
 			flags |= ForcedBody.FLAG_DRAGGED;
 		if (parent.getHoveredElement() == glelem)
 			flags |= ForcedBody.FLAG_HOVERED;
+		if (!isInitLayoutDone)
+			flags |= ForcedBody.FLAG_INITIAL;
 		return new ForcedBody(elem, flags);
 	}
 

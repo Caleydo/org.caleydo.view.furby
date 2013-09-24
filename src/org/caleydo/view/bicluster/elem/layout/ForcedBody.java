@@ -8,12 +8,19 @@ package org.caleydo.view.bicluster.elem.layout;
 import gleem.linalg.Vec2f;
 
 import java.awt.geom.Rectangle2D;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.physics.Physics;
 import org.caleydo.view.bicluster.physics.Physics.Distance;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 /**
  * representation of a forced element
@@ -26,6 +33,7 @@ class ForcedBody extends Rectangle2D {
 	public static final int FLAG_HOVERED = 1 << 2;
 	public static final int FLAG_DRAGGED = 1 << 3;
 	public static final int FLAG_TOOLBAR = 1 << 4;
+	public static final int FLAG_INITIAL = 1 << 5;
 
 	private final int flags;
 	private final IGLLayoutElement elem;
@@ -48,14 +56,18 @@ class ForcedBody extends Rectangle2D {
 	public ForcedBody(IGLLayoutElement elem, int flags) {
 		this.elem = elem;
 		this.flags = flags;
-		Vec2f location = ((flags & FLAG_TOOLBAR) != 0) ? elem.asElement().getAbsoluteLocation() : elem.getLocation();
+
+		final boolean isTooBar = (flags & FLAG_TOOLBAR) != 0;
+		final boolean isInitialRun = (flags & FLAG_INITIAL) != 0;
+
+		Vec2f location = isTooBar ? elem.asElement().getAbsoluteLocation() : elem.getLocation();
 		double rX = elem.getWidth() * 0.5;
 		double rY = elem.getHeight() * 0.5;
-		centerX = location.x() + rX;
-		centerY = location.y() + rY;
+		centerX = isInitialRun ? java.lang.Double.NaN : (location.x() + rX);
+		centerY = isInitialRun ? java.lang.Double.NaN : (location.y() + rY);
 
 		// enlarge toolbars
-		final double scale = ((flags & FLAG_TOOLBAR) != 0 ? 1.5 : 1.2);
+		final double scale = (isTooBar ? 1.5 : 1.2);
 		radiusX = rX * scale;
 		radiusY = rY * scale;
 	}
@@ -326,5 +338,23 @@ class ForcedBody extends Rectangle2D {
 	 */
 	public double getArea() {
 		return radiusX * radiusY * 4;
+	}
+
+	/**
+	 * @param bodies
+	 * @return
+	 */
+	public Iterable<ForcedBody> neighbors(List<ForcedBody> bodies) {
+		ClusterElement c = asClusterElement();
+		if ((c.getRecTotalOverlaps() + c.getDimTotalOverlaps()) == 0)
+			return Collections.emptyList(); // no neighbors
+		final Set<ClusterElement> neighor = ImmutableSet.<ClusterElement> builder()
+				.addAll(c.getDimOverlappingNeighbors()).addAll(c.getRecOverlappingNeighbors()).build();
+		return Iterables.filter(bodies, new Predicate<ForcedBody>() {
+			@Override
+			public boolean apply(ForcedBody input) {
+				return neighor.contains(input.asClusterElement());
+			}
+		});
 	}
 }
