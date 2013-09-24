@@ -332,6 +332,8 @@ public class GLRootElement extends GLElementContainer {
 		}
 		// 2. update overlaps
 		updateAllEdges();
+		setClusterSizes(null);
+		clusters.relayout();
 	}
 
 	private Iterable<NormalClusterElement> allNormalClusters() {

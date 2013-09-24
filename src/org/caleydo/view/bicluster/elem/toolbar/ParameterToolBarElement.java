@@ -5,7 +5,6 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem.toolbar;
 
-import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.UNBOUND_NUMBER;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimThreshold;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimTopNElements;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThreshold;
@@ -41,6 +40,7 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.elem.ui.MySlider;
+import org.caleydo.view.bicluster.elem.ui.MyUnboundSpinner;
 import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
@@ -59,7 +59,7 @@ import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
  * @author Samuel Gratzl
  *
  */
-public class ParameterToolBarElement extends AToolBarElement implements GLSpinner.IChangeCallback<Integer>,
+public class ParameterToolBarElement extends AToolBarElement implements MyUnboundSpinner.IChangeCallback,
 		MySlider.ISelectionCallback {
 
 	private static final SortingType DEFAULT_SORTING_MODE = SortingType.BY_PROBABILITY;
@@ -74,10 +74,10 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 	private final List<String> clearHiddenButtonTooltipList = new ArrayList<>();
 
 	private GLElement recordLabel;
-	private GLSpinner<Integer> recordNumberThresholdSpinner;
+	private MyUnboundSpinner recordNumberThresholdSpinner;
 	private MySlider recordThresholdSlider;
 	private GLElement dimensionLabel;
-	private GLSpinner<Integer> dimensionNumberThresholdSpinner;
+	private MyUnboundSpinner dimensionNumberThresholdSpinner;
 	private MySlider dimensionThresholdSlider;
 	private GLElement clusterMinSizeLabel;
 	private GLSlider clusterMinSizeThresholdSlider;
@@ -189,9 +189,9 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 
 		this.clusterMinSizeThresholdSlider.setValue(0);
 
-		this.dimensionNumberThresholdSpinner.setCallback(null).setValue(getDimTopNElements()).setCallback(this);
+		this.dimensionNumberThresholdSpinner.setValue(getDimTopNElements());
 		this.dimensionThresholdSlider.setCallback(null).setValue(getDimThreshold()).setCallback(this);
-		this.recordNumberThresholdSpinner.setCallback(null).setValue(getRecTopNElements()).setCallback(this);
+		this.recordNumberThresholdSpinner.setValue(getRecTopNElements());
 		this.recordThresholdSlider.setValue(getRecThreshold());
 
 		setClearHiddenButtonRenderer();
@@ -251,7 +251,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 	}
 
 	@Override
-	public void onValueChanged(GLSpinner<? extends Integer> spinner, Integer value) {
+	public void onValueChanged(MyUnboundSpinner spinner, int value) {
 		updateGeneSampleThresholds();
 	}
 
@@ -334,9 +334,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		dimensionLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(dimensionLabel);
 
-		this.dimensionNumberThresholdSpinner = GLSpinner.createIntegerSpinner(getDimTopNElements(), UNBOUND_NUMBER,
-				Integer.MAX_VALUE, 1,
-				SPINNER_UNBOUND);
+		this.dimensionNumberThresholdSpinner = new MyUnboundSpinner(getDimTopNElements());
 		this.dimensionNumberThresholdSpinner.setCallback(this);
 		this.dimensionNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.dimensionNumberThresholdSpinner));
@@ -351,8 +349,7 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 		recordLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(recordLabel);
 
-		this.recordNumberThresholdSpinner = GLSpinner.createIntegerSpinner(getRecTopNElements(), UNBOUND_NUMBER,
-				Integer.MAX_VALUE, 1, SPINNER_UNBOUND);
+		this.recordNumberThresholdSpinner = new MyUnboundSpinner(getRecTopNElements());
 		this.recordNumberThresholdSpinner.setCallback(this);
 		this.recordNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.recordNumberThresholdSpinner));
@@ -418,19 +415,4 @@ public class ParameterToolBarElement extends AToolBarElement implements GLSpinne
 			g.drawText(text, shift, 1, w - shift, 13);
 		}
 	}
-
-	public static final IGLRenderer SPINNER_UNBOUND = new IGLRenderer() {
-		@Override
-		public void render(GLGraphics g, float w, float h, GLElement parent) {
-			Integer r = parent.getLayoutDataAs(Integer.class, Integer.valueOf(UNBOUND_NUMBER));
-			String text;
-			if (r == UNBOUND_NUMBER) {
-				text = "Unbound";
-			} else
-				text = r.toString();
-			g.drawText(text, 2, 1, w - 2, h - 3);
-		}
-
-	};
-
 }
