@@ -824,7 +824,12 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected final void updateVisibility() {
 		boolean should = shouldBeVisible();
 		boolean v = should && !forceHide;
-		setVisibility(v ? EVisibility.PICKABLE : EVisibility.NONE);
+		final boolean bak = getVisibility() == EVisibility.PICKABLE;
+		if (v != bak) {
+			if (v) // reset location if become visible
+				setLocation(Float.NaN, Float.NaN);
+			setVisibility(v ? EVisibility.PICKABLE : EVisibility.NONE);
+		}
 	}
 
 	public abstract boolean shouldBeVisible();

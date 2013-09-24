@@ -47,7 +47,14 @@ public abstract class AForceBasedLayoutTuned extends AForceBasedLayout {
 			iterations = 20;
 		} else {
 			iterations = Math.max(1, computeNumberOfIterations(deltaTimeMs));
+
+			// init uninitialized bodies
+			for (ForcedBody body : bodies) {
+				if (body.isInvalid())
+					initialPosition(body, w, h, bodies);
+			}
 		}
+
 		forcedBasedLayout(bodies, toolBars, iterations, w, h);
 
 		double totalDistanceSquared = 0;
@@ -63,6 +70,7 @@ public abstract class AForceBasedLayoutTuned extends AForceBasedLayout {
 		return anotherRound;
 	}
 
+	protected abstract void initialPosition(ForcedBody body, float w, float h, List<ForcedBody> bodies);
 
 	protected abstract void initialLayout(List<ForcedBody> bodies, float w, float h);
 

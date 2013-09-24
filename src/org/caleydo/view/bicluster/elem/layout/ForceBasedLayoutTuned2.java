@@ -20,6 +20,7 @@ import org.caleydo.view.bicluster.util.Vec2d;
  *
  */
 public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
+	private final Random r = new Random();
 
 	public ForceBasedLayoutTuned2(AllClustersElement parent) {
 		super(parent);
@@ -99,7 +100,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		// the less filled the less attraction
 		final double attraction = clamp(0.20 * areaFilled, 0.01, 0.1);
 		final double repulsion = clamp((1 - areaFilled) * 50, 5, 80);
-		System.out.println();
+
 		// count forces together + apply + reset
 		for (ForcedBody body : bodies) { // reset forces
 			if (!body.isVisible() || body.isFixed()) {
@@ -147,8 +148,8 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		Vec2d distFromBottomRight = getDistanceFromBottomRight(body, w, h);
 
 		// in earlier frames simulate a larger space (twice as large in the first iteration)
-		final double offsetX = 20 * frameAlpha - w * (1 - frameAlpha);
-		final double offsetY = 20 * frameAlpha - h * (1 - frameAlpha);
+		final double offsetX = 20 - w * (1 - frameAlpha);
+		final double offsetY = 20 - h * (1 - frameAlpha);
 
 		final double left = distFromTopLeft.x() - offsetX;
 		final double top = distFromTopLeft.y() - offsetY;
@@ -347,37 +348,29 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 
 	@Override
 	protected void initialLayout(List<ForcedBody> bodies, float w, float h) {
-		Random r = new Random();
-
 		for(ForcedBody body : bodies) {
-			for(ForcedBody neighbor : body.neighbors(bodies)) {
-				if (!neighbor.isInvalid()) { //near the first valid neighbor
-					int rec = body.getRecOverlap(neighbor);
-					int dim = body.getDimOverlap(neighbor);
-					double offsetX = (body.radiusX + neighbor.radiusX) * 1.2;
-					double offsetY = (body.radiusX + neighbor.radiusX) * 1.2;
-					if (rec <= 0)
-						offsetX = 0;
-					if (dim <= 0)
-						offsetY = 0;
-					body.setLocation(neighbor.getCenterX() + offsetX * (r.nextBoolean() ? 1 : -1),
-							neighbor.getCenterY() + offsetY * (r.nextBoolean() ? 1 : -1));
-					break;
-				}
-			}
-			body.setLocation(r.nextDouble() * w - 2 * body.radiusX + body.radiusX, r.nextDouble() * h - 2
-					* body.radiusY + body.radiusY);
+			initialPosition(body, w, h, bodies);
 		}
-//		final int rowCount = (int) (Math.sqrt(bodies.size())) + 1;
-//		int i = 0;
-//
-//		float hFactor = (h - 200) / rowCount;
-//		float wFactor = (w - 300) / (bodies.size() / rowCount + 1);
-//		for (ForcedBody child : bodies) {
-//			int row = i / rowCount;
-//			int col = (i % rowCount);
-//			child.setLocation(row * wFactor + 200, col * hFactor + 100);
-//			i++;
-//		}
+	}
+
+	@Override
+	protected void initialPosition(ForcedBody body, float w, float h, List<ForcedBody> bodies) {
+		for(ForcedBody neighbor : body.neighbors(bodies)) {
+			if (!neighbor.isInvalid()) { //near the first valid neighbor
+				int rec = body.getRecOverlap(neighbor);
+				int dim = body.getDimOverlap(neighbor);
+				double offsetX = (body.radiusX + neighbor.radiusX) * 1.2;
+				double offsetY = (body.radiusX + neighbor.radiusX) * 1.2;
+				if (rec <= 0)
+					offsetX = 0;
+				if (dim <= 0)
+					offsetY = 0;
+				body.setLocation(neighbor.getCenterX() + offsetX * (r.nextBoolean() ? 1 : -1),
+						neighbor.getCenterY() + offsetY * (r.nextBoolean() ? 1 : -1));
+				return;
+			}
+		}
+		body.setLocation(r.nextDouble() * w - 2 * body.radiusX + body.radiusX, r.nextDouble() * h - 2
+				* body.radiusY + body.radiusY);
 	}
 }

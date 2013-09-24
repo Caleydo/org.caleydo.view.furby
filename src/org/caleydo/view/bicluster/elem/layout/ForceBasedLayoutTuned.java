@@ -218,4 +218,10 @@ public class ForceBasedLayoutTuned extends AForceBasedLayoutTuned {
 			i++;
 		}
 	}
+
+	@Override
+	protected void initialPosition(ForcedBody body, float w, float h, List<ForcedBody> bodies) {
+		body.setLocation(Math.random() * w - 2 * body.radiusX + body.radiusX, Math.random() * h - 2 * body.radiusY
+				+ body.radiusY);
+	}
 }
