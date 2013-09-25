@@ -41,7 +41,7 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            locationURI="toolbar:org.caleydo.core.gui.toolbar2">
+            locationURI="toolbar:org.caleydo.core.gui.toolbar?after=import">
          <command
                commandId="org.caleydo.view.bicluster.import"
                icon="resources/icons/icon.png"
