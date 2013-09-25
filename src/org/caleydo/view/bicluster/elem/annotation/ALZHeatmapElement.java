@@ -94,6 +94,8 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		GL2 gl = g.gl;
+
+		g.checkError();
 		texture.enable(gl);
 		texture.bind(gl);
 		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
@@ -106,6 +108,7 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 		final float size = dim.select(w, h);
 		final float op_size = -2 + (dim.select(h, w));
 
+		g.checkError();
 		float centerPos = 0;
 		gl.glBegin(GL2GL3.GL_QUADS);
 		if (spaceProvider == null) {

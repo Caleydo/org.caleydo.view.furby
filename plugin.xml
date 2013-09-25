@@ -44,7 +44,7 @@
             locationURI="toolbar:org.caleydo.core.gui.toolbar?after=import">
          <command
                commandId="org.caleydo.view.bicluster.import"
-               icon="resources/icons/icon.png"
+               icon="resources/icons/import_data.png"
                label="Import XLZ Data"
                style="push">
          </command>

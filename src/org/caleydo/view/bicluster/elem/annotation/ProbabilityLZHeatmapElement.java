@@ -70,15 +70,13 @@ public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
 			// all negative
 			this.center = width-1; //last
 
-		System.out.println(dim + " " + min + " " + max);
-		System.out.println(dim + " " + transform);
 		// IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
 		// DoubleFunctions.normalize(min, max));
 
 		for (IntFloat f : values) {
 			float v = Math.abs(f.getProbability());
 			v = (float) transform.apply(v);
-			System.out.print(v + " ");
+			// System.out.print(v + " ");
 			v = 1 - v; // invert color mapping
 			buffer.put(v);
 			buffer.put(v);

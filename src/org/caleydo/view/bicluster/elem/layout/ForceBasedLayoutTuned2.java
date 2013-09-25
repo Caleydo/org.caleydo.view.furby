@@ -264,8 +264,6 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		repX = v.x() * scale;
 		repY = v.y() * scale;
 		// as distance symmetrical
-		if (Double.isNaN(repX))
-			System.err.println();
 		body.addRepForce(repX, repY);
 		other.addRepForce(-repX, -repY);
 	}
@@ -355,7 +353,6 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 
 	@Override
 	protected void initialPosition(ForcedBody body, float w, float h, List<ForcedBody> bodies) {
-		System.out.println("init position of " + body);
 		for(ForcedBody neighbor : body.neighbors(bodies)) {
 			if (!neighbor.isInvalid()) { //near the first valid neighbor
 				int rec = body.getRecOverlap(neighbor);

@@ -165,6 +165,8 @@ public class GLRootElement extends GLElementContainer {
 	private void onChangeMaxDistanceEvent(ChangeMaxDistanceEvent event) {
 		this.maxDistance = event.getMaxDistance();
 		this.clusters.onChangeMaxDistance();
+		this.clusters.relayout();
+		this.bands.relayout();
 	}
 
 	/**

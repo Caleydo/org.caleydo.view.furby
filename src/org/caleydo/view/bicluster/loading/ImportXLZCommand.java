@@ -8,6 +8,7 @@ package org.caleydo.view.bicluster.loading;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.caleydo.core.data.collection.table.NumericalTable;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.gui.SimpleAction;
@@ -26,8 +27,8 @@ import org.eclipse.ui.PlatformUI;
  *
  */
 public class ImportXLZCommand extends SimpleAction {
-	private static final String LABEL = "Import XLZ Data";
-	private static final String ICON = "resources/icons/general/save.png";
+	private static final String LABEL = "Import Fabia BiClustering";
+	private static final String ICON = "resources/icons/general/import_data.png";
 
 	/**
 	 * Constructor.
@@ -70,7 +71,19 @@ public class ImportXLZCommand extends SimpleAction {
 			bicluster.removeTablePerspective(t);
 
 		for (ATableBasedDataDomain d : dd) {
-			bicluster.addTablePerspective(d.getDefaultTablePerspective());
+			if (d.getTable() instanceof NumericalTable)
+				bicluster.addTablePerspective(d.getDefaultTablePerspective());
+			else if (d.getRecordIDType().getIDCategory().getCategoryName().startsWith("BICLUSTER")) {
+				// thresholds
+				for (TablePerspective p : d.getAllTablePerspectives())
+					if (!p.getDimensionPerspective().isDefault())
+						bicluster.addTablePerspective(p);
+			} else {
+				// chemical clusters
+				for (TablePerspective p : d.getAllTablePerspectives())
+					if (!p.getDimensionPerspective().isDefault())
+						bicluster.addTablePerspective(p);
+			}
 		}
 	}
 }
