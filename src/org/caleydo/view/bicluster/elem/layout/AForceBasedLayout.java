@@ -46,7 +46,6 @@ public abstract class AForceBasedLayout implements IGLLayout2 {
 
 
 	private void setSizes(List<? extends IGLLayoutElement> children, float w, float h) {
-		final boolean anyFocussed = parent.isAnyFocussed();
 		for (IGLLayoutElement child : children) {
 			GLElement g = child.asElement();
 			if (!(g instanceof ClusterElement)) {
@@ -60,8 +59,8 @@ public abstract class AForceBasedLayout implements IGLLayout2 {
 				continue;
 			}
 
-			float scaleX = elem.getScale(EDimension.DIMENSION);
-			float scaleY = elem.getScale(EDimension.RECORD);
+			float scaleX = elem.getZoom(EDimension.DIMENSION);
+			float scaleY = elem.getZoom(EDimension.RECORD);
 			if (elem.needsUniformScaling())
 				scaleX = scaleY = (scaleX + scaleY) * 0.5f; // mean
 

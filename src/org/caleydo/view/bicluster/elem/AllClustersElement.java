@@ -130,11 +130,15 @@ public class AllClustersElement extends GLElementContainer {
 	public void setFocus(ClusterElement elem) {
 		if (this.focussedElement == elem)
 			return;
-		if (this.focussedElement != null)
+		ClusterElement prev = this.focussedElement;
+		if (this.focussedElement != null) {
 			this.focussedElement.setFocus(false);
+		}
 		this.focussedElement = elem;
 		if (this.focussedElement != null) {
 			this.focussedElement.setFocus(true);
+			if (prev != null) // reuse zoom settings
+				this.focussedElement.setZoom(prev.getZoom(EDimension.DIMENSION), prev.getZoom(EDimension.RECORD));
 			add(this.focussedElement); // sounds strange but moves the cluster at the end of the cluster list
 		}
 		focusChanged();
@@ -142,9 +146,11 @@ public class AllClustersElement extends GLElementContainer {
 	}
 
 	private void focusChanged() {
-		for (ClusterElement c : allClusters())
+		for (ClusterElement c : allClusters()) {
+			c.setFocusZoomMode(this.focussedElement != null);
 			if (c != this.focussedElement)
 				c.focusChanged(this.focussedElement);
+		}
 	}
 
 	public boolean isFocussed(ClusterElement elem) {

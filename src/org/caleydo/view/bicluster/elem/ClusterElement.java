@@ -98,8 +98,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 */
 	private int mouseOutDelay = Integer.MAX_VALUE;
 
-	private float recScale = 1;
-	private float dimScale = 1;
+	private float[] zoom = { 1, 1, 1, 1 };
+	private int zoomOffset = 0; // 2 for focus mode
 
 	public ClusterElement(int bcNr, TablePerspective data, BiClustering clustering) {
 		setLayout(this);
@@ -141,8 +141,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return getRecVirtualArray().getIdType();
 	}
 
-	public float getScale(EDimension dim) {
-		return dim.select(dimScale, recScale);
+	public float getZoom(EDimension dim) {
+		return dim.select(zoom[zoomOffset], zoom[zoomOffset + 1]);
 	}
 
 	/**
@@ -256,22 +256,25 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		}
 	}
 
+	public void setFocusZoomMode(boolean focusMode) {
+		this.zoomOffset = focusMode ? 2 : 0;
+	}
 	/**
 	 * @param i
 	 */
 	protected void zoom(int dimFac, int recFac) {
 		if (dimFac == 0 && recFac == 0)
 			return;
-		float rec = nextZoomLevel(recFac, recScale, getRecSize());
-		float dim = nextZoomLevel(dimFac, dimScale, getDimSize());
-		setZoom(rec, dim);
+		float rec = nextZoomLevel(recFac, zoom[zoomOffset + 1], getRecSize());
+		float dim = nextZoomLevel(dimFac, zoom[zoomOffset], getDimSize());
+		setZoom(dim, rec);
 	}
 
-	private void setZoom(float rec, float dim) {
-		if (rec == recScale && dim == dimScale)
+	void setZoom(float dim, float rec) {
+		if (rec == zoom[zoomOffset + 1] && dim == zoom[zoomOffset])
 			return;
-		recScale = rec;
-		dimScale = dim;
+		zoom[zoomOffset + 1] = rec;
+		zoom[zoomOffset] = dim;
 		relayoutParent();
 	}
 
@@ -541,8 +544,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		 * @return
 		 */
 		private String scaleHighlight() {
-			int r = Math.round(recScale * 100);
-			int d = Math.round(dimScale * 100);
+			int r = Math.round(zoom[zoomOffset + 1] * 100);
+			int d = Math.round(zoom[zoomOffset] * 100);
 			if (d == r) {
 				if (d == 100)
 					return "";
@@ -648,12 +651,33 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	public void setFocus(boolean isFocused) {
 		if (isFocused) {
 			forceHide = false;
+			setFocusZoomMode(true);
+			if (zoom[2 + 0] == 1 && zoom[2 + 1] == 1)
+				guessFocusScale();
 		} else {
 			mouseOut();
 		}
 		setZValuesAccordingToState();
 		updateVisibility();
 		relayoutParent();
+	}
+
+	private void guessFocusScale() {
+		Vec2f size = getParent().getSize().times(0.75f);
+		float sx, sy;
+		if (needsUniformScaling()) {
+			Vec2f s = getMinSize();
+			sx = sy = Math.min(size.x() / s.x(), size.y() / s.y());
+		} else {
+			float px = size.x() / getDimSize();
+			float py = size.y() / getRecSize();
+
+			sx = px; // FIXME zoom logic
+			sy = py;
+
+		}
+		zoom[2 + 0] = sx;
+		zoom[2 + 1] = sy;
 	}
 
 	public void focusChanged(ClusterElement elem) {
