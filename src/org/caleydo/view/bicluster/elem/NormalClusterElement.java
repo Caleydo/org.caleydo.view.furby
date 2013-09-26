@@ -317,10 +317,12 @@ public class NormalClusterElement extends AMultiClusterElement {
 	}
 
 	/**
+	 * difference to {@link #setThreshold(EDimension, float)} is that in addition the stuff will be updated
+	 * 
 	 * @param dimension
 	 * @param t
 	 */
-	void setLocalThreshold(EDimension dimension, float t) {
+	public void setLocalThreshold(EDimension dimension, float t) {
 		setThreshold(dimension, t);
 		updateMyEdges(dimension.isHorizontal(), dimension.isVertical());
 		findRootElement().setClusterSizes(this);

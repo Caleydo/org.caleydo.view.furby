@@ -94,6 +94,13 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 
 	@Override
 	public final String getLabel(Pick pick) {
+		int pos = toIndex(pick);
+		if (pos < 0)
+			return null;
+		return getLabel(pos);
+	}
+
+	protected final int toIndex(Pick pick) {
 		Vec2f r = toRelative(pick.getPickedPoint());
 		float coord = dim.select(r.x(), r.y());
 		int pos;
@@ -105,8 +112,8 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 			pos = spaceProvider.getRecordIndex(coord);
 		}
 		if (pos < 0 || pos >= texture.getWidth())
-			return null;
-		return getLabel(pos);
+			return -1;
+		return pos;
 	}
 
 	protected abstract String getLabel(int pos);

@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.caleydo.core.util.function.DoubleFunctions;
 import org.caleydo.core.util.function.IDoubleFunction;
+import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.core.view.opengl.picking.PickingMode;
 import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
 import org.caleydo.view.bicluster.sorting.IntFloat;
@@ -33,6 +35,21 @@ public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
 		NormalClusterElement p = (NormalClusterElement) getParent();
 		float probability = p.getProbability(dim, pos);
 		return Float.isNaN(probability) ? null : String.valueOf(probability);
+	}
+
+	@Override
+	public void pick(Pick pick) {
+		super.pick(pick);
+		if (pick.getPickingMode() == PickingMode.DOUBLE_CLICKED) {
+			int index = toIndex(pick);
+			if (index < 0)
+				return;
+
+			NormalClusterElement p = (NormalClusterElement) getParent();
+			float probability = p.getProbability(dim, index);
+			if (!Float.isNaN(probability))
+				p.setLocalThreshold(dim, Math.abs(probability));
+		}
 	}
 
 	@Override
