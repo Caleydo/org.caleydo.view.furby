@@ -354,8 +354,7 @@ class ForcedBody extends Rectangle2D {
 		ClusterElement c = asClusterElement();
 		if ((c.getRecTotalOverlaps() + c.getDimTotalOverlaps()) == 0)
 			return Collections.emptyList(); // no neighbors
-		final Set<ClusterElement> neighor = ImmutableSet.<ClusterElement> builder()
-				.addAll(c.getDimOverlappingNeighbors()).addAll(c.getRecOverlappingNeighbors()).build();
+		final Set<ClusterElement> neighor = ImmutableSet.copyOf(c.getAnyOverlappingNeighbors());
 		return Iterables.filter(bodies, new Predicate<ForcedBody>() {
 			@Override
 			public boolean apply(ForcedBody input) {

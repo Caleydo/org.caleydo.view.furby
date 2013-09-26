@@ -49,10 +49,13 @@ import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.ResetSettingsEvent;
 import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
-import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
+import org.caleydo.view.bicluster.sorting.BandSortingStrategy;
+import org.caleydo.view.bicluster.sorting.DefaultSortingStrategy;
+import org.caleydo.view.bicluster.sorting.ISortingStrategyFactory;
+import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
 
 /**
  *
@@ -60,12 +63,11 @@ import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
  *
  */
 public class ParameterToolBarElement extends AToolBarElement implements MyUnboundSpinner.IChangeCallback,
-		MySlider.ISelectionCallback {
+		MySlider.ISelectionCallback, GLComboBox.ISelectionCallback<ISortingStrategyFactory> {
 
-	private static final SortingType DEFAULT_SORTING_MODE = SortingType.BY_PROBABILITY;
+	private static final ISortingStrategyFactory DEFAULT_SORTING_MODE = ProbabilitySortingStrategy.FACTORY_INC;
 
-	private final GLButton bandSortingModeButton;
-	private final GLButton probabilitySortingModeButton;
+	private final GLComboBox<ISortingStrategyFactory> sorter;
 
 	private final GLButton dimBandVisibilityButton;
 	private final GLButton recBandVisibilityButton;
@@ -87,20 +89,19 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 	private final GLSpinner<Integer> maxDistance;
 
-	public ParameterToolBarElement() {
-		this.bandSortingModeButton = new GLButton(EButtonMode.CHECKBOX);
-		bandSortingModeButton.setRenderer(GLButton.createRadioRenderer("Sort by Bands"));
-		bandSortingModeButton.setSelected(DEFAULT_SORTING_MODE == SortingType.BY_BAND);
-		bandSortingModeButton.setCallback(this);
-		bandSortingModeButton.setSize(Float.NaN, BUTTON_WIDTH);
-		this.add(bandSortingModeButton);
+	private List<ISortingStrategyFactory> sortingModel;
 
-		this.probabilitySortingModeButton = new GLButton(EButtonMode.CHECKBOX);
-		probabilitySortingModeButton.setRenderer(GLButton.createRadioRenderer("Sort by Probability"));
-		probabilitySortingModeButton.setSelected(DEFAULT_SORTING_MODE == SortingType.BY_PROBABILITY);
-		probabilitySortingModeButton.setCallback(this);
-		probabilitySortingModeButton.setSize(Float.NaN, BUTTON_WIDTH);
-		this.add(probabilitySortingModeButton);
+	public ParameterToolBarElement() {
+		this.add(createGroupLabelLine("Sorting Mode"));
+		this.sortingModel = createSortingModel();
+		this.sorter = new GLComboBox<ISortingStrategyFactory>(sortingModel, GLComboBox.DEFAULT,
+				GLRenderers.fillRect(Color.WHITE));
+		this.sorter.setSelectedItem(DEFAULT_SORTING_MODE);
+		this.sorter.setCallback(this);
+		this.sorter.setSize(Float.NaN, BUTTON_WIDTH);
+		this.sorter.setzDeltaList(0.5f);
+		this.add(sorter);
+
 		this.add(createHorizontalLine());
 
 		{
@@ -177,12 +178,26 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		this.add(reset);
 	}
 
+	/**
+	 * @return
+	 */
+	private List<ISortingStrategyFactory> createSortingModel() {
+		List<ISortingStrategyFactory> r = new ArrayList<>();
+		r.add(ProbabilitySortingStrategy.FACTORY_INC);
+		r.add(ProbabilitySortingStrategy.FACTORY_INC_ABS);
+		r.add(ProbabilitySortingStrategy.FACTORY_DEC);
+		r.add(ProbabilitySortingStrategy.FACTORY_DEC_ABS);
+		r.add(DefaultSortingStrategy.FACTORY);
+		r.add(BandSortingStrategy.FACTORY);
+		// TODO categorical
+		return r;
+	}
+
 	@Override
 	public void reset() {
 		this.dimBandVisibilityButton.setSelected(isShowDimBands());
 		this.recBandVisibilityButton.setSelected(isShowRecBands());
-		this.bandSortingModeButton.setCallback(null).setSelected(DEFAULT_SORTING_MODE == SortingType.BY_BAND).setCallback(this);
-		this.probabilitySortingModeButton.setSelected(DEFAULT_SORTING_MODE == SortingType.BY_PROBABILITY);
+		this.sorter.setCallback(null).setSelectedItem(DEFAULT_SORTING_MODE).setCallback(this);
 
 		this.maxDistance.setValue(MyPreferences.getMaxDistance());
 		this.visualizationSwitcher.setSelected(0);
@@ -242,6 +257,12 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 			updateGeneSampleThresholds();
 	}
 
+	@Override
+	public void onSelectionChanged(GLComboBox<? extends ISortingStrategyFactory> widget, ISortingStrategyFactory item) {
+		if (item != null)
+			EventPublisher.trigger(new SortingChangeEvent(item));
+	}
+
 	private void updateGeneSampleThresholds() {
 		float samplTh = dimensionThresholdSlider.getValue();
 		float geneTh = recordThresholdSlider.getValue();
@@ -261,22 +282,12 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 			EventPublisher.trigger(new ShowHideBandsEvent(selected, recBandVisibilityButton.isSelected()));
 		} else if (button == recBandVisibilityButton) {
 			EventPublisher.trigger(new ShowHideBandsEvent(dimBandVisibilityButton.isSelected(), selected));
-		} else if (button == bandSortingModeButton) {
-			bandSortingModeButton.setSelected(selected);
-			probabilitySortingModeButton.setSelected(!selected);
-		} else if (button == probabilitySortingModeButton) {
-			probabilitySortingModeButton.setSelected(selected);
-			bandSortingModeButton.setSelected(!selected);
 		} else if (button == clearHiddenClusterButton) {
 			clearHiddenButtonTooltipList.clear();
 			clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
 			setClearHiddenButtonRenderer();
 			EventPublisher.trigger(new UnhidingClustersEvent());
 		}
-		boolean isBandSorting = bandSortingModeButton.isSelected();
-		EventPublisher.trigger(new SortingChangeEvent(isBandSorting ? SortingType.BY_BAND
- : SortingType.BY_PROBABILITY,
-				this));
 	}
 
 	@ListenTo

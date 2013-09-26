@@ -13,9 +13,7 @@ import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecTopN
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
@@ -40,15 +38,13 @@ import org.caleydo.view.bicluster.elem.annotation.ALZHeatmapElement;
 import org.caleydo.view.bicluster.elem.annotation.ProbabilityLZHeatmapElement;
 import org.caleydo.view.bicluster.elem.ui.MySlider;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
-import org.caleydo.view.bicluster.event.SortingChangeEvent.SortingType;
-import org.caleydo.view.bicluster.sorting.BandSorting;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
+import org.caleydo.view.bicluster.sorting.ISortingStrategy;
 import org.caleydo.view.bicluster.sorting.IntFloat;
+import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
 
 import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * e.g. a class for representing a cluster
@@ -77,7 +73,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	protected boolean showThreshold;
 
-	protected SortingType sortingType = SortingType.BY_PROBABILITY;
+	protected ISortingStrategy sorter = ProbabilitySortingStrategy.FACTORY_INC.create(this);
 
 	public NormalClusterElement(int bcNr, TablePerspective data, BiClustering clustering) {
 		super(bcNr, data, clustering, Predicates.alwaysTrue());
@@ -232,12 +228,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	@ListenTo
 	private void listenTo(SortingChangeEvent e) {
-		if (e.getSender() == this) {
-			// only local change
-		} else if (this.sortingType != e.getType()) {
-			this.sortingType = e.getType();
-			resort();
-		}
+		this.sorter = e.getFactory().create(this);
+		resort();
 	}
 
 	@Override
@@ -292,7 +284,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 	@Override
 	public void onEdgeUpdateDone() {
 		super.onEdgeUpdateDone();
-		if (getVisibility() == EVisibility.PICKABLE && sortingType == SortingType.BY_BAND)
+		if (getVisibility() == EVisibility.PICKABLE && sorter.needsResortAfterBandsUpdate())
 			resort();
 	}
 
@@ -335,51 +327,12 @@ public class NormalClusterElement extends AMultiClusterElement {
 	}
 
 	private void resort() {
-		switch (sortingType) {
-		case BY_PROBABILITY:
-			probabilitySorting();
-			break;
-		case BY_BAND:
-			bandSorting();
-			break;
-		default:
-		}
-	}
-
-	private void bandSorting() {
 		Pair<List<IntFloat>, List<IntFloat>> p = filterData();
 
-		Set<IntFloat> finalDimSorting = bandSort(p.getFirst(), EDimension.DIMENSION);
-		Set<IntFloat> finalRecSorting = bandSort(p.getSecond(), EDimension.RECORD);
+		List<IntFloat> dim = sorter.apply(p.getFirst(), EDimension.DIMENSION);
+		List<IntFloat> rec = sorter.apply(p.getSecond(), EDimension.RECORD);
 
-		updateTablePerspective(new ArrayList<>(finalDimSorting), new ArrayList<>(finalRecSorting));
-		fireTablePerspectiveChanged();
-	}
-
-	private Set<IntFloat> bandSort(List<IntFloat> indices, EDimension dim) {
-		List<Collection<Integer>> nonEmptyDimBands = new ArrayList<>();
-		for (Edge edge : edges.values()) {
-			if (edge.getOverlap(dim) > 0)
-				nonEmptyDimBands.add(edge.getOverlapIndices(dim));
-		}
-		BandSorting dimConflicts = new BandSorting(nonEmptyDimBands);
-
-		Set<IntFloat> finalDimSorting = new LinkedHashSet<IntFloat>();
-
-		ImmutableMap<Integer, IntFloat> byIndex = Maps.uniqueIndex(indices, IntFloat.TO_INDEX);
-		for (Integer i : dimConflicts) {
-			finalDimSorting.add(byIndex.get(i));
-		}
-		// fill up rest
-		finalDimSorting.addAll(indices);
-		return finalDimSorting;
-	}
-
-	private void probabilitySorting() {
-		Pair<List<IntFloat>, List<IntFloat>> p = filterData();
-
-		updateTablePerspective(p.getFirst(), p.getSecond());
-
+		updateTablePerspective(dim, rec);
 		fireTablePerspectiveChanged();
 	}
 

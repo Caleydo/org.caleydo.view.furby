@@ -378,16 +378,13 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return edge != null ? edge.getRecOverlap() : 0;
 	}
 
-	/**
-	 * @return
-	 */
-	public Iterable<ClusterElement> getDimOverlappingNeighbors() {
-		if (!findRootElement().isDimBandsEnabled())
+	public final Iterable<ClusterElement> getOverlappingNeighbors(final EDimension dim) {
+		if (!findRootElement().isBandsEnabled(dim))
 			return Collections.emptyList();
 		return Iterables.filter(edges.keySet(), new Predicate<ClusterElement>() {
 			@Override
 			public boolean apply(ClusterElement input) {
-				return input != null && edges.get(input).getDimOverlap() > 0;
+				return input != null && edges.get(input).getOverlap(dim) > 0;
 			}
 		});
 	}
@@ -395,13 +392,27 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	/**
 	 * @return
 	 */
-	public Iterable<ClusterElement> getRecOverlappingNeighbors() {
-		if (!findRootElement().isRecBandsEnabled())
+	public Iterable<? extends ClusterElement> getAnyOverlappingNeighbors() {
+		if (!findRootElement().isDimBandsEnabled() && !findRootElement().isRecBandsEnabled())
 			return Collections.emptyList();
 		return Iterables.filter(edges.keySet(), new Predicate<ClusterElement>() {
 			@Override
 			public boolean apply(ClusterElement input) {
-				return input != null && edges.get(input).getRecOverlap() > 0;
+				if (input == null)
+					return false;
+				final Edge edge = edges.get(input);
+				return edge.getDimOverlap() > 0 || edge.getRecOverlap() > 0;
+			}
+		});
+	}
+
+	public final Iterable<Edge> getOverlappingEdges(final EDimension dim) {
+		if (!findRootElement().isBandsEnabled(dim))
+			return Collections.emptyList();
+		return Iterables.filter(edges.values(), new Predicate<Edge>() {
+			@Override
+			public boolean apply(Edge input) {
+				return input != null && input.getOverlap(dim) > 0;
 			}
 		});
 	}
