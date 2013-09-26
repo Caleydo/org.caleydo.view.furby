@@ -15,6 +15,8 @@ import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowRecB
 import java.util.ArrayList;
 import java.util.List;
 
+import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
+import org.caleydo.core.data.perspective.table.TableDoubleLists;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
@@ -39,8 +41,10 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementS
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
-import org.caleydo.view.bicluster.elem.ui.MySlider;
+import org.caleydo.view.bicluster.elem.BiClustering;
+import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.ui.MyUnboundSpinner;
+import org.caleydo.view.bicluster.elem.ui.ThresholdSlider;
 import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
@@ -63,7 +67,7 @@ import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
  *
  */
 public class ParameterToolBarElement extends AToolBarElement implements MyUnboundSpinner.IChangeCallback,
-		MySlider.ISelectionCallback, GLComboBox.ISelectionCallback<ISortingStrategyFactory> {
+		ThresholdSlider.ISelectionCallback, GLComboBox.ISelectionCallback<ISortingStrategyFactory> {
 
 	private static final ISortingStrategyFactory DEFAULT_SORTING_MODE = ProbabilitySortingStrategy.FACTORY_INC;
 
@@ -75,12 +79,12 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	private final GLButton clearHiddenClusterButton;
 	private final List<String> clearHiddenButtonTooltipList = new ArrayList<>();
 
-	private GLElement recordLabel;
-	private MyUnboundSpinner recordNumberThresholdSpinner;
-	private MySlider recordThresholdSlider;
-	private GLElement dimensionLabel;
-	private MyUnboundSpinner dimensionNumberThresholdSpinner;
-	private MySlider dimensionThresholdSlider;
+	private GLElement recLabel;
+	private MyUnboundSpinner recNumberThresholdSpinner;
+	private ThresholdSlider recThresholdSlider;
+	private GLElement dimLabel;
+	private MyUnboundSpinner dimNumberThresholdSpinner;
+	private ThresholdSlider dimThresholdSlider;
 	private GLElement clusterMinSizeLabel;
 	private GLSlider clusterMinSizeThresholdSlider;
 
@@ -204,10 +208,10 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 		this.clusterMinSizeThresholdSlider.setValue(0);
 
-		this.dimensionNumberThresholdSpinner.setValue(getDimTopNElements());
-		this.dimensionThresholdSlider.setCallback(null).setValue(getDimThreshold()).setCallback(this);
-		this.recordNumberThresholdSpinner.setValue(getRecTopNElements());
-		this.recordThresholdSlider.setValue(getRecThreshold());
+		this.dimNumberThresholdSpinner.setValue(getDimTopNElements());
+		this.dimThresholdSlider.setCallback(null).setValue(getDimThreshold()).setCallback(this);
+		this.recNumberThresholdSpinner.setValue(getRecTopNElements());
+		this.recThresholdSlider.setValue(getRecThreshold());
 
 		setClearHiddenButtonRenderer();
 		EventPublisher.trigger(new UnhidingClustersEvent());
@@ -252,8 +256,8 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	}
 
 	@Override
-	public void onSelectionChanged(MySlider slider, float value) {
-		if (slider == dimensionThresholdSlider || slider == recordThresholdSlider)
+	public void onSelectionChanged(ThresholdSlider slider, float value) {
+		if (slider == dimThresholdSlider || slider == recThresholdSlider)
 			updateGeneSampleThresholds();
 	}
 
@@ -264,11 +268,11 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	}
 
 	private void updateGeneSampleThresholds() {
-		float samplTh = dimensionThresholdSlider.getValue();
-		float geneTh = recordThresholdSlider.getValue();
-		int sampleNumberTh = dimensionNumberThresholdSpinner.getValue();
-		int geneNumberTh = recordNumberThresholdSpinner.getValue();
-		EventPublisher.trigger(new LZThresholdChangeEvent(geneTh, samplTh, geneNumberTh, sampleNumberTh, true));
+		float dimThresh = dimThresholdSlider.getValue();
+		float recThresh = recThresholdSlider.getValue();
+		int dimNumber = dimNumberThresholdSpinner.getValue();
+		int recNumber = recNumberThresholdSpinner.getValue();
+		EventPublisher.trigger(new LZThresholdChangeEvent(recThresh, dimThresh, recNumber, dimNumber, true));
 	}
 
 	@Override
@@ -292,8 +296,8 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 	@ListenTo
 	private void listenTo(MaxThresholdChangeEvent e) {
-		this.recordThresholdSlider.setMinMax(0.02f, (float) e.getRecThreshold());
-		this.dimensionThresholdSlider.setMinMax(0, (float) e.getDimThreshold());
+		this.dimThresholdSlider.setMinMax(0.02f, (float) e.getRecThreshold());
+		this.dimThresholdSlider.setMinMax(0, (float) e.getDimThreshold());
 	}
 
 	private void setClearHiddenButtonRenderer() {
@@ -340,35 +344,35 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	private void createThresholdSlider() {
 		this.add(createGroupLabelLine("Thresholds"));
 
-		this.dimensionLabel = new GLElement();
-		setText(dimensionLabel, "Dimension Threshold");
-		dimensionLabel.setSize(Float.NaN, LABEL_WIDTH);
-		this.add(dimensionLabel);
+		this.dimLabel = new GLElement();
+		setText(dimLabel, "Dimension Threshold");
+		dimLabel.setSize(Float.NaN, LABEL_WIDTH);
+		this.add(dimLabel);
 
-		this.dimensionNumberThresholdSpinner = new MyUnboundSpinner(getDimTopNElements());
-		this.dimensionNumberThresholdSpinner.setCallback(this);
-		this.dimensionNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
-		this.add(wrapSpinner(this.dimensionNumberThresholdSpinner));
+		this.dimNumberThresholdSpinner = new MyUnboundSpinner(getDimTopNElements());
+		this.dimNumberThresholdSpinner.setCallback(this);
+		this.dimNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
+		this.add(wrapSpinner(this.dimNumberThresholdSpinner));
 
-		this.dimensionThresholdSlider = new MySlider(true, 0, 5f, getDimThreshold());
-		dimensionThresholdSlider.setCallback(this);
-		dimensionThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
-		this.add(dimensionThresholdSlider);
+		this.dimThresholdSlider = new ThresholdSlider(0, 5f, getDimThreshold());
+		dimThresholdSlider.setCallback(this);
+		dimThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
+		this.add(dimThresholdSlider);
 
-		this.recordLabel = new GLElement();
-		setText(recordLabel, "Record Threshold");
-		recordLabel.setSize(Float.NaN, LABEL_WIDTH);
-		this.add(recordLabel);
+		this.recLabel = new GLElement();
+		setText(dimLabel, "Record Threshold");
+		recLabel.setSize(Float.NaN, LABEL_WIDTH);
+		this.add(recLabel);
 
-		this.recordNumberThresholdSpinner = new MyUnboundSpinner(getRecTopNElements());
-		this.recordNumberThresholdSpinner.setCallback(this);
-		this.recordNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
-		this.add(wrapSpinner(this.recordNumberThresholdSpinner));
+		this.recNumberThresholdSpinner = new MyUnboundSpinner(getRecTopNElements());
+		this.recNumberThresholdSpinner.setCallback(this);
+		this.recNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
+		this.add(wrapSpinner(this.recNumberThresholdSpinner));
 
-		this.recordThresholdSlider = new MySlider(true, 0.02f, 0.2f, getRecThreshold());
-		recordThresholdSlider.setCallback(this);
-		recordThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
-		this.add(recordThresholdSlider);
+		this.recThresholdSlider = new ThresholdSlider(0.02f, 0.2f, getRecThreshold());
+		recThresholdSlider.setCallback(this);
+		recThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
+		this.add(recThresholdSlider);
 
 	}
 
@@ -386,18 +390,24 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	}
 
 	@Override
-	public void init(final TablePerspective x) {
-		final String dimensionIDCategory = x.getDataDomain().getDimensionIDCategory().getCategoryName();
-		final String recordIDCategory = x.getDataDomain().getRecordIDCategory().getCategoryName();
+	public void init(final BiClustering clustering) {
+		ATableBasedDataDomain dataDomain = clustering.getXDataDomain();
+		final String dimensionIDCategory = dataDomain.getDimensionIDCategory().getCategoryName();
+		final String recordIDCategory = dataDomain.getRecordIDCategory().getCategoryName();
 
-		setText(dimensionLabel, dimensionIDCategory + " Threshold");
-		setText(recordLabel, recordIDCategory + " Threshold");
+		setText(dimLabel, dimensionIDCategory + " Threshold");
+		setText(recLabel, recordIDCategory + " Threshold");
 
 		recBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(recordIDCategory + " Bands"));
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(dimensionIDCategory + " Bands"));
 
-		this.visualizationSwitcherModel.addAll(createSupplier(x));
+		this.visualizationSwitcherModel
+				.addAll(createSupplier(clustering.getXDataDomain().getDefaultTablePerspective()));
 		this.visualizationSwitcher.setSelected(0);
+
+		dimThresholdSlider.setStats(TableDoubleLists.asRawList(clustering.getLZ(EDimension.DIMENSION)));
+		recThresholdSlider.setStats(TableDoubleLists.asRawList(clustering.getLZ(EDimension.RECORD)));
+
 	}
 
 	/**

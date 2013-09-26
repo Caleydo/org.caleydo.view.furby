@@ -10,7 +10,7 @@ import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.MIN_SCALE_
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimScaleFactor;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecScaleFactor;
 
-import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -19,6 +19,7 @@ import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.view.bicluster.elem.BiClustering;
 import org.caleydo.view.bicluster.event.ForceChangeEvent;
 import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
 
@@ -144,9 +145,10 @@ public class LayoutToolBarElement extends AToolBarElement {
 	}
 
 	@Override
-	public void init(final TablePerspective x) {
-		setText(clusterDimSizeLabel, x.getDataDomain().getDimensionIDCategory() + " Scale Factor");
-		setText(clusterRecSizeLabel, x.getDataDomain().getRecordIDCategory() + " Scale Factor");
+	public void init(final BiClustering biClustering) {
+		ATableBasedDataDomain dataDomain = biClustering.getXDataDomain();
+		setText(clusterDimSizeLabel, dataDomain.getDimensionIDCategory() + " Scale Factor");
+		setText(clusterRecSizeLabel, dataDomain.getRecordIDCategory() + " Scale Factor");
 	}
 
 	/**

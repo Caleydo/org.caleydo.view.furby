@@ -310,8 +310,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 	 * @param x2
 	 * @return
 	 */
-	private static Table asTable(TablePerspective x2) {
-		return x2.getDataDomain().getTable();
+	private static NumericalTable asTable(TablePerspective x2) {
+		return (NumericalTable) x2.getDataDomain().getTable();
 	}
 
 	private void handleThresholds(List<TablePerspective> added, List<TablePerspective> removed) {

@@ -207,7 +207,7 @@ public class GLRootElement extends GLElementContainer {
 		this.rec2label = x2Label(this.x.getRecordPerspective().getIdType());
 
 		for (AToolBarElement toolbar : getToolbars())
-			toolbar.init(x);
+			toolbar.init(biClustering);
 
 		bands = new AllBandsElement(x);
 		this.clear();

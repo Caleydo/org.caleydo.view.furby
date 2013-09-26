@@ -8,6 +8,7 @@ package org.caleydo.view.bicluster.elem.ui;
 import java.util.Locale;
 
 import org.caleydo.core.util.color.Color;
+import org.caleydo.core.util.function.IDoubleSizedIterable;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
@@ -22,7 +23,7 @@ import org.caleydo.core.view.opengl.util.text.ETextStyle;
  * @author Samuel Gratzl
  *
  */
-public class MySlider extends PickableGLElement {
+public class ThresholdSlider extends PickableGLElement {
 	/**
 	 * width of a gl slider
 	 */
@@ -61,14 +62,9 @@ public class MySlider extends PickableGLElement {
 	 */
 	private String valueFormat = "%.2f";
 
-	private final boolean invert;
+	private SimpleHistogram hist;
 
-	public MySlider(boolean invert) {
-		this.invert = invert;
-	}
-
-	public MySlider(boolean invert, float min, float max, float value) {
-		this.invert = invert;
+	public ThresholdSlider(float min, float max, float value) {
 		this.min = min;
 		this.max = max;
 		this.value = clamp(value);
@@ -78,7 +74,7 @@ public class MySlider extends PickableGLElement {
 	 * @param wheelInc
 	 *            setter, see {@link wheelInc}
 	 */
-	public MySlider setWheelInc(float wheelInc) {
+	public ThresholdSlider setWheelInc(float wheelInc) {
 		this.wheelInc = wheelInc;
 		return this;
 	}
@@ -94,7 +90,7 @@ public class MySlider extends PickableGLElement {
 	 * @param isHorizontal
 	 *            setter, see {@link isHorizontal}
 	 */
-	public MySlider setHorizontal(boolean isHorizontal) {
+	public ThresholdSlider setHorizontal(boolean isHorizontal) {
 		this.isHorizontal = isHorizontal;
 		return this;
 	}
@@ -103,7 +99,7 @@ public class MySlider extends PickableGLElement {
 	 * @param valueFormat
 	 *            setter, see {@link valueFormat}
 	 */
-	public MySlider setValueFormat(String valueFormat) {
+	public ThresholdSlider setValueFormat(String valueFormat) {
 		this.valueFormat = valueFormat;
 		return this;
 	}
@@ -119,7 +115,7 @@ public class MySlider extends PickableGLElement {
 	 * @param value
 	 *            setter, see {@link value}
 	 */
-	public MySlider setValue(float value) {
+	public ThresholdSlider setValue(float value) {
 		value = clamp(value);
 		if (this.value == value)
 			return this;
@@ -129,7 +125,7 @@ public class MySlider extends PickableGLElement {
 		return this;
 	}
 
-	public MySlider setMinMax(float min, float max) {
+	public ThresholdSlider setMinMax(float min, float max) {
 		if (this.min == min && this.max == max)
 			return this;
 		this.min = min;
@@ -162,7 +158,7 @@ public class MySlider extends PickableGLElement {
 	 * @param callback
 	 *            setter, see {@link callback}
 	 */
-	public final MySlider setCallback(ISelectionCallback callback) {
+	public final ThresholdSlider setCallback(ISelectionCallback callback) {
 		if (callback == null)
 			callback = DUMMY_CALLBACK;
 		if (this.callback == callback)
@@ -178,30 +174,22 @@ public class MySlider extends PickableGLElement {
 		final boolean showText = true;
 		final boolean showMinMaxText = hovered;
 
-		{
-			Color a = invert ? Color.BLACK : Color.WHITE;
-			Color b = !invert ? Color.BLACK : Color.WHITE;
-			if (isHorizontal)
-				g.fillPolygon(new ColoredVec2f(0, 0, a), new ColoredVec2f(w, 0, b), new ColoredVec2f(w, h, b),
-						new ColoredVec2f(0, h, a));
-			else
-				g.fillPolygon(new ColoredVec2f(0, 0, a), new ColoredVec2f(w, 0, a), new ColoredVec2f(w, h, b),
-						new ColoredVec2f(0, h, b));
-		}
+		renderGradient(g, w, h);
+		renderHist(g, w, h);
 
 		if (hovered || dragged)
 			g.color(Color.BLUE);
 		else
-			g.color(Color.LIGHT_BLUE);
+			g.color(Color.LIGHT_BLUE.darker());
 
 		if (isHorizontal) {
 			float x = mapValue(w) + 1;
 			g.fillRect(x, 0, Math.min(BAR_WIDTH, w - x), h);
 			if (showMinMaxText) {
-				g.textColor(invert ? Color.WHITE : Color.BLACK);
-				g.drawText(format(invert ? max : min), 2, 3, w - 3, h - 6, VAlign.LEFT);
-				g.textColor(!invert ? Color.WHITE : Color.BLACK);
-				g.drawText(format(invert ? min : max), 2, 3, w - 3, h - 6, VAlign.RIGHT);
+				g.textColor(Color.WHITE);
+				g.drawText(format(max), 2, 3, w - 3, h - 6, VAlign.LEFT);
+				g.textColor(Color.BLACK);
+				g.drawText(format(min), 2, 3, w - 3, h - 6, VAlign.RIGHT);
 			}
 			if (showText)
 				g.textColor(Color.BLUE).drawText(format(value), 2, 2, w - 3, h - 6, VAlign.CENTER, ETextStyle.BOLD);
@@ -211,10 +199,10 @@ public class MySlider extends PickableGLElement {
 			if (showText)
 				g.save().gl.glRotatef(90, 0, 0, 1);
 			if (showMinMaxText) {
-				g.textColor(invert ? Color.WHITE : Color.BLACK);
-				g.drawText(format(invert ? max : min), 2, 3 - w, h - 3, w - 6, VAlign.LEFT);
-				g.textColor(!invert ? Color.WHITE : Color.BLACK);
-				g.drawText(format(invert ? min : max), 2, 3 - w, h - 3, w - 6, VAlign.RIGHT);
+				g.textColor(Color.WHITE);
+				g.drawText(format(max), 2, 3 - w, h - 3, w - 6, VAlign.LEFT);
+				g.textColor(Color.BLACK);
+				g.drawText(format(min), 2, 3 - w, h - 3, w - 6, VAlign.RIGHT);
 			}
 			if (showText)
 				g.textColor(Color.BLUE)
@@ -226,6 +214,40 @@ public class MySlider extends PickableGLElement {
 		g.color(Color.BLACK).drawRect(0, 0, w, h);
 	}
 
+	/**
+	 * @param g
+	 * @param w
+	 * @param h
+	 */
+	private void renderHist(GLGraphics g, float w, float h) {
+		if (hist == null)
+			return;
+		g.color(Color.LIGHT_BLUE);
+		g.save();
+		if (isHorizontal) {
+			g.move(w, 0);
+			g.gl.glScalef(-1, 1, 1);
+			hist.render(g, w, h);
+		} else {
+			g.gl.glRotatef(90, 0, 0, 1);
+			g.move(h, -w);
+			g.gl.glScalef(-1, 1, 1);
+			hist.render(g, h, w);
+		}
+		g.restore();
+	}
+
+	private void renderGradient(GLGraphics g, float w, float h) {
+		Color a = Color.BLACK;
+		Color b = Color.WHITE;
+		if (isHorizontal)
+			g.fillPolygon(new ColoredVec2f(0, 0, a), new ColoredVec2f(w, 0, b), new ColoredVec2f(w, h, b),
+					new ColoredVec2f(0, h, a));
+		else
+			g.fillPolygon(new ColoredVec2f(0, 0, a), new ColoredVec2f(w, 0, a), new ColoredVec2f(w, h, b),
+					new ColoredVec2f(0, h, b));
+	}
+
 	protected String format(float v) {
 		return String.format(Locale.ENGLISH, valueFormat, v);
 	}
@@ -235,16 +257,14 @@ public class MySlider extends PickableGLElement {
 		float range = max - min;
 		float factor = total / range;
 		float r = (value - min) * factor;
-		if (invert)
-			r = total - r;
+		r = total - r;
 		return r;
 	}
 
 	private float unmapValue(float v) {
 		float total = isHorizontal ? getSize().x() : getSize().y();
 		total -= BAR_WIDTH + 2;
-		if (invert)
-			v = total - v;
+		v = total - v;
 		float range = max - min;
 		float factor = total / range;
 		return clamp(v / factor + min);
@@ -318,18 +338,26 @@ public class MySlider extends PickableGLElement {
 	}
 
 	/**
+	 * @param tablePerspectiveDoubleRawList
+	 */
+	public void setStats(IDoubleSizedIterable it) {
+		this.hist = SimpleHistogram.of(it.iterator(), true);
+		repaint();
+	}
+
+	/**
 	 * callback interface for selection changes
 	 *
 	 * @author Samuel Gratzl
 	 *
 	 */
 	public interface ISelectionCallback {
-		void onSelectionChanged(MySlider slider, float value);
+		void onSelectionChanged(ThresholdSlider slider, float value);
 	}
 
 	private static final ISelectionCallback DUMMY_CALLBACK = new ISelectionCallback() {
 		@Override
-		public void onSelectionChanged(MySlider slider, float value) {
+		public void onSelectionChanged(ThresholdSlider slider, float value) {
 
 		}
 	};

@@ -20,6 +20,7 @@ import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
+import org.caleydo.core.util.function.IDoubleSizedIterable;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
@@ -36,7 +37,7 @@ import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.elem.annotation.ALZHeatmapElement;
 import org.caleydo.view.bicluster.elem.annotation.ProbabilityLZHeatmapElement;
-import org.caleydo.view.bicluster.elem.ui.MySlider;
+import org.caleydo.view.bicluster.elem.ui.ThresholdSlider;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
 import org.caleydo.view.bicluster.sorting.ISortingStrategy;
@@ -89,8 +90,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
 
-		dimThreshBar.updateSliders(clustering.getMaxAbsProbability(EDimension.DIMENSION));
-		recThreshBar.updateSliders(clustering.getMaxAbsProbability(EDimension.RECORD));
+		dimThreshBar.updateSliders(clustering.getMaxAbsProbability(EDimension.DIMENSION),
+				clustering.getClustering(EDimension.DIMENSION, bcNr));
+		recThreshBar.updateSliders(clustering.getMaxAbsProbability(EDimension.RECORD),
+				clustering.getClustering(EDimension.DIMENSION, bcNr));
 
 		this.add(new HeatMapLabelElement(true, data.getDimensionPerspective(), content));
 		this.add(new HeatMapLabelElement(false, data.getRecordPerspective(), content));
@@ -431,10 +434,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 		isLocked = !isLocked;
 	}
 
-	protected class ThresholdBar extends GLElementDecorator implements MySlider.ISelectionCallback {
+	protected class ThresholdBar extends GLElementDecorator implements ThresholdSlider.ISelectionCallback {
 
 		private final boolean isHorizontal;
-		private final MySlider slider;
+		private final ThresholdSlider slider;
 		// float globalMaxThreshold;
 		private float localMaxSliderValue;
 
@@ -445,15 +448,16 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 			// create buttons
 			float max = 0;
-			this.slider = new MySlider(true, 0, max, max / 2);
+			this.slider = new ThresholdSlider(0, max, max / 2);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
 			setContent(slider);
 			setVisibility(EVisibility.PICKABLE); // for parent
 		}
 
+
 		@Override
-		public void onSelectionChanged(MySlider slider, float value) {
+		public void onSelectionChanged(ThresholdSlider slider, float value) {
 			if (value >= localMaxSliderValue)
 				return;
 			setLocalThreshold(EDimension.get(isHorizontal), value);
@@ -462,9 +466,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 		/**
 		 * @param dimProbabilities
 		 */
-		public void updateSliders(double max) {
+		public void updateSliders(double max, IDoubleSizedIterable values) {
 			localMaxSliderValue = (float) max;
 			this.slider.setMinMax(0, localMaxSliderValue);
+			this.slider.setStats(values);
 		}
 
 		/**
