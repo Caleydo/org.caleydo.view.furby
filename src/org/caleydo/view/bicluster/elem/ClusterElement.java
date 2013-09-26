@@ -172,11 +172,12 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	@Override
 	protected final void renderPickImpl(GLGraphics g, float w, float h) {
-		g.color(Color.BLACK);
+		g.color(Color.GRAY);
 		if (isFocused()) {
-			g.fillRect(-20, -20, w + 80 + 20, h + 80 + 20);
+			g.decZ().fillRect(-20, -20, w + 80 + 20, h + 80 + 20).incZ();
 		} else
-			g.fillRect(-10, -10, w + 20, w + 20);
+			g.decZ().fillRect(-10, -10, w + 20, w + 20).incZ();
+		g.color(Color.DARK_BLUE);
 		super.renderPickImpl(g, w, h);
 	}
 

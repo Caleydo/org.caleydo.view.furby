@@ -21,7 +21,9 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
+import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingLabelProvider;
+import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.elem.ClusterContentElement;
 import org.caleydo.view.bicluster.elem.EDimension;
@@ -37,7 +39,7 @@ import com.jogamp.opengl.util.texture.TextureData;
  * @author Samuel Gratzl
  *
  */
-public abstract class ALZHeatmapElement extends GLElement implements IPickingLabelProvider {
+public abstract class ALZHeatmapElement extends GLElement implements IPickingLabelProvider, IPickingListener {
 	protected static final int NO_CENTER = -2;
 	protected final EDimension dim;
 	private Texture texture;
@@ -47,11 +49,14 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 	private ClusterContentElement spaceProvider;
 	protected int center;
 
+	protected float mouseOver = Float.NaN;
+
 	public ALZHeatmapElement(EDimension dim) {
 		this.dim = dim;
 		setSize(dim.isHorizontal() ? Float.NaN : 4, dim.isHorizontal() ? 4 : Float.NaN);
 		setLayoutData(dim);
 		setVisibility(EVisibility.PICKABLE);
+		setPicker(GLRenderers.fillRect(Color.DARK_GREEN));
 	}
 
 	/**
@@ -66,6 +71,25 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 		super.init(context);
 		texture = new Texture(GL.GL_TEXTURE_2D);
 		onPick(context.getSWTLayer().createTooltip(this));
+		onPick(this);
+	}
+
+	@Override
+	public void pick(Pick pick) {
+		switch (pick.getPickingMode()) {
+		case MOUSE_OUT:
+			mouseOver = Float.NaN;
+			repaint();
+			break;
+		case MOUSE_MOVED:
+		case MOUSE_OVER:
+			Vec2f r = toRelative(pick.getPickedPoint());
+			mouseOver = dim.select(r.x(), r.y());
+			repaint();
+			break;
+		default:
+			break;
+		}
 	}
 
 	@Override
@@ -74,12 +98,14 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 		float coord = dim.select(r.x(), r.y());
 		int pos;
 		if (spaceProvider == null) {
-			pos = Math.round(coord / texture.getWidth());
+			pos = Math.round(coord / (dim.isHorizontal() ? getSize().x() : getSize().y()));
 		} else if (this.dim.isHorizontal()) {
 			pos = spaceProvider.getDimensionIndex(coord);
 		} else {
 			pos = spaceProvider.getRecordIndex(coord);
 		}
+		if (pos < 0 || pos >= texture.getWidth())
+			return null;
 		return getLabel(pos);
 	}
 
@@ -173,7 +199,26 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 			g.lineWidth(1);
 		}
 
+		renderMouseHint(g, w, h);
+
 		g.color(Color.GRAY).drawRect(1, 1, w - 2, h - 2);
+	}
+
+	/**
+	 * @param g
+	 * @param w
+	 * @param h
+	 */
+	private void renderMouseHint(GLGraphics g, float w, float h) {
+		if (Float.isNaN(mouseOver))
+			return;
+		g.lineWidth(2);
+		g.color(Color.LIGHT_BLUE);
+		if (dim.isHorizontal()) {
+			g.drawLine(mouseOver, 0, mouseOver, h);
+		} else
+			g.drawLine(0, mouseOver, w, mouseOver);
+		g.lineWidth(1);
 	}
 
 	/**
@@ -217,7 +262,7 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 			setVisibility(EVisibility.HIDDEN);
 			return;
 		} else
-			setVisibility(EVisibility.VISIBLE);
+			setVisibility(EVisibility.PICKABLE);
 
 		FloatBuffer buffer = FloatBuffer.allocate(width * 3); // w*rgb*float
 		updateImpl(buffer, values);

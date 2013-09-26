@@ -57,6 +57,7 @@ import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.BandSortingStrategy;
+import org.caleydo.view.bicluster.sorting.CenterProbabilitySortingStrategy;
 import org.caleydo.view.bicluster.sorting.DefaultSortingStrategy;
 import org.caleydo.view.bicluster.sorting.ISortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
@@ -193,6 +194,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		r.add(ProbabilitySortingStrategy.FACTORY_DEC_ABS);
 		r.add(DefaultSortingStrategy.FACTORY);
 		r.add(BandSortingStrategy.FACTORY);
+		r.add(CenterProbabilitySortingStrategy.FACTORY);
 		// TODO categorical
 		return r;
 	}
@@ -296,7 +298,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 	@ListenTo
 	private void listenTo(MaxThresholdChangeEvent e) {
-		this.dimThresholdSlider.setMinMax(0.02f, (float) e.getRecThreshold());
+		this.recThresholdSlider.setMinMax(0, (float) e.getRecThreshold());
 		this.dimThresholdSlider.setMinMax(0, (float) e.getDimThreshold());
 	}
 

@@ -397,6 +397,11 @@ public class NormalClusterElement extends AMultiClusterElement {
 	public void addAnnotation(ALZHeatmapElement annotation) {
 		this.add(annotation);
 		this.annotations.add(annotation);
+		if (isFocused()) {
+			annotation.nonUniformLayout(content);
+		} else {
+			annotation.uniformLayout();
+		}
 		resort();
 	}
 

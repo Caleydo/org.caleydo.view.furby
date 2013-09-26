@@ -9,7 +9,7 @@ import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.Set;
 
-import org.caleydo.core.data.collection.table.CategoricalTable;
+import org.caleydo.core.data.collection.column.container.CategoricalClassDescription;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
@@ -71,13 +71,20 @@ public class CategoricalLZHeatmapElement extends ALZHeatmapElement {
 	}
 
 	private String getCategory(Integer id) {
-		CategoricalTable<?> t = (CategoricalTable<?>) table;
 		Object category;
-		if (table.getDataDomain().getDimensionIDType().equals(id2colorId.getTarget()))
-			category = t.getRaw(id, oppositeID);
-		else
-			category = t.getRaw(oppositeID, id);
-		return category == null ? null : t.getCategoryDescriptions().getCategoryProperty(category).getCategoryName();
+		Object desc;
+		if (table.getDataDomain().getDimensionIDType().equals(id2colorId.getTarget())) {
+			category = table.getRaw(id, oppositeID);
+			desc = table.getDataClassSpecificDescription(id, oppositeID);
+		} else {
+			category = table.getRaw(oppositeID, id);
+			desc = table.getDataClassSpecificDescription(oppositeID, id);
+		}
+		if (category == null)
+			return null;
+		if (!(desc instanceof CategoricalClassDescription<?>))
+			return null;
+		return ((CategoricalClassDescription<?>) desc).getCategoryProperty(category).getCategoryName();
 	}
 
 	public boolean is(Integer oppositeID, IDType target) {
