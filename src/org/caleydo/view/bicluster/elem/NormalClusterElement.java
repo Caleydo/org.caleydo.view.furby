@@ -279,10 +279,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 		GLRootElement root = findRootElement();
 		if (root == null)
 			return true;
-		float clusterSizeThreshold = root.getClusterSizeThreshold();
-		float biggest = root.getBiggestDimSize();
-		if ((dim / biggest) < clusterSizeThreshold && (rec / biggest) < clusterSizeThreshold)
-			return false;
+		// float clusterSizeThreshold = root.getClusterSizeThreshold();
+		// float biggest = root.getBiggestDimSize();
+		// if ((dim / biggest) < clusterSizeThreshold && (rec / biggest) < clusterSizeThreshold)
+		// return false;
 		return true;
 	}
 
@@ -318,15 +318,14 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	/**
 	 * difference to {@link #setThreshold(EDimension, float)} is that in addition the stuff will be updated
-	 * 
+	 *
 	 * @param dimension
 	 * @param t
 	 */
 	public void setLocalThreshold(EDimension dimension, float t) {
 		setThreshold(dimension, t);
 		updateMyEdges(dimension.isHorizontal(), dimension.isVertical());
-		findRootElement().setClusterSizes(this);
-		findAllClustersElement().relayout();
+		relayoutParent();
 	}
 
 	@Override
@@ -540,11 +539,9 @@ public class NormalClusterElement extends AMultiClusterElement {
 		@Override
 		public void onSelectionChanged(GLButton button, boolean selected) {
 			if (button == enlarge) {
-				upscale();
-				resize();
+				zoomIn();
 			} else if (button == smaller) {
-				reduceScaleFactor();
-				resize();
+				zoomOut();
 			} else if (button == focus) {
 				findAllClustersElement().setFocus(selected ? NormalClusterElement.this : null);
 			} else if (button == lock) {
@@ -555,4 +552,5 @@ public class NormalClusterElement extends AMultiClusterElement {
 		}
 
 	}
+
 }

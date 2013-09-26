@@ -31,7 +31,6 @@ import org.caleydo.core.view.opengl.layout2.basic.GLButton.EButtonMode;
 import org.caleydo.core.view.opengl.layout2.basic.GLComboBox;
 import org.caleydo.core.view.opengl.layout2.basic.GLComboBox.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
-import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
 import org.caleydo.core.view.opengl.layout2.basic.GLSpinner;
 import org.caleydo.core.view.opengl.layout2.basic.GLSpinner.IChangeCallback;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
@@ -50,7 +49,6 @@ import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
-import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.ResetSettingsEvent;
 import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
@@ -94,8 +92,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	private GLElement dimLabel;
 	private MyUnboundSpinner dimNumberThresholdSpinner;
 	private ThresholdSlider dimThresholdSlider;
-	private GLElement clusterMinSizeLabel;
-	private GLSlider clusterMinSizeThresholdSlider;
 
 	private final GLComboBox<GLElementSupplier> visualizationSwitcher;
 	private final List<GLElementSupplier> visualizationSwitcherModel = new ArrayList<>();
@@ -171,7 +167,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		this.add(visualizationSwitcher);
 
 		createThresholdSlider();
-		createMinimumClusterSizeSlider();
 
 		GLElementContainer c = new GLElementContainer(GLLayouts.flowHorizontal(2));
 		this.maxDistance = GLSpinner.createIntegerSpinner(1, 0, 4, 1);
@@ -229,8 +224,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 		this.maxDistance.setValue(MyPreferences.getMaxDistance());
 		this.visualizationSwitcher.setSelected(0);
-
-		this.clusterMinSizeThresholdSlider.setValue(0);
 
 		this.dimNumberThresholdSpinner.setValue(getDimTopNElements());
 		this.dimThresholdSlider.setCallback(null).setValue(getDimThreshold()).setCallback(this);
@@ -297,8 +290,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 	@Override
 	public void onSelectionChanged(GLSlider slider, float value) {
-		if (slider == clusterMinSizeThresholdSlider)
-			EventPublisher.trigger(new MinClusterSizeThresholdChangeEvent(slider.getValue() / 100f));
 	}
 
 	@Override
@@ -378,22 +369,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		}
 		clearHiddenClusterButton.setTooltip(tooltip.toString());
 		setClearHiddenButtonRenderer();
-	}
-
-	/**
-	 *
-	 */
-	private void createMinimumClusterSizeSlider() {
-		this.clusterMinSizeLabel = new GLElement();
-		clusterMinSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
-		this.add(clusterMinSizeLabel);
-
-		this.clusterMinSizeThresholdSlider = new GLSlider(0, 100, 0f);
-		clusterMinSizeThresholdSlider.setCallback(this);
-		clusterMinSizeThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
-		clusterMinSizeThresholdSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
-		this.add(clusterMinSizeThresholdSlider);
-		setText(clusterMinSizeLabel, "Minumum Cluster Size (%)");
 	}
 
 	/**

@@ -145,7 +145,7 @@ public class ClusterContentElement extends GLElementDecorator {
 		return switcher.getActiveElement() instanceof HeatMapElement;
 	}
 
-	boolean isShowingLinearPlot() {
+	boolean isShowingBarPlot() {
 		return switcher.getActiveElement() instanceof BarPlotElement;
 	}
 

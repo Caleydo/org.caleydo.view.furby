@@ -159,6 +159,10 @@ public class AllClustersElement extends GLElementContainer {
 		return focussedElement;
 	}
 
+	public boolean isAnyFocussed() {
+		return focussedElement != null;
+	}
+
 	public ClusterElement getHoveredElement() {
 		return hoveredElement;
 	}
@@ -174,7 +178,7 @@ public class AllClustersElement extends GLElementContainer {
 	 *
 	 */
 	public void onChangeMaxDistance() {
-		if (this.focussedElement != null)
+		if (isAnyFocussed())
 			focusChanged();
 	}
 }

@@ -5,8 +5,6 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import gleem.linalg.Vec2f;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -41,11 +39,7 @@ import org.caleydo.view.bicluster.elem.toolbar.LayoutToolBarElement;
 import org.caleydo.view.bicluster.elem.toolbar.ParameterToolBarElement;
 import org.caleydo.view.bicluster.event.AlwaysShowToolBarEvent;
 import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
-import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
-import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
-import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
-import org.caleydo.view.bicluster.event.MinClusterSizeThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
@@ -69,11 +63,7 @@ public class GLRootElement extends GLElementContainer {
 	private boolean dimBands = MyPreferences.isShowDimBands();
 	private boolean recBands = MyPreferences.isShowRecBands();
 
-	private float dimScaleFactor = MyPreferences.getDimScaleFactor();
-	private float recScaleFactor = MyPreferences.getRecScaleFactor();
-	private double scaleFactor = MyPreferences.getScaleFactor();
 	private int maxDistance = MyPreferences.getMaxDistance();
-	private float clusterSizeThreshold = 0;
 
 	private boolean isShowAlwaysToolBar = false;
 
@@ -89,10 +79,7 @@ public class GLRootElement extends GLElementContainer {
 .setPicker(
 			GLRenderers.fillRect(Color.CYAN));
 
-	private int maxSize;
-
 	private IIDTypeMapper<Integer, String> dim2label;
-
 	private IIDTypeMapper<Integer, String> rec2label;
 
 
@@ -102,15 +89,22 @@ public class GLRootElement extends GLElementContainer {
 			@Override
 			public void pick(Pick pick) {
 				// mouse wheel zoom
-				if (pick.getPickingMode() == PickingMode.MOUSE_WHEEL && ((IMouseEvent) pick).isCtrlDown()) {
-					setScaleFactor(Math.max(0.2, scaleFactor
-							* (((IMouseEvent) pick).getWheelRotation() > 0 ? 1.1 : 1 / 1.1)));
+				if (pick.getPickingMode() == PickingMode.MOUSE_WHEEL) {
+					zoom((IMouseEvent) pick);
 				}
 			}
 		});
 		this.add(zoomLayer);
 	}
 
+
+	/**
+	 * @param f
+	 */
+	protected void zoom(IMouseEvent pick) {
+		for (ClusterElement elem : clusters.allClusters())
+			elem.zoom(pick);
+	}
 
 	@Override
 	public void layout(int deltaTimeMs) {
@@ -169,14 +163,6 @@ public class GLRootElement extends GLElementContainer {
 		this.clusters.onChangeMaxDistance();
 		this.clusters.relayout();
 		this.bands.relayout();
-	}
-
-	/**
-	 * @param max
-	 */
-	protected void setScaleFactor(double factor) {
-		scaleFactor = factor;
-		setClusterSizes(null);
 	}
 
 	@Override
@@ -261,67 +247,6 @@ public class GLRootElement extends GLElementContainer {
 		this.bands = null;
 	}
 
-	public void setClusterSizes(Object causer) {
-		int maxDimClusterElements = 1;
-		int maxRecClusterElements = 1;
-
-		for (GLElement iGL : clusters) {
-			ClusterElement i = (ClusterElement) iGL;
-			if (!i.isVisible())
-				continue;
-			maxDimClusterElements = Math.max(maxDimClusterElements, i.getDimSize());
-			maxRecClusterElements = Math.max(maxRecClusterElements, i.getRecSize());
-		}
-		this.maxSize = Math.max(maxDimClusterElements, maxRecClusterElements);
-
-		for (GLElement iGL : clusters) {
-			ClusterElement i = (ClusterElement) iGL;
-			Vec2f preferredSize = i.getPreferredSize(dimScaleFactor, recScaleFactor);
-			double recSize = preferredSize.y() * scaleFactor;
-			double dimSize = preferredSize.x() * scaleFactor;
-			i.setClusterSize(dimSize, recSize, causer);
-			i.updateVisibility();
-			i.relayout();
-		}
-	}
-
-	/**
-	 * @return
-	 */
-	public int getBiggestDimSize() {
-		return maxSize;
-	}
-
-	@ListenTo
-	public void listenTo(ClusterScaleEvent event) {
-		setClusterSizes(event.getSender());
-	}
-
-	@ListenTo
-	private void listenTo(MinClusterSizeThresholdChangeEvent event) {
-		this.clusterSizeThreshold = event.getMinClusterSize();
-		updateClusterVisibilities();
-	}
-
-	/**
-	 * @return the clusterSizeThreshold, see {@link #clusterSizeThreshold}
-	 */
-	public float getClusterSizeThreshold() {
-		return clusterSizeThreshold;
-	}
-
-	private void updateClusterVisibilities() {
-		for (ClusterElement elem : clusters.allClusters())
-			elem.updateVisibility();
-	}
-
-	@ListenTo
-	private void listenTo(MaxClusterSizeChangeEvent e) {
-		dimScaleFactor = (int) e.getMaxDimensionSize() + 1;
-		recScaleFactor = (int) e.getMaxRecordSize() + 1;
-		setClusterSizes(null);
-	}
-
 	@ListenTo
 	private void listenTo(LZThresholdChangeEvent event) {
 		final int dimNumberThreshold = event.getDimensionNumberThreshold();
@@ -336,7 +261,6 @@ public class GLRootElement extends GLElementContainer {
 		}
 		// 2. update overlaps
 		updateAllEdges();
-		setClusterSizes(null);
 		clusters.relayout();
 	}
 
@@ -380,16 +304,10 @@ public class GLRootElement extends GLElementContainer {
 	}
 
 	@ListenTo
-	private void listenTo(ClusterGetsHiddenEvent e) {
-		setClusterSizes(null);
-	}
-
-	@ListenTo
 	private void listenTo(UnhidingClustersEvent e) {
 		for (ClusterElement elem : Iterables.filter(clusters, ClusterElement.class)) {
 			elem.show();
 		}
-		setClusterSizes(null);
 	}
 
 	/**

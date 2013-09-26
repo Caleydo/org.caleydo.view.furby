@@ -299,7 +299,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 
 			// signal that we now use that data domain
 			rootElement.init(biClustering, x);
-			rootElement.setClusterSizes(null);
 		}
 
 		handleSpecialClusters(added, removed);

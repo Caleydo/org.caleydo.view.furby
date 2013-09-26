@@ -8,13 +8,10 @@ package org.caleydo.view.bicluster.elem;
 import gleem.linalg.Vec2f;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
-import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
-import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 
 import com.google.common.base.Predicate;
 
@@ -54,15 +51,16 @@ public abstract class AMultiClusterElement extends ClusterElement {
 		c.onActiveChanged(new GLElementFactorySwitcher.IActiveChangedCallback() {
 			@Override
 			public void onActiveChanged(int active) {
-				EventPublisher.trigger(new ClusterScaleEvent(AMultiClusterElement.this));
+				relayoutParent();
 			}
 		});
-		c.setMinSizeProvider(new IHasMinSize() {
-			@Override
-			public Vec2f getMinSize() {
-				return getLayoutDataAs(Vec2f.class, getPreferredSize(1, 1));
-			}
-		});
+		// FIXME
+		// c.setMinSizeProvider(new IHasMinSize() {
+		// @Override
+		// public Vec2f getMinSize() {
+		// return getLayoutDataAs(Vec2f.class, getPreferredSize());
+		// }
+		// });
 		return c;
 	}
 
@@ -94,14 +92,12 @@ public abstract class AMultiClusterElement extends ClusterElement {
 	}
 
 	@Override
-	public final Vec2f getPreferredSize(float scaleX, float scaleY) {
-		if (content.isShowingHeatMap()) {
-			return new Vec2f(getDimSize() * scaleX, getRecSize() * scaleY);
-		}
-		if (content.isShowingLinearPlot()) {
-			return new Vec2f(getDimSize() * scaleX, getRecSize() * 2 * scaleY);
-		}
-		ClusterContentElement c = (content);
-		return c.getMinSize();
+	public boolean needsUniformScaling() {
+		return !content.isShowingHeatMap() && !content.isShowingBarPlot();
+	}
+
+	@Override
+	public Vec2f getMinSize() {
+		return content.getMinSize();
 	}
 }

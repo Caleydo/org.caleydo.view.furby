@@ -36,6 +36,7 @@ import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.layout2.animation.AnimatedGLElementContainer;
 import org.caleydo.core.view.opengl.layout2.animation.MoveTransitions;
 import org.caleydo.core.view.opengl.layout2.animation.Transitions;
+import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayoutDatas;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
@@ -60,7 +61,7 @@ import com.google.common.collect.Iterables;
  * @author Michael Gillhofer
  * @author Samuel Gratzl
  */
-public abstract class ClusterElement extends AnimatedGLElementContainer implements IGLLayout, ILabeled {
+public abstract class ClusterElement extends AnimatedGLElementContainer implements IGLLayout, ILabeled, IHasMinSize {
 	protected static final IHasGLLayoutData GROW_UP = GLLayoutDatas.combine(new MoveTransitions.MoveTransitionBase(
 			Transitions.NO, Transitions.LINEAR, Transitions.NO, Transitions.LINEAR), DEFAULT_DURATION);
 	private static final Logger log = Logger.create(ClusterElement.class);
@@ -89,16 +90,16 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	protected HeaderBar headerBar;
 
-	private double dimSize;
-	private double recSize;
-	protected double scaleFactor;
-	protected double minScaleFactor;
-	private double preFocusScaleFactor = -1; // -1 indicator no backup
+	// whether hiding is enforced
+	private boolean forceHide = false;
 
 	/**
 	 * delayed mouse out to avoid fast in / out delays
 	 */
 	private int mouseOutDelay = Integer.MAX_VALUE;
+
+	private float recScale = 1;
+	private float dimScale = 1;
 
 	public ClusterElement(int bcNr, TablePerspective data, BiClustering clustering) {
 		setLayout(this);
@@ -108,12 +109,9 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 		this.headerBar = new HeaderBar();
 		this.add(headerBar);
-
 		this.data = data;
 		this.clustering = clustering;
-		minScaleFactor = 0.25;
 		updateVisibility();
-		setScaleFactor(1);
 		this.onPick(new IPickingListener() {
 
 			@Override
@@ -129,21 +127,11 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	/**
-	 * @param i
-	 */
-	protected final void setScaleFactor(double s) {
-		if (s < minScaleFactor)
-			s = minScaleFactor;
-		scaleFactor = s;
-	}
-
-	/**
 	 * @return the bcNr, see {@link #bcNr}
 	 */
 	public final int getBiClusterNumber() {
 		return bcNr;
 	}
-
 
 	public final IDType getDimensionIDType() {
 		return getDimVirtualArray().getIdType();
@@ -151,6 +139,10 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	public final IDType getRecordIDType() {
 		return getRecVirtualArray().getIdType();
+	}
+
+	public float getScale(EDimension dim) {
+		return dim.select(dimScale, recScale);
 	}
 
 	/**
@@ -176,7 +168,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		if (isFocused()) {
 			g.decZ().fillRect(-20, -20, w + 80 + 20, h + 80 + 20).incZ();
 		} else
-			g.decZ().fillRect(-10, -10, w + 20, w + 20).incZ();
+			g.decZ().fillRect(-10, -10, w + 20, h + 20).incZ();
 		g.color(Color.DARK_BLUE);
 		super.renderPickImpl(g, w, h);
 	}
@@ -256,11 +248,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		case MOUSE_WHEEL:
 			// zoom on CTRL+mouse wheel
 			IMouseEvent event = ((IMouseEvent) pick);
-			int r = (event).getWheelRotation();
-			if (r != 0 && event.isCtrlDown()) {
-				scaleFactor = Math.max(minScaleFactor, scaleFactor * (r > 0 ? 1.1 : 1 / 1.1));
-				resize();
-			}
+			zoom(event);
 			break;
 		default:
 			break;
@@ -268,11 +256,56 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		}
 	}
 
+	/**
+	 * @param i
+	 */
+	protected void zoom(int dimFac, int recFac) {
+		if (dimFac == 0 && recFac == 0)
+			return;
+		float rec = nextZoomLevel(recFac, recScale, getRecSize());
+		float dim = nextZoomLevel(dimFac, dimScale, getDimSize());
+		if (rec == recScale && dim == dimScale)
+			return;
+		recScale = rec;
+		dimScale = dim;
+		relayoutParent();
+	}
+
+	private static float nextZoomLevel(int direction, float current, int elements) {
+		if (direction == 0)
+			return current;
+		float expected = current * elements;
+		// FIXME logic
+		return Math.max(current + direction * 0.2f, 0.01f);
+	}
+
+	/**
+	 * @param event
+	 */
+	void zoom(IMouseEvent event) {
+		int r = (event).getWheelRotation();
+		if (r == 0)
+			return;
+		final int factor = r > 0 ? 1 : -1;
+		int dimFac = event.isCtrlDown() || event.isAltDown() ? factor : 0;
+		int recFac = event.isCtrlDown() || event.isShiftDown() ? factor : 0;
+		zoom(dimFac, recFac);
+	}
+
+	/**
+	 *
+	 */
+	protected void zoomIn() {
+		zoom(1, 1);
+	}
+
+	protected void zoomOut() {
+		zoom(-1, -1);
+	}
+
 	protected final void mouseOut() {
 		if (isHovered && !headerBar.isClicked()) {
 			isHovered = false;
-			if (wasResizedWhileHovered)
-				setClusterSize(newDimSize, newRecSize, this);
 			targetOpacityfactor = highOpacityFactor;
 			repaintChildren();
 			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
@@ -478,12 +511,25 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 				g.textColor(new Color(0, 0, 0, actOpacityFactor));
 
 			String text = getID();
-			if (scaleFactor > minScaleFactor && Math.round(scaleFactor * 100) != 100)
-				text += String.format(" (%d%%)", (int) (100 * scaleFactor));
+			text += scaleHighlight();
 			if (isHovered)
 				text = " " + text;
 			g.drawText(text, 0, 0, g.text.getTextWidth(text, 12) + 2, 12);
 			g.textColor(Color.BLACK);
+		}
+
+		/**
+		 * @return
+		 */
+		private String scaleHighlight() {
+			int r = Math.round(recScale * 100);
+			int d = Math.round(dimScale * 100);
+			if (d == r) {
+				if (d == 100)
+					return "";
+				return " " + d + "%";
+			}
+			return " " + d + "% / " + r + "%";
 		}
 
 		@Override
@@ -540,10 +586,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return false;
 	}
 
-	protected void upscale() {
-		scaleFactor += 0.6;
-	}
-
 	public final void renameCluster() {
 		Display.getDefault().asyncExec(new Runnable() {
 			@Override
@@ -561,55 +603,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		setLabel(e.getNewName());
 	}
 
-	protected void reduceScaleFactor() {
-		scaleFactor -= 0.6;
-		if (scaleFactor <= minScaleFactor)
-			scaleFactor = minScaleFactor;
-	}
-
-	private boolean wasResizedWhileHovered = false;
-	private double newRecSize = 0;
-	private double newDimSize = 0;
-	// whether hiding is enforced
-	private boolean forceHide = false;
-
-	public void setClusterSize(double x, double y, Object causer) {
-		if ((isHovered || isLocked) && (causer != this)) {
-			wasResizedWhileHovered = true;
-			newRecSize = y;
-			newDimSize = x;
-		} else {
-			wasResizedWhileHovered = false;
-			newRecSize = 0;
-			newDimSize = 0;
-			dimSize = x;
-			recSize = y;
-			resize();
-		}
-	}
-
-	protected void resize() {
-		float targetX = (float) (dimSize * scaleFactor);
-		float targetY = (float) (recSize * scaleFactor);
-		setLayoutData(new Vec2f(targetX, targetY));
-		IGLLayoutElement layoutElement = GLElementAccessor.asLayoutElement(this);
-		if (isFocused()) {
-			Vec2f size = getParent().getSize();
-			targetX = Math.min(targetX, size.x() * 0.7f);
-			targetY = Math.min(targetY, size.y() * 0.9f);
-		}
-		layoutElement.setSize(targetX, targetY);
-		relayoutParent();
-		relayout();
-	}
-
-	/**
-	 * @return the scaleFactor, see {@link #scaleFactor}
-	 */
-	public double getScaleFactor() {
-		return scaleFactor;
-	}
-
 	/**
 	 * @return the isFocused, see {@link #isFocused}
 	 */
@@ -619,31 +612,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	public final boolean isDragged() {
 		return findAllClustersElement().isDragged(this);
-	}
-
-	/**
-	 * generate the default scale factor to use during focus
-	 *
-	 * @return
-	 */
-	private double defaultFocusScaleFactor() {
-		double s = 0;
-		double ws = focusSize(getDimSize()) / dimSize;
-		double hs = focusSize(getRecSize()) / recSize;
-		s = Math.max(ws, hs);
-		return Math.max(scaleFactor, s);
-	}
-
-	/**
-	 * @param dimensionElementSize
-	 * @return
-	 */
-	private static float focusSize(int elements) {
-		if (elements < 5)
-			return 20 * elements;
-		else if (elements < 10)
-			return 16 * elements;
-		return Math.min(14 * elements, 14 * 20);
 	}
 
 	protected final void hideThisCluster() {
@@ -660,14 +628,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	public void setFocus(boolean isFocused) {
 		if (isFocused) {
-			preFocusScaleFactor = scaleFactor;
-			scaleFactor = defaultFocusScaleFactor();
-			resize();
 			forceHide = false;
 		} else {
-			setScaleFactor(preFocusScaleFactor);
-			preFocusScaleFactor = -1;
-			resize();
 			mouseOut();
 		}
 		setZValuesAccordingToState();
@@ -680,24 +642,14 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		if (this.isFocused())
 			setFocus(false);
 		if (elem != null) {
-			if (preFocusScaleFactor < 0) {// backup
-				preFocusScaleFactor = scaleFactor;
-			}
 			int maxDistance = findRootElement().getMaxDistance();
 			int distance = minimalDistanceTo(elem, maxDistance);
 			if (distance > maxDistance) {
 				forceHide = true;
 			} else {
-				float relationship = relationshipTo(elem);
 				forceHide = false;
-				setScaleFactor(preFocusScaleFactor * Math.min(0.8f + relationship * 10, 2));
-				resize();
 			}
 		} else {
-			if (preFocusScaleFactor > 0)
-				setScaleFactor(preFocusScaleFactor);
-			preFocusScaleFactor = -1;
-			resize();
 			forceHide = false;
 		}
 		updateVisibility();
@@ -931,10 +883,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return band.size();
 	}
 
-	public Vec2f getPreferredSize(float scaleX, float scaleY) {
-		return new Vec2f(getDimSize() * scaleX, getRecSize() * scaleY);
-	}
-
 	private void drag(Pick pick) {
 		findAllClustersElement().setDragedElement(this);
 		setzDelta(DRAGGING_Z_DELTA);
@@ -948,4 +896,10 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return builder.toString();
 	}
 
+	/**
+	 * whether scaling can only be applied uniformly, i.e the aspect ratio must be preserved
+	 *
+	 * @return
+	 */
+	public abstract boolean needsUniformScaling();
 }
