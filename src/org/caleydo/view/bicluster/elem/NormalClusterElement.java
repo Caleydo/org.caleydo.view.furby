@@ -524,15 +524,18 @@ public class NormalClusterElement extends AMultiClusterElement {
 			enlarge.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_IN));
 			enlarge.setCallback(this);
 			this.add(enlarge);
+
+			reset = new GLButton();
+			reset.setTooltip("Zoom Reset");
+			reset.setSize(16, 16);
+			reset.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_RESET));
+			reset.setCallback(this);
+			this.add(reset);
+
 			smaller = new GLButton();
 			smaller.setTooltip("Zoom Out");
 			smaller.setSize(16, 16);
 			smaller.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_OUT));
-			smaller.setCallback(this);
-			smaller = new GLButton();
-			smaller.setTooltip("Zoom Reset");
-			smaller.setSize(16, 16);
-			smaller.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_RESET));
 			smaller.setCallback(this);
 			this.add(smaller);
 		}
@@ -544,9 +547,9 @@ public class NormalClusterElement extends AMultiClusterElement {
 		@Override
 		public void onSelectionChanged(GLButton button, boolean selected) {
 			if (button == enlarge) {
-				zoomIn();
+				zoomIn(null);
 			} else if (button == smaller) {
-				zoomOut();
+				zoomOut(null);
 			} else if (button == reset) {
 				zoomReset();
 			} else if (button == focus) {

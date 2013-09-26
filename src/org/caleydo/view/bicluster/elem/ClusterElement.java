@@ -310,12 +310,12 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	/**
 	 *
 	 */
-	protected void zoomIn() {
-		zoom(1, 1);
+	protected void zoomIn(EDimension dim) {
+		zoom(dim == null || dim.isHorizontal() ? 1 : 0, dim == null || dim.isVertical() ? 1 : 0);
 	}
 
-	protected void zoomOut() {
-		zoom(-1, -1);
+	protected void zoomOut(EDimension dim) {
+		zoom(dim == null || dim.isHorizontal() ? -1 : 0, dim == null || dim.isVertical() ? -1 : 0);
 	}
 
 	protected void zoomReset() {

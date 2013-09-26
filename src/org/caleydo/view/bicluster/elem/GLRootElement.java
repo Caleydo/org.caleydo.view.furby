@@ -43,6 +43,7 @@ import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
+import org.caleydo.view.bicluster.event.ZoomEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.CategoricalSortingStrategyFactory;
 import org.caleydo.view.bicluster.util.SetUtils;
@@ -104,6 +105,36 @@ public class GLRootElement extends GLElementContainer {
 	protected void zoom(IMouseEvent pick) {
 		for (ClusterElement elem : clusters.allClusters())
 			elem.zoom(pick);
+	}
+
+	@ListenTo
+	private void onZoomEvent(ZoomEvent event) {
+		switch (event.getDirection()) {
+		case -1:
+			zoomOut(event.getDim());
+			return;
+		case 0:
+			zoomReset();
+			return;
+		case 1:
+			zoomIn(event.getDim());
+			return;
+		}
+	}
+
+	private void zoomIn(EDimension dim) {
+		for (ClusterElement elem : clusters.allClusters())
+			elem.zoomIn(dim);
+	}
+
+	private void zoomReset() {
+		for (ClusterElement elem : clusters.allClusters())
+			elem.zoomReset();
+	}
+
+	private void zoomOut(EDimension dim) {
+		for (ClusterElement elem : clusters.allClusters())
+			elem.zoomOut(dim);
 	}
 
 	@Override

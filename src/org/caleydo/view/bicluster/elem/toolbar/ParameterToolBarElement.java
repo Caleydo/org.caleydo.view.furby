@@ -36,11 +36,14 @@ import org.caleydo.core.view.opengl.layout2.basic.GLSpinner.IChangeCallback;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
+import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementSupplier;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
+import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.elem.BiClustering;
 import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.ui.MyUnboundSpinner;
@@ -54,6 +57,7 @@ import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
+import org.caleydo.view.bicluster.event.ZoomEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy;
 import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy.IComposeAbleSortingStrategyFactory;
@@ -100,7 +104,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 
 	public ParameterToolBarElement() {
-		this.add(createGroupLabelLine("Sorting Criteria (Primary, Secondary)"));
+		this.add(createGroupLabelLine("Visual Settings"));
 		this.sortingModelPrimary = createSortingModel(true);
 		this.sorterPrimary = new GLComboBox<ISortingStrategyFactory>(sortingModelPrimary, GLComboBox.DEFAULT,
 				GLRenderers.fillRect(Color.WHITE));
@@ -166,6 +170,8 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		visualizationSwitcher.setzDelta(0.2f);
 		this.add(visualizationSwitcher);
 
+		this.add(createZoomControls());
+
 		createThresholdSlider();
 
 		GLElementContainer c = new GLElementContainer(GLLayouts.flowHorizontal(2));
@@ -193,6 +199,56 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		reset.setTooltip("Reset the layout parameters to their default value");
 		reset.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(reset);
+	}
+
+	/**
+	 * @return
+	 */
+	private GLElement createZoomControls() {
+		GLElementContainer c = new GLElementContainer();
+		c.add(createZoomButton("Zoom Reset", BiClusterRenderStyle.ICON_ZOOM_RESET, 0, null));
+		c.add(createZoomButton("Zoom In X", BiClusterRenderStyle.ICON_ZOOM_IN, +1, EDimension.DIMENSION));
+		c.add(createZoomButton("Zoom Out X", BiClusterRenderStyle.ICON_ZOOM_OUT, -1, EDimension.DIMENSION));
+		c.add(createZoomButton("Zoom In Y", BiClusterRenderStyle.ICON_ZOOM_IN, +1, EDimension.RECORD));
+		c.add(createZoomButton("Zoom Out Y", BiClusterRenderStyle.ICON_ZOOM_OUT, -1, EDimension.RECORD));
+		c.add(createZoomButton("Zoom In", BiClusterRenderStyle.ICON_ZOOM_IN, +1, null));
+		c.add(createZoomButton("Zoom Out", BiClusterRenderStyle.ICON_ZOOM_OUT, -1, null));
+		c.setSize(Float.NaN, BUTTON_WIDTH * 3 + 6);
+		c.setLayout(new IGLLayout2() {
+			@Override
+			public boolean doLayout(List<? extends IGLLayoutElement> children, float w, float h,
+					IGLLayoutElement parent, int deltaTimeMs) {
+				h -= 3;
+				float y = 2;
+				final float s = BUTTON_WIDTH + 1;
+				float c = w * 0.5f - s * (1.5f);
+				y = 2;
+				children.get(0).setBounds(c, y, BUTTON_WIDTH, BUTTON_WIDTH);
+				for (int i = 0; i < 2; ++i) {
+					children.get(i + 1).setBounds(c + s + s * i, y, BUTTON_WIDTH, BUTTON_WIDTH);
+					children.get(3 + i).setBounds(c, y + +s + s * i, BUTTON_WIDTH, BUTTON_WIDTH);
+					children.get(5 + i).setBounds(c + s + s * i, y + s + s * i, BUTTON_WIDTH, BUTTON_WIDTH);
+				}
+				c += BUTTON_WIDTH + 1;
+
+				return false;
+			}
+		});
+		return c;
+	}
+
+	private GLElement createZoomButton(String label, String icon, final int dir, final EDimension dim) {
+		GLButton b = new GLButton();
+		b.setRenderer(GLRenderers.fillImage(icon));
+		b.setTooltip(label);
+		b.setSize(BUTTON_WIDTH, -1);
+		b.setCallback(new GLButton.ISelectionCallback() {
+			@Override
+			public void onSelectionChanged(GLButton button, boolean selected) {
+				EventPublisher.trigger(new ZoomEvent(dir, dim));
+			}
+		});
+		return b;
 	}
 
 	/**
