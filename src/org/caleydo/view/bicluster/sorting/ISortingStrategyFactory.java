@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster.sorting;
 
 import org.caleydo.core.util.base.ILabeled;
+import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
 
 /**
@@ -14,5 +15,5 @@ import org.caleydo.view.bicluster.elem.NormalClusterElement;
  */
 public interface ISortingStrategyFactory extends ILabeled {
 
-	ISortingStrategy create(NormalClusterElement cluster);
+	ISortingStrategy create(NormalClusterElement cluster, EDimension dim);
 }

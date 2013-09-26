@@ -74,7 +74,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	protected boolean showThreshold;
 
-	protected ISortingStrategy sorter = ProbabilitySortingStrategy.FACTORY_INC.create(this);
+	protected ISortingStrategy dimSorter = ProbabilitySortingStrategy.FACTORY_INC.create(this, EDimension.DIMENSION);
+	protected ISortingStrategy recSorter = ProbabilitySortingStrategy.FACTORY_INC.create(this, EDimension.RECORD);
 
 	public NormalClusterElement(int bcNr, TablePerspective data, BiClustering clustering) {
 		super(bcNr, data, clustering, Predicates.alwaysTrue());
@@ -231,7 +232,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	@ListenTo
 	private void listenTo(SortingChangeEvent e) {
-		this.sorter = e.getFactory().create(this);
+		this.dimSorter = e.getFactory().create(this, EDimension.DIMENSION);
+		this.recSorter = e.getFactory().create(this, EDimension.RECORD);
 		resort();
 	}
 
@@ -287,7 +289,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 	@Override
 	public void onEdgeUpdateDone() {
 		super.onEdgeUpdateDone();
-		if (getVisibility() == EVisibility.PICKABLE && sorter.needsResortAfterBandsUpdate())
+		if (getVisibility() == EVisibility.PICKABLE
+				&& (dimSorter.needsResortAfterBandsUpdate() || recSorter.needsResortAfterBandsUpdate()))
 			resort();
 	}
 
@@ -332,8 +335,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 	private void resort() {
 		Pair<List<IntFloat>, List<IntFloat>> p = filterData();
 
-		List<IntFloat> dim = sorter.apply(p.getFirst(), EDimension.DIMENSION);
-		List<IntFloat> rec = sorter.apply(p.getSecond(), EDimension.RECORD);
+		List<IntFloat> dim = dimSorter.apply(p.getFirst());
+		List<IntFloat> rec = recSorter.apply(p.getSecond());
 
 		updateTablePerspective(dim, rec);
 		fireTablePerspectiveChanged();

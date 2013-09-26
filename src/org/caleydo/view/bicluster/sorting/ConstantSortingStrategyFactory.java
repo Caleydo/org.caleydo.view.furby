@@ -5,6 +5,7 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.sorting;
 
+import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
 
 /**
@@ -21,7 +22,7 @@ public class ConstantSortingStrategyFactory implements ISortingStrategyFactory {
 	}
 
 	@Override
-	public ISortingStrategy create(NormalClusterElement cluster) {
+	public ISortingStrategy create(NormalClusterElement cluster, EDimension dim) {
 		return instance;
 	}
 

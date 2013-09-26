@@ -10,15 +10,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.caleydo.view.bicluster.elem.EDimension;
-
 /**
  * @author Samuel Gratzl
  *
  */
 public abstract class AComposeAbleSortingStrategy implements ISortingStrategy, Comparator<IntFloat> {
 	@Override
-	public final List<IntFloat> apply(List<IntFloat> list, EDimension dim) {
+	public final List<IntFloat> apply(List<IntFloat> list) {
 		List<IntFloat> r = new ArrayList<>(list);
 		Collections.sort(r, this);
 		return r;

@@ -7,15 +7,11 @@ package org.caleydo.view.bicluster.elem.annotation;
 
 import java.nio.FloatBuffer;
 import java.util.List;
-import java.util.Set;
 
-import org.caleydo.core.data.collection.column.container.CategoricalClassDescription;
-import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.id.IDType;
-import org.caleydo.core.id.IIDTypeMapper;
-import org.caleydo.core.util.color.Color;
 import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
+import org.caleydo.view.bicluster.sorting.CategoricalSortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 
 /**
@@ -25,69 +21,38 @@ import org.caleydo.view.bicluster.sorting.IntFloat;
  *
  */
 public class CategoricalLZHeatmapElement extends ALZHeatmapElement {
-	private final Table table;
-	private final IIDTypeMapper<Integer,Integer> id2colorId;
-	private final Integer oppositeID;
+	private final CategoricalSortingStrategyFactory data;
 
 
-	public CategoricalLZHeatmapElement(EDimension dim, Integer oppositeID, Table table,
-			IIDTypeMapper<Integer, Integer> id2colorId) {
+	public CategoricalLZHeatmapElement(EDimension dim, CategoricalSortingStrategyFactory data) {
 		super(dim);
-		this.oppositeID = oppositeID;
-		this.table = table;
-		this.id2colorId = id2colorId;
+		this.data = data;
 	}
 
 	@Override
 	protected String getLabel(int pos) {
 		NormalClusterElement p = (NormalClusterElement) getParent();
 		int index = p.getVirtualArray(dim).get(pos);
-		Set<Integer> r = id2colorId.apply(index);
-		if (r == null || r.isEmpty())
-			return null;
-		index = r.iterator().next();
-		return getCategory(index);
+		return data.getLabel(index);
 	}
 
 	@Override
 	protected void updateImpl(FloatBuffer buffer, List<IntFloat> values) {
 		center = NO_CENTER;
 		for(IntFloat v : values) {
-			Set<Integer> r = id2colorId.apply(v.getIndex());
-			float[] c;
-			if (r == null || r.isEmpty())
-				c = Color.NOT_A_NUMBER_COLOR.getRGB();
-			else //if (r.size() == 1)
-				c = getColor(r.iterator().next());
+			float[] c = data.getColor(v.getIndex());
 			buffer.put(c[0]).put(c[1]).put(c[2]);
 		}
 	}
 
-	private float[] getColor(Integer id) {
-		if (table.getDataDomain().getDimensionIDType().equals(id2colorId.getTarget()))
-			return table.getColor(id, oppositeID);
-		else
-			return table.getColor(oppositeID, id);
-	}
-
-	private String getCategory(Integer id) {
-		Object category;
-		Object desc;
-		if (table.getDataDomain().getDimensionIDType().equals(id2colorId.getTarget())) {
-			category = table.getRaw(id, oppositeID);
-			desc = table.getDataClassSpecificDescription(id, oppositeID);
-		} else {
-			category = table.getRaw(oppositeID, id);
-			desc = table.getDataClassSpecificDescription(oppositeID, id);
-		}
-		if (category == null)
-			return null;
-		if (!(desc instanceof CategoricalClassDescription<?>))
-			return null;
-		return ((CategoricalClassDescription<?>) desc).getCategoryProperty(category).getCategoryName();
-	}
-
 	public boolean is(Integer oppositeID, IDType target) {
-		return oppositeID.equals(oppositeID) && target.equals(id2colorId.getTarget());
+		return oppositeID.equals(oppositeID) && target.equals(data.getTarget());
+	}
+
+	/**
+	 * @return the data, see {@link #data}
+	 */
+	public CategoricalSortingStrategyFactory getData() {
+		return data;
 	}
 }

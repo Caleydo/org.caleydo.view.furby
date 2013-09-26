@@ -5,17 +5,21 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.sorting;
 
-
 /**
  * @author Samuel Gratzl
  *
  */
-public class CategoricalSortingStrategy extends AComposeAbleSortingStrategy {
+public class AllEqualsSortringStrategy extends AComposeAbleSortingStrategy {
+
+	public static final ISortingStrategy INSTANCE = new AllEqualsSortringStrategy();
+
+	private AllEqualsSortringStrategy() {
+
+	}
 
 	@Override
 	public int compare(IntFloat o1, IntFloat o2) {
-		// TODO Auto-generated method stub
-		return 0;
+		return 0; // always 0
 	}
 
 }

@@ -438,4 +438,22 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 			g.drawText(text, shift, 1, w - shift, 13);
 		}
 	}
+
+	/**
+	 * @param factory
+	 */
+	public void addSortingMode(ISortingStrategyFactory factory) {
+		this.sortingModel.add(factory);
+		this.sorter.repaint();
+	}
+
+	/**
+	 * @param data
+	 */
+	public void removeSortingMode(ISortingStrategyFactory data) {
+		if (sorter.getSelectedItem() == data)
+			sorter.setSelectedItem(DEFAULT_SORTING_MODE);
+		if (this.sortingModel.remove(data))
+			this.sorter.repaint();
+	}
 }

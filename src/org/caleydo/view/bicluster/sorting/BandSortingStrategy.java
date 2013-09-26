@@ -30,23 +30,25 @@ public class BandSortingStrategy implements ISortingStrategy {
 		}
 
 		@Override
-		public ISortingStrategy create(NormalClusterElement cluster) {
-			return new BandSortingStrategy(cluster);
+		public ISortingStrategy create(NormalClusterElement cluster, EDimension dim) {
+			return new BandSortingStrategy(cluster, dim);
 		}
 	};
 
 	private final NormalClusterElement cluster;
+	private final EDimension dim;
 
 	/**
 	 * @param cluster
 	 * @param dim
 	 */
-	public BandSortingStrategy(NormalClusterElement cluster) {
+	public BandSortingStrategy(NormalClusterElement cluster, EDimension dim) {
 		this.cluster = cluster;
+		this.dim = dim;
 	}
 
 	@Override
-	public List<IntFloat> apply(List<IntFloat> list, EDimension dim) {
+	public List<IntFloat> apply(List<IntFloat> list) {
 		List<Collection<Integer>> nonEmptyDimBands = new ArrayList<>();
 		for (Edge edge : cluster.getOverlappingEdges(dim)) {
 			nonEmptyDimBands.add(edge.getOverlapIndices(dim));

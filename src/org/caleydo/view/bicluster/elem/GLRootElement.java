@@ -50,6 +50,7 @@ import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
+import org.caleydo.view.bicluster.sorting.CategoricalSortingStrategyFactory;
 import org.caleydo.view.bicluster.util.SetUtils;
 
 import com.google.common.collect.Iterables;
@@ -61,7 +62,8 @@ import com.google.common.collect.Iterables;
 public class GLRootElement extends GLElementContainer {
 	private static final Logger log = Logger.create(GLRootElement.class);
 
-	private final List<AToolBarElement> toolbars = Arrays.asList(new ParameterToolBarElement(),
+	private final ParameterToolBarElement toolbarParam = new ParameterToolBarElement();
+	private final List<AToolBarElement> toolbars = Arrays.asList(toolbarParam,
 			new LayoutToolBarElement());
 
 	private boolean dimBands = MyPreferences.isShowDimBands();
@@ -181,7 +183,7 @@ public class GLRootElement extends GLElementContainer {
 	protected void init(IGLElementContext context) {
 		super.init(context);
 		// show the global toolbar as a popup
-		toolbars.get(0).toggle(context);
+		toolbarParam.toggle(context);
 	}
 
 	@ListenTo
@@ -450,13 +452,22 @@ public class GLRootElement extends GLElementContainer {
 		if (source.getDimensionIDCategory().isOfCategory(target)) {
 			final IIDTypeMapper<Integer, Integer> mapper = source.getDimensionIDMappingManager().getIDTypeMapper(
 					source.getDimensionIDType(), target);
+			final CategoricalSortingStrategyFactory factory = new CategoricalSortingStrategyFactory(
+					EDimension.DIMENSION, oppositeID, table,
+					mapper);
+			toolbarParam.addSortingMode(factory);
 			for (NormalClusterElement cluster : allNormalClusters())
-				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.DIMENSION, oppositeID, table, mapper));
+				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.DIMENSION, factory));
 		} else if (source.getRecordIDCategory().isOfCategory(target)) {
 			final IIDTypeMapper<Integer, Integer> mapper = source.getRecordIDMappingManager().getIDTypeMapper(
 					source.getRecordIDType(), target);
+
+			final CategoricalSortingStrategyFactory factory = new CategoricalSortingStrategyFactory(EDimension.RECORD,
+					oppositeID, table,
+					mapper);
+			toolbarParam.addSortingMode(factory);
 			for (NormalClusterElement cluster : allNormalClusters())
-				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.RECORD, oppositeID, table, mapper));
+				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.RECORD, factory));
 		}
 	}
 
@@ -476,6 +487,7 @@ public class GLRootElement extends GLElementContainer {
 						CategoricalLZHeatmapElement.class)) {
 					if (h.is(oppositeID, target)) {
 						cluster.removeAnnotation(h);
+						toolbarParam.removeSortingMode(h.getData());
 						break;
 					}
 				}
@@ -486,6 +498,7 @@ public class GLRootElement extends GLElementContainer {
 						CategoricalLZHeatmapElement.class)) {
 					if (h.is(oppositeID, target)) {
 						cluster.removeAnnotation(h);
+						toolbarParam.removeSortingMode(h.getData());
 						break;
 					}
 				}

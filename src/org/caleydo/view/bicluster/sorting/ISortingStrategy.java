@@ -7,8 +7,6 @@ package org.caleydo.view.bicluster.sorting;
 
 import java.util.List;
 
-import org.caleydo.view.bicluster.elem.EDimension;
-
 /**
  * @author Samuel Gratzl
  *
@@ -24,6 +22,6 @@ public interface ISortingStrategy {
 	 * @param first
 	 * @return
 	 */
-	List<IntFloat> apply(List<IntFloat> list, EDimension dim);
+	List<IntFloat> apply(List<IntFloat> list);
 
 }
