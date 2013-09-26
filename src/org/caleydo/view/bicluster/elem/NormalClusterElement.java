@@ -492,7 +492,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 	}
 
 	protected class ToolBar extends GLElementContainer implements ISelectionCallback {
-		private GLButton enlarge, smaller, focus, lock;
+		private GLButton enlarge, smaller, reset, focus, lock;
 
 		public ToolBar(GLElement switcher) {
 			super(GLLayouts.flowVertical(3));
@@ -520,14 +520,19 @@ public class NormalClusterElement extends AMultiClusterElement {
 			this.add(lock);
 			enlarge = new GLButton();
 			enlarge.setSize(16, 16);
-			enlarge.setTooltip("Enlarge");
+			enlarge.setTooltip("Zoom In");
 			enlarge.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_IN));
 			enlarge.setCallback(this);
 			this.add(enlarge);
 			smaller = new GLButton();
-			smaller.setTooltip("Reduce");
+			smaller.setTooltip("Zoom Out");
 			smaller.setSize(16, 16);
 			smaller.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_OUT));
+			smaller.setCallback(this);
+			smaller = new GLButton();
+			smaller.setTooltip("Zoom Reset");
+			smaller.setSize(16, 16);
+			smaller.setRenderer(GLRenderers.fillImage(BiClusterRenderStyle.ICON_ZOOM_RESET));
 			smaller.setCallback(this);
 			this.add(smaller);
 		}
@@ -542,6 +547,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 				zoomIn();
 			} else if (button == smaller) {
 				zoomOut();
+			} else if (button == reset) {
+				zoomReset();
 			} else if (button == focus) {
 				findAllClustersElement().setFocus(selected ? NormalClusterElement.this : null);
 			} else if (button == lock) {

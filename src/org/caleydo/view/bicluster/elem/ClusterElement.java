@@ -264,6 +264,10 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			return;
 		float rec = nextZoomLevel(recFac, recScale, getRecSize());
 		float dim = nextZoomLevel(dimFac, dimScale, getDimSize());
+		setZoom(rec, dim);
+	}
+
+	private void setZoom(float rec, float dim) {
 		if (rec == recScale && dim == dimScale)
 			return;
 		recScale = rec;
@@ -271,6 +275,17 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		relayoutParent();
 	}
 
+	/**
+	 * implements the zoom logic
+	 *
+	 * @param direction
+	 *            +1 in , -1 out, 0 .. no change
+	 * @param current
+	 *            current scale factor
+	 * @param elements
+	 *            number of elements that will be scaled
+	 * @return
+	 */
 	private static float nextZoomLevel(int direction, float current, int elements) {
 		if (direction == 0)
 			return current;
@@ -301,6 +316,10 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 
 	protected void zoomOut() {
 		zoom(-1, -1);
+	}
+
+	protected void zoomReset() {
+		setZoom(1, 1);
 	}
 
 	protected final void mouseOut() {
