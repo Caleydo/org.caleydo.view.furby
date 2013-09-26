@@ -7,22 +7,23 @@ package org.caleydo.view.bicluster.sorting;
 
 import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
+import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy.IComposeAbleSortingStrategyFactory;
 
 /**
  * @author Samuel Gratzl
  *
  */
-public class ConstantSortingStrategyFactory implements ISortingStrategyFactory {
-	private final ISortingStrategy instance;
+public class ConstantSortingStrategyFactory implements IComposeAbleSortingStrategyFactory {
+	private final AComposeAbleSortingStrategy instance;
 	private final String label;
 
-	public ConstantSortingStrategyFactory(ISortingStrategy instance, String label) {
+	public ConstantSortingStrategyFactory(AComposeAbleSortingStrategy instance, String label) {
 		this.instance = instance;
 		this.label = label;
 	}
 
 	@Override
-	public ISortingStrategy create(NormalClusterElement cluster, EDimension dim) {
+	public AComposeAbleSortingStrategy create(NormalClusterElement cluster, EDimension dim) {
 		return instance;
 	}
 

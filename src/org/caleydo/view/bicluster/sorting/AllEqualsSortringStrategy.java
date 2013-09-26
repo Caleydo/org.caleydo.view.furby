@@ -11,7 +11,7 @@ package org.caleydo.view.bicluster.sorting;
  */
 public class AllEqualsSortringStrategy extends AComposeAbleSortingStrategy {
 
-	public static final ISortingStrategy INSTANCE = new AllEqualsSortringStrategy();
+	public static final AComposeAbleSortingStrategy INSTANCE = new AllEqualsSortringStrategy();
 
 	private AllEqualsSortringStrategy() {
 

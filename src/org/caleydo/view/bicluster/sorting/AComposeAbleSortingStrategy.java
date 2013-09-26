@@ -10,6 +10,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.caleydo.view.bicluster.elem.EDimension;
+import org.caleydo.view.bicluster.elem.NormalClusterElement;
+
 /**
  * @author Samuel Gratzl
  *
@@ -25,5 +28,11 @@ public abstract class AComposeAbleSortingStrategy implements ISortingStrategy, C
 	@Override
 	public final boolean needsResortAfterBandsUpdate() {
 		return false;
+	}
+
+	public interface IComposeAbleSortingStrategyFactory extends ISortingStrategyFactory {
+
+		@Override
+		AComposeAbleSortingStrategy create(NormalClusterElement cluster, EDimension dim);
 	}
 }

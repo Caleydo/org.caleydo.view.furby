@@ -16,6 +16,7 @@ import org.caleydo.core.id.IIDTypeMapper;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
+import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy.IComposeAbleSortingStrategyFactory;
 
 /**
  * categorical sorting strategy
@@ -23,7 +24,7 @@ import org.caleydo.view.bicluster.elem.NormalClusterElement;
  * @author Samuel Gratzl
  *
  */
-public class CategoricalSortingStrategyFactory implements ISortingStrategyFactory {
+public class CategoricalSortingStrategyFactory implements IComposeAbleSortingStrategyFactory {
 
 	private final EDimension dim;
 	private final Integer oppositeID;
@@ -50,7 +51,7 @@ public class CategoricalSortingStrategyFactory implements ISortingStrategyFactor
 	}
 
 	@Override
-	public ISortingStrategy create(NormalClusterElement cluster, EDimension dim) {
+	public AComposeAbleSortingStrategy create(NormalClusterElement cluster, EDimension dim) {
 		if (this.dim == dim)
 			return new CategoricalSortingStrategy(this);
 		return AllEqualsSortringStrategy.INSTANCE;

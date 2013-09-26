@@ -13,6 +13,7 @@ import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowDimB
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowRecBands;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
@@ -56,8 +57,11 @@ import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
+import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy;
+import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy.IComposeAbleSortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.BandSortingStrategy;
 import org.caleydo.view.bicluster.sorting.CenterProbabilitySortingStrategy;
+import org.caleydo.view.bicluster.sorting.ComposedSortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.DefaultSortingStrategy;
 import org.caleydo.view.bicluster.sorting.ISortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
@@ -70,9 +74,13 @@ import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
 public class ParameterToolBarElement extends AToolBarElement implements MyUnboundSpinner.IChangeCallback,
 		ThresholdSlider.ISelectionCallback, GLComboBox.ISelectionCallback<ISortingStrategyFactory> {
 
-	private static final ISortingStrategyFactory DEFAULT_SORTING_MODE = ProbabilitySortingStrategy.FACTORY_INC;
+	private static final ISortingStrategyFactory DEFAULT_PRIMARY_SORTING_MODE = ProbabilitySortingStrategy.FACTORY_INC;
+	private static final ISortingStrategyFactory DEFAULT_SECONDARY_SORTING_MODE = DefaultSortingStrategy.FACTORY;
 
-	private final GLComboBox<ISortingStrategyFactory> sorter;
+	private final GLComboBox<ISortingStrategyFactory> sorterPrimary;
+	private final GLComboBox<ISortingStrategyFactory> sorterSecondary;
+	private List<ISortingStrategyFactory> sortingModelPrimary;
+	private List<ISortingStrategyFactory> sortingModelSecondary;
 
 	private final GLButton dimBandVisibilityButton;
 	private final GLButton recBandVisibilityButton;
@@ -94,18 +102,27 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 	private final GLSpinner<Integer> maxDistance;
 
-	private List<ISortingStrategyFactory> sortingModel;
 
 	public ParameterToolBarElement() {
-		this.add(createGroupLabelLine("Sorting Mode"));
-		this.sortingModel = createSortingModel();
-		this.sorter = new GLComboBox<ISortingStrategyFactory>(sortingModel, GLComboBox.DEFAULT,
+		this.add(createGroupLabelLine("Sorting Criteria (Primary, Secondary)"));
+		this.sortingModelPrimary = createSortingModel(true);
+		this.sorterPrimary = new GLComboBox<ISortingStrategyFactory>(sortingModelPrimary, GLComboBox.DEFAULT,
 				GLRenderers.fillRect(Color.WHITE));
-		this.sorter.setSelectedItem(DEFAULT_SORTING_MODE);
-		this.sorter.setCallback(this);
-		this.sorter.setSize(Float.NaN, BUTTON_WIDTH);
-		this.sorter.setzDeltaList(0.5f);
-		this.add(sorter);
+		this.sorterPrimary.setSelectedItem(DEFAULT_PRIMARY_SORTING_MODE);
+		this.sorterPrimary.setCallback(this);
+		this.sorterPrimary.setSize(Float.NaN, BUTTON_WIDTH);
+		this.sorterPrimary.setzDeltaList(0.5f);
+		this.add(sorterPrimary);
+
+		this.sortingModelSecondary = new ArrayList<>();
+		this.sorterSecondary = new GLComboBox<ISortingStrategyFactory>(sortingModelSecondary, GLComboBox.DEFAULT,
+				GLRenderers.fillRect(Color.WHITE));
+		this.sorterSecondary.setCallback(this);
+		this.sorterSecondary.setSize(Float.NaN, BUTTON_WIDTH);
+		this.sorterSecondary.setzDeltaList(0.5f);
+		this.add(sorterSecondary);
+
+		updateSecondary(DEFAULT_PRIMARY_SORTING_MODE);
 
 		this.add(createHorizontalLine());
 
@@ -184,9 +201,10 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	}
 
 	/**
+	 * @param all
 	 * @return
 	 */
-	private List<ISortingStrategyFactory> createSortingModel() {
+	private List<ISortingStrategyFactory> createSortingModel(boolean all) {
 		List<ISortingStrategyFactory> r = new ArrayList<>();
 		r.add(ProbabilitySortingStrategy.FACTORY_INC);
 		r.add(ProbabilitySortingStrategy.FACTORY_INC_ABS);
@@ -195,7 +213,10 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		r.add(DefaultSortingStrategy.FACTORY);
 		r.add(BandSortingStrategy.FACTORY);
 		r.add(CenterProbabilitySortingStrategy.FACTORY);
-		// TODO categorical
+		if (!all)
+			for (Iterator<ISortingStrategyFactory> it = r.iterator(); it.hasNext();)
+				if (!(it.next() instanceof AComposeAbleSortingStrategy))
+					it.remove();
 		return r;
 	}
 
@@ -203,7 +224,8 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	public void reset() {
 		this.dimBandVisibilityButton.setSelected(isShowDimBands());
 		this.recBandVisibilityButton.setSelected(isShowRecBands());
-		this.sorter.setCallback(null).setSelectedItem(DEFAULT_SORTING_MODE).setCallback(this);
+		this.sorterPrimary.setCallback(null).setSelectedItem(DEFAULT_PRIMARY_SORTING_MODE).setCallback(this);
+		updateSecondary(DEFAULT_PRIMARY_SORTING_MODE);
 
 		this.maxDistance.setValue(MyPreferences.getMaxDistance());
 		this.visualizationSwitcher.setSelected(0);
@@ -217,6 +239,28 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 		setClearHiddenButtonRenderer();
 		EventPublisher.trigger(new UnhidingClustersEvent());
+	}
+
+	private void updateSecondary(ISortingStrategyFactory primary) {
+		this.sorterSecondary.setCallback(null);
+		this.sortingModelSecondary.clear();
+		if (!(primary instanceof IComposeAbleSortingStrategyFactory)) {
+			this.sorterSecondary.setVisibility(EVisibility.VISIBLE);
+			this.sorterSecondary.setSelected(-1);
+		} else {
+			this.sortingModelSecondary.clear();
+			this.sortingModelSecondary.addAll(sortingModelPrimary);
+			for (Iterator<ISortingStrategyFactory> it = this.sortingModelSecondary.iterator(); it.hasNext();) {
+				ISortingStrategyFactory act = it.next();
+				if (act == primary || !(act instanceof IComposeAbleSortingStrategyFactory))
+					it.remove();
+			}
+			this.sorterSecondary
+					.setSelectedItem(primary == DEFAULT_SECONDARY_SORTING_MODE ? DEFAULT_PRIMARY_SORTING_MODE
+							: DEFAULT_SECONDARY_SORTING_MODE);
+			this.sorterSecondary.setVisibility(EVisibility.PICKABLE);
+		}
+		this.sorterSecondary.setCallback(this);
 	}
 
 	/**
@@ -265,8 +309,20 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 	@Override
 	public void onSelectionChanged(GLComboBox<? extends ISortingStrategyFactory> widget, ISortingStrategyFactory item) {
-		if (item != null)
-			EventPublisher.trigger(new SortingChangeEvent(item));
+		if (widget == sorterPrimary && item != null) {
+			updateSecondary(item);
+		}
+		ISortingStrategyFactory primary = sorterPrimary.getSelectedItem();
+		ISortingStrategyFactory secondary = sorterSecondary.getSelectedItem();
+		if (primary == null)
+			return;
+		ISortingStrategyFactory r;
+		if (primary instanceof IComposeAbleSortingStrategyFactory && secondary instanceof IComposeAbleSortingStrategyFactory) {
+			r = new ComposedSortingStrategyFactory((IComposeAbleSortingStrategyFactory) primary,
+					(IComposeAbleSortingStrategyFactory) secondary);
+		} else
+			r = primary;
+		EventPublisher.trigger(new SortingChangeEvent(r));
 	}
 
 	private void updateGeneSampleThresholds() {
@@ -443,17 +499,20 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	 * @param factory
 	 */
 	public void addSortingMode(ISortingStrategyFactory factory) {
-		this.sortingModel.add(factory);
-		this.sorter.repaint();
+		this.sortingModelPrimary.add(factory);
+		if (this.sorterPrimary.getSelectedItem() instanceof IComposeAbleSortingStrategyFactory
+				&& factory instanceof IComposeAbleSortingStrategyFactory)
+			this.sortingModelSecondary.add(factory);
+		this.sorterPrimary.repaint();
 	}
 
 	/**
 	 * @param data
 	 */
 	public void removeSortingMode(ISortingStrategyFactory data) {
-		if (sorter.getSelectedItem() == data)
-			sorter.setSelectedItem(DEFAULT_SORTING_MODE);
-		if (this.sortingModel.remove(data))
-			this.sorter.repaint();
+		if (sorterPrimary.getSelectedItem() == data)
+			sorterPrimary.setSelectedItem(DEFAULT_PRIMARY_SORTING_MODE);
+		if (this.sortingModelPrimary.remove(data))
+			this.sorterPrimary.repaint();
 	}
 }
