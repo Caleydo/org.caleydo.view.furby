@@ -12,10 +12,14 @@ import org.caleydo.core.util.function.IDoubleSizedIterable;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.ISWTLayer.ISWTLayerRunnable;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
+import org.caleydo.core.view.opengl.layout2.basic.AInputBoxDialog;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.gleem.ColoredVec2f;
 import org.caleydo.core.view.opengl.util.text.ETextStyle;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 
 /**
  * custom slider implementation with inversion support
@@ -361,4 +365,45 @@ public class ThresholdSlider extends PickableGLElement {
 
 		}
 	};
+
+	@Override
+	protected void onDoubleClicked(Pick pick) {
+		context.getSWTLayer().run(new ISWTLayerRunnable() {
+			@Override
+			public void run(Display display, Composite canvas) {
+				new InputBox(canvas).open();
+			}
+		});
+	}
+
+	private class InputBox extends AInputBoxDialog {
+		public InputBox(Composite canvas) {
+			super(null, "Set Value", ThresholdSlider.this, canvas);
+		}
+
+		@Override
+		protected void set(String value) {
+			setValue(Float.parseFloat(value));
+		}
+
+		@Override
+		protected String verify(String value) {
+			try {
+				float v = Float.parseFloat(value);
+				if (v < min)
+					return "Too small, needs to be in the range: [" + min + "," + max + "]";
+				if (v > max)
+					return "Too large, needs to be in the range: [" + min + "," + max + "]";
+			} catch (NumberFormatException e) {
+				return "The value: '" + value + "' can't be parsed to Float: " + e.getMessage();
+			}
+			return null;
+		}
+
+		@Override
+		protected String getInitialValue() {
+			return String.valueOf(getValue());
+		}
+
+	}
 }

@@ -10,10 +10,14 @@ import gleem.linalg.Vec2f;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
+import org.caleydo.core.view.opengl.layout2.ISWTLayer.ISWTLayerRunnable;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
+import org.caleydo.core.view.opengl.layout2.basic.AInputBoxDialog;
 import org.caleydo.core.view.opengl.layout2.basic.EButtonIcon;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 
 import com.google.common.base.Objects;
 
@@ -234,4 +238,41 @@ public class MyUnboundSpinner extends PickableGLElement {
 
 		}
 	};
+
+	@Override
+	protected void onDoubleClicked(Pick pick) {
+		context.getSWTLayer().run(new ISWTLayerRunnable() {
+			@Override
+			public void run(Display display, Composite canvas) {
+				new InputBox(canvas).open();
+			}
+		});
+	}
+
+	private class InputBox extends AInputBoxDialog {
+		public InputBox(Composite canvas) {
+			super(null, "Set Value", MyUnboundSpinner.this, canvas);
+		}
+
+		@Override
+		protected void set(String value) {
+			setValue(Integer.parseInt(value));
+		}
+
+		@Override
+		protected String verify(String value) {
+			try {
+				Integer.parseInt(value);
+			} catch (NumberFormatException e) {
+				return "The value: '" + value + "' can't be parsed to Integer: " + e.getMessage();
+			}
+			return null;
+		}
+
+		@Override
+		protected String getInitialValue() {
+			return String.valueOf(getValue());
+		}
+
+	}
 }
