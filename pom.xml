@@ -11,7 +11,4 @@
 	<artifactId>org.caleydo.view.bicluster</artifactId>
 	<packaging>eclipse-plugin</packaging>
 	
-	<build>
-		<sourceDirectory>src</sourceDirectory>
-	</build>
 </project>
