@@ -5,6 +5,8 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import static org.caleydo.view.bicluster.elem.ZoomLogic.nextZoomDelta;
+import static org.caleydo.view.bicluster.elem.ZoomLogic.toDirection;
 import gleem.linalg.Vec2f;
 
 import java.awt.Rectangle;
@@ -54,7 +56,6 @@ import org.eclipse.swt.widgets.Display;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 /**
  * e.g. a class for representing a cluster
  *
@@ -265,48 +266,30 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected void zoom(int dimFac, int recFac) {
 		if (dimFac == 0 && recFac == 0)
 			return;
-		float rec = nextZoomLevel(recFac, zoom[zoomOffset + 1], getRecSize());
-		float dim = nextZoomLevel(dimFac, zoom[zoomOffset], getDimSize());
-		setZoom(dim, rec);
+		float rec = nextZoomDelta(recFac, zoom[zoomOffset + 1], getRecSize());
+		float dim = nextZoomDelta(dimFac, zoom[zoomOffset], getDimSize());
+		incZoom(dim, rec);
 	}
 
-	void setZoom(float dim, float rec) {
-		if (rec == zoom[zoomOffset + 1] && dim == zoom[zoomOffset])
+	void incZoom(float dim, float rec) {
+		if (dim == 0 && rec == 0)
 			return;
-		zoom[zoomOffset + 1] = rec;
-		zoom[zoomOffset] = dim;
+		setZoom(zoom[zoomOffset] + dim, zoom[zoomOffset + 1] + rec);
 		relayoutParent();
 	}
 
-	/**
-	 * implements the zoom logic
-	 *
-	 * @param direction
-	 *            +1 in , -1 out, 0 .. no change
-	 * @param current
-	 *            current scale factor
-	 * @param elements
-	 *            number of elements that will be scaled
-	 * @return
-	 */
-	private static float nextZoomLevel(int direction, float current, int elements) {
-		if (direction == 0)
-			return current;
-		float expected = current * elements;
-		// FIXME logic
-		return Math.max(current + direction * 0.2f, 0.01f);
+	void setZoom(float dim, float rec) {
+		zoom[zoomOffset] = Math.max(dim, 0.01f);
+		zoom[zoomOffset + 1] = Math.max(rec, 0.01f);
+		relayoutParent();
 	}
 
 	/**
 	 * @param event
 	 */
-	void zoom(IMouseEvent event) {
-		int r = (event).getWheelRotation();
-		if (r == 0)
-			return;
-		final int factor = r > 0 ? 1 : -1;
-		int dimFac = event.isCtrlDown() || event.isAltDown() ? factor : 0;
-		int recFac = event.isCtrlDown() || event.isShiftDown() ? factor : 0;
+	private void zoom(IMouseEvent event) {
+		int dimFac = toDirection(event, EDimension.DIMENSION);
+		int recFac = toDirection(event, EDimension.RECORD);
 		zoom(dimFac, recFac);
 	}
 

@@ -5,6 +5,9 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import static org.caleydo.view.bicluster.elem.ZoomLogic.nextZoomDelta;
+import static org.caleydo.view.bicluster.elem.ZoomLogic.toDirection;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -102,39 +105,61 @@ public class GLRootElement extends GLElementContainer {
 	/**
 	 * @param f
 	 */
-	protected void zoom(IMouseEvent pick) {
-		for (ClusterElement elem : clusters.allClusters())
-			elem.zoom(pick);
+	protected void zoom(IMouseEvent event) {
+		final int dim = toDirection(event, EDimension.DIMENSION);
+		final int rec = toDirection(event, EDimension.RECORD);
+		if (dim == 0 && rec == 0)
+			return;
+		setZoom(dim, rec);
 	}
+
+	/**
+	 * @param dim
+	 * @param rec
+	 */
+	private void setZoom(int dim, int rec) {
+		float nextDim = Float.POSITIVE_INFINITY;
+		float nextRec = Float.POSITIVE_INFINITY;
+		for(ClusterElement elem : clusters.allClusters()) {
+			float d = nextZoomDelta(dim, elem.getZoom(EDimension.DIMENSION), elem.getDimSize());
+			float r = nextZoomDelta(rec, elem.getZoom(EDimension.RECORD), elem.getRecSize());
+			if (Math.abs(nextDim) > Math.abs(d))
+				nextDim = d;
+			if (Math.abs(nextRec) > Math.abs(r))
+				nextRec = r;
+		}
+		for (ClusterElement elem : clusters.allClusters())
+			elem.incZoom(nextDim, nextRec);
+	}
+
 
 	@ListenTo
 	private void onZoomEvent(ZoomEvent event) {
+		final EDimension dim = event.getDim();
 		switch (event.getDirection()) {
 		case -1:
-			zoomOut(event.getDim());
+			setZoom(-1, dim);
 			return;
 		case 0:
 			zoomReset();
 			return;
 		case 1:
-			zoomIn(event.getDim());
+			setZoom(1, dim);
 			return;
 		}
 	}
 
-	private void zoomIn(EDimension dim) {
-		for (ClusterElement elem : clusters.allClusters())
-			elem.zoomIn(dim);
+	/**
+	 * @param dim
+	 * @param dim
+	 */
+	private void setZoom(int dir, EDimension dim) {
+		setZoom(dim == null || dim.isHorizontal() ? dir : 0, dim == null || dim.isVertical() ? dir : 0);
 	}
 
 	private void zoomReset() {
 		for (ClusterElement elem : clusters.allClusters())
 			elem.zoomReset();
-	}
-
-	private void zoomOut(EDimension dim) {
-		for (ClusterElement elem : clusters.allClusters())
-			elem.zoomOut(dim);
 	}
 
 	@Override
