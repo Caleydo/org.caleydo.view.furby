@@ -3,7 +3,6 @@ package org.caleydo.view.bicluster.internal;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.gui.SimpleAction;
 import org.caleydo.core.view.opengl.canvas.IGLKeyListener;
-import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.event.SearchClusterEvent;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;

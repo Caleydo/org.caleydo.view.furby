@@ -12,6 +12,7 @@ import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecTopN
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowDimBands;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowRecBands;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -43,7 +44,6 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementS
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
-import org.caleydo.view.bicluster.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.elem.BiClustering;
 import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.ui.MyUnboundSpinner;
@@ -58,6 +58,7 @@ import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.event.ZoomEvent;
+import org.caleydo.view.bicluster.internal.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy;
 import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy.IComposeAbleSortingStrategyFactory;
@@ -237,7 +238,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		return c;
 	}
 
-	private GLElement createZoomButton(String label, String icon, final int dir, final EDimension dim) {
+	private GLElement createZoomButton(String label, URL icon, final int dir, final EDimension dim) {
 		GLButton b = new GLButton();
 		b.setRenderer(GLRenderers.fillImage(icon));
 		b.setTooltip(label);
