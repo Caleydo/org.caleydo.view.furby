@@ -504,7 +504,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-205, 0, 200, 365 + 20);
+		return new Rect(-205, 0, 200, 400 + 20);
 	}
 
 	private static class MyTextRender implements IGLRenderer {
