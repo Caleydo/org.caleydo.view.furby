@@ -35,8 +35,9 @@ public class ZoomLogic {
 	public static float nextZoomDelta(int direction, float current, int elements) {
 		if (direction == 0)
 			return 0;
-		float expected = current * elements;
+		float width = current * elements;
+
 		// FIXME logic
-		return direction * 0.2f;
+		return current * direction * 0.2f;
 	}
 }
