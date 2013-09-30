@@ -11,6 +11,7 @@ import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThre
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecTopNElements;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowDimBands;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowRecBands;
+import gleem.linalg.Vec2f;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -34,6 +35,8 @@ import org.caleydo.core.view.opengl.layout2.basic.GLComboBox.ISelectionCallback;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLSpinner;
 import org.caleydo.core.view.opengl.layout2.basic.GLSpinner.IChangeCallback;
+import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator;
+import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
@@ -45,18 +48,18 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.elem.BiClustering;
+import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.ui.MyUnboundSpinner;
 import org.caleydo.view.bicluster.elem.ui.ThresholdSlider;
 import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
-import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
+import org.caleydo.view.bicluster.event.HideClusterEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.ResetSettingsEvent;
 import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
-import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.event.ZoomEvent;
 import org.caleydo.view.bicluster.internal.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
@@ -68,6 +71,8 @@ import org.caleydo.view.bicluster.sorting.ComposedSortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.DefaultSortingStrategy;
 import org.caleydo.view.bicluster.sorting.ISortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
+
+import com.google.common.collect.Iterables;
 
 /**
  *
@@ -88,9 +93,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	private final GLButton dimBandVisibilityButton;
 	private final GLButton recBandVisibilityButton;
 
-	private final GLButton clearHiddenClusterButton;
-	private final List<String> clearHiddenButtonTooltipList = new ArrayList<>();
-
 	private GLElement recLabel;
 	private MyUnboundSpinner recNumberThresholdSpinner;
 	private ThresholdSlider recThresholdSlider;
@@ -102,7 +104,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	private final List<GLElementSupplier> visualizationSwitcherModel = new ArrayList<>();
 
 	private final GLSpinner<Integer> maxDistance;
-
+	private final HiddenClusters hidden;
 
 	public ParameterToolBarElement() {
 		this.add(createGroupLabelLine("Visual Settings"));
@@ -124,18 +126,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		this.add(sorterSecondary);
 
 		updateSecondary(DEFAULT_PRIMARY_SORTING_MODE);
-
-		this.add(createHorizontalLine());
-
-		{
-			clearHiddenClusterButton = new GLButton(EButtonMode.BUTTON);
-			setClearHiddenButtonRenderer();
-			clearHiddenClusterButton.setCallback(this);
-			clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
-			clearHiddenClusterButton.setSize(Float.NaN, BUTTON_WIDTH);
-			this.add(clearHiddenClusterButton);
-		}
-		this.add(createHorizontalLine());
 
 		this.dimBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer("Dimension Bands"));
@@ -171,10 +161,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		visualizationSwitcher.setzDelta(0.2f);
 		this.add(visualizationSwitcher);
 
-		this.add(createZoomControls());
-
-		createThresholdSlider();
-
 		GLElementContainer c = new GLElementContainer(GLLayouts.flowHorizontal(2));
 		this.maxDistance = GLSpinner.createIntegerSpinner(1, 0, 4, 1);
 		maxDistance.setCallback(new IChangeCallback<Integer>() {
@@ -188,6 +174,17 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		c.add(new GLElement(GLRenderers.drawText("Max Distance: ")).setSize(100, -1));
 		c.add(maxDistance);
 		this.add(c.setSize(-1, LABEL_WIDTH));
+
+		this.add(createGroupLabelLine("Zoom"));
+		this.add(createZoomControls());
+
+		createThresholdSlider();
+
+		this.add(createGroupLabelLine("Hidden Clusters"));
+
+		this.hidden = new HiddenClusters();
+		this.add(ScrollingDecorator.wrap(hidden, 8));
+		this.add(createHorizontalLine());
 
 		GLButton reset = new GLButton();
 		reset.setRenderer(GLRenderers.drawText("Reset", VAlign.CENTER, new GLPadding(0, 0, 0, 2)));
@@ -287,8 +284,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		this.recNumberThresholdSpinner.setValue(getRecTopNElements());
 		this.recThresholdSlider.setValue(getRecThreshold());
 
-		setClearHiddenButtonRenderer();
-		EventPublisher.trigger(new UnhidingClustersEvent());
+		this.hidden.showAll();
 	}
 
 	private void updateSecondary(ISortingStrategyFactory primary) {
@@ -392,11 +388,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 			EventPublisher.trigger(new ShowHideBandsEvent(selected, recBandVisibilityButton.isSelected()));
 		} else if (button == recBandVisibilityButton) {
 			EventPublisher.trigger(new ShowHideBandsEvent(dimBandVisibilityButton.isSelected(), selected));
-		} else if (button == clearHiddenClusterButton) {
-			clearHiddenButtonTooltipList.clear();
-			clearHiddenClusterButton.setTooltip("Currently no Clusters are hidden");
-			setClearHiddenButtonRenderer();
-			EventPublisher.trigger(new UnhidingClustersEvent());
 		}
 	}
 
@@ -404,28 +395,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	private void listenTo(MaxThresholdChangeEvent e) {
 		this.recThresholdSlider.setMinMax(0, (float) e.getRecThreshold());
 		this.dimThresholdSlider.setMinMax(0, (float) e.getDimThreshold());
-	}
-
-	private void setClearHiddenButtonRenderer() {
-		String text;
-		if (clearHiddenButtonTooltipList.size() == 0) {
-			text = "Show all clusters";
-		} else
-			text = "Show all clusters (+" + clearHiddenButtonTooltipList.size() + ")";
-		clearHiddenClusterButton.setRenderer(new MyTextRender(text));
-	}
-
-
-	@ListenTo
-	public void listenTo(ClusterGetsHiddenEvent event) {
-		clearHiddenButtonTooltipList.add(event.getClusterID());
-		StringBuilder tooltip = new StringBuilder("HiddenClusters: ");
-		for (String s : clearHiddenButtonTooltipList) {
-			tooltip.append("\n   ");
-			tooltip.append(s);
-		}
-		clearHiddenClusterButton.setTooltip(tooltip.toString());
-		setClearHiddenButtonRenderer();
 	}
 
 	/**
@@ -505,16 +474,12 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-205, 0, 200, 400 + 20);
+		return new Rect(-205, 0, 200, 480 + 20);
 	}
 
 	private static class MyTextRender implements IGLRenderer {
 		private final String text;
 		private final float shift;
-
-		public MyTextRender(String text) {
-			this(text, 18);
-		}
 
 		public MyTextRender(String text, float shift) {
 			this.text = text;
@@ -546,5 +511,45 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 			sorterPrimary.setSelectedItem(DEFAULT_PRIMARY_SORTING_MODE);
 		if (this.sortingModelPrimary.remove(data))
 			this.sorterPrimary.repaint();
+	}
+
+	private static class HiddenClusters extends GLElementContainer implements IHasMinSize, GLButton.ISelectionCallback {
+		public HiddenClusters() {
+			super(GLLayouts.flowVertical(2));
+		}
+
+		public void add(ClusterElement elem) {
+			GLButton b = new GLButton();
+			b.setRenderer(GLRenderers.drawText(elem.getLabel(), VAlign.LEFT, new GLPadding(4, 1)));
+			b.setSize(-1, 12);
+			b.setLayoutData(elem);
+			b.setCallback(this);
+			this.add(b);
+			relayoutParent();
+		}
+
+		public void showAll() {
+			for (GLButton b : Iterables.filter(this, GLButton.class)) {
+				b.setSelected(true);
+			}
+		}
+
+		@ListenTo
+		private void onHideClusterEvent(HideClusterEvent event) {
+			add(event.getElem());
+		}
+
+		@Override
+		public void onSelectionChanged(GLButton button, boolean selected) {
+			ClusterElement r = button.getLayoutDataAs(ClusterElement.class, null);
+			r.show();
+			remove(button);
+			relayoutParent();
+		}
+
+		@Override
+		public Vec2f getMinSize() {
+			return new Vec2f(100, size() * 14);
+		}
 	}
 }

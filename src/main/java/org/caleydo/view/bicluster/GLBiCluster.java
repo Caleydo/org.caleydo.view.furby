@@ -250,7 +250,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 
 	@Override
 	public String toString() {
-		return "Furbi";
+		return "Furby";
 	}
 
 	@Override

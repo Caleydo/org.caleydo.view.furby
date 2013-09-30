@@ -45,7 +45,7 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.core.view.opengl.layout2.layout.IHasGLLayoutData;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
-import org.caleydo.view.bicluster.event.ClusterGetsHiddenEvent;
+import org.caleydo.view.bicluster.event.HideClusterEvent;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.event.SearchClusterEvent;
@@ -627,7 +627,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		isHidden = true;
 		isHovered = false;
 		updateVisibility();
-		EventPublisher.trigger(new ClusterGetsHiddenEvent(getID()));
+		EventPublisher.trigger(new HideClusterEvent(this));
 		relayoutParent();
 	}
 

@@ -46,7 +46,6 @@ import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
 import org.caleydo.view.bicluster.event.ShowToolBarEvent;
-import org.caleydo.view.bicluster.event.UnhidingClustersEvent;
 import org.caleydo.view.bicluster.event.ZoomEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.CategoricalSortingStrategyFactory;
@@ -368,13 +367,6 @@ public class GLRootElement extends GLElementContainer {
 			elem.onEdgeUpdateDone();
 		}
 		bands.relayout();
-	}
-
-	@ListenTo
-	private void listenTo(UnhidingClustersEvent e) {
-		for (ClusterElement elem : Iterables.filter(clusters, ClusterElement.class)) {
-			elem.show();
-		}
 	}
 
 	/**
