@@ -19,8 +19,23 @@ import com.google.common.collect.ImmutableMap;
  */
 public class ZoomLogic {
 
-	public static Map<EDimension, Float> initialScaleFactor(Collection<Dimension> sizes, float w, float h) {
+	public static Map<EDimension, Float> initialOverviewScaleFactor(Collection<Dimension> sizes, float w, float h) {
 		float dim = .5f;
+		float rec = 1;
+		return ImmutableMap.of(EDimension.DIMENSION, dim, EDimension.RECORD, rec);
+	}
+
+	public static Map<EDimension, Float> initialFocusScaleFactor(Dimension size, float w, float h) {
+		w *= 0.75f;
+		h *= 0.9f;
+		float dim = w / size.width;
+		float rec = h / size.height;
+		return ImmutableMap.of(EDimension.DIMENSION, dim, EDimension.RECORD, rec);
+	}
+
+	public static Map<EDimension, Float> initialFocusNeighborScaleFactor(Collection<Dimension> sizes,
+			Dimension focusSize, float w, float h) {
+		float dim = 1f;
 		float rec = 1;
 		return ImmutableMap.of(EDimension.DIMENSION, dim, EDimension.RECORD, rec);
 	}

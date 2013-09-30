@@ -5,7 +5,7 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
-import static org.caleydo.view.bicluster.elem.ZoomLogic.initialScaleFactor;
+import static org.caleydo.view.bicluster.elem.ZoomLogic.initialOverviewScaleFactor;
 import static org.caleydo.view.bicluster.elem.ZoomLogic.nextZoomDelta;
 import static org.caleydo.view.bicluster.elem.ZoomLogic.toDirection;
 
@@ -281,7 +281,7 @@ public class GLRootElement extends GLElementContainer {
 			dimensions.add(el.getSizes());
 		}
 
-		final Map<EDimension, Float> scales = initialScaleFactor(dimensions, getSize().x(), getSize().y());
+		final Map<EDimension, Float> scales = initialOverviewScaleFactor(dimensions, getSize().x(), getSize().y());
 		final float dimScale = scales.get(EDimension.DIMENSION);
 		final float recScale = scales.get(EDimension.RECORD);
 

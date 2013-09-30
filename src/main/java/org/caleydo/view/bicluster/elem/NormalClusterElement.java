@@ -117,6 +117,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 	@Override
 	protected void init(IGLElementContext context) {
 		super.init(context);
+
+		resort();
 		updateVisibility();
 		setZValuesAccordingToState();
 	}

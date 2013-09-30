@@ -13,6 +13,7 @@ import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,14 +101,18 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 */
 	private int mouseOutDelay = Integer.MAX_VALUE;
 
-	private float[] zoom = { 1, 1, 1, 1 };
-	private int zoomOffset = 0; // 2 for focus mode
+	private final Map<EZoomMode, Vec2f> zooms = new EnumMap<>(EZoomMode.class);
+	private Vec2f zoom;
 
 	public ClusterElement(int bcNr, TablePerspective data, BiClustering clustering) {
 		setLayout(this);
 		setAnimateByDefault(false);
 
 		this.bcNr = bcNr;
+
+		for (EZoomMode z : EZoomMode.values())
+			zooms.put(z, new Vec2f(1, 1));
+		zoom = zooms.get(EZoomMode.OVERVIEW);
 
 		this.headerBar = new HeaderBar();
 		this.add(headerBar);
@@ -144,7 +149,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	}
 
 	public float getZoom(EDimension dim) {
-		return dim.select(zoom[zoomOffset], zoom[zoomOffset + 1]);
+		return dim.select(zoom.x(), zoom.y());
 	}
 
 	/**
@@ -258,8 +263,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		}
 	}
 
-	public void setFocusZoomMode(boolean focusMode) {
-		this.zoomOffset = focusMode ? 2 : 0;
+	public void setZoomMode(EZoomMode mode) {
+		this.zoom = zooms.get(mode);
 	}
 	/**
 	 * @param i
@@ -267,21 +272,21 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	protected void zoom(int dimFac, int recFac) {
 		if (dimFac == 0 && recFac == 0)
 			return;
-		float rec = nextZoomDelta(recFac, zoom[zoomOffset + 1], getRecSize());
-		float dim = nextZoomDelta(dimFac, zoom[zoomOffset], getDimSize());
+		float dim = nextZoomDelta(dimFac, zoom.x(), getDimSize());
+		float rec = nextZoomDelta(recFac, zoom.y(), getRecSize());
 		incZoom(dim, rec);
 	}
 
 	void incZoom(float dim, float rec) {
 		if (dim == 0 && rec == 0)
 			return;
-		setZoom(zoom[zoomOffset] + dim, zoom[zoomOffset + 1] + rec);
+		setZoom(zoom.x() + dim, zoom.y() + rec);
 		relayoutParent();
 	}
 
 	void setZoom(float dim, float rec) {
-		zoom[zoomOffset] = Math.max(dim, 0.01f);
-		zoom[zoomOffset + 1] = Math.max(rec, 0.01f);
+		zoom.setX(Math.max(dim, 0.01f));
+		zoom.setY(Math.max(rec, 0.01f));
 		relayoutParent();
 	}
 
@@ -528,8 +533,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		 * @return
 		 */
 		private String scaleHighlight() {
-			int r = Math.round(zoom[zoomOffset + 1] * 100);
-			int d = Math.round(zoom[zoomOffset] * 100);
+			int r = Math.round(zoom.y() * 100);
+			int d = Math.round(zoom.x() * 100);
 			if (d == r) {
 				if (d == 100)
 					return "";
@@ -635,9 +640,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	public void setFocus(boolean isFocused) {
 		if (isFocused) {
 			forceHide = false;
-			setFocusZoomMode(true);
-			if (zoom[2 + 0] == 1 && zoom[2 + 1] == 1)
-				guessFocusScale();
+			setZoomMode(EZoomMode.FOCUS);
 		} else {
 			mouseOut();
 		}
@@ -646,28 +649,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		relayoutParent();
 	}
 
-	private void guessFocusScale() {
-		Vec2f size = getParent().getSize().times(0.75f);
-		float sx, sy;
-		if (needsUniformScaling()) {
-			Vec2f s = getMinSize();
-			sx = sy = Math.min(size.x() / s.x(), size.y() / s.y());
-		} else {
-			float px = size.x() / getDimSize();
-			float py = size.y() / getRecSize();
-
-			sx = px; // FIXME zoom logic
-			sy = py;
-
-		}
-		zoom[2 + 0] = sx;
-		zoom[2 + 1] = sy;
-	}
-
 	public void focusChanged(ClusterElement elem) {
 		assert this != elem;
-		if (this.isFocused())
-			setFocus(false);
 		if (elem != null) {
 			int maxDistance = findRootElement().getMaxDistance();
 			int distance = minimalDistanceTo(elem, maxDistance);
@@ -676,8 +659,10 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			} else {
 				forceHide = false;
 			}
+			setZoomMode(EZoomMode.FOCUS_NEIGHBOR);
 		} else {
 			forceHide = false;
+			setZoomMode(EZoomMode.OVERVIEW);
 		}
 		updateVisibility();
 	}

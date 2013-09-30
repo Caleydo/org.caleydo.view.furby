@@ -5,9 +5,16 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import static org.caleydo.view.bicluster.elem.ZoomLogic.initialFocusNeighborScaleFactor;
+import static org.caleydo.view.bicluster.elem.ZoomLogic.initialFocusScaleFactor;
+import gleem.linalg.Vec2f;
+
+import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import org.caleydo.core.event.EventListenerManager.DeepScan;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -139,6 +146,19 @@ public class AllClustersElement extends GLElementContainer {
 			this.focussedElement.setFocus(true);
 			if (prev != null) // reuse zoom settings
 				this.focussedElement.setZoom(prev.getZoom(EDimension.DIMENSION), prev.getZoom(EDimension.RECORD));
+			else {
+				Vec2f size = getSize();
+				if (this.focussedElement.needsUniformScaling()) {
+					Vec2f s = this.focussedElement.getMinSize();
+					float scale = Math.min(size.x() / s.x(), size.y() / s.y());
+					this.focussedElement.setZoom(scale,scale);
+				} else {
+					Map<EDimension, Float> s = initialFocusScaleFactor(this.focussedElement.getSizes(), size.x(),
+							size.y());
+					this.focussedElement.setZoom(s.get(EDimension.DIMENSION), s.get(EDimension.RECORD));
+				}
+			}
+
 			add(this.focussedElement); // sounds strange but moves the cluster at the end of the cluster list
 		}
 		focusChanged();
@@ -146,10 +166,24 @@ public class AllClustersElement extends GLElementContainer {
 	}
 
 	private void focusChanged() {
+		List<Dimension> dims = new ArrayList<>();
 		for (ClusterElement c : allClusters()) {
-			c.setFocusZoomMode(this.focussedElement != null);
-			if (c != this.focussedElement)
-				c.focusChanged(this.focussedElement);
+			if (c == this.focussedElement)
+				continue;
+			c.focusChanged(this.focussedElement);
+			if (c.isVisible())
+				dims.add(c.getSizes());
+		}
+		if (this.focussedElement != null) {
+			// set neighbor size for focused element
+			Vec2f size = getSize();
+			Map<EDimension, Float> s = initialFocusNeighborScaleFactor(dims, this.focussedElement.getSizes(), size.x(),
+					size.y());
+			for (ClusterElement c : allClusters()) {
+				if (c == this.focussedElement)
+					continue;
+				c.setZoom(s.get(EDimension.DIMENSION), s.get(EDimension.RECORD));
+			}
 		}
 	}
 
