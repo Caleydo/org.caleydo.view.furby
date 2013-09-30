@@ -123,6 +123,10 @@ public class ClusterContentElement extends GLElementDecorator {
 		return any;
 	}
 
+	public void updateScroller() {
+		scroller.relayout();
+	}
+
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		g.color(Color.WHITE).fillRect(0, 0, w, h);

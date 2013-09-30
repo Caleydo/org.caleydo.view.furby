@@ -128,6 +128,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		});
 	}
 
+	public abstract void relayoutContent();
+
 	protected final boolean isShowAlwaysToolBar() {
 		GLRootElement p = findRootElement();
 		return p != null && p.isShowAlwaysToolBar();

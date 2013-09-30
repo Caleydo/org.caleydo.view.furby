@@ -8,6 +8,7 @@ package org.caleydo.view.bicluster.elem.layout;
 import gleem.linalg.Vec2f;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
@@ -65,7 +66,19 @@ public abstract class AForceBasedLayout implements IGLLayout2 {
 				scaleX = scaleY = (scaleX + scaleY) * 0.5f; // mean
 
 			Vec2f minSize = elem.getMinSize();
-			child.setSize(minSize.x() * scaleX, minSize.y() * scaleY);
+			float w_i = minSize.x() * scaleX;
+			float h_i = minSize.y() * scaleY;
+			if (elem.isFocused()) {
+				Vec2f old = elem.getLayoutDataAs(Vec2f.class, null);
+				Vec2f new_ = new Vec2f(w_i - 6, h_i - 6);
+				if (!Objects.equals(old, new_)) {
+					elem.setLayoutData(new_);
+					elem.relayoutContent();
+				}
+				w_i = Math.min(w_i, w * 0.8f);
+				h_i = Math.min(h_i, h * 0.9f);
+			}
+			child.setSize(w_i, h_i);
 		}
 	}
 

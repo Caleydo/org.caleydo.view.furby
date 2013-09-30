@@ -9,6 +9,8 @@ import gleem.linalg.Vec2f;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
+import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
+import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
@@ -38,6 +40,12 @@ public abstract class AMultiClusterElement extends ClusterElement {
 		return data.getLabel();
 	}
 
+	@Override
+	public void relayoutContent() {
+		GLElementAccessor.relayoutDown(content);
+		content.updateScroller();
+	}
+
 	/**
 	 * @return
 	 */
@@ -54,13 +62,12 @@ public abstract class AMultiClusterElement extends ClusterElement {
 				relayoutParent();
 			}
 		});
-		// FIXME
-		// c.setMinSizeProvider(new IHasMinSize() {
-		// @Override
-		// public Vec2f getMinSize() {
-		// return getLayoutDataAs(Vec2f.class, getPreferredSize());
-		// }
-		// });
+		c.setMinSizeProvider(new IHasMinSize() {
+			@Override
+			public Vec2f getMinSize() {
+				return getLayoutDataAs(Vec2f.class, AMultiClusterElement.this.getMinSize());
+			}
+		});
 		return c;
 	}
 
