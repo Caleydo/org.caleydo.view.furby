@@ -107,6 +107,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.annotations.add(p);
 		this.add(p);
 
+		resort();
 	}
 
 	public float getProbability(EDimension dim, int index) {
@@ -116,8 +117,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 	@Override
 	protected void init(IGLElementContext context) {
 		super.init(context);
-
-		resort();
 		updateVisibility();
 		setZValuesAccordingToState();
 	}

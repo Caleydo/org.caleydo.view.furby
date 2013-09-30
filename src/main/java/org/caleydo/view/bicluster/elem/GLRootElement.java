@@ -5,9 +5,12 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem;
 
+import static org.caleydo.view.bicluster.elem.ZoomLogic.initialScaleFactor;
 import static org.caleydo.view.bicluster.elem.ZoomLogic.nextZoomDelta;
 import static org.caleydo.view.bicluster.elem.ZoomLogic.toDirection;
 
+import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -271,14 +274,23 @@ public class GLRootElement extends GLElementContainer {
 
 		final int count = biClustering.getBiClusterCount();
 		log.info(count + " bi clusters loaded.");
+		List<Dimension> dimensions = new ArrayList<>();
 		for (int i = 0; i < count; ++i) {
 			final ClusterElement el = new NormalClusterElement(i, clustering.getData(i), clustering);
 			clusters.add(el);
+			dimensions.add(el.getSizes());
 		}
+
+		final Map<EDimension, Float> scales = initialScaleFactor(dimensions, getSize().x(), getSize().y());
+		final float dimScale = scales.get(EDimension.DIMENSION);
+		final float recScale = scales.get(EDimension.RECORD);
+
 		log.info("creating bands");
 		final List<GLElement> l = clusters.asList();
 		for (int i = 0; i < l.size(); ++i) {
 			ClusterElement start = (ClusterElement) l.get(i);
+			start.setZoom(dimScale, recScale);
+
 			for (int j = i + 1; j < l.size(); ++j) {
 				ClusterElement end = (ClusterElement) l.get(j);
 				Edge edge = new Edge(start, end);

@@ -9,6 +9,7 @@ import static org.caleydo.view.bicluster.elem.ZoomLogic.nextZoomDelta;
 import static org.caleydo.view.bicluster.elem.ZoomLogic.toDirection;
 import gleem.linalg.Vec2f;
 
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -928,4 +929,11 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 	 * @return
 	 */
 	public abstract boolean needsUniformScaling();
+
+	/**
+	 * @return
+	 */
+	public Dimension getSizes() {
+		return new Dimension(getDimSize(), getRecSize());
+	}
 }
