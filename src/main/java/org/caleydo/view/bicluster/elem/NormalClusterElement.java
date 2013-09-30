@@ -436,7 +436,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 			@Override
 			public void onSelectionChanged(GLButton button, boolean selected) {
-				hideThisCluster();
+				hide();
 			}
 
 		});
