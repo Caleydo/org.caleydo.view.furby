@@ -360,12 +360,20 @@ public class GLRootElement extends GLElementContainer {
 	 *            bicluster id x threshold
 	 */
 	public void setThresholds(EDimension dimension, Map<Integer, Float> thresholds) {
+		float thresh = Float.NEGATIVE_INFINITY;
 		for (NormalClusterElement elem : allNormalClusters()) {
 			int number = elem.getBiClusterNumber();
 			if (thresholds.containsKey(number)) {
 				float t = thresholds.get(number);
+				if (Float.isInfinite(thresh))
+					thresh = t;
+				if (t != thresh)
+					thresh = Float.NaN;
 				elem.setThreshold(dimension, t);
 			}
+		}
+		if (!Float.isNaN(thresh) && !Float.isInfinite(thresh)) { // all the same set that in the parameter toolbar
+			this.toolbarParam.setThreshold(dimension, thresh);
 		}
 		updateAllEdges();
 	}

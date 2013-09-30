@@ -295,6 +295,9 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 
 	public void setThresholds(float dimThreshold, int dimNumberThreshold, float recThreshold, int recNumberThreshold) {
+		if (this.dimThreshold == dimThreshold && this.dimNumberThreshold == dimNumberThreshold
+				&& this.recThreshold == recThreshold && this.recNumberThreshold == recNumberThreshold)
+			return;
 		this.dimThreshold = dimThreshold;
 		this.dimNumberThreshold = dimNumberThreshold;
 		this.recThreshold = recThreshold;

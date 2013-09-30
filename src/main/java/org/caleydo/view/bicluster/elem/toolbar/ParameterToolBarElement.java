@@ -552,4 +552,12 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 			return new Vec2f(100, size() * 14);
 		}
 	}
+
+	/**
+	 * @param dimension
+	 * @param thresh
+	 */
+	public void setThreshold(EDimension dimension, float thresh) {
+		dimension.select(this.dimThresholdSlider, this.recThresholdSlider).setValue(thresh);
+	}
 }
