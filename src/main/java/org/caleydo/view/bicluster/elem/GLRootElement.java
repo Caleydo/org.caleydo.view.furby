@@ -23,6 +23,7 @@ import org.caleydo.core.id.IDMappingManagerRegistry;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
 import org.caleydo.core.util.color.Color;
+import org.caleydo.core.util.function.AdvancedDoubleStatistics;
 import org.caleydo.core.util.logging.Logger;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -118,18 +119,28 @@ public class GLRootElement extends GLElementContainer {
 	 * @param rec
 	 */
 	private void setZoom(int dim, int rec) {
-		float nextDim = Float.POSITIVE_INFINITY;
-		float nextRec = Float.POSITIVE_INFINITY;
-		for(ClusterElement elem : clusters.allClusters()) {
+		final Iterable<ClusterElement> clusters = this.clusters.allClusters();
+		final int size = this.clusters.size();
+		double[] dimValues = new double[size];
+		double[] recValues = new double[size];
+		int i = 0;
+		for (ClusterElement elem : clusters) {
 			float d = nextZoomDelta(dim, elem.getZoom(EDimension.DIMENSION), elem.getDimSize());
 			float r = nextZoomDelta(rec, elem.getZoom(EDimension.RECORD), elem.getRecSize());
-			if (Math.abs(nextDim) > Math.abs(d))
-				nextDim = d;
-			if (Math.abs(nextRec) > Math.abs(r))
-				nextRec = r;
+			dimValues[i] = elem.getZoom(EDimension.DIMENSION) + d;
+			recValues[i] = elem.getZoom(EDimension.RECORD) + r;
+			i++;
 		}
-		for (ClusterElement elem : clusters.allClusters())
-			elem.incZoom(nextDim, nextRec);
+		final AdvancedDoubleStatistics dimStats = AdvancedDoubleStatistics.of(dimValues);
+		final AdvancedDoubleStatistics recStats = AdvancedDoubleStatistics.of(recValues);
+		final float dimNext = (float) dimStats.getMedian();
+		final float recNext = (float) recStats.getMedian();
+
+		for (ClusterElement elem : clusters)
+			if (elem.isFocused()) // focussed will be locally zoomed
+				elem.zoom(dim, rec);
+			else
+				elem.setZoom(dimNext, recNext);
 	}
 
 
