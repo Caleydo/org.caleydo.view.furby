@@ -75,8 +75,8 @@ public abstract class AForceBasedLayout implements IGLLayout2 {
 					elem.setLayoutData(new_);
 					elem.relayoutContent();
 				}
-				w_i = Math.min(w_i, w * 0.8f);
-				h_i = Math.min(h_i, h * 0.9f);
+				w_i = Math.min(w_i, w * 0.7f);
+				h_i = Math.min(h_i, h * 0.85f);
 			}
 			child.setSize(w_i, h_i);
 		}
