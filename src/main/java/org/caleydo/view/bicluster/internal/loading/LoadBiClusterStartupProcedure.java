@@ -2,8 +2,8 @@
  * Caleydo - Visualization for Molecular Biology - http://caleydo.org
  * Copyright (c) The Caleydo Team. All rights reserved.
  * Licensed under the new BSD license, available at http://caleydo.org/license
- ******************************************************************************/
-package org.caleydo.view.bicluster.loading;
+ *******************************************************************************/
+package org.caleydo.view.bicluster.internal.loading;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,44 +11,47 @@ import java.util.List;
 import org.caleydo.core.data.collection.table.NumericalTable;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.gui.SimpleAction;
 import org.caleydo.core.io.DataLoader;
 import org.caleydo.core.io.DataSetDescription;
+import org.caleydo.core.startup.IStartupProcedure;
+import org.caleydo.core.util.logging.Logger;
 import org.caleydo.view.bicluster.GLBiCluster;
 import org.caleydo.view.bicluster.RcpGLBiClusterView;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 
-/**
- * @author Samuel Gratzl
- *
- */
-public class ImportXLZCommand extends SimpleAction {
-	private static final String LABEL = "Import Fabia BiClustering";
-	private static final String ICON = "resources/icons/general/import_data.png";
+final class LoadBiClusterStartupProcedure implements IStartupProcedure {
+	private static final Logger log = Logger.create(LoadBiClusterStartupProcedure.class);
 
-	/**
-	 * Constructor.
-	 */
-	public ImportXLZCommand() {
-		super(LABEL, ICON);
+	private final String name;
+	private final List<DataSetDescription> datasets;
+
+	private final List<ATableBasedDataDomain> loaded = new ArrayList<>();
+
+	public LoadBiClusterStartupProcedure(String name, List<DataSetDescription> datasets) {
+		this.datasets = datasets;
+		this.name = name;
 	}
 
 	@Override
 	public void run() {
-		ImportXLZDialog dialog = new ImportXLZDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell());
-		if (dialog.open() != Window.OK) {
-			return;
-		}
-		List<DataSetDescription> r = dialog.getDataSetDescriptions();
 
 		// 1. load data
-		List<ATableBasedDataDomain> dd = new ArrayList<>();
-		for (DataSetDescription ri : r)
-			dd.add(DataLoader.loadData(ri, new NullProgressMonitor()));
+		for (DataSetDescription ri : datasets)
+			loaded.add(DataLoader.loadData(ri, new NullProgressMonitor()));
+	}
+
+	@Override
+	public boolean preWorkbenchOpen() {
+		return true;
+	}
+
+	@Override
+	public void postWorkbenchOpen(IWorkbenchWindowConfigurer configurer) {
+		configurer.setTitle("Caleydo - " + name);
 
 		// 2. show Bicluster View
 		IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
@@ -56,8 +59,7 @@ public class ImportXLZCommand extends SimpleAction {
 		try {
 			rbiCluster = (RcpGLBiClusterView) activePage.showView(GLBiCluster.VIEW_TYPE);
 		} catch (PartInitException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("can't create Furby: ", e);
 			return;
 		}
 
@@ -67,10 +69,10 @@ public class ImportXLZCommand extends SimpleAction {
 			return;
 
 		List<TablePerspective> ts = new ArrayList<>(bicluster.getTablePerspectives());
-		for(TablePerspective t : ts)
+		for (TablePerspective t : ts)
 			bicluster.removeTablePerspective(t);
 
-		for (ATableBasedDataDomain d : dd) {
+		for (ATableBasedDataDomain d : loaded) {
 			if (d.getTable() instanceof NumericalTable)
 				bicluster.addTablePerspective(d.getDefaultTablePerspective());
 			else if (d.getRecordIDType().getIDCategory().getCategoryName().startsWith("BICLUSTER")) {

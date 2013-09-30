@@ -2,9 +2,10 @@
  * Caleydo - Visualization for Molecular Biology - http://caleydo.org
  * Copyright (c) The Caleydo Team. All rights reserved.
  * Licensed under the new BSD license, available at http://caleydo.org/license
- ******************************************************************************/
-package org.caleydo.view.bicluster.loading;
+ *******************************************************************************/
+package org.caleydo.view.bicluster.internal.loading;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,9 +20,10 @@ import org.caleydo.core.io.DataSetDescription;
 import org.caleydo.core.io.DataSetDescription.ECreateDefaultProperties;
 import org.caleydo.core.io.IDSpecification;
 import org.caleydo.core.io.ParsingRule;
+import org.caleydo.core.startup.IStartupAddon;
+import org.caleydo.core.startup.IStartupProcedure;
 import org.caleydo.datadomain.genetic.TCGADefinitions;
-import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -29,39 +31,54 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.kohsuke.args4j.Option;
 
 /**
  * @author Samuel Gratzl
  *
  */
-public class ImportXLZDialog extends Dialog {
+public class BiClusterStartupAddon implements IStartupAddon {
+	@Option(name = "-bicluster:X", usage = "specify the bicluster x data file")
+	private File xFile;
+	@Option(name = "-bicluster:L", usage = "specify the bicluster L data file")
+	private File lFile;
+	@Option(name = "-bicluster:Z", usage = "specify the bicluster Z data file")
+	private File zFile;
+	@Option(name = "-bicluster:chemical", usage = "specify the bicluster chemical cluster file")
+	private File chemicalFile;
+	@Option(name = "-bicluster:thresholds", usage = "specify the bicluster thresholds fiel")
+	private File thresholdsFile;
+	@Option(name = "-bicluster:genes", usage = "whether the record names are valid gene symbols")
+	private boolean genes = false;
 
-	private String xFile;
-	private String lFile;
-	private String zFile;
-	private String chemicalFile;
-	private String thresholdsFile;
-	private boolean genes = true;
+	private Text lFileUI;
+	private Text zFileUI;
+	private Text chemicalFileUI;
+	private Text thresholdsFileUI;
 
-	protected ImportXLZDialog(Shell parentShell) {
-		super(parentShell);
+	@Override
+	public boolean init() {
+		if (validate())
+			return true;
+		if (isValid(xFile))
+			inferFromX();
+		if (validate())
+			return true;
+		return false;
+	}
+
+	private static boolean isValid(File f) {
+		return f != null && f.isFile() && f.exists();
 	}
 
 	@Override
-	public void create() {
-		super.create();
-		getShell().setText("Import XLZ Data");
-	}
-
-	@Override
-	protected Control createDialogArea(Composite parent) {
+	public Composite create(Composite parent, final WizardPage page) {
 		// create composite
-		Composite composite = (Composite) super.createDialogArea(parent);
+		parent = new Composite(parent, SWT.NONE);
+		parent.setLayout(new GridLayout(1, true));
 		{
 			Group group = new Group(parent, SWT.SHADOW_ETCHED_IN);
 			group.setText("X File");
@@ -80,7 +97,19 @@ public class ImportXLZDialog extends Dialog {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
 					xFile = onOpenFile(xFileUI);
-					checkAllThere();
+					checkAllThere(page);
+					// infer the other
+					if (isValid(xFile))
+						inferFromX();
+					if (isValid(lFile))
+						lFileUI.setText(lFile.getAbsolutePath());
+					if (isValid(zFile))
+						zFileUI.setText(zFile.getAbsolutePath());
+					if (isValid(chemicalFile))
+						chemicalFileUI.setText(chemicalFile.getAbsolutePath());
+					if (isValid(thresholdsFile))
+						thresholdsFileUI.setText(thresholdsFile.getAbsolutePath());
+					checkAllThere(page);
 				}
 			});
 		}
@@ -90,19 +119,19 @@ public class ImportXLZDialog extends Dialog {
 			group.setLayout(new GridLayout(2, false));
 			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-			final Text xFileUI = new Text(group, SWT.BORDER);
-			xFileUI.setEditable(false);
+			this.lFileUI = new Text(group, SWT.BORDER);
+			lFileUI.setEditable(false);
 			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 			gridData.widthHint = 200;
-			xFileUI.setLayoutData(gridData);
+			lFileUI.setLayoutData(gridData);
 
 			Button openFileButton = new Button(group, SWT.PUSH);
 			openFileButton.setText("Choose L");
 			openFileButton.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
-					lFile = onOpenFile(xFileUI);
-					checkAllThere();
+					lFile = onOpenFile(lFileUI);
+					checkAllThere(page);
 				}
 			});
 		}
@@ -113,19 +142,19 @@ public class ImportXLZDialog extends Dialog {
 			group.setLayout(new GridLayout(2, false));
 			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-			final Text xFileUI = new Text(group, SWT.BORDER);
-			xFileUI.setEditable(false);
+			this.zFileUI = new Text(group, SWT.BORDER);
+			zFileUI.setEditable(false);
 			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 			gridData.widthHint = 200;
-			xFileUI.setLayoutData(gridData);
+			zFileUI.setLayoutData(gridData);
 
 			Button openFileButton = new Button(group, SWT.PUSH);
 			openFileButton.setText("Choose Z");
 			openFileButton.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
-					zFile = onOpenFile(xFileUI);
-					checkAllThere();
+					zFile = onOpenFile(zFileUI);
+					checkAllThere(page);
 				}
 			});
 		}
@@ -136,19 +165,19 @@ public class ImportXLZDialog extends Dialog {
 			group.setLayout(new GridLayout(2, false));
 			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-			final Text xFileUI = new Text(group, SWT.BORDER);
-			xFileUI.setEditable(false);
+			this.chemicalFileUI = new Text(group, SWT.BORDER);
+			chemicalFileUI.setEditable(false);
 			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 			gridData.widthHint = 200;
-			xFileUI.setLayoutData(gridData);
+			chemicalFileUI.setLayoutData(gridData);
 
 			Button openFileButton = new Button(group, SWT.PUSH);
 			openFileButton.setText("Choose");
 			openFileButton.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
-					chemicalFile = onOpenFile(xFileUI);
-					checkAllThere();
+					chemicalFile = onOpenFile(chemicalFileUI);
+					checkAllThere(page);
 				}
 			});
 		}
@@ -159,19 +188,19 @@ public class ImportXLZDialog extends Dialog {
 			group.setLayout(new GridLayout(2, false));
 			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-			final Text xFileUI = new Text(group, SWT.BORDER);
-			xFileUI.setEditable(false);
+			this.thresholdsFileUI = new Text(group, SWT.BORDER);
+			thresholdsFileUI.setEditable(false);
 			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 			gridData.widthHint = 200;
-			xFileUI.setLayoutData(gridData);
+			thresholdsFileUI.setLayoutData(gridData);
 
 			Button openFileButton = new Button(group, SWT.PUSH);
 			openFileButton.setText("Choose");
 			openFileButton.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
-					thresholdsFile = onOpenFile(xFileUI);
-					checkAllThere();
+					thresholdsFile = onOpenFile(thresholdsFileUI);
+					checkAllThere(page);
 				}
 			});
 		}
@@ -193,20 +222,19 @@ public class ImportXLZDialog extends Dialog {
 			});
 		}
 
-		applyDialogFont(composite);
-		return composite;
+		return parent;
 	}
 
 	/**
 	 *
 	 */
-	protected void checkAllThere() {
-		boolean ok = xFile != null && lFile != null && zFile != null;
-		getButton(IDialogConstants.OK_ID).setEnabled(ok);
+	protected void checkAllThere(WizardPage page) {
+		boolean ok = validate();
+		page.setPageComplete(ok);
 	}
 
-	protected String onOpenFile(Text xFileUI) {
-		FileDialog fileDialog = new FileDialog(getShell());
+	protected File onOpenFile(Text xFileUI) {
+		FileDialog fileDialog = new FileDialog(xFileUI.getShell());
 		fileDialog.setText("Open");
 		// fileDialog.setFilterPath(filePath);
 		String[] filterExt = { "*.csv" };
@@ -216,34 +244,24 @@ public class ImportXLZDialog extends Dialog {
 		if (inputFileName == null)
 			return null;
 		xFileUI.setText(inputFileName);
-		return inputFileName.replace('\\', '/');
-	}
-
-
-	@Override
-	protected void createButtonsForButtonBar(Composite parent) {
-		// create OK and Cancel buttons by default
-		createButton(parent, IDialogConstants.OK_ID, "Import", true).setEnabled(false);
-		createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
+		return new File(inputFileName);
 	}
 
 	/**
 	 * @return
 	 */
-	public List<DataSetDescription> getDataSetDescriptions() {
+	public List<DataSetDescription> toDataSetDescriptions() {
 		final IDSpecification geneNames = genes ? TCGADefinitions.createGeneIDSpecificiation() : new IDSpecification(
-				"GENE_SAMPLES",
-				"GENE_SAMPLES");
+				"GENE_SAMPLES", "GENE_SAMPLES");
 		final IDSpecification sample = new IDSpecification("SAMPLE", "SAMPLE");
 		final IDSpecification bicluster = new IDSpecification("BICLUSTER", "BICLUSTER");
 
 		List<DataSetDescription> r = new ArrayList<DataSetDescription>();
 
-		String name = xFile.substring(xFile.lastIndexOf("/") + 1, xFile.lastIndexOf("."));
-		name = StringUtils.removeEnd(name, "_X");
+		String name = getProjectName();
 		{
 			DataSetDescription x = new DataSetDescription(ECreateDefaultProperties.NUMERICAL);
-			x.setDataSourcePath(xFile);
+			x.setDataSourcePath(xFile.getAbsolutePath());
 			x.setDataSetName(name + "_X");
 			x.setDelimiter("\t");
 			x.setRowIDSpecification(geneNames);
@@ -253,7 +271,7 @@ public class ImportXLZDialog extends Dialog {
 		}
 		{
 			DataSetDescription l = new DataSetDescription(ECreateDefaultProperties.NUMERICAL);
-			l.setDataSourcePath(lFile);
+			l.setDataSourcePath(lFile.getAbsolutePath());
 			l.setDataSetName(name + "_L");
 			l.setDelimiter("\t");
 			l.setRowIDSpecification(geneNames);
@@ -263,7 +281,7 @@ public class ImportXLZDialog extends Dialog {
 		}
 		{
 			DataSetDescription z = new DataSetDescription(ECreateDefaultProperties.NUMERICAL);
-			z.setDataSourcePath(zFile);
+			z.setDataSourcePath(zFile.getAbsolutePath());
 			z.setDataSetName(name + "_Z");
 			z.setDelimiter("\t");
 			z.setRowIDSpecification(sample);
@@ -272,9 +290,9 @@ public class ImportXLZDialog extends Dialog {
 			r.add(z);
 		}
 
-		if (!StringUtils.isBlank(chemicalFile)) {
+		if (isValid(chemicalFile)) {
 			DataSetDescription z = new DataSetDescription();
-			z.setDataSourcePath(chemicalFile);
+			z.setDataSourcePath(chemicalFile.getAbsolutePath());
 			z.setDataSetName(name + "_ChemicalClusters");
 			z.setDelimiter("\t");
 			z.setRowIDSpecification(sample);
@@ -287,9 +305,9 @@ public class ImportXLZDialog extends Dialog {
 			r.add(z);
 		}
 
-		if (!StringUtils.isBlank(thresholdsFile)) {
+		if (isValid(thresholdsFile)) {
 			DataSetDescription z = new DataSetDescription();
-			z.setDataSourcePath(thresholdsFile);
+			z.setDataSourcePath(thresholdsFile.getAbsolutePath());
 			z.setDataSetName(name + "_Thresholds");
 			z.setDelimiter("\t");
 			z.setRowIDSpecification(bicluster);
@@ -305,6 +323,13 @@ public class ImportXLZDialog extends Dialog {
 			r.add(z);
 		}
 		return r;
+	}
+
+	private String getProjectName() {
+		String xFileName = xFile.getName();
+		String name = xFileName.substring(0, xFileName.lastIndexOf("."));
+		name = StringUtils.removeEnd(name, "_X");
+		return name;
 	}
 
 	/**
@@ -326,6 +351,33 @@ public class ImportXLZDialog extends Dialog {
 		r.setParseUntilEnd(true);
 		r.setColumnDescripton(new ColumnDescription());
 		return r;
+	}
+
+	@Override
+	public boolean validate() {
+		return isValid(xFile) && isValid(lFile) && isValid(zFile);
+	}
+
+	/**
+	 */
+	private void inferFromX() {
+		final File p = xFile.getParentFile();
+		final String base = StringUtils.removeEnd(xFile.getName(), "_X.csv");
+		if (!isValid(xFile))
+			lFile = new File(p, base + "_X.csv");
+		if (!isValid(lFile))
+			lFile = new File(p, base + "_L.csv");
+		if (!isValid(zFile))
+			zFile = new File(p, base + "_Z.csv");
+		if (!isValid(chemicalFile))
+			chemicalFile = new File(p, base + "_chemicalClusters.csv");
+		if (!isValid(thresholdsFile))
+			thresholdsFile = new File(p, base + "_thresholds.csv");
+	}
+
+	@Override
+	public IStartupProcedure create() {
+		return new LoadBiClusterStartupProcedure(getProjectName(), toDataSetDescriptions());
 	}
 
 }
