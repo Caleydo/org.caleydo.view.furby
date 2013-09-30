@@ -39,9 +39,11 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		for (ForcedBody fix : fixed) {
 			areaFilled += fix.getArea();
 		}
+		boolean anyFocussed = false;
 		for (ForcedBody body : bodies) {
 			if (body.isFocussed()) {
 				body.setLocation(w * 0.5f, h * 0.5f);
+				anyFocussed = true;
 			}
 			ClusterElement v = body.asClusterElement();
 			dimOverlapSize += v.getDimTotalOverlaps();
@@ -55,13 +57,14 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		areaFilled /= (w * h);
 
 		for (int i = 0; i < iterations; i++) {
-			double frameAlpha = 1;
-			forceDirectedLayout(bodies, fixed, w, h, frameAlpha, dimOverlapSize, recOverlapSize, areaFilled);
+			double frameAlpha = (i + 1) / (double) iterations;
+			forceDirectedLayout(bodies, fixed, w, h, frameAlpha, dimOverlapSize, recOverlapSize, areaFilled,
+					anyFocussed);
 		}
 	}
 
 	private void forceDirectedLayout(List<ForcedBody> bodies, List<ForcedBody> fixedBodies, float w, float h,
-			double frameAlpha, int overlapDim, int overlapRec, double areaFilled) {
+			double frameAlpha, int overlapDim, int overlapRec, double areaFilled, boolean anyFocussed) {
 
 		final int size = bodies.size();
 
@@ -83,7 +86,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 			}
 			if (!body.isFixed()) { // don't waste time if the element is active
 				addFrame(w, h, body, frameAlpha);
-				addGravity(w, h, body);
+				addGravity(w, h, body, anyFocussed);
 				addFixedBodyRespulsion(fixedBodies, body);
 			}
 		}
@@ -147,9 +150,10 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		Vec2d distFromTopLeft = getDistanceFromTopLeft(body, w, h);
 		Vec2d distFromBottomRight = getDistanceFromBottomRight(body, w, h);
 
+		final double frameFactor = Math.max(0.8 - frameAlpha, 0);
 		// in earlier frames simulate a larger space (twice as large in the first iteration)
-		final double offsetX = 20 - w * (1 - frameAlpha);
-		final double offsetY = 20 - h * (1 - frameAlpha);
+		final double offsetX = 20 - w * frameFactor;
+		final double offsetY = 20 - h * frameFactor;
 
 		final double left = distFromTopLeft.x() - offsetX;
 		final double top = distFromTopLeft.y() - offsetY;
@@ -176,12 +180,16 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 	 * @param w
 	 * @param h
 	 * @param body
+	 * @param anyFocussed
 	 */
-	private void addGravity(float w, float h, ForcedBody body) {
+	private void addGravity(float w, float h, ForcedBody body, boolean anyFocussed) {
+		if (anyFocussed)
+			return;
 		final double cx = body.getCenterX() - w * 0.5;
 		final double cy = body.getCenterY() - h * 0.5;
 
-		final double centerForce = -0.001;
+		// if focussed away from the center else towards the center
+		final double centerForce = -0.002;
 		body.addFrameForce(cx * centerForce, cy * centerForce);
 	}
 

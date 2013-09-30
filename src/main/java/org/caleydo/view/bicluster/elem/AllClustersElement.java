@@ -221,4 +221,13 @@ public class AllClustersElement extends GLElementContainer {
 		if (isAnyFocussed())
 			focusChanged();
 	}
+
+	/**
+	 *
+	 */
+	public void onMouseOut() {
+		if (this.hoveredElement != null) {
+			this.hoveredElement.mouseOut();
+		}
+	}
 }

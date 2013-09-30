@@ -249,8 +249,6 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			}
 			break;
 		case MOUSE_OUT:
-			if (isHovered)
-				EventPublisher.trigger(new DataSetSelectedEvent(data.getDataDomain()));
 			mouseOutDelay = 200;
 			// mouseOut();
 			break;
@@ -323,6 +321,8 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 			repaintChildren();
 			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
 			relayout(); // for hiding the bars
+			EventPublisher.trigger(new DataSetSelectedEvent(data.getDataDomain()));
+			findAllClustersElement().setHoveredElement(null);
 		}
 	}
 

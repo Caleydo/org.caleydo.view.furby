@@ -37,7 +37,6 @@ import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
-import org.caleydo.core.view.opengl.picking.PickingMode;
 import org.caleydo.view.bicluster.elem.annotation.CategoricalLZHeatmapElement;
 import org.caleydo.view.bicluster.elem.band.AllBandsElement;
 import org.caleydo.view.bicluster.elem.band.BandElement;
@@ -95,15 +94,25 @@ public class GLRootElement extends GLElementContainer {
 		zoomLayer.onPick(new IPickingListener() {
 			@Override
 			public void pick(Pick pick) {
-				// mouse wheel zoom
-				if (pick.getPickingMode() == PickingMode.MOUSE_WHEEL) {
-					zoom((IMouseEvent) pick);
-				}
+				onZoomLayerPick(pick);
 			}
 		});
 		this.add(zoomLayer);
 	}
 
+
+	/**
+	 * @param pick
+	 */
+	protected void onZoomLayerPick(Pick pick) {
+		switch (pick.getPickingMode()) {
+		case MOUSE_WHEEL:
+			zoom((IMouseEvent) pick);
+			break;
+		default:
+			break;
+		}
+	}
 
 	/**
 	 * @param f
@@ -127,6 +136,8 @@ public class GLRootElement extends GLElementContainer {
 		double[] recValues = new double[size];
 		int i = 0;
 		for (ClusterElement elem : clusters) {
+			if (elem.isFocused())
+				continue;
 			float d = nextZoomDelta(dim, elem.getZoom(EDimension.DIMENSION), elem.getDimSize());
 			float r = nextZoomDelta(rec, elem.getZoom(EDimension.RECORD), elem.getRecSize());
 			dimValues[i] = elem.getZoom(EDimension.DIMENSION) + d;
@@ -138,11 +149,11 @@ public class GLRootElement extends GLElementContainer {
 		final float dimNext = (float) dimStats.getMedian();
 		final float recNext = (float) recStats.getMedian();
 
-		for (ClusterElement elem : clusters)
-			if (elem.isFocused()) // focussed will be locally zoomed
-				elem.zoom(dim, rec);
-			else
-				elem.setZoom(dimNext, recNext);
+		for (ClusterElement elem : clusters) {
+			if (elem.isFocused()) // no global zoom for focussed elements
+				continue;
+			elem.setZoom(dimNext, recNext);
+		}
 	}
 
 
@@ -350,7 +361,8 @@ public class GLRootElement extends GLElementContainer {
 	private void onShowHideBandsEvent(ShowHideBandsEvent event) {
 		this.dimBands = event.isShowDimBand();
 		this.recBands = event.isShowRecBand();
-		bands.relayout();
+		this.bands.relayout();
+		this.clusters.onChangeMaxDistance();
 	}
 
 	/**

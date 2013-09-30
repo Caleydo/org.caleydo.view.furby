@@ -178,7 +178,7 @@ class ForcedBody extends Rectangle2D {
 	}
 
 	public boolean isDraggedOrFocussed() {
-		return (flags & (FLAG_FOCUSSED | FLAG_DRAGGED)) != 0;
+		return (flags & (FLAG_FOCUSSED | FLAG_DRAGGED | FLAG_TOOLBAR)) != 0;
 	}
 
 	public boolean isFocussed() {
