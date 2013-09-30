@@ -8,7 +8,13 @@ package org.caleydo.view.bicluster.loading;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+import org.caleydo.core.data.collection.EDataClass;
+import org.caleydo.core.data.collection.EDataType;
+import org.caleydo.core.id.IDCategory;
+import org.caleydo.core.id.IDType;
 import org.caleydo.core.io.ColumnDescription;
+import org.caleydo.core.io.DataDescription;
 import org.caleydo.core.io.DataSetDescription;
 import org.caleydo.core.io.DataSetDescription.ECreateDefaultProperties;
 import org.caleydo.core.io.IDSpecification;
@@ -38,6 +44,8 @@ public class ImportXLZDialog extends Dialog {
 	private String xFile;
 	private String lFile;
 	private String zFile;
+	private String chemicalFile;
+	private String thresholdsFile;
 	private boolean genes = true;
 
 	protected ImportXLZDialog(Shell parentShell) {
@@ -121,6 +129,53 @@ public class ImportXLZDialog extends Dialog {
 				}
 			});
 		}
+
+		{
+			Group group = new Group(parent, SWT.SHADOW_ETCHED_IN);
+			group.setText("Chemical Clustering File");
+			group.setLayout(new GridLayout(2, false));
+			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+			final Text xFileUI = new Text(group, SWT.BORDER);
+			xFileUI.setEditable(false);
+			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+			gridData.widthHint = 200;
+			xFileUI.setLayoutData(gridData);
+
+			Button openFileButton = new Button(group, SWT.PUSH);
+			openFileButton.setText("Choose");
+			openFileButton.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent event) {
+					chemicalFile = onOpenFile(xFileUI);
+					checkAllThere();
+				}
+			});
+		}
+
+		{
+			Group group = new Group(parent, SWT.SHADOW_ETCHED_IN);
+			group.setText("Thresholds File");
+			group.setLayout(new GridLayout(2, false));
+			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+			final Text xFileUI = new Text(group, SWT.BORDER);
+			xFileUI.setEditable(false);
+			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+			gridData.widthHint = 200;
+			xFileUI.setLayoutData(gridData);
+
+			Button openFileButton = new Button(group, SWT.PUSH);
+			openFileButton.setText("Choose");
+			openFileButton.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent event) {
+					thresholdsFile = onOpenFile(xFileUI);
+					checkAllThere();
+				}
+			});
+		}
+
 		{
 			Group group = new Group(parent, SWT.SHADOW_ETCHED_IN);
 			group.setText("Options");
@@ -185,6 +240,7 @@ public class ImportXLZDialog extends Dialog {
 		List<DataSetDescription> r = new ArrayList<DataSetDescription>();
 
 		String name = xFile.substring(xFile.lastIndexOf("/") + 1, xFile.lastIndexOf("."));
+		name = StringUtils.removeEnd(name, "_X");
 		{
 			DataSetDescription x = new DataSetDescription(ECreateDefaultProperties.NUMERICAL);
 			x.setDataSourcePath(xFile);
@@ -215,7 +271,53 @@ public class ImportXLZDialog extends Dialog {
 			z.addParsingRule(createParsingRule());
 			r.add(z);
 		}
+
+		if (!StringUtils.isBlank(chemicalFile)) {
+			DataSetDescription z = new DataSetDescription();
+			z.setDataSourcePath(chemicalFile);
+			z.setDataSetName(name + "_ChemicalClusters");
+			z.setDelimiter("\t");
+			z.setRowIDSpecification(sample);
+			z.setColumnIDSpecification(createDummy(z.getDataSetName()));
+			ParsingRule p = new ParsingRule();
+			p.setFromColumn(1);
+			p.setToColumn(2);
+			p.setColumnDescripton(new ColumnDescription(new DataDescription(EDataClass.CATEGORICAL, EDataType.STRING)));
+			z.addParsingRule(p);
+			r.add(z);
+		}
+
+		if (!StringUtils.isBlank(thresholdsFile)) {
+			DataSetDescription z = new DataSetDescription();
+			z.setDataSourcePath(thresholdsFile);
+			z.setDataSetName(name + "_Thresholds");
+			z.setDelimiter("\t");
+			z.setRowIDSpecification(bicluster);
+			z.setColumnIDSpecification(createDummy(z.getDataSetName()));
+			for (int i = 1; i < 3; ++i) {
+				ParsingRule p = new ParsingRule();
+				p.setFromColumn(i);
+				p.setToColumn(i + 1);
+				p.setColumnDescripton(new ColumnDescription(
+						new DataDescription(EDataClass.REAL_NUMBER, EDataType.FLOAT)));
+				z.addParsingRule(p);
+			}
+			r.add(z);
+		}
 		return r;
+	}
+
+	/**
+	 * @param dataSetName
+	 * @return
+	 */
+	private IDSpecification createDummy(String dataSetName) {
+		IDSpecification columnIDSpecification = new IDSpecification();
+		IDCategory idCategory = IDCategory.registerCategoryIfAbsent(dataSetName + "_column");
+		idCategory.setInternalCategory(true);
+		IDType idType = IDType.registerType(dataSetName + "_column", idCategory, EDataType.STRING);
+		columnIDSpecification.setIDSpecification(idCategory.getCategoryName(), idType.getTypeName());
+		return columnIDSpecification;
 	}
 
 	protected static ParsingRule createParsingRule() {

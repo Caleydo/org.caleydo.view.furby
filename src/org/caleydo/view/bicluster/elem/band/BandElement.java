@@ -9,7 +9,6 @@ import gleem.linalg.Vec2f;
 import gleem.linalg.Vec3f;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -20,17 +19,12 @@ import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
-import org.caleydo.core.id.IDMappingManagerRegistry;
-import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
-import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
-import org.caleydo.core.view.opengl.layout2.GLSandBox;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
-import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.core.view.opengl.layout2.util.PickingPool;
 import org.caleydo.core.view.opengl.picking.IPickingLabelProvider;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
@@ -38,8 +32,9 @@ import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.picking.PickingListenerComposite;
 import org.caleydo.core.view.opengl.util.gleem.ColoredVec3f;
 import org.caleydo.core.view.opengl.util.spline.Band;
-import org.caleydo.core.view.opengl.util.spline.TesselatedPolygons;
 import org.caleydo.view.bicluster.elem.ClusterElement;
+import org.caleydo.view.bicluster.elem.EDimension;
+import org.caleydo.view.bicluster.elem.Edge;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
 import org.caleydo.view.bicluster.util.SetUtils;
@@ -51,7 +46,10 @@ import com.google.common.collect.ImmutableSortedSet;
  * @author Michael Gillhofer
  *
  */
-public abstract class BandElement extends PickableGLElement implements IPickingLabelProvider {
+public class BandElement extends PickableGLElement implements IPickingLabelProvider {
+
+	private static final Color highlightColor = SelectionType.SELECTION.getColor();
+	private static final Color hoveredColor = SelectionType.MOUSE_OVER.getColor();
 
 	private static final float HIGH_OPACITY_FACTPOR = 1;
 	private static final float LOW_OPACITY_FACTOR = 0.15f;
@@ -61,7 +59,8 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	private static final float SELECTED_Z_DELTA = -2;
 	private static final float HOVERED_Z_DELTA = -1;
 
-	protected final ClusterElement first, second;
+	protected final Edge edge;
+	private final EDimension dimension;
 	protected List<Integer> overlap;
 	private boolean hasSharedElementsWithSelection;
 	private boolean hasSharedElementsWithHover;
@@ -69,43 +68,42 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected final SelectionManager selectionManager;
 	private final IIDTypeMapper<Integer, String> id2label;
 
-	protected AllBandsElement root;
-
-	protected BandFactory secondMergeArea, bandFactory;
-	protected Map<List<Integer>, Band> splittedBands, nonSplittedBands;
+	protected Map<List<Integer>, Band> splittedBands;
+	private Band band;
 	protected Map<Integer, List<Vec2f>> splines;
-	protected List<List<Integer>> firstSubIndices, secondSubIndices;
-	protected Color highlightColor, hoveredColor, defaultColor;
 	protected boolean isMouseOver = false;
 	protected boolean isAnyThingHovered = false;
 
 	protected PickingPool pickingPool;
 	protected IPickingListener pickingListener;
-	private int currSelectedSplineID = -1;
+	private int actSelectedSplineID = -1;
 
-	private float opacityFactor = 1;
+	private float targetOpacityFactor = 1;
+	private BandFactory bandFactory;
 
-	protected BandElement(GLElement first, GLElement second, List<Integer> list,
-			SelectionManager selectionManager,
-			AllBandsElement root, float[] defaultColor, IDType idType) {
-		this.first = (ClusterElement) first;
-		this.second = (ClusterElement) second;
-		this.overlap = toFastOverlap(list);
-		this.id2label = IDMappingManagerRegistry.get().getIDMappingManager(idType)
-				.getIDTypeMapper(idType, idType.getIDCategory().getHumanReadableIDType());
-		this.root = root;
+	public BandElement(Edge edge, EDimension dimension, SelectionManager selectionManager,
+			IIDTypeMapper<Integer, String> id2label) {
+		this.edge = edge;
+		this.dimension = dimension;
+		this.id2label = id2label;
 		this.selectionManager = selectionManager;
-		this.defaultColor = new Color(defaultColor);
+
 		hasSharedElementsWithSelection = false;
 		hasSharedElementsWithHover = false;
-		highlightColor = SelectionType.SELECTION.getColor();
-		hoveredColor = SelectionType.MOUSE_OVER.getColor();
+
 		setZDeltaAccordingToState();
 		initBand();
 		setPicker(null);
 	}
 
-	protected static ImmutableList<Integer> toFastOverlap(List<Integer> list) {
+	/**
+	 * @return the dimension, see {@link #dimension}
+	 */
+	public EDimension getDimension() {
+		return dimension;
+	}
+
+	protected static ImmutableList<Integer> toFastOverlap(Collection<Integer> list) {
 		return ImmutableSortedSet.copyOf(list).asList();
 	}
 
@@ -113,14 +111,14 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	 * @return the first, see {@link #first}
 	 */
 	public final ClusterElement getFirst() {
-		return first;
+		return edge.getA();
 	}
 
 	/**
 	 * @return the second, see {@link #second}
 	 */
 	public final ClusterElement getSecond() {
-		return second;
+		return edge.getB();
 	}
 
 	@Override
@@ -152,7 +150,9 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 			z = HOVERED_Z_DELTA;
 		if (oldZ != z) {
 			setzDelta(z);
-			root.triggerResort();
+			final AllBandsElement p = findAllBands();
+			if (p != null)
+				p.triggerResort();
 		}
 	}
 
@@ -170,11 +170,11 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 			repaint();
 			break;
 		case MOUSE_OVER:
-			this.currSelectedSplineID = pick.getObjectID();
+			this.actSelectedSplineID = pick.getObjectID();
 			repaint();
 			break;
 		case MOUSE_OUT:
-			this.currSelectedSplineID = -1;
+			this.actSelectedSplineID = -1;
 			repaint();
 			break;
 		default:
@@ -199,7 +199,9 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 		setZDeltaAccordingToState();
 	}
 
-	protected abstract void initBand();
+	protected void initBand() {
+		updateStructure();
+	}
 
 	@Override
 	public void layout(int deltaTimeMs) {
@@ -208,28 +210,28 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	}
 
 	private void updateOpacticy(int deltaTimeMs) {
-		float delta = Math.abs(curOpacityFactor - opacityFactor);
+		float delta = Math.abs(actOpacityFactor - targetOpacityFactor);
 		if (delta < 0.01f) // done
 			return;
 		final float speed = 0.003f; // [units/ms]
-		float back = curOpacityFactor;
+		float back = actOpacityFactor;
 
 		final float change = deltaTimeMs * speed;
 
-		if (opacityFactor < curOpacityFactor)
-			curOpacityFactor = Math.max(opacityFactor, curOpacityFactor - change);
+		if (targetOpacityFactor < actOpacityFactor)
+			actOpacityFactor = Math.max(targetOpacityFactor, actOpacityFactor - change);
 		else
-			curOpacityFactor = Math.min(opacityFactor, curOpacityFactor + change);
-		if (back != curOpacityFactor) {
+			actOpacityFactor = Math.min(targetOpacityFactor, actOpacityFactor + change);
+		if (back != actOpacityFactor) {
 			repaint();
 		}
 	}
 
 	protected final void updateVisibilityByOverlap() {
-		if (overlap.size() > 0)
+		if (!overlap.isEmpty())
 			setVisibility(EVisibility.PICKABLE);
 		else
-			setVisibility(EVisibility.NONE);
+			setVisibility(EVisibility.HIDDEN);
 	}
 
 	@Override
@@ -241,44 +243,44 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 			else if (hasSharedElementsWithHoveredBand())
 				bandColor = hoveredColor;
 			else
-				bandColor = defaultColor;
+				bandColor = dimension.getBandColor();
 			if (isMouseOver) {
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * curOpacityFactor);
-				for (Band b : splittedBands.values()) {
+				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * actOpacityFactor);
+				for (Band b : getSplittedBands().values()) {
 					g.drawPath(b);
 				}
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.5f * curOpacityFactor);
-				for (Band b : splittedBands.values()) {
+				g.color(bandColor.r, bandColor.g, bandColor.b, 0.5f * actOpacityFactor);
+				for (Band b : getSplittedBands().values()) {
 					g.fillPolygon(b);
 				}
 
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.25f * curOpacityFactor);
-				List<Vec2f> currSelectedSpline = splines.get(currSelectedSplineID - 1);
-				for (List<Vec2f> b : splines.values()) {
+				g.color(bandColor.r, bandColor.g, bandColor.b, 0.25f * actOpacityFactor);
+				List<Vec2f> currSelectedSpline = getSplines().get(actSelectedSplineID - 1);
+				for (List<Vec2f> b : getSplines().values()) {
 					if (b == currSelectedSpline)
 						continue;
 					g.drawPath(b, false);
 				}
 				if (currSelectedSpline != null) {
-					g.color(0, 0, 0, 0.85f * curOpacityFactor).lineWidth(2);
+					g.color(0, 0, 0, 0.85f * actOpacityFactor).lineWidth(2);
 					g.drawPath(currSelectedSpline, false);
 					g.lineWidth(1);
 				}
 			} else {
 				Color col = bandColor.clone();
 				col.a = 0.8f;
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * curOpacityFactor);
+				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * actOpacityFactor);
 				Collection<Band> stubBands;
 				if (!hasSelections())
 					// stub only if we haven't any highlights
-					stubBands = stubify(nonSplittedBands.values(), col, curOpacityFactor, HIGH_OPACITY_FACTPOR);
+					stubBands = stubify(band, col, actOpacityFactor, HIGH_OPACITY_FACTPOR);
 				else {
-					stubBands = nonSplittedBands.values();
+					stubBands = ImmutableList.of(band);
 				}
 				for (Band b : stubBands) {
 					g.drawPath(b);
 				}
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.5f * curOpacityFactor);
+				g.color(bandColor.r, bandColor.g, bandColor.b, 0.5f * actOpacityFactor);
 				for (Band b : stubBands) {
 					g.fillPolygon(b);
 				}
@@ -286,9 +288,20 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 		}
 	}
 
+	private Map<Integer, List<Vec2f>> getSplines() {
+		if (splines == null)
+			splines = bandFactory.getConnectionsSplines();
+		return splines;
+	}
+
+	private Map<List<Integer>, Band> getSplittedBands() {
+		if (splittedBands == null)
+			splittedBands = bandFactory.getSplitableBands();
+		return splittedBands;
+	}
 
 	protected boolean isVisible() {
-		return first.isVisible() && second.isVisible() && overlap != null && !overlap.isEmpty();
+		return getFirst().isVisible() && getSecond().isVisible() && overlap != null && !overlap.isEmpty();
 	}
 
 	protected boolean hasSharedElementsWithSelectedBand() {
@@ -302,21 +315,20 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (getVisibility() == EVisibility.PICKABLE && !isAnyThingHovered && isVisible()) {
-			g.color(defaultColor);
+			g.color(dimension.getBandColor());
 			if (isMouseOver) {
-				for (Band b : splittedBands.values())
+				for (Band b : getSplittedBands().values())
 					g.fillPolygon(b);
 				g.incZ();
-				for (Integer elementIndex : splines.keySet()) {
+				for (Integer elementIndex : getSplines().keySet()) {
 					g.pushName(pickingPool.get(elementIndex + 1));
-					g.fillPolygon(splines.get(elementIndex));
+					g.fillPolygon(getSplines().get(elementIndex));
 					g.popName();
 				}
 				g.decZ();
 			} else {
-				if (nonSplittedBands != null)
-					for (Band b : nonSplittedBands.values())
-						g.fillPolygon(b);
+				if (band != null)
+					g.fillPolygon(band);
 			}
 		}
 	}
@@ -325,26 +337,30 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected void onClicked(Pick pick) {
 		if (hasSharedElementsWithSelectedBand()) { // disable the selection again
 			hasSharedElementsWithSelection = false;
-			root.setSelection(null);
+			findAllBands().setSelection(null);
 			selectElement(SelectionType.SELECTION, -1, true);
 		} else {
 			hasSharedElementsWithSelection = true;
-			root.setSelection(this);
+			findAllBands().setSelection(this);
 			selectElement(SelectionType.SELECTION, -1, true);
 		}
+	}
+
+	protected AllBandsElement findAllBands() {
+		return findParent(AllBandsElement.class);
 	}
 
 	protected void selectElement(SelectionType type, int objectId, boolean select) {
 		if (selectionManager == null)
 			return;
-		root.clearAll(type);
+		findAllBands().clearAll(type);
 		if (select) {
 			if (objectId <= 0)
 				selectionManager.addToType(type, overlap);
 			else
 				selectionManager.addToType(type, objectId - 1);
 		}
-		root.fireAllSelections(this);
+		findAllBands().fireAllSelections(this);
 	}
 
 	public void deselect() {
@@ -365,15 +381,57 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	protected void onMouseOut(Pick pick) {
 		isMouseOver = false;
 		hasSharedElementsWithHover = false;
-		this.currSelectedSplineID = -1;
+		this.actSelectedSplineID = -1;
 		EventPublisher.trigger(new MouseOverBandEvent(this, false));
 		selectElement(SelectionType.MOUSE_OVER, -1, false);
 		repaintAll();
 	}
 
-	public abstract void updateStructure();
+	public void updateStructure() {
+		if (!edge.anyVisible())
+			return;
+		overlap = toFastOverlap(edge.getOverlapIndices(dimension));
+		updateVisibilityByOverlap();
+		ClusterElement first = edge.getA();
+		ClusterElement second = edge.getB();
+		List<List<Integer>> firstSubIndices = first.getListOfContinousSequences(dimension, overlap);
+		List<List<Integer>> secondSubIndices = second.getListOfContinousSequences(dimension, overlap);
+		if (firstSubIndices.size() == 0)
+			return;
 
-	public abstract void updatePosition();
+		this.bandFactory = createFactory(dimension, first, second, firstSubIndices, secondSubIndices, overlap);
+		this.band = bandFactory.getSimpleBand();
+
+		// lazy
+		splittedBands = null;
+		splines = null;
+
+		if (pickingPool != null) {
+			pickingPool.clear();
+		}
+
+		// RECORD special
+		// nonSplittedBands = bandFactory.getNonSplitableBands();
+		// // splittedBands = bandFactory.getSplitableBands();
+		//
+		// // splitted bands are not looking really helpfull for records
+		// splittedBands= nonSplittedBands;
+		//
+		// // splines = bandFactory.getConnectionsSplines();
+		// splines = new HashMap<>(); // create empty hashmap .. splines are not looking very good
+
+		repaintAll();
+	}
+
+	private static BandFactory createFactory(EDimension dim, ClusterElement cluster, ClusterElement other,
+			List<List<Integer>> firstSubIndices, List<List<Integer>> secondSubIndices, List<Integer> overlap) {
+		return dim == EDimension.DIMENSION ? new DimensionBandFactory(cluster, other, firstSubIndices, secondSubIndices,
+				overlap) : new RecordBandFactory(cluster, other, firstSubIndices, secondSubIndices, overlap);
+	}
+
+	public void updatePosition() {
+		updateStructure();
+	}
 
 	public void onSelectionUpdate(SelectionManager manager) {
 		if (manager != selectionManager)
@@ -386,17 +444,17 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	}
 
 
-	protected float curOpacityFactor = 1;
+	protected float actOpacityFactor = 1;
 
 	@ListenTo
 	private void listenTo(MouseOverClusterEvent event) {
 		isAnyThingHovered = event.isMouseOver();
 		if (!event.isMouseOver() || hasSelections()) {
-			opacityFactor = HIGH_OPACITY_FACTPOR;
+			targetOpacityFactor = HIGH_OPACITY_FACTPOR;
 		} else if (isNearEnough((ClusterElement) event.getSender()))
-			opacityFactor = HIGH_OPACITY_FACTPOR;
+			targetOpacityFactor = HIGH_OPACITY_FACTPOR;
 		else
-			opacityFactor = LOW_OPACITY_FACTOR;
+			targetOpacityFactor = LOW_OPACITY_FACTOR;
 		setZDeltaAccordingToState();
 	}
 
@@ -405,9 +463,9 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	 * @return
 	 */
 	private boolean isNearEnough(ClusterElement c) {
-		if (c == first || c == second)
+		if (c == getFirst() || c == getSecond())
 			return true;
-		return c.nearEnough(first, second); // as symmetric
+		return c.nearEnough(getFirst(), getSecond()); // as symmetric
 	}
 
 	@ListenTo
@@ -416,13 +474,13 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 			return;
 		isAnyThingHovered = event.isMouseOver();
 		boolean fadeOut = event.isMouseOver() && !hasSelections()
-				&& !isNearEnought(event.getFirst(), event.getSecond());
+				&& !isNearEnough(event.getFirst(), event.getSecond());
 		if (fadeOut) {
-			opacityFactor = LOW_OPACITY_FACTOR;
+			targetOpacityFactor = LOW_OPACITY_FACTOR;
 			// if (isOtherType(event.getBand()))
 			// setVisibility(EVisibility.NONE);
 		} else {
-			opacityFactor = HIGH_OPACITY_FACTPOR;
+			targetOpacityFactor = HIGH_OPACITY_FACTPOR;
 			// updateVisibilityByOverlap();
 		}
 		setZDeltaAccordingToState();
@@ -433,10 +491,12 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	 * @param second2
 	 * @return
 	 */
-	private boolean isNearEnought(ClusterElement first, ClusterElement second) {
-		if (first == this.first || first == this.second || second == this.first || second == this.second)
+	private boolean isNearEnough(ClusterElement first, ClusterElement second) {
+		ClusterElement f = getFirst();
+		ClusterElement s = getSecond();
+		if (first == f || first == s || second == f || second == s)
 			return true;
-		return first.nearEnough(this.first, this.second) || second.nearEnough(this.first, this.second);
+		return first.nearEnough(f, s) || second.nearEnough(f, s);
 	}
 
 	// /**
@@ -465,15 +525,14 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 	 * @param curOpacityFactor2
 	 * @return
 	 */
-	private static Collection<Band> stubify(Collection<Band> bands, Color color, float centerAlpha, float maxAlpha) {
-		if (bands.isEmpty() || centerAlpha >= 1)
-			return bands;
+	private static Collection<Band> stubify(Band band, Color color, float centerAlpha, float maxAlpha) {
+		if (band == null || centerAlpha >= 1)
+			return ImmutableList.of(band);
 
-		Collection<Band> result = new ArrayList<>(bands.size());
+		Collection<Band> result = new ArrayList<>(2);
 
-		for (Band band : bands) {
-			stubify(result, band, color, centerAlpha, maxAlpha);
-		}
+		stubify(result, band, color, centerAlpha, maxAlpha);
+
 		return result;
 	}
 
@@ -521,38 +580,5 @@ public abstract class BandElement extends PickableGLElement implements IPickingL
 		// split the band into two to avoid tesselation effects
 		result.add(new Band(cOut.subList(0, firstAlpha + 2), bOut.subList(0, firstAlpha + 2)));
 		result.add(new Band(cOut.subList(size - firstAlpha - 1, size), bOut.subList(size - firstAlpha - 1, size)));
-	}
-
-	public enum BandType {
-		recordBand, dimensionBand;
-	}
-
-	public static void main(String[] args) {
-
-		GLSandBox.main(args, new IGLRenderer() {
-			@Override
-			public void render(GLGraphics g, float w, float h, GLElement parent) {
-				renderBand(g, new Vec2f(0, 0), new Vec2f(2, -2), new Vec2f(4, -4), new Vec2f(5, -4),
-						new Vec2f(5.5f, -2));
-
-			}
-
-			private void renderBand(GLGraphics g, Vec2f... vecs) {
-				final Band band = TesselatedPolygons.band(Arrays.asList(vecs), 0, 1, 10);
-				Collection<Band> r = new ArrayList<>();
-				stubify(r, band, new Color(1, 0, 0), 0.0f, 1);
-
-				g.move(100, 100);
-				g.save().gl.glScalef(10, 10, 10);
-				g.color(1, 0, 0, 0.5f);
-				for (Band ri : r)
-					g.fillPolygon(ri);
-				g.color(0, 1, 0, 0.5f);
-				for (Band ri : r)
-					g.drawPath(ri);
-				g.restore();
-			}
-		});
-
 	}
 }

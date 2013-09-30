@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster.event;
 
 import org.caleydo.core.event.AEvent;
+import org.caleydo.view.bicluster.sorting.ISortingStrategyFactory;
 
 /**
  * @author user
@@ -13,24 +14,21 @@ import org.caleydo.core.event.AEvent;
  */
 public class SortingChangeEvent extends AEvent {
 
-	private final SortingType sortingType;
+	private final ISortingStrategyFactory factory;
 
-	public SortingChangeEvent(SortingType sortingType, Object source) {
-		this.sortingType = sortingType;
-		this.setSender(source);
+	public SortingChangeEvent(ISortingStrategyFactory factory) {
+		this.factory = factory;
 	}
 
-	public SortingType getType() {
-		return sortingType;
+	/**
+	 * @return the factory, see {@link #factory}
+	 */
+	public ISortingStrategyFactory getFactory() {
+		return factory;
 	}
 
 	@Override
 	public boolean checkIntegrity() {
 		return true;
 	}
-
-	public enum SortingType {
-		probabilitySorting, bandSorting
-	}
-
 }

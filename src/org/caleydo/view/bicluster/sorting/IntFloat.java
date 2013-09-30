@@ -84,6 +84,12 @@ public final class IntFloat {
 			return val;
 		}
 	};
+	public static final Comparator<IntFloat> BY_INDEX = new Comparator<IntFloat>() {
+		@Override
+		public int compare(IntFloat o1, IntFloat o2) {
+			return o1.index - o2.index;
+		}
+	};
 
 	public static final Function<IntFloat, Integer> TO_INDEX = new Function<IntFloat, Integer>() {
 		@Override

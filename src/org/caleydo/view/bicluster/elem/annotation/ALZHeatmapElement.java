@@ -3,7 +3,9 @@
  * Copyright (c) The Caleydo Team. All rights reserved.
  * Licensed under the new BSD license, available at http://caleydo.org/license
  *******************************************************************************/
-package org.caleydo.view.bicluster.elem;
+package org.caleydo.view.bicluster.elem.annotation;
+
+import gleem.linalg.Vec2f;
 
 import java.nio.FloatBuffer;
 import java.util.List;
@@ -15,13 +17,17 @@ import javax.media.opengl.GLContext;
 import javax.media.opengl.GLProfile;
 
 import org.caleydo.core.util.color.Color;
-import org.caleydo.core.util.function.DoubleFunctions;
-import org.caleydo.core.util.function.ExpressionFunctions;
-import org.caleydo.core.util.function.IDoubleFunction;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
+import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.core.view.opengl.picking.IPickingLabelProvider;
+import org.caleydo.core.view.opengl.picking.IPickingListener;
+import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.view.bicluster.elem.ClusterContentElement;
+import org.caleydo.view.bicluster.elem.EDimension;
+import org.caleydo.view.bicluster.sorting.IntFloat;
 import org.caleydo.view.heatmap.v2.CellSpace;
 
 import com.jogamp.opengl.util.texture.Texture;
@@ -33,26 +39,84 @@ import com.jogamp.opengl.util.texture.TextureData;
  * @author Samuel Gratzl
  *
  */
-public class LZHeatmapElement extends GLElement {
-	private final boolean horizontal;
+public abstract class ALZHeatmapElement extends GLElement implements IPickingLabelProvider, IPickingListener {
+	protected static final int NO_CENTER = -2;
+	protected final EDimension dim;
 	private Texture texture;
 	/**
 	 * spacer for the focus case with non uniform cells
 	 */
 	private ClusterContentElement spaceProvider;
-	private int center;
+	protected int center;
 
-	public LZHeatmapElement(boolean horizontal) {
-		this.horizontal = horizontal;
-		setSize(horizontal ? Float.NaN : 4, horizontal ? 4 : Float.NaN);
+	protected float mouseOver = Float.NaN;
+
+	public ALZHeatmapElement(EDimension dim) {
+		this.dim = dim;
+		setSize(dim.isHorizontal() ? Float.NaN : 4, dim.isHorizontal() ? 4 : Float.NaN);
+		setLayoutData(dim);
+		setVisibility(EVisibility.PICKABLE);
+		setPicker(GLRenderers.fillRect(Color.DARK_GREEN));
+	}
+
+	/**
+	 * @return the dim, see {@link #dim}
+	 */
+	public EDimension getDim() {
+		return dim;
 	}
 
 	@Override
 	protected void init(IGLElementContext context) {
 		super.init(context);
 		texture = new Texture(GL.GL_TEXTURE_2D);
-
+		onPick(context.getSWTLayer().createTooltip(this));
+		onPick(this);
 	}
+
+	@Override
+	public void pick(Pick pick) {
+		switch (pick.getPickingMode()) {
+		case MOUSE_OUT:
+			mouseOver = Float.NaN;
+			repaint();
+			break;
+		case MOUSE_MOVED:
+		case MOUSE_OVER:
+			Vec2f r = toRelative(pick.getPickedPoint());
+			mouseOver = dim.select(r.x(), r.y());
+			repaint();
+			break;
+		default:
+			break;
+		}
+	}
+
+	@Override
+	public final String getLabel(Pick pick) {
+		int pos = toIndex(pick);
+		if (pos < 0)
+			return null;
+		return getLabel(pos);
+	}
+
+	protected final int toIndex(Pick pick) {
+		Vec2f r = toRelative(pick.getPickedPoint());
+		float coord = dim.select(r.x(), r.y());
+		int pos;
+		if (spaceProvider == null) {
+			pos = Math.round(coord / (dim.isHorizontal() ? getSize().x() : getSize().y()));
+		} else if (this.dim.isHorizontal()) {
+			pos = spaceProvider.getDimensionIndex(coord);
+		} else {
+			pos = spaceProvider.getRecordIndex(coord);
+		}
+		if (pos < 0 || pos >= texture.getWidth())
+			return -1;
+		return pos;
+	}
+
+	protected abstract String getLabel(int pos);
 
 	@Override
 	protected void takeDown() {
@@ -63,6 +127,8 @@ public class LZHeatmapElement extends GLElement {
 	@Override
 	protected void renderImpl(GLGraphics g, float w, float h) {
 		GL2 gl = g.gl;
+
+		g.checkError();
 		texture.enable(gl);
 		texture.bind(gl);
 		gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST);
@@ -72,9 +138,10 @@ public class LZHeatmapElement extends GLElement {
 		gl.glTranslatef(1, 1, g.z());
 
 		final float s_factor = 1.f / texture.getWidth();
-		final float size = horizontal ? w : h;
-		final float op_size = -2 + (horizontal ? h : w);
+		final float size = dim.select(w, h);
+		final float op_size = -2 + (dim.select(h, w));
 
+		g.checkError();
 		float centerPos = 0;
 		gl.glBegin(GL2GL3.GL_QUADS);
 		if (spaceProvider == null) {
@@ -82,8 +149,8 @@ public class LZHeatmapElement extends GLElement {
 			centerPos = center > 0 ? center * size * s_factor : 0;
 		} else {
 			final Rect clippingArea = spaceProvider.getClippingArea();
-			final float clippingStart = horizontal ? clippingArea.x() : clippingArea.y();
-			final float clippingEnd = horizontal ? clippingArea.x2() : clippingArea.y2();
+			final float clippingStart = dim.isHorizontal() ? clippingArea.x() : clippingArea.y();
+			final float clippingEnd = dim.isHorizontal() ? clippingArea.x2() : clippingArea.y2();
 
 			int s = 0;
 			int s_acc = 0;
@@ -91,7 +158,8 @@ public class LZHeatmapElement extends GLElement {
 			float p_x = 0;
 			float p_acc = 0;
 			for (int i = 0; i < texture.getWidth(); ++i) {
-				final CellSpace cell = horizontal ? spaceProvider.getDimensionCell(i) : spaceProvider.getRecordCell(i);
+				final CellSpace cell = dim.isHorizontal() ? spaceProvider.getDimensionCell(i) : spaceProvider
+						.getRecordCell(i);
 				float p_i = cell.getSize();
 				if (cell.getPosition() + p_i < clippingStart) {
 					s++; // move texel
@@ -129,16 +197,35 @@ public class LZHeatmapElement extends GLElement {
 		g.restore();
 
 		// System.out.println(center + " " + centerPos);
-		if (center != -2) {
+		if (center != NO_CENTER) {
 			g.lineWidth(3).color(Color.BLUE);
-			if (horizontal)
+			if (dim.isHorizontal())
 				g.drawLine(centerPos, 0, centerPos, h);
 			else
 				g.drawLine(0, centerPos, w, centerPos);
 			g.lineWidth(1);
 		}
 
+		renderMouseHint(g, w, h);
+
 		g.color(Color.GRAY).drawRect(1, 1, w - 2, h - 2);
+	}
+
+	/**
+	 * @param g
+	 * @param w
+	 * @param h
+	 */
+	private void renderMouseHint(GLGraphics g, float w, float h) {
+		if (Float.isNaN(mouseOver))
+			return;
+		g.lineWidth(2);
+		g.color(Color.LIGHT_BLUE);
+		if (dim.isHorizontal()) {
+			g.drawLine(mouseOver, 0, mouseOver, h);
+		} else
+			g.drawLine(0, mouseOver, w, mouseOver);
+		g.lineWidth(1);
 	}
 
 	/**
@@ -151,7 +238,7 @@ public class LZHeatmapElement extends GLElement {
 	 * @param gl
 	 */
 	private void rect(float s1, float s2, float x, float x2, float y, GL2 gl) {
-		if (horizontal) {
+		if (dim.isHorizontal()) {
 			gl.glTexCoord2f(s1, 1f);
 			gl.glVertex2f(x, 0);
 			gl.glTexCoord2f(s2, 1f);
@@ -172,74 +259,34 @@ public class LZHeatmapElement extends GLElement {
 		}
 	}
 
-	public void update(List<Float> data) {
-		if (texture == null)
+	public final void update(List<IntFloat> values) {
+		if (context == null)
 			return;
 
-		final int width = data.size();
-		if (width <= 0) {
-			setVisibility(EVisibility.HIDDEN);
-			return;
-		}
+		final int width = values.size();
 
-		float max;
-		float min;
-		float last;
-		last = data.get(0);
-		min = max = Math.abs(last);
-
-		int center = -1;
-		boolean multiCenter = false;
-		for (int i = 1; i < width; ++i) {
-			float v = data.get(i);
-			float v_a = Math.abs(v);
-			if (v_a > max)
-				max = v_a;
-			if (v_a < min)
-				min = v_a;
-			if (last < 0 && v > 0 && !multiCenter) {
-				multiCenter = center >= 0; // already set a center -> multi center
-				center = i - 1; // before me
-			}
-			last = v;
-		}
-		if (multiCenter)
-			this.center = -2;
-		else if (center != -1)
-			this.center = center;//in the middle
-		else if (last > 0) // all positive
-			this.center = -1; //first
-		else
-			// all negative
-			this.center = width-1; //last
-
-		IDoubleFunction transform = ExpressionFunctions.compose(DoubleFunctions.CLAMP01,
-				DoubleFunctions.normalize(min, max));
-
-		update(width, transform, data);
-	}
-
-	private void update(int width, IDoubleFunction transform, Iterable<Float> data) {
 		if (width <= 0) {
 			setVisibility(EVisibility.HIDDEN);
 			return;
 		} else
-			setVisibility(EVisibility.VISIBLE);
+			setVisibility(EVisibility.PICKABLE);
 
 		FloatBuffer buffer = FloatBuffer.allocate(width * 3); // w*rgb*float
-		for (Float f : data) {
-			float v = Math.abs(f.floatValue());
-			v = (float) transform.apply(v);
-			v = 1 - v; // invert color mapping
-			buffer.put(v);
-			buffer.put(v);
-			buffer.put(v);
-		}
+		updateImpl(buffer, values);
 
+		updateTexture(width, buffer);
+	}
+
+	/**
+	 * @param buffer
+	 * @param values
+	 */
+	protected abstract void updateImpl(FloatBuffer buffer, List<IntFloat> values);
+
+	private void updateTexture(int width, FloatBuffer buffer) {
 		buffer.rewind();
 		TextureData texData = new TextureData(GLProfile.getDefault(), GL.GL_RGB /* internalFormat */, width, 1,
-				0 /* border */, GL.GL_RGB /* pixelFormat */, GL.GL_FLOAT /* pixelType */,
-				false /* mipmap */,
+				0 /* border */, GL.GL_RGB /* pixelFormat */, GL.GL_FLOAT /* pixelType */, false /* mipmap */,
 				false /* dataIsCompressed */, false /* mustFlipVertically */, buffer, null);
 		texture.updateImage(GLContext.getCurrentGL(), texData);
 		texData.destroy();

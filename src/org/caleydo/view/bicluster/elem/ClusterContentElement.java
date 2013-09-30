@@ -30,10 +30,10 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.ELaz
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.IActiveChangedCallback;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.heatmap.v2.AHeatMapElement;
+import org.caleydo.view.heatmap.v2.BarPlotElement;
 import org.caleydo.view.heatmap.v2.CellSpace;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.ISpacingStrategy;
-import org.caleydo.view.heatmap.v2.LinearBarHeatMapElement;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
 
 import com.google.common.base.Predicate;
@@ -60,7 +60,7 @@ public class ClusterContentElement extends GLElementDecorator {
 	 */
 	public ClusterContentElement(Builder builder, Predicate<? super String> filter) {
 		builder.set("histogram.showColorMapper", false); // don't show the color mapper
-		builder.set("heatmap.linearBar.scaleLocally"); // scale plot per table perspective
+		// bbuilder.set("heatmap.linearBar.scaleLocally"); // scale plot per table perspective
 		GLElementFactoryContext context = builder.build();
 		this.data = context.getData();
 		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",
@@ -132,7 +132,7 @@ public class ClusterContentElement extends GLElementDecorator {
 		ClusterElement cluster = findParent(ClusterElement.class);
 		float a = 1.0f;
 		if (!cluster.isFocused()) {
-			a *= cluster.curOpacityFactor;
+			a *= cluster.actOpacityFactor;
 		}
 		if (a < 1) {
 			g.incZ(5);
@@ -145,8 +145,8 @@ public class ClusterContentElement extends GLElementDecorator {
 		return switcher.getActiveElement() instanceof HeatMapElement;
 	}
 
-	boolean isShowingLinearPlot() {
-		return switcher.getActiveElement() instanceof LinearBarHeatMapElement;
+	boolean isShowingBarPlot() {
+		return switcher.getActiveElement() instanceof BarPlotElement;
 	}
 
 	public Vec2f getMinSize() {
@@ -176,6 +176,13 @@ public class ClusterContentElement extends GLElementDecorator {
 		return getDimensionCell(index).getPosition();
 	}
 
+	public int getDimensionIndex(float position) {
+		AHeatMapElement heatmap = getHeatMap();
+		if (heatmap != null)
+			return heatmap.getDimensionIndex(position);
+		return Math.round(position / getSize().x());
+	}
+
 	public CellSpace getDimensionCell(int index) {
 		AHeatMapElement heatmap = getHeatMap();
 		if (heatmap != null)
@@ -194,6 +201,13 @@ public class ClusterContentElement extends GLElementDecorator {
 		if (heatmap != null)
 			return heatmap.getRecordCellSpace(index).getPosition();
 		return getRecordCell(index).getPosition();
+	}
+
+	public int getRecordIndex(float position) {
+		AHeatMapElement heatmap = getHeatMap();
+		if (heatmap != null)
+			return heatmap.getRecordIndex(position);
+		return Math.round(position / getSize().y());
 	}
 
 	public CellSpace getRecordCell(int index) {

@@ -3,31 +3,25 @@
  * Copyright (c) The Caleydo Team. All rights reserved.
  * Licensed under the new BSD license, available at http://caleydo.org/license
  ******************************************************************************/
-package org.caleydo.view.bicluster.elem;
+package org.caleydo.view.bicluster.elem.toolbar;
 
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.MAX_SCALE_FACTOR;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.MIN_SCALE_FACTOR;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimScaleFactor;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecScaleFactor;
 
-import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
-import org.caleydo.core.view.opengl.layout2.GLElementContainer;
-import org.caleydo.core.view.opengl.layout2.basic.GLButton;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider;
 import org.caleydo.core.view.opengl.layout2.basic.GLSlider.EValueVisibility;
-import org.caleydo.core.view.opengl.layout2.basic.GLSpinner;
-import org.caleydo.core.view.opengl.layout2.basic.GLSpinner.IChangeCallback;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
-import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
-import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
+import org.caleydo.view.bicluster.elem.BiClustering;
 import org.caleydo.view.bicluster.event.ForceChangeEvent;
 import org.caleydo.view.bicluster.event.MaxClusterSizeChangeEvent;
-import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 
 /**
  *
@@ -48,12 +42,14 @@ public class LayoutToolBarElement extends AToolBarElement {
 	private GLSlider clusterDimFactorSlider, clusterRecFactorSlider;
 	private GLSlider repulsionSlider, attractionSlider, borderForceSlider;
 
-
-	private TablePerspective x;
-	private GLSpinner<Integer> maxDistance;
+	private GLElement clusterRecSizeLabel;
+	private GLElement clusterDimSizeLabel;
 
 	public LayoutToolBarElement() {
-		initSliders();
+		createClusterSizeSlider();
+		createForceSliders();
+
+		reset();
 	}
 
 	private void setText(GLElement elem, String text) {
@@ -74,52 +70,13 @@ public class LayoutToolBarElement extends AToolBarElement {
 		}
 	}
 
-	/**
-	 *
-	 */
-	private void initSliders() {
-		createClusterSizeSlider();
-		createForceSliders();
-
-		GLElementContainer c = new GLElementContainer(GLLayouts.flowHorizontal(2));
-		this.maxDistance = GLSpinner.createIntegerSpinner(1, 0, 4, 1);
-		maxDistance.setCallback(new IChangeCallback<Integer>() {
-			@Override
-			public void onValueChanged(GLSpinner<? extends Integer> spinner, Integer value) {
-				EventPublisher.trigger(new ChangeMaxDistanceEvent(value.intValue()));
-			}
-		});
-		maxDistance.setTooltip("specifies the maximal distance for automatic hiding of connected clusters");
-		maxDistance.setSize(-1, -1);
-		c.add(new GLElement(GLRenderers.drawText("Max Distance: ")).setSize(100, -1));
-		c.add(maxDistance);
-		this.add(c.setSize(-1, LABEL_WIDTH));
-
-		GLButton reset = new GLButton();
-		reset.setRenderer(GLRenderers.drawText("Reset", VAlign.CENTER, new GLPadding(0, 0, 0, 2)));
-		reset.setCallback(new GLButton.ISelectionCallback() {
-			@Override
-			public void onSelectionChanged(GLButton button, boolean selected) {
-				reset();
-			}
-		});
-		reset.setTooltip("Reset the layout parameters to their default value");
-		reset.setSize(Float.NaN, LABEL_WIDTH);
-		this.add(reset);
-
-		reset();
-	}
-
-	/**
-	 *
-	 */
+	@Override
 	public void reset() {
-		this.repulsionSlider.setValue(DEFAULT_REPULSION);
-		this.attractionSlider.setValue(DEFAULT_ATTRACTION);
-		this.borderForceSlider.setValue(DEFAULT_BORDERFACTOR);
-		this.clusterDimFactorSlider.setValue(getDimScaleFactor());
+		this.repulsionSlider.setCallback(null).setValue(DEFAULT_REPULSION).setCallback(this);
+		this.attractionSlider.setCallback(null).setValue(DEFAULT_ATTRACTION).setCallback(this);
+		this.borderForceSlider.setCallback(null).setValue(DEFAULT_BORDERFACTOR).setCallback(this);
+		this.clusterDimFactorSlider.setCallback(null).setValue(getDimScaleFactor()).setCallback(this);
 		this.clusterRecFactorSlider.setValue(getRecScaleFactor());
-		maxDistance.setValue(MyPreferences.getMaxDistance());
 	}
 
 	/**
@@ -166,7 +123,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 	 *
 	 */
 	private void createClusterSizeSlider() {
-		GLElement clusterDimSizeLabel = new GLElement();
+		this.clusterDimSizeLabel = new GLElement();
 		clusterDimSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterDimSizeLabel);
 
@@ -176,7 +133,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 		this.clusterDimFactorSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(clusterDimFactorSlider);
 
-		GLElement clusterRecSizeLabel = new GLElement();
+		this.clusterRecSizeLabel = new GLElement();
 		clusterRecSizeLabel.setSize(Float.NaN, LABEL_WIDTH);
 		this.add(clusterRecSizeLabel);
 
@@ -185,22 +142,13 @@ public class LayoutToolBarElement extends AToolBarElement {
 		this.clusterRecFactorSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.clusterRecFactorSlider.setMinMaxVisibility(EValueVisibility.VISIBLE_HOVERED);
 		this.add(clusterRecFactorSlider);
-
-		if (x == null) {
-			setText(clusterDimSizeLabel, "Dimension Scale Factor");
-			setText(clusterRecSizeLabel, "Record Scale Factor)");
-		} else {
-			setText(clusterDimSizeLabel, x.getDataDomain().getDimensionIDCategory() + " Scale Factor");
-			setText(clusterRecSizeLabel, x.getDataDomain().getRecordIDCategory() + " Scale Factor");
-
-		}
 	}
 
-	public void setXTablePerspective(final TablePerspective x) {
-		if (x == null)
-			return;
-		else
-			this.x = x;
+	@Override
+	public void init(final BiClustering biClustering) {
+		ATableBasedDataDomain dataDomain = biClustering.getXDataDomain();
+		setText(clusterDimSizeLabel, dataDomain.getDimensionIDCategory() + " Scale Factor");
+		setText(clusterRecSizeLabel, dataDomain.getRecordIDCategory() + " Scale Factor");
 	}
 
 	/**
@@ -208,7 +156,7 @@ public class LayoutToolBarElement extends AToolBarElement {
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-205, 365 + 20 + 20, 200, 256);
+		return new Rect(-205, 400 + 20 + 20, 200, 216);
 	}
 
 }

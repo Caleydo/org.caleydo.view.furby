@@ -8,13 +8,10 @@ package org.caleydo.view.bicluster.elem;
 import gleem.linalg.Vec2f;
 
 import org.caleydo.core.data.perspective.table.TablePerspective;
-import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.canvas.EDetailLevel;
-import org.caleydo.core.view.opengl.layout2.basic.ScrollingDecorator.IHasMinSize;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Builder;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
-import org.caleydo.view.bicluster.event.ClusterScaleEvent;
 
 import com.google.common.base.Predicate;
 
@@ -54,54 +51,53 @@ public abstract class AMultiClusterElement extends ClusterElement {
 		c.onActiveChanged(new GLElementFactorySwitcher.IActiveChangedCallback() {
 			@Override
 			public void onActiveChanged(int active) {
-				EventPublisher.trigger(new ClusterScaleEvent(AMultiClusterElement.this));
+				relayoutParent();
 			}
 		});
-		c.setMinSizeProvider(new IHasMinSize() {
-			@Override
-			public Vec2f getMinSize() {
-				return getLayoutDataAs(Vec2f.class, getPreferredSize(1, 1));
-			}
-		});
+		// FIXME
+		// c.setMinSizeProvider(new IHasMinSize() {
+		// @Override
+		// public Vec2f getMinSize() {
+		// return getLayoutDataAs(Vec2f.class, getPreferredSize());
+		// }
+		// });
 		return c;
 	}
 
 
 	@Override
-	protected void handleFocus(boolean isFocused) {
-		super.handleFocus(isFocused);
+	public void setFocus(boolean isFocused) {
+		super.setFocus(isFocused);
 		content.changeFocus(isFocused);
 	}
 
 	@Override
 	public final float getDimPosOf(int id) {
 		if (isFocused()) {
-			int ind = getDimensionVirtualArray().indexOf(id);
+			int ind = getDimVirtualArray().indexOf(id);
 			return content.getDimensionPos(ind);
 		} else {
-			return getDimIndexOf(id) * getSize().x() / getDimensionVirtualArray().size();
+			return getDimIndexOf(id) * getSize().x() / getDimVirtualArray().size();
 		}
 	}
 
 	@Override
 	public final float getRecPosOf(int id) {
 		if (isFocused()) {
-			int ind = getRecordVirtualArray().indexOf(id);
+			int ind = getRecVirtualArray().indexOf(id);
 			return content.getRecordPos(ind);
 		} else {
-			return getRecIndexOf(id) * getSize().y() / getRecordVirtualArray().size();
+			return getRecIndexOf(id) * getSize().y() / getRecVirtualArray().size();
 		}
 	}
 
 	@Override
-	public final Vec2f getPreferredSize(float scaleX, float scaleY) {
-		if (content.isShowingHeatMap()) {
-			return new Vec2f(getNumberOfDimElements() * scaleX, getNumberOfRecElements() * scaleY);
-		}
-		if (content.isShowingLinearPlot()) {
-			return new Vec2f(getNumberOfDimElements() * scaleX, getNumberOfRecElements() * 2 * scaleY);
-		}
-		ClusterContentElement c = (content);
-		return c.getMinSize();
+	public boolean needsUniformScaling() {
+		return !content.isShowingHeatMap() && !content.isShowingBarPlot();
+	}
+
+	@Override
+	public Vec2f getMinSize() {
+		return content.getMinSize();
 	}
 }

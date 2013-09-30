@@ -9,7 +9,7 @@
             class="org.caleydo.view.bicluster.RcpGLBiClusterView"
             icon="resources/icons/icon.png"
             id="org.caleydo.view.bicluster"
-            name="Bicluster">
+            name="Furby">
       </view>
    </extension>
    <extension
@@ -41,10 +41,10 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            locationURI="toolbar:org.caleydo.core.gui.toolbar2">
+            locationURI="toolbar:org.caleydo.core.gui.toolbar?after=import">
          <command
                commandId="org.caleydo.view.bicluster.import"
-               icon="resources/icons/icon.png"
+               icon="resources/icons/import_data.png"
                label="Import XLZ Data"
                style="push">
          </command>
@@ -55,7 +55,7 @@
       <command
             defaultHandler="org.caleydo.view.bicluster.OpenViewHandler"
             id="org.caleydo.view.bicluster.command.opentemplate"
-            name="Bicluster">
+            name="Furby">
       </command>
       <command
             defaultHandler="org.caleydo.view.bicluster.loading.ImportXLZHandler"

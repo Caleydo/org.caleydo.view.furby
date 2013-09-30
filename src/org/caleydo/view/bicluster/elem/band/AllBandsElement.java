@@ -18,7 +18,7 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayout;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
-import org.caleydo.view.bicluster.event.RecalculateOverlapEvent;
+import org.caleydo.view.bicluster.elem.GLRootElement;
 import org.caleydo.view.bicluster.event.UpdateBandsEvent;
 
 import com.google.common.collect.Iterables;
@@ -32,7 +32,16 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 	@DeepScan
 	private final TablePerspectiveSelectionMixin selectionMixin;
 
+	private static final Comparator<GLElement> byZDelta = new Comparator<GLElement>() {
+		@Override
+		public int compare(GLElement o1, GLElement o2) {
+			return Float.compare(o1.getzDelta(), o2.getzDelta());
+		}
+	};
+
 	private BandElement selection;
+
+	boolean resortOnNextRun = true;
 
 	/**
 	 * @param savedData
@@ -47,19 +56,25 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 
 	@Override
 	public void doLayout(List<? extends IGLLayoutElement> children, float w, float h) {
-		for (GLElement b : this) {
-			b.setBounds(0,0,w, h);
-			((BandElement) b).updatePosition();
+		GLRootElement root = findParent(GLRootElement.class);
+		for (IGLLayoutElement child : children) {
+			BandElement b = (BandElement) child.asElement();
+			if (!root.isBandsEnabled(b.getDimension()))
+				child.hide();
+			else {
+				child.setBounds(0, 0, w, h);
+				b.updatePosition();
+			}
 		}
+	}
+
+	@Override
+	public void layout(int deltaTimeMs) {
 		if (resortOnNextRun) {
-			sortBy(new Comparator<GLElement>() {
-				@Override
-				public int compare(GLElement o1, GLElement o2) {
-					return Float.compare(o1.getzDelta(), o2.getzDelta());
-				}
-			});
+			sortBy(byZDelta);
 			resortOnNextRun = false;
 		}
+		super.layout(deltaTimeMs);
 	}
 
 	@ListenTo
@@ -125,20 +140,12 @@ public class AllBandsElement extends GLElementContainer implements IGLLayout,
 		selection.onSelectionUpdate(getRecordSelectionManager());
 	}
 
-	@ListenTo
-	private void listenTo(RecalculateOverlapEvent event) {
-		relayout();
-	}
-
 	public void updateStructure() {
 		relayout();
 	}
 
-	boolean resortOnNextRun = true;
-
 	public void triggerResort() {
 		resortOnNextRun = true;
-		relayout();
 	}
 
 	/**

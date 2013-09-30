@@ -10,6 +10,11 @@ import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.UNBOUND_NU
 import java.util.Iterator;
 import java.util.List;
 
+import org.caleydo.core.util.function.DoubleSizedIterables;
+import org.caleydo.core.util.function.IDoubleFunction;
+import org.caleydo.core.util.function.IDoubleSizedIterable;
+import org.caleydo.core.util.function.IDoubleSizedIterator;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -20,7 +25,7 @@ import com.google.common.collect.Lists;
  * @author Samuel Gratzl
  *
  */
-public final class FuzzyClustering {
+public final class FuzzyClustering implements IDoubleSizedIterable {
 	private final static IntFloat ZERO = new IntFloat(0, 0);
 
 	/**
@@ -102,5 +107,48 @@ public final class FuzzyClustering {
 		ImmutableSortedSet<IntFloat> tailSet = posStart == null ? ImmutableSortedSet.<IntFloat> of() : probabilities
 				.tailSet(posStart, true);
 		return ConcatedList.concat(headSet.asList(), tailSet.asList());
+	}
+
+	@Override
+	public int size() {
+		return this.size();
+	}
+
+	@Override
+	public IDoubleSizedIterator iterator() {
+		return new IDoubleSizedIterator() {
+			private final Iterator<IntFloat> it = probabilities.iterator();
+			private final int size = probabilities.size();
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public Double next() {
+				return nextPrimitive();
+			}
+
+			@Override
+			public boolean hasNext() {
+				return it.hasNext();
+			}
+
+			@Override
+			public double nextPrimitive() {
+				return it.next().getProbability();
+			}
+
+			@Override
+			public int size() {
+				return size;
+			}
+		};
+	}
+
+	@Override
+	public IDoubleSizedIterable map(IDoubleFunction f) {
+		return DoubleSizedIterables.map(this, f);
 	}
 }

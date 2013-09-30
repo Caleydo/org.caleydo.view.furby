@@ -3,10 +3,11 @@
  * Copyright (c) The Caleydo Team. All rights reserved.
  * Licensed under the new BSD license, available at http://caleydo.org/license
  ******************************************************************************/
-package org.caleydo.view.bicluster.elem;
+package org.caleydo.view.bicluster.elem.toolbar;
 
 import gleem.linalg.Vec2f;
 
+import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
@@ -17,6 +18,8 @@ import org.caleydo.core.view.opengl.layout2.geom.Rect;
 import org.caleydo.core.view.opengl.layout2.layout.GLFlowLayout;
 import org.caleydo.core.view.opengl.layout2.layout.GLPadding;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
+import org.caleydo.view.bicluster.elem.BiClustering;
+import org.caleydo.view.bicluster.event.ResetSettingsEvent;
 
 /**
  *
@@ -42,6 +45,15 @@ public abstract class AToolBarElement extends GLElementContainer implements GLBu
 	public final boolean isVisible() {
 		return getParent() != null;
 	}
+
+	public abstract void reset();
+
+	@ListenTo
+	private void onResetSettingsEvent(ResetSettingsEvent event) {
+		reset();
+	}
+
+	public abstract void init(final BiClustering biClustering);
 
 	@Override
 	public void onSelectionChanged(GLSlider slider, float value) {

@@ -7,9 +7,10 @@ package org.caleydo.view.bicluster.elem;
 
 import java.util.List;
 
-import org.caleydo.core.data.collection.table.Table;
+import org.caleydo.core.data.collection.table.NumericalTable;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.util.function.DoubleStatistics;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
 
 /**
@@ -19,15 +20,15 @@ import org.caleydo.view.bicluster.sorting.FuzzyClustering;
  *
  */
 public class BiClustering {
-	private final Table x;
-	private final Table l; // record
-	private final Table z; // dimension
+	private final NumericalTable x;
+	private final NumericalTable l; // record
+	private final NumericalTable z; // dimension
 
 	private final List<FuzzyClustering> lClusterings;
 	private final List<FuzzyClustering> zClusterings;
 	private final List<TablePerspective> clusterTablePerspectives;
 
-	public BiClustering(Table x, Table l, Table z, List<FuzzyClustering> lClusterings,
+	public BiClustering(NumericalTable x, NumericalTable l, NumericalTable z, List<FuzzyClustering> lClusterings,
 			List<FuzzyClustering> zClusterings, List<TablePerspective> clusterTablePerspectives) {
 		this.x = x;
 		this.l = l;
@@ -44,22 +45,38 @@ public class BiClustering {
 	/**
 	 * @return the x, see {@link #x}
 	 */
-	public Table getX() {
+	public NumericalTable getX() {
 		return x;
 	}
 
 	/**
 	 * @return the l, see {@link #l}
 	 */
-	public Table getL() {
+	public NumericalTable getL() {
 		return l;
 	}
 
 	/**
 	 * @return the z, see {@link #z}
 	 */
-	public Table getZ() {
+	public NumericalTable getZ() {
 		return z;
+	}
+
+	/**
+	 * @param dimension
+	 * @return
+	 */
+	public NumericalTable getLZ(EDimension dimension) {
+		return dimension.selectZL(z, l);
+	}
+
+	/**
+	 * @param dimension
+	 * @return
+	 */
+	public DoubleStatistics getStats(EDimension dimension) {
+		return dimension.selectZL(z, l).getDatasetStatistics();
 	}
 
 	/**
@@ -80,4 +97,22 @@ public class BiClustering {
 	public FuzzyClustering getRecClustering(int bcNr) {
 		return lClusterings.get(bcNr);
 	}
+
+	public FuzzyClustering getClustering(EDimension dim, int bcNr) {
+		return dim.isHorizontal() ? getDimClustering(bcNr) : getRecClustering(bcNr);
+	}
+
+	public float getProbability(EDimension dim, int bcNr, int index) {
+		return dim.selectZL(z, l).getRaw(bcNr, index);
+	}
+
+	/**
+	 * @param dimension
+	 * @return
+	 */
+	public double getMaxAbsProbability(EDimension dimension) {
+		DoubleStatistics stats = getStats(dimension);
+		return Math.max(Math.abs(stats.getMin()), Math.abs(stats.getMax()));
+	}
+
 }

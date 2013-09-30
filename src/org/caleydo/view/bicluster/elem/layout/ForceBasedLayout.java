@@ -12,14 +12,12 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementAccessor;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
-import org.caleydo.view.bicluster.elem.AToolBarElement;
 import org.caleydo.view.bicluster.elem.AllClustersElement;
 import org.caleydo.view.bicluster.elem.ClusterElement;
-import org.caleydo.view.bicluster.event.CreateBandsEvent;
+import org.caleydo.view.bicluster.elem.toolbar.AToolBarElement;
 import org.caleydo.view.bicluster.physics.Physics;
 import org.caleydo.view.bicluster.util.Vec2d;
 
@@ -49,8 +47,9 @@ public class ForceBasedLayout extends AForceBasedLayout {
 			scaleView(children, w, h);
 		lastW = w;
 		lastH = h;
-		if (focusedElement != null) {
-			setLocation(focusedElement, w / 2, h / 2, w, h);
+		GLElement focus = parent.getFocussedElement();
+		if (focus != null) {
+			setLocation(focus, w / 2, h / 2, w, h);
 		}
 		bringClustersBackToFrame(children, w, h);
 		clearClusterCollisions(children, w, h);
@@ -81,7 +80,7 @@ public class ForceBasedLayout extends AForceBasedLayout {
 			Rectangle2D iRec = new Rectangle2D.Float(iLoc.x() - 10, iLoc.y() - 10, iSize.x() + 20, iSize.y() + 20);
 			for (IGLLayoutElement jIGL : children) {
 				ClusterElement j = (ClusterElement) jIGL.asElement();
-				if (j == i || !j.isVisible() || (j == parent.getDragedElement() || j == focusedElement))
+				if (j == i || !j.isVisible() || (j == parent.getDraggedElement() || j == parent.getFocussedElement()))
 					continue;
 
 				Vec2f jSize = j.getSize();
@@ -126,8 +125,8 @@ public class ForceBasedLayout extends AForceBasedLayout {
 		for (IGLLayoutElement iGLE : children) {
 			GLElement vGL = iGLE.asElement();
 			ClusterElement v = (ClusterElement) vGL;
-			xOverlapSize += v.getDimensionOverlapSize();
-			yOverlapSize += v.getRecordOverlapSize();
+			xOverlapSize += v.getDimTotalOverlaps();
+			yOverlapSize += v.getRecTotalOverlaps();
 		}
 		double attractionX = 1;
 		double attractionY = 1;
@@ -178,12 +177,10 @@ public class ForceBasedLayout extends AForceBasedLayout {
 				ClusterElement j = (ClusterElement) jElement;
 				if (i == j)
 					continue;
-				List<Integer> xOverlap = i.getDimOverlap(j);
-				List<Integer> yOverlap = i.getRecOverlap(j);
-				if (xOverlap.size() == 0 && yOverlap.size() == 0)
+				int overlapSizeX = i.getDimOverlap(j);
+				int overlapSizeY = i.getRecOverlap(j);
+				if (overlapSizeX == 0 && overlapSizeY == 0)
 					continue;
-				int overlapSizeX = xOverlap.size();
-				int overlapSizeY = yOverlap.size();
 				Vec2d distVec = getDistance(j, i);
 				double dist = distVec.length/* Squared */();
 				// counting the attraction
@@ -262,7 +259,7 @@ public class ForceBasedLayout extends AForceBasedLayout {
 	 * @return
 	 */
 	private boolean isActiveCluster(ClusterElement i) {
-		return i == parent.getDragedElement() || i == hoveredElement || i == focusedElement;
+		return i == parent.getDraggedElement() || i == parent.getHoveredElement() || i == parent.getFocussedElement();
 	}
 
 	private Vec2d checkPlausibility(Vec2d vec2d) {
@@ -350,7 +347,6 @@ public class ForceBasedLayout extends AForceBasedLayout {
 			setLocation(child, pos.x(), pos.y(), w, h);
 			i++;
 		}
-		EventPublisher.trigger(new CreateBandsEvent(parent));
 	}
 
 	private final static class ForceHelper {

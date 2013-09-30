@@ -44,9 +44,19 @@ public abstract class BandFactory {
 		this.allIndices = overlap;
 	}
 
+	protected static void calculateRotationMatrix(float[] m, double angle) {
+		final float cos = (float) Math.cos(angle);
+		final float sin = (float) Math.sin(angle);
+
+		m[0] = cos;
+		m[1] = sin;
+		m[2] = -sin;
+		m[3] = cos;
+	}
+
 	protected abstract Map<List<Integer>, Band> getSplitableBands();
 
-	protected abstract Map<List<Integer>, Band> getNonSplitableBands();
+	protected abstract Band getSimpleBand();
 
 	protected abstract Map<Integer, List<Vec2f>> getConnectionsSplines();
 }

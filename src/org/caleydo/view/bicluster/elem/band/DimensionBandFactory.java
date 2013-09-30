@@ -41,8 +41,8 @@ public class DimensionBandFactory extends BandFactory {
 		super(cluster, other, firstSubIndices, secondSubIndices, cluster
 				.getDimensionElementSize(), overlap);
 		calcClusterDirectionVectorsAndAngle();
-		calculateRotationMatrixFirst();
-		calculateRotationMatrixSecond();
+		calculateRotationMatrix(rotationMatrixFirst, firstAngle);
+		calculateRotationMatrix(rotationMatrixSecond, secondAngle);
 		firstElementSize = first.getDimensionElementSize();
 		secondElementSize = second.getDimensionElementSize();
 	}
@@ -68,20 +68,6 @@ public class DimensionBandFactory extends BandFactory {
 		firstAngle = firstAngle + Math.PI;
 	}
 
-	private void calculateRotationMatrixFirst() {
-		rotationMatrixFirst[0] = (float) Math.cos(firstAngle);
-		rotationMatrixFirst[1] = (float) Math.sin(firstAngle);
-		rotationMatrixFirst[2] = (float) -Math.sin(firstAngle);
-		rotationMatrixFirst[3] = (float) Math.cos(firstAngle);
-	}
-
-	private void calculateRotationMatrixSecond() {
-		rotationMatrixSecond[0] = (float) Math.cos(secondAngle);
-		rotationMatrixSecond[1] = (float) Math.sin(secondAngle);
-		rotationMatrixSecond[2] = (float) -Math.sin(secondAngle);
-		rotationMatrixSecond[3] = (float) Math.cos(secondAngle);
-	}
-
 	// delivers indicator whether the bands directly leaving a cluster are
 	// starting at the top or the bottom
 	private boolean isStartsOnTopFirst() {
@@ -95,8 +81,8 @@ public class DimensionBandFactory extends BandFactory {
 	}
 
 	private void findLeftestAndRightestFirst(List<Integer> list) {
-		firstLeftest = 2e30f;
-		firstRightest = -2e30f;
+		firstLeftest = Float.POSITIVE_INFINITY;
+		firstRightest = Float.NEGATIVE_INFINITY;
 		for (Integer i : list) {
 			float pos = first.getDimPosOf(i);
 			if (pos > firstRightest)
@@ -108,8 +94,8 @@ public class DimensionBandFactory extends BandFactory {
 	}
 
 	private void findLeftestAndRightestSecond(List<Integer> list) {
-		secondLeftest = 2e30f;
-		secondRightest = -2e30f;
+		secondLeftest = Float.POSITIVE_INFINITY;
+		secondRightest = Float.NEGATIVE_INFINITY;
 		for (Integer i : list) {
 			float pos = second.getDimPosOf(i);
 			if (pos > secondRightest)
@@ -130,8 +116,7 @@ public class DimensionBandFactory extends BandFactory {
 	}
 
 	@Override
-	protected Map<List<Integer>, Band> getNonSplitableBands() {
-		Map<List<Integer>, Band> bandsMap = new IdentityHashMap<>();
+	protected Band getSimpleBand() {
 		List<Vec2f> bandPoints = new ArrayList<>(4);
 
 		// there is only one band from first cluster to the second cluster
@@ -164,15 +149,12 @@ public class DimensionBandFactory extends BandFactory {
 		secondPoints = translateToClusterAbsoluteCoordinates(secondPoints,
 				second);
 		bandPoints.addAll(secondPoints);
-		bandsMap.put(
-				allIndices,
-				TesselatedBiClusterPolygons.band(bandPoints, 0,
+
+		return TesselatedBiClusterPolygons.band(bandPoints, 0,
 						first.getNrOfElements(allIndices) / 2f
 								* firstElementSize,
 						second.getNrOfElements(allIndices) / 2f
-								* secondElementSize, MAINBAND_POLYGONS));
-
-		return bandsMap;
+ * secondElementSize, MAINBAND_POLYGONS);
 	}
 
 	@Override

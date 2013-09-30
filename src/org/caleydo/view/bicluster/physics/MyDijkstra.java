@@ -10,6 +10,7 @@ import java.util.Deque;
 import java.util.Set;
 
 import org.caleydo.view.bicluster.elem.ClusterElement;
+import org.caleydo.view.bicluster.elem.EDimension;
 
 import com.google.common.collect.Sets;
 
@@ -50,9 +51,9 @@ public class MyDijkstra {
 			if (act.distance >= maxDistance) // stop here to add its neighors
 				continue;
 			if (dimBands)
-				addAll(done, queue, act.distance, act.elem.getDimOverlappingNeighbors());
+				addAll(done, queue, act.distance, act.elem.getOverlappingNeighbors(EDimension.DIMENSION));
 			if (recBands)
-				addAll(done, queue, act.distance, act.elem.getRecOverlappingNeighbors());
+				addAll(done, queue, act.distance, act.elem.getOverlappingNeighbors(EDimension.RECORD));
 		}
 		return invalid;
 	}
@@ -79,7 +80,6 @@ public class MyDijkstra {
 
 	private static boolean hasNeighbor(final ClusterElement source, final ClusterElement target, boolean recBands,
 			boolean dimBands) {
-		return (dimBands && !source.getDimOverlap(target).isEmpty())
-				|| (recBands && !source.getRecOverlap(target).isEmpty());
+		return (dimBands && source.getDimOverlap(target) > 0) || (recBands && source.getRecOverlap(target) > 0);
 	}
 }

@@ -40,6 +40,7 @@ import org.caleydo.core.view.opengl.canvas.IGLKeyListener;
 import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.view.AMultiTablePerspectiveElementView;
 import org.caleydo.view.bicluster.elem.BiClustering;
+import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.GLRootElement;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
@@ -66,7 +67,7 @@ import com.google.common.collect.Lists;
 
 public class GLBiCluster extends AMultiTablePerspectiveElementView implements IGLKeyListener {
 	public static final String VIEW_TYPE = "org.caleydo.view.bicluster";
-	public static final String VIEW_NAME = "Bicluster";
+	public static final String VIEW_NAME = "Furby";
 
 	private TablePerspective x, l, z;
 
@@ -298,8 +299,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 
 			// signal that we now use that data domain
 			rootElement.init(biClustering, x);
-			rootElement.recalculateOverlap(MyPreferences.isShowDimBands(), MyPreferences.isShowRecBands());
-			rootElement.setClusterSizes(null);
 		}
 
 		handleSpecialClusters(added, removed);
@@ -310,8 +309,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 	 * @param x2
 	 * @return
 	 */
-	private static Table asTable(TablePerspective x2) {
-		return x2.getDataDomain().getTable();
+	private static NumericalTable asTable(TablePerspective x2) {
+		return (NumericalTable) x2.getDataDomain().getTable();
 	}
 
 	private void handleThresholds(List<TablePerspective> added, List<TablePerspective> removed) {
@@ -350,7 +349,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 					continue;
 				thresholds.put(row, t);
 			}
-			rootElement.setThresholds(isZ, thresholds);
+			rootElement.setThresholds(EDimension.get(isZ), thresholds);
 		}
 	}
 	/**
@@ -381,15 +380,20 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 
 		for (TablePerspective t : added) {
 			if (findGroupings(t.getRecordPerspective())) {
-				for (TablePerspective group : t.getRecordSubTablePerspectives())
-					rootElement.addSpecialCluster(t.getRecordPerspective().getIdType(), group);
+				rootElement.addAnnotation(EDimension.RECORD, t);
 			}
 			if (findGroupings(t.getDimensionPerspective())) {
-				for (TablePerspective group : t.getDimensionSubTablePerspectives())
-					rootElement.addSpecialCluster(t.getDimensionPerspective().getIdType(), group);
+				rootElement.addAnnotation(EDimension.DIMENSION, t);
 			}
 		}
-		rootElement.removeSpecialClusters(removed);
+		for (TablePerspective t : removed) {
+			if (findGroupings(t.getRecordPerspective())) {
+				rootElement.removeAnnotation(EDimension.RECORD, t);
+			}
+			if (findGroupings(t.getDimensionPerspective())) {
+				rootElement.removeAnnotation(EDimension.DIMENSION, t);
+			}
+		}
 	}
 
 
