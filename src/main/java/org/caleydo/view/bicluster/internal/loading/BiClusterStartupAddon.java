@@ -83,11 +83,11 @@ public class BiClusterStartupAddon implements IStartupAddon {
 			Group group = new Group(parent, SWT.SHADOW_ETCHED_IN);
 			group.setText("X File");
 			group.setLayout(new GridLayout(2, false));
-			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
 			final Text xFileUI = new Text(group, SWT.BORDER);
 			xFileUI.setEditable(false);
-			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+			GridData gridData = new GridData(SWT.FILL, SWT.TOP, true, true);
 			gridData.widthHint = 200;
 			xFileUI.setLayoutData(gridData);
 
@@ -117,11 +117,11 @@ public class BiClusterStartupAddon implements IStartupAddon {
 			Group group = new Group(parent, SWT.SHADOW_ETCHED_IN);
 			group.setText("L File");
 			group.setLayout(new GridLayout(2, false));
-			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
 			this.lFileUI = new Text(group, SWT.BORDER);
 			lFileUI.setEditable(false);
-			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+			GridData gridData = new GridData(SWT.FILL, SWT.TOP, true, true);
 			gridData.widthHint = 200;
 			lFileUI.setLayoutData(gridData);
 
@@ -140,11 +140,11 @@ public class BiClusterStartupAddon implements IStartupAddon {
 			Group group = new Group(parent, SWT.SHADOW_ETCHED_IN);
 			group.setText("Z File");
 			group.setLayout(new GridLayout(2, false));
-			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
 			this.zFileUI = new Text(group, SWT.BORDER);
 			zFileUI.setEditable(false);
-			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+			GridData gridData = new GridData(SWT.FILL, SWT.TOP, true, true);
 			gridData.widthHint = 200;
 			zFileUI.setLayoutData(gridData);
 
@@ -163,11 +163,11 @@ public class BiClusterStartupAddon implements IStartupAddon {
 			Group group = new Group(parent, SWT.SHADOW_ETCHED_IN);
 			group.setText("Chemical Clustering File");
 			group.setLayout(new GridLayout(2, false));
-			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
 			this.chemicalFileUI = new Text(group, SWT.BORDER);
 			chemicalFileUI.setEditable(false);
-			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+			GridData gridData = new GridData(SWT.FILL, SWT.TOP, true, true);
 			gridData.widthHint = 200;
 			chemicalFileUI.setLayoutData(gridData);
 
@@ -186,11 +186,11 @@ public class BiClusterStartupAddon implements IStartupAddon {
 			Group group = new Group(parent, SWT.SHADOW_ETCHED_IN);
 			group.setText("Thresholds File");
 			group.setLayout(new GridLayout(2, false));
-			group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true));
 
 			this.thresholdsFileUI = new Text(group, SWT.BORDER);
 			thresholdsFileUI.setEditable(false);
-			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
+			GridData gridData = new GridData(SWT.FILL, SWT.TOP, true, true);
 			gridData.widthHint = 200;
 			thresholdsFileUI.setLayoutData(gridData);
 
@@ -220,6 +220,10 @@ public class BiClusterStartupAddon implements IStartupAddon {
 					genes = genesUI.getSelection();
 				}
 			});
+		}
+		{
+			Composite rest = new Composite(parent, SWT.None);
+			rest.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		}
 
 		return parent;
