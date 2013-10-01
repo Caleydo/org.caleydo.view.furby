@@ -308,7 +308,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.recThreshBar.setValue(recThreshold);
 		this.dimThreshBar.setValue(dimThreshold);
 
-		refilter(false);
+		resort();
 	}
 
 	/**
@@ -345,24 +345,6 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 		updateTablePerspective(dim, rec);
 		fireTablePerspectiveChanged();
-	}
-
-	/**
-	 * triggers a refiltering
-	 *
-	 * @param isGlobal
-	 *            whether this is a local change or a global one
-	 */
-	private void refilter(boolean isGlobal) {
-		if (isLocked && isGlobal)
-			return;
-
-		Pair<List<IntFloat>, List<IntFloat>> p = filterData();
-
-		updateTablePerspective(p.getFirst(), p.getSecond());
-		fireTablePerspectiveChanged();
-
-		updateVisibility();
 	}
 
 	/**
@@ -436,7 +418,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 			@Override
 			public void onSelectionChanged(GLButton button, boolean selected) {
-				hideThisCluster();
+				hide();
 			}
 
 		});

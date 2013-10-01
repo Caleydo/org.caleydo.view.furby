@@ -627,11 +627,17 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return findAllClustersElement().isDragged(this);
 	}
 
-	protected final void hideThisCluster() {
+	public final void hide() {
 		if (isHidden)
 			return;
-		if (isHovered)
+		AllClustersElement p = findAllClustersElement();
+		if (isHovered) {
 			EventPublisher.trigger(new MouseOverClusterEvent(this, false));
+			p.setHoveredElement(null);
+			EventPublisher.trigger(new DataSetSelectedEvent(data.getDataDomain()));
+		}
+		if (isFocused())
+			p.setFocus(null);
 		isHidden = true;
 		isHovered = false;
 		updateVisibility();

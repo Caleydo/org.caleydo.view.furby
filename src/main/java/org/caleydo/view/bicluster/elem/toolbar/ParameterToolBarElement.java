@@ -204,31 +204,31 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	 */
 	private GLElement createZoomControls() {
 		GLElementContainer c = new GLElementContainer();
-		c.add(createZoomButton("Zoom Reset", BiClusterRenderStyle.ICON_ZOOM_RESET, 0, null));
-		c.add(createZoomButton("Zoom In X", BiClusterRenderStyle.ICON_ZOOM_IN, +1, EDimension.DIMENSION));
-		c.add(createZoomButton("Zoom Out X", BiClusterRenderStyle.ICON_ZOOM_OUT, -1, EDimension.DIMENSION));
-		c.add(createZoomButton("Zoom In Y", BiClusterRenderStyle.ICON_ZOOM_IN, +1, EDimension.RECORD));
-		c.add(createZoomButton("Zoom Out Y", BiClusterRenderStyle.ICON_ZOOM_OUT, -1, EDimension.RECORD));
-		c.add(createZoomButton("Zoom In", BiClusterRenderStyle.ICON_ZOOM_IN, +1, null));
 		c.add(createZoomButton("Zoom Out", BiClusterRenderStyle.ICON_ZOOM_OUT, -1, null));
-		c.setSize(Float.NaN, BUTTON_WIDTH * 3 + 6);
+		c.add(createZoomButton("Zoom Reset", BiClusterRenderStyle.ICON_ZOOM_RESET, 0, null));
+		c.add(createZoomButton("Zoom In", BiClusterRenderStyle.ICON_ZOOM_IN, +1, null));
+		c.add(createZoomButton("Zoom Out X", BiClusterRenderStyle.ICON_ZOOM_OUT, -1, EDimension.DIMENSION));
+		c.add(createZoomButton("Zoom Out Y", BiClusterRenderStyle.ICON_ZOOM_OUT, -1, EDimension.RECORD));
+		c.add(createZoomButton("Zoom In X", BiClusterRenderStyle.ICON_ZOOM_IN, +1, EDimension.DIMENSION));
+		c.add(createZoomButton("Zoom In Y", BiClusterRenderStyle.ICON_ZOOM_IN, +1, EDimension.RECORD));
+		c.add(new GLElement(GLRenderers.drawText("X:", VAlign.RIGHT)));
+		c.add(new GLElement(GLRenderers.drawText("Y:", VAlign.RIGHT)));
+		c.setSize(Float.NaN, BUTTON_WIDTH);
 		c.setLayout(new IGLLayout2() {
 			@Override
 			public boolean doLayout(List<? extends IGLLayoutElement> children, float w, float h,
 					IGLLayoutElement parent, int deltaTimeMs) {
-				h -= 3;
-				float y = 2;
-				final float s = BUTTON_WIDTH + 1;
-				float c = w * 0.5f - s * (1.5f);
-				y = 2;
-				children.get(0).setBounds(c, y, BUTTON_WIDTH, BUTTON_WIDTH);
-				for (int i = 0; i < 2; ++i) {
-					children.get(i + 1).setBounds(c + s + s * i, y, BUTTON_WIDTH, BUTTON_WIDTH);
-					children.get(3 + i).setBounds(c, y + +s + s * i, BUTTON_WIDTH, BUTTON_WIDTH);
-					children.get(5 + i).setBounds(c + s + s * i, y + s + s * i, BUTTON_WIDTH, BUTTON_WIDTH);
-				}
-				c += BUTTON_WIDTH + 1;
+				final float w_i = BUTTON_WIDTH + 1;
+				float xi = (w - w_i * 10) * 0.5f;
 
+				for (int i = 0; i < 3; ++i)
+					children.get(i).setBounds(xi + i * w_i, 0, BUTTON_WIDTH, h);
+				xi += w_i * 3;
+				for (int i = 0; i < 2; ++i) {
+					children.get(3 + i).setBounds(xi + (i * 3.5f + 1.5f) * w_i, 0, BUTTON_WIDTH, h);
+					children.get(5 + i).setBounds(xi + (i * 3.5f + 2.5f) * w_i, 0, BUTTON_WIDTH, h);
+					children.get(7 + i).setBounds(xi + i * 3.5f * w_i, 0, BUTTON_WIDTH * 1.5f, h);
+				}
 				return false;
 			}
 		});
@@ -239,7 +239,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		GLButton b = new GLButton();
 		b.setRenderer(GLRenderers.fillImage(icon));
 		b.setTooltip(label);
-		b.setSize(BUTTON_WIDTH, -1);
 		b.setCallback(new GLButton.ISelectionCallback() {
 			@Override
 			public void onSelectionChanged(GLButton button, boolean selected) {

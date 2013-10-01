@@ -39,16 +39,6 @@
             </menu>
          </menu>
       </menuContribution>
-      <menuContribution
-            allPopups="false"
-            locationURI="toolbar:org.caleydo.core.gui.toolbar?after=import">
-         <command
-               commandId="org.caleydo.view.bicluster.import"
-               icon="resources/icons/import_data.png"
-               label="Import XLZ Data"
-               style="push">
-         </command>
-      </menuContribution>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -56,11 +46,6 @@
             defaultHandler="org.caleydo.view.bicluster.OpenViewHandler"
             id="org.caleydo.view.bicluster.command.opentemplate"
             name="Furby">
-      </command>
-      <command
-            defaultHandler="org.caleydo.view.bicluster.loading.ImportXLZHandler"
-            id="org.caleydo.view.bicluster.import"
-            name="Import XLZ Data">
       </command>
    </extension>
    <extension
@@ -98,5 +83,12 @@
             id="org.caleydo.view.bicluster"
             name="Bicluster">
       </page>
+   </extension>
+   <extension
+         point="org.caleydo.core.StartupAddon">
+      <addon
+            class="org.caleydo.view.bicluster.internal.loading.BiClusterStartupAddon"
+            name="Load BiCluster Result">
+      </addon>
    </extension>
 </plugin>

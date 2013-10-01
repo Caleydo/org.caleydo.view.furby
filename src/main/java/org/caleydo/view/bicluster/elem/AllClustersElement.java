@@ -104,15 +104,7 @@ public class AllClustersElement extends GLElementContainer {
 	public void focusNext() {
 		if (this.focussedElement == null)
 			return;
-		NormalClusterElement act = null;
-		for (NormalClusterElement cluster : getSortedClusters()) {
-			if (act != null) {
-				setFocus(cluster);
-				break;
-			}
-			if (cluster == focussedElement)
-				act = cluster;
-		}
+		focusPrevious(Lists.reverse(getSortedClusters()));
 	}
 
 	/**
@@ -121,13 +113,25 @@ public class AllClustersElement extends GLElementContainer {
 	public void focusPrevious() {
 		if (this.focussedElement == null)
 			return;
+		focusPrevious(getSortedClusters());
+	}
+
+	private void focusPrevious(final List<NormalClusterElement> sortedClusters) {
 		NormalClusterElement prev = null;
-		for (NormalClusterElement cluster : getSortedClusters()) {
+		for (NormalClusterElement cluster : sortedClusters) {
 			if (cluster == focussedElement && prev != null) {
 				setFocus(prev);
-				break;
+				return;
 			}
 			prev = cluster;
+		}
+
+		// else use the last focussable one, round trip
+		for (NormalClusterElement cluster : Lists.reverse(sortedClusters)) {
+			if (cluster == focussedElement)
+				break;
+			setFocus(cluster);
+			break;
 		}
 	}
 
