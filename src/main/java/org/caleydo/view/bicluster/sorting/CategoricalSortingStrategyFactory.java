@@ -8,13 +8,13 @@ package org.caleydo.view.bicluster.sorting;
 import java.util.Set;
 
 import org.apache.commons.lang.WordUtils;
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.collection.column.container.CategoricalClassDescription;
 import org.caleydo.core.data.collection.column.container.CategoryProperty;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
 import org.caleydo.core.util.color.Color;
-import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
 import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy.IComposeAbleSortingStrategyFactory;
 

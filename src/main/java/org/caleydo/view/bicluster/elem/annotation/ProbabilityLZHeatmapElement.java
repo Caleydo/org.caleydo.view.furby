@@ -8,11 +8,11 @@ package org.caleydo.view.bicluster.elem.annotation;
 import java.nio.FloatBuffer;
 import java.util.List;
 
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.util.function.DoubleFunctions;
 import org.caleydo.core.util.function.IDoubleFunction;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.picking.PickingMode;
-import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 

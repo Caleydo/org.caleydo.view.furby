@@ -11,7 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.caleydo.view.bicluster.elem.EDimension;
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.view.bicluster.elem.Edge;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
 

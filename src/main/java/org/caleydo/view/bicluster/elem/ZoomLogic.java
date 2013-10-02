@@ -9,6 +9,7 @@ import java.awt.Dimension;
 import java.util.Collection;
 import java.util.Map;
 
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 
 import com.google.common.collect.ImmutableMap;

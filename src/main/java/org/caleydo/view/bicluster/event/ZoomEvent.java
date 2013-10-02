@@ -5,8 +5,8 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.event;
 
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.event.ADirectedEvent;
-import org.caleydo.view.bicluster.elem.EDimension;
 
 /**
  * @author Samuel Gratzl

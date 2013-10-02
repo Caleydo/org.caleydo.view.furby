@@ -6,7 +6,7 @@
 package org.caleydo.view.bicluster.sorting;
 
 import org.apache.commons.lang.StringUtils;
-import org.caleydo.view.bicluster.elem.EDimension;
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
 import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy.IComposeAbleSortingStrategyFactory;
 

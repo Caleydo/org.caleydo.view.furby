@@ -9,8 +9,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Set;
 
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.view.bicluster.elem.ClusterElement;
-import org.caleydo.view.bicluster.elem.EDimension;
 
 import com.google.common.collect.Sets;
 
