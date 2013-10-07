@@ -28,6 +28,14 @@ public class ZoomLogic {
 	 */
 	private static final double INITIAL_FILLED_PERCENTAGE = 0.15;
 
+	/**
+	 * computes the initial scale factors for the presented clusters with the given dimensions
+	 *
+	 * @param sizes
+	 * @param w
+	 * @param h
+	 * @return
+	 */
 	public static Map<EDimension, Float> initialOverviewScaleFactor(Collection<Dimension> sizes, float w, float h) {
 		DoubleStatistics.Builder stats = DoubleStatistics.builder();
 		for (Dimension size : sizes) {
@@ -48,7 +56,7 @@ public class ZoomLogic {
 		dim = Math.floor(dim * scale * 100) / 100.f;
 		rec = Math.floor(rec * scale * 100) / 100.f;
 
-		return ImmutableMap.of(EDimension.DIMENSION, (float) dim, EDimension.RECORD, (float) rec);
+		return pair((float) dim, (float) rec);
 	}
 
 	private static double count(Collection<Dimension> sizes, double dim, double rec) {
@@ -58,21 +66,49 @@ public class ZoomLogic {
 		return sum;
 	}
 
+	/**
+	 * computes the initial focus scale factor
+	 *
+	 * @param size
+	 * @param w
+	 * @param h
+	 * @return
+	 */
 	public static Map<EDimension, Float> initialFocusScaleFactor(Dimension size, float w, float h) {
 		w *= 0.75f;
 		h *= 0.9f;
 		float dim = w / size.width;
 		float rec = h / size.height;
-		return ImmutableMap.of(EDimension.DIMENSION, dim, EDimension.RECORD, rec);
+		return pair(dim, rec);
 	}
 
+	/**
+	 * computes the initial focus scale factor for focus neighbors
+	 *
+	 * @param sizes
+	 * @param focusSize
+	 * @param w
+	 * @param h
+	 * @return
+	 */
 	public static Map<EDimension, Float> initialFocusNeighborScaleFactor(Collection<Dimension> sizes,
 			Dimension focusSize, float w, float h) {
 		float dim = 1f;
 		float rec = 1;
+		return pair(dim, rec);
+	}
+
+	private static ImmutableMap<EDimension, Float> pair(float dim, float rec) {
 		return ImmutableMap.of(EDimension.DIMENSION, dim, EDimension.RECORD, rec);
 	}
 
+	/**
+	 * convert a {@link IMouseEvent} to a direction information
+	 *
+	 * @param event
+	 * @param dim
+	 * @return -1 smaller, +1 larger, and 0 nothing
+	 */
 	public static int toDirection(IMouseEvent event, EDimension dim) {
 		final int w = event.getWheelRotation();
 		if (w == 0)
@@ -99,5 +135,48 @@ public class ZoomLogic {
 
 		// FIXME logic
 		return current * direction * 0.2f;
+	}
+
+	public static float adaptScaleFactorToSize(Dimension oldSize, Dimension newSize, float currentDim,
+			float currentRec, float w, float h) {
+		int dim = oldSize.width - newSize.width;
+		int rec = oldSize.height - newSize.height;
+		if (dim == 0 && rec == 0)
+			return 1; // no change
+		// FIXME
+			// float deltaDim = dim * currentDim;
+			// float deltaRec = rec * currentRec;
+			//
+			// if (dim != 0) {
+			// if (dim < 0 && newSize.width * currentDim > w * 0.05) {
+			// float filled = newSize.width * currentDim / (w * 0.05f);
+			// float f = lookup(filled);
+			// float factor = (oldSize.width + -dim * f) / newSize.width;
+			// return factor;
+			// } else if (dim > 0 && oldSize.width * currentDim > w * 0.05 && newSize.width * currentDim < w * 0.03) {
+			// float factor = (oldSize.width + -dim * 1.1f) / newSize.width;
+			// return factor;
+			// }
+			// }
+			// if (rec != 0) {
+			// if (rec < 0 && newSize.height * currentRec > h * 0.05) {
+			// return (float) Math.pow(0.999f, -rec);
+			// } else if (rec > 0 && oldSize.height * currentRec > h * 0.05)
+			// return (float) Math.pow(0.999f, -rec);
+			// }
+		return 1.f;
+	}
+
+	/**
+	 * @param filled
+	 * @return
+	 */
+	private static float lookup(float filled) {
+		if (filled < .8f)
+			return 1.f;
+		if (filled < .9f)
+			return (0.95f - filled) * 10;
+		return (1 - filled) * 8;
+
 	}
 }

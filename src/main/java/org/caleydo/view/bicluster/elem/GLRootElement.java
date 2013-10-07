@@ -28,6 +28,7 @@ import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.util.function.AdvancedDoubleStatistics;
+import org.caleydo.core.util.function.DoubleStatistics;
 import org.caleydo.core.util.logging.Logger;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -347,12 +348,34 @@ public class GLRootElement extends GLElementContainer {
 
 		// 1. update thresholds
 		Iterable<NormalClusterElement> allNormalClusters = allNormalClusters();
+		DoubleStatistics.Builder b = DoubleStatistics.builder();
+		final Vec2f total = getSize();
 		for (NormalClusterElement cluster : allNormalClusters) {
+			Dimension old = cluster.getSizes();
 			cluster.setThresholds(dimThreshold, dimNumberThreshold, recThreshold, recNumberThreshold);
+			Dimension new_ = cluster.getSizes();
+			float s = ZoomLogic.adaptScaleFactorToSize(old, new_, cluster.getZoom(EDimension.DIMENSION),
+					cluster.getZoom(EDimension.RECORD), total.x(), total.y());
+			// System.out.println(s);
+			b.add(s);
 		}
+		float s = (float) b.build().getMean();
+		if (s != 1.0f) {
+			for (ClusterElement elem : clusters.allClusters()) {
+				elem.scaleZoom(s);
+			}
+		}
+
 		// 2. update overlaps
 		updateAllEdges();
 		clusters.relayout();
+	}
+
+	/**
+	 * @return
+	 */
+	private Dimension getSizes() {
+		return new Dimension(x.getNrDimensions(), x.getNrRecords());
 	}
 
 	private Iterable<NormalClusterElement> allNormalClusters() {

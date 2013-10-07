@@ -10,6 +10,7 @@ import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimTopN
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThreshold;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecTopNElements;
 
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -327,8 +328,12 @@ public class NormalClusterElement extends AMultiClusterElement {
 	 * @param t
 	 */
 	public void setLocalThreshold(EDimension dimension, float t) {
+		Dimension old = getSizes();
 		setThreshold(dimension, t);
 		updateMyEdges(dimension.isHorizontal(), dimension.isVertical());
+
+		// adaptScaleFactors(old);
+
 		relayoutParent();
 	}
 
