@@ -14,8 +14,10 @@ import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import com.google.common.collect.ImmutableMap;
 
 /**
+ * encapsulate all the zoom logic relevant settings
+ * 
  * @author Samuel Gratzl
- *
+ * 
  */
 public class ZoomLogic {
 

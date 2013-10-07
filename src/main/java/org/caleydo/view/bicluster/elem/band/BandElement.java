@@ -91,9 +91,11 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 		hasSharedElementsWithSelection = false;
 		hasSharedElementsWithHover = false;
 
+		updateOverlap();
+
 		setZDeltaAccordingToState();
-		initBand();
 		setPicker(null);
+
 	}
 
 	/**
@@ -198,11 +200,6 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 		}
 		setZDeltaAccordingToState();
 	}
-
-	protected void initBand() {
-		updateStructure();
-	}
-
 	@Override
 	public void layout(int deltaTimeMs) {
 		updateOpacticy(deltaTimeMs);
@@ -301,7 +298,8 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 	}
 
 	protected boolean isVisible() {
-		return getFirst().isVisible() && getSecond().isVisible() && overlap != null && !overlap.isEmpty();
+		return getFirst().isVisible() && getSecond().isVisible() && overlap != null && !overlap.isEmpty()
+				&& isValidBand();
 	}
 
 	protected boolean hasSharedElementsWithSelectedBand() {
@@ -387,13 +385,18 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 		repaintAll();
 	}
 
+	private boolean isValidBand() {
+		return band != null && band.size() > 0 && !Float.isNaN(band.getCurveTop().get(0).x());
+	}
+
 	public void updateStructure() {
-		if (!edge.anyVisible())
+		this.band = null;
+		if (!updateOverlap())
 			return;
-		overlap = toFastOverlap(edge.getOverlapIndices(dimension));
-		updateVisibilityByOverlap();
 		ClusterElement first = edge.getA();
 		ClusterElement second = edge.getB();
+		if (!areValidBounds(first.getBounds()) || !areValidBounds(second.getBounds()))
+			return;
 		List<List<Integer>> firstSubIndices = first.getListOfContinousSequences(dimension, overlap);
 		List<List<Integer>> secondSubIndices = second.getListOfContinousSequences(dimension, overlap);
 		if (firstSubIndices.size() == 0)
@@ -421,6 +424,14 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 		// splines = new HashMap<>(); // create empty hashmap .. splines are not looking very good
 
 		repaintAll();
+	}
+
+	private boolean updateOverlap() {
+		if (!edge.anyVisible())
+			return false;
+		overlap = toFastOverlap(edge.getOverlapIndices(dimension));
+		updateVisibilityByOverlap();
+		return true;
 	}
 
 	private static BandFactory createFactory(EDimension dim, ClusterElement cluster, ClusterElement other,
@@ -560,7 +571,6 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 		for (int i = 0; i < size; ++i) {
 			Vec3f top = curveTop.get(i);
 			Vec3f bottom = curveBottom.get(i);
-
 			float a_i = Math.max(a * act_a, 0);
 			if (a_i <= 0)
 				firstAlpha = Math.min(firstAlpha, i);

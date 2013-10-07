@@ -64,17 +64,6 @@ public final class IntFloat {
 		return true;
 	}
 
-	public final static Comparator<IntFloat> BY_ABS_PROBABILITY = new Comparator<IntFloat>() {
-		@Override
-		public int compare(IntFloat o1, IntFloat o2) {
-			// the large t
-			int val = Float.compare(Math.abs(o1.probability), Math.abs(o2.probability));
-			if (val == 0)
-				val = o1.index - o2.index;
-			return val;
-		}
-	};
-
 	public final static Comparator<IntFloat> BY_PROBABILITY = new Comparator<IntFloat>() {
 		@Override
 		public int compare(IntFloat o1, IntFloat o2) {
@@ -82,12 +71,6 @@ public final class IntFloat {
 			if (val == 0)
 				val = o1.index - o2.index;
 			return val;
-		}
-	};
-	public static final Comparator<IntFloat> BY_INDEX = new Comparator<IntFloat>() {
-		@Override
-		public int compare(IntFloat o1, IntFloat o2) {
-			return o1.index - o2.index;
 		}
 	};
 
