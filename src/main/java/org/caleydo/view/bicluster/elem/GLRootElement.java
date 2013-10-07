@@ -8,6 +8,7 @@ package org.caleydo.view.bicluster.elem;
 import static org.caleydo.view.bicluster.elem.ZoomLogic.initialOverviewScaleFactor;
 import static org.caleydo.view.bicluster.elem.ZoomLogic.nextZoomDelta;
 import static org.caleydo.view.bicluster.elem.ZoomLogic.toDirection;
+import gleem.linalg.Vec2f;
 
 import java.awt.Dimension;
 import java.util.ArrayList;
@@ -266,8 +267,9 @@ public class GLRootElement extends GLElementContainer {
 
 	/**
 	 * @param biClustering
+	 * @param size
 	 */
-	public void init(BiClustering biClustering, TablePerspective x) {
+	public void init(BiClustering biClustering, TablePerspective x, Vec2f size) {
 		this.x = x;
 		this.clustering = biClustering;
 
@@ -292,7 +294,7 @@ public class GLRootElement extends GLElementContainer {
 			dimensions.add(el.getSizes());
 		}
 
-		final Map<EDimension, Float> scales = initialOverviewScaleFactor(dimensions, getSize().x(), getSize().y());
+		final Map<EDimension, Float> scales = initialOverviewScaleFactor(dimensions, size.x(), size.y());
 		final float dimScale = scales.get(EDimension.DIMENSION);
 		final float recScale = scales.get(EDimension.RECORD);
 

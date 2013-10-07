@@ -6,12 +6,15 @@
 package org.caleydo.view.bicluster.event;
 
 import org.caleydo.core.event.AEvent;
+import org.caleydo.core.util.logging.Logger;
 
 /**
  * @author user
  *
  */
 public class LZThresholdChangeEvent extends AEvent {
+	private static final Logger log = Logger.create(LZThresholdChangeEvent.class);
+
 	private float recordThreshold;
 	private float dimensionThreshold;
 	private boolean global;
@@ -25,8 +28,8 @@ public class LZThresholdChangeEvent extends AEvent {
 		this.recordNumberThreshold = recordNumberThreshold;
 		this.dimensionNumberThreshold = dimensionNumberThreshold;
 		this.global = global;
-		System.out.println("Erstelle Cluster mit SampleTH: " + dimensionThreshold);
-		System.out.println("                     RecordTH: " + recordThreshold);
+		log.debug("changing threshold to: dim: " + dimensionThreshold + "#" + dimensionNumberThreshold + " rec: "
+				+ recordThreshold + "#" + recordNumberThreshold);
 	}
 
 	/**

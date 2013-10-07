@@ -5,9 +5,6 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.internal.prefs;
 
-import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.MAX_SCALE_FACTOR;
-import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.MIN_SCALE_FACTOR;
-
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -40,9 +37,10 @@ public class MyPreferencePage extends FieldEditorPreferencePage implements IWork
 	@Override
 	public void createFieldEditors() {
 		final Composite parent = getFieldEditorParent();
-		addField(new IntegerFieldEditor("view.bicluster.maxDistance", "Max Distance", parent));
-		addField(new ScaleFieldEditor2("view.bicluster.scale", "Global Scale Factor", parent,20, 400, 20, 100,
+		addField(new ScaleFieldEditor2("view.bicluster.aspectratio", "Initial Aspect Ratio W/H", parent, 20, 400, 20,
+				100,
 				ScaleFieldEditor2.PERCENT_FORMATTER));
+		addField(new IntegerFieldEditor("view.bicluster.maxDistance", "Max Distance", parent));
 		addFields(parent, "rec", "Record");
 		addFields(parent, "dim", "Dimension");
 	}
@@ -70,10 +68,6 @@ public class MyPreferencePage extends FieldEditorPreferencePage implements IWork
 				ScaleFieldEditor2.PERCENT_FORMATTER));
 		addField(new SpinnerFieldEditor("view.bicluster.top." + suffix, "Max # elements", parent, 0, Integer.MAX_VALUE,
 				1, 10));
-
-		addField(new ScaleFieldEditor2("view.bicluster.scale." + suffix, "Scale Factor", parent,
-				(int) (MIN_SCALE_FACTOR * 100), (int) (MAX_SCALE_FACTOR * 100), 25, 100,
-				ScaleFieldEditor2.PERCENT_FORMATTER));
 		addField(new BooleanFieldEditor("view.bicluster.showbands." + suffix, "Show Bands", parent));
 
 	}
