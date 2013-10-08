@@ -8,8 +8,8 @@ package org.caleydo.view.bicluster.elem.annotation;
 import java.nio.FloatBuffer;
 import java.util.List;
 
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.id.IDType;
-import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
 import org.caleydo.view.bicluster.sorting.CategoricalSortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.IntFloat;

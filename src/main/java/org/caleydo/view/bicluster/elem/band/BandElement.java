@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
@@ -33,10 +34,10 @@ import org.caleydo.core.view.opengl.picking.PickingListenerComposite;
 import org.caleydo.core.view.opengl.util.gleem.ColoredVec3f;
 import org.caleydo.core.view.opengl.util.spline.Band;
 import org.caleydo.view.bicluster.elem.ClusterElement;
-import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.elem.Edge;
 import org.caleydo.view.bicluster.event.MouseOverBandEvent;
 import org.caleydo.view.bicluster.event.MouseOverClusterEvent;
+import org.caleydo.view.bicluster.internal.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.util.SetUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -240,7 +241,7 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 			else if (hasSharedElementsWithHoveredBand())
 				bandColor = hoveredColor;
 			else
-				bandColor = dimension.getBandColor();
+				bandColor = BiClusterRenderStyle.getBandColor(dimension);
 			if (isMouseOver) {
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * actOpacityFactor);
 				for (Band b : getSplittedBands().values()) {
@@ -313,7 +314,7 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 	@Override
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (getVisibility() == EVisibility.PICKABLE && !isAnyThingHovered && isVisible()) {
-			g.color(dimension.getBandColor());
+			g.color(BiClusterRenderStyle.getBandColor(dimension));
 			if (isMouseOver) {
 				for (Band b : getSplittedBands().values())
 					g.fillPolygon(b);

@@ -16,6 +16,7 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLContext;
 import javax.media.opengl.GLProfile;
 
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
@@ -26,7 +27,6 @@ import org.caleydo.core.view.opengl.picking.IPickingLabelProvider;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.elem.ClusterContentElement;
-import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 import org.caleydo.view.heatmap.v2.CellSpace;
 

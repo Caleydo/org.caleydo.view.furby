@@ -10,6 +10,7 @@ import gleem.linalg.Vec2f;
 import java.util.List;
 import java.util.Objects;
 
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.view.opengl.layout2.GLElement;
@@ -17,7 +18,6 @@ import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
 import org.caleydo.core.view.opengl.layout2.layout.IGLLayoutElement;
 import org.caleydo.view.bicluster.elem.AllClustersElement;
 import org.caleydo.view.bicluster.elem.ClusterElement;
-import org.caleydo.view.bicluster.elem.EDimension;
 import org.caleydo.view.bicluster.event.ForceChangeEvent;
 import org.caleydo.view.bicluster.event.UpdateBandsEvent;
 

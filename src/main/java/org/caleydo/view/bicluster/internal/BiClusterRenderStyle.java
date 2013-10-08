@@ -7,6 +7,9 @@ package org.caleydo.view.bicluster.internal;
 
 import java.net.URL;
 
+import org.caleydo.core.data.collection.EDimension;
+import org.caleydo.core.util.color.Color;
+
 /**
  * Render style.
  *
@@ -35,4 +38,14 @@ public class BiClusterRenderStyle {
 
 	public static final String ICON_TEXT_LARGE = ICON_PREFIX + "text_large_cap.png";
 
+	public static Color getBandColor(EDimension dim) {
+		switch (dim) {
+		case DIMENSION:
+			return Color.NEUTRAL_GREY;
+		case RECORD:
+			return Color.LIGHT_GRAY;
+		}
+		throw new IllegalStateException();
+
+	}
 }
