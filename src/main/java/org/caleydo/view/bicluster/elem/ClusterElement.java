@@ -284,10 +284,10 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		setZoom(zoom.x() + dim, zoom.y() + rec);
 	}
 
-	void scaleZoom(float s) {
-		if (s == 1)
+	void scaleZoom(float d, float r) {
+		if (d == 1 && r == 1)
 			return;
-		setZoom(zoom.x() * s, zoom.y() * s);
+		setZoom(zoom.x() * d, zoom.y() * r);
 	}
 
 	void setZoom(float dim, float rec) {

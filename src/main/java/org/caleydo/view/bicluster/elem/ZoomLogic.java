@@ -138,11 +138,11 @@ public class ZoomLogic {
 		return current * direction * 0.2f;
 	}
 
-	public static float adaptScaleFactorToSize(Dimension oldSize, Dimension newSize, float currentDim,
+	public static float adaptScaleFactorToSize(EDimension dir, Dimension oldSize, Dimension newSize, float currentDim,
 			float currentRec, float w, float h) {
 		int dim = oldSize.width - newSize.width;
 		int rec = oldSize.height - newSize.height;
-		if (dim == 0 && rec == 0)
+		if (dir.select(dim, rec) == 0)
 			return 1; // no change
 		// FIXME
 			// float deltaDim = dim * currentDim;

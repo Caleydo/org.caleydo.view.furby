@@ -46,6 +46,7 @@ import org.caleydo.view.bicluster.elem.band.BandElement;
 import org.caleydo.view.bicluster.elem.toolbar.AToolBarElement;
 import org.caleydo.view.bicluster.elem.toolbar.LayoutToolBarElement;
 import org.caleydo.view.bicluster.elem.toolbar.ParameterToolBarElement;
+import org.caleydo.view.bicluster.elem.ui.MyUnboundSpinner;
 import org.caleydo.view.bicluster.event.AlwaysShowToolBarEvent;
 import org.caleydo.view.bicluster.event.ChangeMaxDistanceEvent;
 import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
@@ -342,10 +343,9 @@ public class GLRootElement extends GLElementContainer {
 
 	@ListenTo
 	private void listenTo(LZThresholdChangeEvent event) {
-		final int dimNumberThreshold = event.getDimensionNumberThreshold();
-		final float dimThreshold = event.getDimensionThreshold();
-		final int recNumberThreshold = event.getRecordNumberThreshold();
-		final float recThreshold = event.getRecordThreshold();
+		final EDimension dim = event.getDim();
+		final int numberThreshold = event.getNumberThreshold();
+		final float threshold = event.getThreshold();
 
 		// 1. update thresholds
 		Iterable<NormalClusterElement> allNormalClusters = allNormalClusters();
@@ -353,9 +353,9 @@ public class GLRootElement extends GLElementContainer {
 		final Vec2f total = getSize();
 		for (NormalClusterElement cluster : allNormalClusters) {
 			Dimension old = cluster.getSizes();
-			cluster.setThresholds(dimThreshold, dimNumberThreshold, recThreshold, recNumberThreshold);
+			cluster.setThreshold(dim, threshold, numberThreshold);
 			Dimension new_ = cluster.getSizes();
-			float s = ZoomLogic.adaptScaleFactorToSize(old, new_, cluster.getZoom(EDimension.DIMENSION),
+			float s = ZoomLogic.adaptScaleFactorToSize(dim, old, new_, cluster.getZoom(EDimension.DIMENSION),
 					cluster.getZoom(EDimension.RECORD), total.x(), total.y());
 			// System.out.println(s);
 			b.add(s);
@@ -363,7 +363,7 @@ public class GLRootElement extends GLElementContainer {
 		float s = (float) b.build().getMean();
 		if (s != 1.0f) {
 			for (ClusterElement elem : clusters.allClusters()) {
-				elem.scaleZoom(s);
+				elem.scaleZoom(dim.select(s, 1), dim.select(1, s));
 			}
 		}
 
@@ -407,7 +407,7 @@ public class GLRootElement extends GLElementContainer {
 					thresh = t;
 				if (t != thresh)
 					thresh = Float.NaN;
-				elem.setThreshold(dimension, t);
+				elem.setThreshold(dimension, t, MyUnboundSpinner.UNBOUND);
 			}
 		}
 		if (!Float.isNaN(thresh) && !Float.isInfinite(thresh)) { // all the same set that in the parameter toolbar

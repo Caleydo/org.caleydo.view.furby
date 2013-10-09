@@ -5,6 +5,7 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.event;
 
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.event.AEvent;
 import org.caleydo.core.util.logging.Logger;
 
@@ -15,47 +16,35 @@ import org.caleydo.core.util.logging.Logger;
 public class LZThresholdChangeEvent extends AEvent {
 	private static final Logger log = Logger.create(LZThresholdChangeEvent.class);
 
-	private float recordThreshold;
-	private float dimensionThreshold;
-	private boolean global;
-	private final int recordNumberThreshold;
-	private final int dimensionNumberThreshold;
+	private final EDimension dim;
+	private final float threshold;
+	private final int numberThreshold;
 
-	public LZThresholdChangeEvent(float recordThreshold, float dimensionThreshold, int recordNumberThreshold,
-			int dimensionNumberThreshold, boolean global) {
-		this.recordThreshold = recordThreshold;
-		this.dimensionThreshold = dimensionThreshold;
-		this.recordNumberThreshold = recordNumberThreshold;
-		this.dimensionNumberThreshold = dimensionNumberThreshold;
-		this.global = global;
-		log.debug("changing threshold to: dim: " + dimensionThreshold + "#" + dimensionNumberThreshold + " rec: "
-				+ recordThreshold + "#" + recordNumberThreshold);
+	public LZThresholdChangeEvent(EDimension dim, float threshold, int numberThreshold) {
+		this.threshold = threshold;
+		this.numberThreshold = numberThreshold;
+		this.dim = dim;
 	}
 
 	/**
-	 * @return the recordNumberThreshold, see {@link #recordNumberThreshold}
+	 * @return the dim, see {@link #dim}
 	 */
-	public int getRecordNumberThreshold() {
-		return recordNumberThreshold;
+	public EDimension getDim() {
+		return dim;
 	}
 
 	/**
-	 * @return the dimensionNumberThreshold, see {@link #dimensionNumberThreshold}
+	 * @return the threshold, see {@link #threshold}
 	 */
-	public int getDimensionNumberThreshold() {
-		return dimensionNumberThreshold;
+	public float getThreshold() {
+		return threshold;
 	}
 
-	public float getRecordThreshold() {
-		return recordThreshold;
-	}
-
-	public float getDimensionThreshold() {
-		return dimensionThreshold;
-	}
-
-	public boolean isGlobalEvent() {
-		return global;
+	/**
+	 * @return the numberThreshold, see {@link #numberThreshold}
+	 */
+	public int getNumberThreshold() {
+		return numberThreshold;
 	}
 
 	@Override

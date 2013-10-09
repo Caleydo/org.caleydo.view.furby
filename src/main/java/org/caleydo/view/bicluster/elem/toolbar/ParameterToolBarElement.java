@@ -346,8 +346,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 	@Override
 	public void onSelectionChanged(ThresholdSlider slider, float value) {
-		if (slider == dimThresholdSlider || slider == recThresholdSlider)
-			updateGeneSampleThresholds();
+		updateGeneSampleThresholds(EDimension.get(slider == dimThresholdSlider));
 	}
 
 	@Override
@@ -368,17 +367,21 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		EventPublisher.trigger(new SortingChangeEvent(r));
 	}
 
-	private void updateGeneSampleThresholds() {
-		float dimThresh = dimThresholdSlider.getValue();
-		float recThresh = recThresholdSlider.getValue();
-		int dimNumber = dimNumberThresholdSpinner.getValue();
-		int recNumber = recNumberThresholdSpinner.getValue();
-		EventPublisher.trigger(new LZThresholdChangeEvent(recThresh, dimThresh, recNumber, dimNumber, true));
-	}
-
 	@Override
 	public void onValueChanged(MyUnboundSpinner spinner, int value) {
-		updateGeneSampleThresholds();
+		updateGeneSampleThresholds(EDimension.get(spinner == dimNumberThresholdSpinner));
+	}
+
+	/**
+	 * @param eDimension
+	 */
+	private void updateGeneSampleThresholds(EDimension dim) {
+		if (dim.isDimension())
+			EventPublisher.trigger(new LZThresholdChangeEvent(dim, dimThresholdSlider.getValue(),
+					dimNumberThresholdSpinner.getValue()));
+		else
+			EventPublisher.trigger(new LZThresholdChangeEvent(dim, recThresholdSlider.getValue(),
+					recNumberThresholdSpinner.getValue()));
 	}
 
 	@Override

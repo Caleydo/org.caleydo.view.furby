@@ -316,10 +316,13 @@ public class NormalClusterElement extends AMultiClusterElement {
 	/**
 	 * @param dimension
 	 * @param t
+	 * @param numberThreshold
 	 */
-	public void setThreshold(EDimension dimension, float t) {
-		setThresholds(dimension.select(t, dimThreshold), dimNumberThreshold, dimension.select(recThreshold, t),
-				recNumberThreshold);
+	public void setThreshold(EDimension dim, float t, int numberThreshold) {
+		if (dim.isHorizontal())
+			setThresholds(t, numberThreshold, recThreshold, recNumberThreshold);
+		else
+			setThresholds(dimThreshold, dimNumberThreshold, t, numberThreshold);
 	}
 
 	/**
@@ -330,7 +333,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 	 */
 	public void setLocalThreshold(EDimension dimension, float t) {
 		Dimension old = getSizes();
-		setThreshold(dimension, t);
+		setThreshold(dimension, t, dimension.select(dimNumberThreshold, recNumberThreshold));
 		updateMyEdges(dimension.isHorizontal(), dimension.isVertical());
 
 		// adaptScaleFactors(old);

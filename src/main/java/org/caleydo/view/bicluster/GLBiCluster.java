@@ -42,7 +42,6 @@ import org.caleydo.core.view.opengl.layout2.GLElementDecorator;
 import org.caleydo.core.view.opengl.layout2.view.AMultiTablePerspectiveElementView;
 import org.caleydo.view.bicluster.elem.BiClustering;
 import org.caleydo.view.bicluster.elem.GLRootElement;
-import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
@@ -294,7 +293,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 			// actually alter the cluster perspectives
 			// createBiClusterPerspectives(x, l, z);
 			EventPublisher.trigger(new MaxThresholdChangeEvent(maxDimThreshold, maxRecThreshold));
-			EventPublisher.trigger(new LZThresholdChangeEvent(recThreshold, dimThreshold, MyPreferences.getRecTopNElements(), MyPreferences.getDimTopNElements(), true));
+			// EventPublisher.trigger(new LZThresholdChangeEvent(recThreshold, dimThreshold,
+			// MyPreferences.getRecTopNElements(), MyPreferences.getDimTopNElements(), true));
 			// rootElement.createBands();
 
 			// signal that we now use that data domain
