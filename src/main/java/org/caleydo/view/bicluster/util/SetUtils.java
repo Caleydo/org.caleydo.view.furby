@@ -17,6 +17,8 @@ public class SetUtils {
 	 * @return
 	 */
 	public static boolean containsAny(Collection<Integer> set, Iterable<Integer> elements) {
+		if (set == null)
+			return false;
 		for (Integer elem : elements)
 			if (set.contains(elem))
 				return true;

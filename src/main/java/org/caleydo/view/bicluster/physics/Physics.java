@@ -27,6 +27,7 @@ public class Physics {
 		final Vec2d distVec = new Vec2d();
 		distVec.setX(a.getCenterX() - b.getCenterX());
 		distVec.setY(a.getCenterY() - b.getCenterY());
+
 		double d = distVec.length();
 		if (d <= 0) { // if the same position randomly shift
 			distVec.setX(Math.random() * 20 - 10);
@@ -122,6 +123,8 @@ public class Physics {
 	}
 
 	private static double ellipseRadius(Vec2d ray_dir, double a, double b) {
+		if (a == 0 || b == 0)
+			return 0;
 		// https://en.wikipedia.org/wiki/Ellipse#Polar_form_relative_to_center
 		// r(\theta)=\frac{ab}{\sqrt{(b \cos \theta)^2 + (a\sin \theta)^2}}
 		double r = (a * b) / (Math.sqrt(pow2(a * ray_dir.x()) + pow2(b * ray_dir.y())));

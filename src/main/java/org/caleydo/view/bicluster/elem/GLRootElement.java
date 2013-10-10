@@ -360,7 +360,7 @@ public class GLRootElement extends GLElementContainer {
 			// System.out.println(s);
 			b.add(s);
 		}
-		float s = (float) b.build().getMean();
+		float s = (float) b.build().getMin();
 		if (s != 1.0f) {
 			for (ClusterElement elem : clusters.allClusters()) {
 				elem.scaleZoom(dim.select(s, 1), dim.select(1, s));

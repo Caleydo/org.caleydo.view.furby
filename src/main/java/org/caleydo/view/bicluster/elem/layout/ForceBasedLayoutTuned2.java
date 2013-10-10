@@ -101,8 +101,10 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		// use the area filled as an indicator how repulsive the elements should be
 		// the less filled the more repulsion
 		// the less filled the less attraction
-		final double attraction = clamp(0.20 * areaFilled, 0.01, 0.1);
+		final double attraction = clamp(0.20 * (1 - areaFilled), 0.01, 0.1);
 		final double repulsion = clamp((1 - areaFilled) * 50, 5, 80);
+		final double frame = clamp((1 - areaFilled) * 2, 0.2, 1);
+		// System.out.println(attraction + " " + repulsion + " " + frame);
 
 		// count forces together + apply + reset
 		for (ForcedBody body : bodies) { // reset forces
@@ -115,8 +117,8 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 			double attForceX = checkPlausibility(body.getAttForceX() * attraction);
 			double attForceY = checkPlausibility(body.getAttForceY() * attraction);
 
-			final double frameForceX = 1 * body.getFrameForceX();
-			final double frameForceY = 1 * body.getFrameForceY();
+			final double frameForceX = frame * body.getFrameForceX();
+			final double frameForceY = frame * body.getFrameForceY();
 
 			double forceX = repForceX + attForceX + frameForceX;
 			double forceY = repForceY + attForceY + frameForceY;
@@ -271,6 +273,8 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		scale /= (distLength * distLength);
 		repX = v.x() * scale;
 		repY = v.y() * scale;
+		if (Double.isNaN(repX) || Double.isNaN(repY))
+			return;
 		// as distance symmetrical
 		body.addRepForce(repX, repY);
 		other.addRepForce(-repX, -repY);
@@ -356,6 +360,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 	protected void initialLayout(List<ForcedBody> bodies, float w, float h) {
 		for(ForcedBody body : bodies) {
 			initialPosition(body, w, h, bodies);
+			System.out.println(body);
 		}
 	}
 

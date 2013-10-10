@@ -140,31 +140,55 @@ public class ZoomLogic {
 
 	public static float adaptScaleFactorToSize(EDimension dir, Dimension oldSize, Dimension newSize, float currentDim,
 			float currentRec, float w, float h) {
-		int dim = oldSize.width - newSize.width;
-		int rec = oldSize.height - newSize.height;
-		if (dir.select(dim, rec) == 0)
+		final int delta = dir.select(newSize.width - oldSize.width, newSize.height - oldSize.height);
+		if (delta == 0)
 			return 1; // no change
-		// FIXME
-			// float deltaDim = dim * currentDim;
-			// float deltaRec = rec * currentRec;
-			//
-			// if (dim != 0) {
-			// if (dim < 0 && newSize.width * currentDim > w * 0.05) {
-			// float filled = newSize.width * currentDim / (w * 0.05f);
-			// float f = lookup(filled);
-			// float factor = (oldSize.width + -dim * f) / newSize.width;
-			// return factor;
-			// } else if (dim > 0 && oldSize.width * currentDim > w * 0.05 && newSize.width * currentDim < w * 0.03) {
-			// float factor = (oldSize.width + -dim * 1.1f) / newSize.width;
-			// return factor;
-			// }
-			// }
-			// if (rec != 0) {
-			// if (rec < 0 && newSize.height * currentRec > h * 0.05) {
-			// return (float) Math.pow(0.999f, -rec);
-			// } else if (rec > 0 && oldSize.height * currentRec > h * 0.05)
-			// return (float) Math.pow(0.999f, -rec);
-			// }
+		final float scale = dir.select(currentDim, currentRec);
+		final float total = dir.select(w, h);
+		final float old = dir.select(oldSize.width, oldSize.height);
+		final float new_ = dir.select(newSize.width, newSize.height);
+
+		if (new_ == 0) // not visible anymore
+			return 1;
+
+		if (delta > 0 && new_ * scale > total * 0.15) { // increase and too large
+			float filled = new_ * scale / (total * 0.3f);
+			if (filled > 1)
+				filled = 1;
+			float f = lookup(filled);
+			float factor = (old + delta * f) / new_;
+			System.out.println(old + " " + delta + "*" + f + " / " + new_ + " " + filled);
+			return factor;
+		} else if (delta < 0 && new_ * scale < total * 0.1) { // shrink and too small
+			float filled = new_ * scale / (total * 0.1f);
+			if (filled > 1)
+				filled = 1;
+			float f = lookup(1 - filled);
+			float factor = (old + delta * f) / new_;
+			System.out.println("" + old + " " + delta + "*" + f + " / " + new_ + " " + filled);
+			return factor;
+		}
+
+		// float deltaDim = dim * currentDim;
+		// float deltaRec = rec * currentRec;
+		//
+		// if (dim != 0) {
+		// if (dim < 0 && newSize.width * currentDim > w * 0.05) {
+		// float filled = newSize.width * currentDim / (w * 0.05f);
+		// float f = lookup(filled);
+		// float factor = (oldSize.width + -dim * f) / newSize.width;
+		// return factor;
+		// } else if (dim > 0 && oldSize.width * currentDim > w * 0.05 && newSize.width * currentDim < w * 0.03) {
+		// float factor = (oldSize.width + -dim * 1.1f) / newSize.width;
+		// return factor;
+		// }
+		// }
+		// if (rec != 0) {
+		// if (rec < 0 && newSize.height * currentRec > h * 0.05) {
+		// return (float) Math.pow(0.999f, -rec);
+		// } else if (rec > 0 && oldSize.height * currentRec > h * 0.05)
+		// return (float) Math.pow(0.999f, -rec);
+		// }
 		return 1.f;
 	}
 
@@ -173,11 +197,11 @@ public class ZoomLogic {
 	 * @return
 	 */
 	private static float lookup(float filled) {
-		if (filled < .8f)
+		if (filled <= .8f) // small enough
 			return 1.f;
-		if (filled < .9f)
-			return (0.95f - filled) * 10;
-		return (1 - filled) * 8;
+		if (filled <= .9f) //
+			return 0.65f + 0.35f * (filled - .8f);
+		return 0.2f + 0.45f * (filled - .9f);
 
 	}
 }
