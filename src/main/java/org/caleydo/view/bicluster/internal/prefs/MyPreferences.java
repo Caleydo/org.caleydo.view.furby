@@ -34,7 +34,7 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 		store.setDefault("view.bicluster.threshold.rec", (int) (0.08f * 100));
 		store.setDefault("view.bicluster.top.dim", UNBOUND_NUMBER);
 		store.setDefault("view.bicluster.top.rec", UNBOUND_NUMBER);
-		store.setDefault("view.bicluster.showbands.dim", true);
+		store.setDefault("view.bicluster.showbands.dim", false);
 		store.setDefault("view.bicluster.showbands.rec", true);
 	}
 
