@@ -61,6 +61,7 @@ public class ClusterContentElement extends GLElementDecorator {
 	public ClusterContentElement(Builder builder, Predicate<? super String> filter) {
 		builder.set("histogram.showColorMapper", false); // don't show the color mapper
 		// bbuilder.set("heatmap.linearBar.scaleLocally"); // scale plot per table perspective
+		// builder.put(EScalingMode.class, EScalingMode.LOCAL_ROW);
 		GLElementFactoryContext context = builder.build();
 		this.data = context.getData();
 		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",
