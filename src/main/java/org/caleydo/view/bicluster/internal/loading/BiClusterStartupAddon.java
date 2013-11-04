@@ -6,12 +6,18 @@
 package org.caleydo.view.bicluster.internal.loading;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.caleydo.core.data.collection.EDataClass;
 import org.caleydo.core.data.collection.EDataType;
+import org.caleydo.core.data.collection.column.container.CategoricalClassDescription;
 import org.caleydo.core.id.IDCategory;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.io.ColumnDescription;
@@ -20,9 +26,15 @@ import org.caleydo.core.io.DataSetDescription;
 import org.caleydo.core.io.DataSetDescription.ECreateDefaultProperties;
 import org.caleydo.core.io.IDSpecification;
 import org.caleydo.core.io.ParsingRule;
+import org.caleydo.core.io.gui.dataimport.widget.CategoricalDataPropertiesWidget;
 import org.caleydo.core.startup.IStartupAddon;
 import org.caleydo.core.startup.IStartupProcedure;
 import org.caleydo.datadomain.genetic.TCGADefinitions;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -31,8 +43,10 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.kohsuke.args4j.Option;
 
@@ -58,6 +72,8 @@ public class BiClusterStartupAddon implements IStartupAddon {
 	private Text zFileUI;
 	private Text chemicalFileUI;
 	private Text thresholdsFileUI;
+	private Button specifyCategoriesUI;
+	private CategoricalClassDescription<String> chemicalProperties;
 
 	@Override
 	public boolean init() {
@@ -105,8 +121,10 @@ public class BiClusterStartupAddon implements IStartupAddon {
 						lFileUI.setText(lFile.getAbsolutePath());
 					if (isValid(zFile))
 						zFileUI.setText(zFile.getAbsolutePath());
-					if (isValid(chemicalFile))
+					if (isValid(chemicalFile)) {
 						chemicalFileUI.setText(chemicalFile.getAbsolutePath());
+						specifyCategoriesUI.setEnabled(true);
+					}
 					if (isValid(thresholdsFile))
 						thresholdsFileUI.setText(thresholdsFile.getAbsolutePath());
 					checkAllThere(page);
@@ -177,7 +195,22 @@ public class BiClusterStartupAddon implements IStartupAddon {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
 					chemicalFile = onOpenFile(chemicalFileUI);
+					if (chemicalFile != null)
+						specifyCategoriesUI.setEnabled(true);
 					checkAllThere(page);
+				}
+			});
+
+			specifyCategoriesUI = new Button(group, SWT.PUSH);
+			specifyCategoriesUI.setText("Set Properties");
+			gridData = new GridData(SWT.FILL, SWT.TOP, true, true);
+			gridData.horizontalSpan = 2;
+			specifyCategoriesUI.setLayoutData(gridData);
+			specifyCategoriesUI.setEnabled(false);
+			specifyCategoriesUI.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					onSpecifyChemicalCategories();
 				}
 			});
 		}
@@ -232,6 +265,20 @@ public class BiClusterStartupAddon implements IStartupAddon {
 	/**
 	 *
 	 */
+	protected void onSpecifyChemicalCategories() {
+		if (this.chemicalFile == null)
+			return;
+		ChemicalProperties p = new ChemicalProperties(null, chemicalFile, this.chemicalProperties);
+		p.setBlockOnOpen(true);
+		if (p.open() == Window.OK) {
+			this.chemicalProperties = p.result;
+		}
+	}
+
+
+	/**
+	 *
+	 */
 	protected void checkAllThere(WizardPage page) {
 		boolean ok = validate();
 		page.setPageComplete(ok);
@@ -243,11 +290,12 @@ public class BiClusterStartupAddon implements IStartupAddon {
 		// fileDialog.setFilterPath(filePath);
 		String[] filterExt = { "*.csv" };
 		fileDialog.setFilterExtensions(filterExt);
+		fileDialog.setFileName(xFileUI.getText());
 
 		String inputFileName = fileDialog.open();
 		if (inputFileName == null)
-			return null;
-		xFileUI.setText(inputFileName);
+			return StringUtils.isBlank(xFileUI.getText()) ? null : new File(xFileUI.getText());
+		xFileUI.setText(StringUtils.defaultString(inputFileName));
 		return new File(inputFileName);
 	}
 
@@ -295,36 +343,38 @@ public class BiClusterStartupAddon implements IStartupAddon {
 		}
 
 		if (isValid(chemicalFile)) {
-			DataSetDescription z = new DataSetDescription();
-			z.setDataSourcePath(chemicalFile.getAbsolutePath());
-			z.setDataSetName(name + "_ChemicalClusters");
-			z.setDelimiter("\t");
-			z.setRowIDSpecification(sample);
-			z.setColumnIDSpecification(createDummy(z.getDataSetName()));
+			DataSetDescription c = new DataSetDescription();
+			c.setDataSourcePath(chemicalFile.getAbsolutePath());
+			c.setDataSetName(name + "_ChemicalClusters");
+			c.setDelimiter("\t");
+			c.setRowIDSpecification(sample);
+			c.setColumnIDSpecification(createDummy(c.getDataSetName()));
 			ParsingRule p = new ParsingRule();
 			p.setFromColumn(1);
 			p.setToColumn(2);
-			p.setColumnDescripton(new ColumnDescription(new DataDescription(EDataClass.CATEGORICAL, EDataType.STRING)));
-			z.addParsingRule(p);
-			r.add(z);
+			final ColumnDescription desc = new ColumnDescription(new DataDescription(EDataClass.CATEGORICAL, EDataType.STRING));
+			desc.getDataDescription().setCategoricalClassDescription(chemicalProperties);
+			p.setColumnDescripton(desc);
+			c.addParsingRule(p);
+			r.add(c);
 		}
 
 		if (isValid(thresholdsFile)) {
-			DataSetDescription z = new DataSetDescription();
-			z.setDataSourcePath(thresholdsFile.getAbsolutePath());
-			z.setDataSetName(name + "_Thresholds");
-			z.setDelimiter("\t");
-			z.setRowIDSpecification(bicluster);
-			z.setColumnIDSpecification(createDummy(z.getDataSetName()));
+			DataSetDescription t = new DataSetDescription();
+			t.setDataSourcePath(thresholdsFile.getAbsolutePath());
+			t.setDataSetName(name + "_Thresholds");
+			t.setDelimiter("\t");
+			t.setRowIDSpecification(bicluster);
+			t.setColumnIDSpecification(createDummy(t.getDataSetName()));
 			for (int i = 1; i < 3; ++i) {
 				ParsingRule p = new ParsingRule();
 				p.setFromColumn(i);
 				p.setToColumn(i + 1);
 				p.setColumnDescripton(new ColumnDescription(
 						new DataDescription(EDataClass.REAL_NUMBER, EDataType.FLOAT)));
-				z.addParsingRule(p);
+				t.addParsingRule(p);
 			}
-			r.add(z);
+			r.add(t);
 		}
 		return r;
 	}
@@ -382,6 +432,63 @@ public class BiClusterStartupAddon implements IStartupAddon {
 	@Override
 	public IStartupProcedure create() {
 		return new LoadBiClusterStartupProcedure(getProjectName(), toDataSetDescriptions());
+	}
+
+	private class ChemicalProperties extends Dialog {
+		private CategoricalDataPropertiesWidget widget;
+		private CategoricalClassDescription<String> result;
+		private final File inputFile;
+		private CategoricalClassDescription<String> old;
+
+		/**
+		 * @param parentShell
+		 * @param old
+		 */
+		protected ChemicalProperties(Shell parentShell, File inputFile, CategoricalClassDescription<String> old) {
+			super(parentShell);
+			this.inputFile = inputFile;
+			this.old = old;
+		}
+
+		@Override
+		protected Control createDialogArea(Composite parent) {
+			List<List<String>> data = parseFile(inputFile);
+			widget = new CategoricalDataPropertiesWidget(parent);
+			if (old != null)
+				widget.updateCategories(data, 1, old);
+			else
+				widget.updateCategories(data, 1);
+
+			return parent;
+		}
+
+		@Override
+		protected void okPressed() {
+			this.result = widget.getCategoricalClassDescription();
+			super.okPressed();
+		}
+
+		/**
+		 * @param inputFile2
+		 * @return
+		 */
+		private List<List<String>> parseFile(File f) {
+			if (!f.exists() || !f.isFile())
+				return Collections.emptyList();
+			List<List<String>> r = new ArrayList<>();
+			try {
+				List<String> lines = Files.readAllLines(f.toPath(), Charset.forName("UTF-8"));
+				for (String line : lines.subList(1, lines.size())) {
+					r.add(Arrays.asList(line.split("\t")));
+				}
+			} catch (IOException e) {
+				ErrorDialog.openError(getParentShell(), "Can't load file", "Can't load file: " + f, new Status(
+						IStatus.ERROR, "Caleydo", "Can't load file: " + f, e));
+
+			}
+			return r;
+		}
+
 	}
 
 }

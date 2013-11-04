@@ -45,14 +45,14 @@ public abstract class AForceBasedLayoutTuned extends AForceBasedLayout {
 			initialLayout(bodies, w, h);
 			isInitLayoutDone = true;
 			iterations = 20;
-			System.out.println("init all");
+			// System.out.println("init all");
 		} else {
 			iterations = Math.max(1, computeNumberOfIterations(deltaTimeMs));
 
 			// init uninitialized bodies
 			for (ForcedBody body : bodies) {
 				if (body.isInvalid() && body.isVisible()) {
-					System.out.println("init " + body);
+					// System.out.println("init " + body);
 					initialPosition(body, w, h, bodies);
 				}
 			}
