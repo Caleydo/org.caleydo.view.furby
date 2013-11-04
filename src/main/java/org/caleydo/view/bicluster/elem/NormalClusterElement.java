@@ -19,6 +19,7 @@ import java.util.List;
 import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
+import org.caleydo.core.data.virtualarray.group.GroupList;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
@@ -42,9 +43,11 @@ import org.caleydo.view.bicluster.elem.ui.ThresholdSlider;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.internal.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
+import org.caleydo.view.bicluster.sorting.IGroupingStrategy;
 import org.caleydo.view.bicluster.sorting.ISortingStrategy;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
+import org.caleydo.view.bicluster.sorting.SortingStrategies;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
@@ -379,8 +382,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 	 * @param recs
 	 */
 	private void updateTablePerspective(List<IntFloat> dims, List<IntFloat> recs) {
-		fill(getDimVirtualArray(), dims);
-		fill(getRecVirtualArray(), recs);
+		fill(getDimVirtualArray(), dims, SortingStrategies.findGrouping(dimSorter));
+		fill(getRecVirtualArray(), recs, SortingStrategies.findGrouping(recSorter));
 
 		this.data.invalidateContainerStatistics();
 
@@ -391,9 +394,14 @@ public class NormalClusterElement extends AMultiClusterElement {
 				annotation.update(recs);
 	}
 
-	private static void fill(VirtualArray va, List<IntFloat> values) {
+	private static void fill(VirtualArray va, List<IntFloat> values, IGroupingStrategy grouper) {
 		va.clear();
 		va.addAll(Lists.transform(values, IntFloat.TO_INDEX));
+		if (grouper != null)
+			va.setGroupList(grouper.getGrouping(values));
+		else
+			va.setGroupList(new GroupList());
+
 	}
 
 	public void addAnnotation(ALZHeatmapElement annotation) {

@@ -5,6 +5,8 @@
  *******************************************************************************/
 package org.caleydo.view.bicluster.sorting;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang.WordUtils;
@@ -12,6 +14,8 @@ import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.collection.column.container.CategoricalClassDescription;
 import org.caleydo.core.data.collection.column.container.CategoryProperty;
 import org.caleydo.core.data.collection.table.Table;
+import org.caleydo.core.data.virtualarray.group.Group;
+import org.caleydo.core.data.virtualarray.group.GroupList;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
 import org.caleydo.core.util.color.Color;
@@ -62,7 +66,7 @@ public class CategoricalSortingStrategyFactory implements IComposeAbleSortingStr
 		return property == null ? null : property.getCategoryName();
 	}
 
-	private CategoryProperty<?> getProperty(Integer id) {
+	public CategoryProperty<?> getProperty(Integer id) {
 		id = map(id);
 		if (id == null)
 			return null;
@@ -117,7 +121,8 @@ public class CategoricalSortingStrategyFactory implements IComposeAbleSortingStr
 		return r == null || r.isEmpty() ? null : r.iterator().next();
 	}
 
-	private static class CategoricalSortingStrategy extends AComposeAbleSortingStrategy {
+	private static class CategoricalSortingStrategy extends AComposeAbleSortingStrategy implements
+			IGroupingStrategy {
 		private final CategoricalSortingStrategyFactory factory;
 
 		/**
@@ -125,6 +130,36 @@ public class CategoricalSortingStrategyFactory implements IComposeAbleSortingStr
 		 */
 		public CategoricalSortingStrategy(CategoricalSortingStrategyFactory factory) {
 			this.factory = factory;
+		}
+
+		@Override
+		public GroupList getGrouping(List<IntFloat> sortedList) {
+			GroupList l = new GroupList();
+			int from = 0;
+			int size = 0;
+			CategoryProperty<?> last = null;
+			for (IntFloat i : sortedList) {
+				CategoryProperty<?> prop = factory.getProperty(i.getIndex());
+				if (!Objects.equals(prop, last) && size > 0 && last != null) {
+					Group g = new Group(size, -1);
+					g.setLabel(last.getCategoryName(), false);
+					g.setStartIndex(from);
+					l.append(g);
+					from += size;
+					size = 0;
+				}
+				size++;
+				last = prop;
+			}
+			if (size > 0 && last != null) {
+				Group g = new Group(size, -1);
+				g.setLabel(last.getCategoryName(), false);
+				g.setStartIndex(from);
+				l.append(g);
+				from += size;
+				size = 0;
+			}
+			return l;
 		}
 
 		@Override
