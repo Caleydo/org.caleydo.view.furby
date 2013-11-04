@@ -15,7 +15,6 @@ import gleem.linalg.Vec2f;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.caleydo.core.data.collection.EDimension;
@@ -48,6 +47,7 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactories.GLElementS
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
+import org.caleydo.core.view.opengl.util.text.ETextStyle;
 import org.caleydo.view.bicluster.elem.BiClustering;
 import org.caleydo.view.bicluster.elem.ClusterElement;
 import org.caleydo.view.bicluster.elem.ui.MyUnboundSpinner;
@@ -58,19 +58,11 @@ import org.caleydo.view.bicluster.event.LZThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
 import org.caleydo.view.bicluster.event.ResetSettingsEvent;
 import org.caleydo.view.bicluster.event.ShowHideBandsEvent;
-import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.event.ZoomEvent;
 import org.caleydo.view.bicluster.internal.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
-import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy;
-import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy.IComposeAbleSortingStrategyFactory;
-import org.caleydo.view.bicluster.sorting.BandSortingStrategy;
-import org.caleydo.view.bicluster.sorting.CenterProbabilitySortingStrategy;
-import org.caleydo.view.bicluster.sorting.ComposedSortingStrategyFactory;
-import org.caleydo.view.bicluster.sorting.DefaultSortingStrategy;
 import org.caleydo.view.bicluster.sorting.ISortingStrategyFactory;
-import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
 
 import com.google.common.collect.Iterables;
 
@@ -80,15 +72,7 @@ import com.google.common.collect.Iterables;
  *
  */
 public class ParameterToolBarElement extends AToolBarElement implements MyUnboundSpinner.IChangeCallback,
-		ThresholdSlider.ISelectionCallback, GLComboBox.ISelectionCallback<ISortingStrategyFactory> {
-
-	private static final ISortingStrategyFactory DEFAULT_PRIMARY_SORTING_MODE = ProbabilitySortingStrategy.FACTORY_INC;
-	private static final ISortingStrategyFactory DEFAULT_SECONDARY_SORTING_MODE = DefaultSortingStrategy.FACTORY;
-
-	private final GLComboBox<ISortingStrategyFactory> sorterPrimary;
-	private final GLComboBox<ISortingStrategyFactory> sorterSecondary;
-	private List<ISortingStrategyFactory> sortingModelPrimary;
-	private List<ISortingStrategyFactory> sortingModelSecondary;
+		ThresholdSlider.ISelectionCallback {
 
 	private final GLButton dimBandVisibilityButton;
 	private final GLButton recBandVisibilityButton;
@@ -106,27 +90,25 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	private final GLSpinner<Integer> maxDistance;
 	private final HiddenClusters hidden;
 
+	private GLElement recSortingLabel;
+	private final SortingStrategyChanger recSorter;
+	private GLElement dimSortingLabel;
+	private final SortingStrategyChanger dimSorter;
+
 	public ParameterToolBarElement() {
+		this.add(createGroupLabelLine("Sorting Criteria"));
+
+		this.recSortingLabel = new GLElement();
+		setText(recSortingLabel, "Record", ETextStyle.BOLD);
+		this.add(recSortingLabel.setSize(Float.NaN, LABEL_WIDTH));
+		this.recSorter = new SortingStrategyChanger(this, EDimension.RECORD);
+		this.dimSortingLabel = new GLElement();
+		setText(dimSortingLabel, "Dimension", ETextStyle.BOLD);
+		this.add(dimSortingLabel.setSize(Float.NaN, LABEL_WIDTH));
+		this.dimSorter = new SortingStrategyChanger(this, EDimension.DIMENSION);
+
+
 		this.add(createGroupLabelLine("Visual Settings"));
-		this.sortingModelPrimary = createSortingModel(true);
-		this.sorterPrimary = new GLComboBox<ISortingStrategyFactory>(sortingModelPrimary, GLComboBox.DEFAULT,
-				GLRenderers.fillRect(Color.WHITE));
-		this.sorterPrimary.setSelectedItem(DEFAULT_PRIMARY_SORTING_MODE);
-		this.sorterPrimary.setCallback(this);
-		this.sorterPrimary.setSize(Float.NaN, BUTTON_WIDTH);
-		this.sorterPrimary.setzDeltaList(0.5f);
-		this.add(sorterPrimary);
-
-		this.sortingModelSecondary = new ArrayList<>();
-		this.sorterSecondary = new GLComboBox<ISortingStrategyFactory>(sortingModelSecondary, GLComboBox.DEFAULT,
-				GLRenderers.fillRect(Color.WHITE));
-		this.sorterSecondary.setCallback(this);
-		this.sorterSecondary.setSize(Float.NaN, BUTTON_WIDTH);
-		this.sorterSecondary.setzDeltaList(0.5f);
-		this.add(sorterSecondary);
-
-		updateSecondary(DEFAULT_PRIMARY_SORTING_MODE);
-
 		this.dimBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer("Dimension Bands"));
 		dimBandVisibilityButton.setSelected(isShowDimBands());
@@ -248,32 +230,14 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		return b;
 	}
 
-	/**
-	 * @param all
-	 * @return
-	 */
-	private List<ISortingStrategyFactory> createSortingModel(boolean all) {
-		List<ISortingStrategyFactory> r = new ArrayList<>();
-		r.add(ProbabilitySortingStrategy.FACTORY_INC);
-		r.add(ProbabilitySortingStrategy.FACTORY_INC_ABS);
-		r.add(ProbabilitySortingStrategy.FACTORY_DEC);
-		r.add(ProbabilitySortingStrategy.FACTORY_DEC_ABS);
-		r.add(DefaultSortingStrategy.FACTORY);
-		r.add(BandSortingStrategy.FACTORY);
-		r.add(CenterProbabilitySortingStrategy.FACTORY);
-		if (!all)
-			for (Iterator<ISortingStrategyFactory> it = r.iterator(); it.hasNext();)
-				if (!(it.next() instanceof AComposeAbleSortingStrategy))
-					it.remove();
-		return r;
-	}
 
 	@Override
 	public void reset() {
 		this.dimBandVisibilityButton.setSelected(isShowDimBands());
 		this.recBandVisibilityButton.setSelected(isShowRecBands());
-		this.sorterPrimary.setCallback(null).setSelectedItem(DEFAULT_PRIMARY_SORTING_MODE).setCallback(this);
-		updateSecondary(DEFAULT_PRIMARY_SORTING_MODE);
+
+		recSorter.reset();
+		dimSorter.reset();
 
 		this.maxDistance.setValue(MyPreferences.getMaxDistance());
 		this.visualizationSwitcher.setSelected(0);
@@ -284,28 +248,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		this.recThresholdSlider.setValue(getRecThreshold());
 
 		this.hidden.showAll();
-	}
-
-	private void updateSecondary(ISortingStrategyFactory primary) {
-		this.sorterSecondary.setCallback(null);
-		this.sortingModelSecondary.clear();
-		if (!(primary instanceof IComposeAbleSortingStrategyFactory)) {
-			this.sorterSecondary.setVisibility(EVisibility.VISIBLE);
-			this.sorterSecondary.setSelected(-1);
-		} else {
-			this.sortingModelSecondary.clear();
-			this.sortingModelSecondary.addAll(sortingModelPrimary);
-			for (Iterator<ISortingStrategyFactory> it = this.sortingModelSecondary.iterator(); it.hasNext();) {
-				ISortingStrategyFactory act = it.next();
-				if (act == primary || !(act instanceof IComposeAbleSortingStrategyFactory))
-					it.remove();
-			}
-			this.sorterSecondary
-					.setSelectedItem(primary == DEFAULT_SECONDARY_SORTING_MODE ? DEFAULT_PRIMARY_SORTING_MODE
-							: DEFAULT_SECONDARY_SORTING_MODE);
-			this.sorterSecondary.setVisibility(EVisibility.PICKABLE);
-		}
-		this.sorterSecondary.setCallback(this);
 	}
 
 	/**
@@ -337,7 +279,11 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	}
 
 	private void setText(GLElement elem, String text) {
-		elem.setRenderer(GLRenderers.drawText(text, VAlign.LEFT, new GLPadding(1, 0, 1, 2)));
+		setText(elem, text, ETextStyle.PLAIN);
+	}
+
+	private void setText(GLElement elem, String text, ETextStyle style) {
+		elem.setRenderer(GLRenderers.drawText(text, VAlign.LEFT, new GLPadding(1, 0, 1, 2), style));
 	}
 
 	@Override
@@ -349,23 +295,6 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		updateGeneSampleThresholds(EDimension.get(slider == dimThresholdSlider));
 	}
 
-	@Override
-	public void onSelectionChanged(GLComboBox<? extends ISortingStrategyFactory> widget, ISortingStrategyFactory item) {
-		if (widget == sorterPrimary && item != null) {
-			updateSecondary(item);
-		}
-		ISortingStrategyFactory primary = sorterPrimary.getSelectedItem();
-		ISortingStrategyFactory secondary = sorterSecondary.getSelectedItem();
-		if (primary == null)
-			return;
-		ISortingStrategyFactory r;
-		if (primary instanceof IComposeAbleSortingStrategyFactory && secondary instanceof IComposeAbleSortingStrategyFactory) {
-			r = new ComposedSortingStrategyFactory((IComposeAbleSortingStrategyFactory) primary,
-					(IComposeAbleSortingStrategyFactory) secondary);
-		} else
-			r = primary;
-		EventPublisher.trigger(new SortingChangeEvent(r));
-	}
 
 	@Override
 	public void onValueChanged(MyUnboundSpinner spinner, int value) {
@@ -458,6 +387,8 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 
 		setText(dimLabel, dimensionIDCategory + " Threshold");
 		setText(recLabel, recordIDCategory + " Threshold");
+		setText(dimSortingLabel, dimensionIDCategory, ETextStyle.BOLD);
+		setText(recSortingLabel, recordIDCategory, ETextStyle.BOLD);
 
 		recBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(recordIDCategory + " Bands"));
 		dimBandVisibilityButton.setRenderer(GLButton.createCheckRenderer(dimensionIDCategory + " Bands"));
@@ -476,7 +407,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	 */
 	@Override
 	public Rect getPreferredBounds() {
-		return new Rect(-205, 0, 200, 480 + 20);
+		return new Rect(-205, 0, 200, 520 + 20);
 	}
 
 	private static class MyTextRender implements IGLRenderer {
@@ -494,26 +425,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		}
 	}
 
-	/**
-	 * @param factory
-	 */
-	public void addSortingMode(ISortingStrategyFactory factory) {
-		this.sortingModelPrimary.add(factory);
-		if (this.sorterPrimary.getSelectedItem() instanceof IComposeAbleSortingStrategyFactory
-				&& factory instanceof IComposeAbleSortingStrategyFactory)
-			this.sortingModelSecondary.add(factory);
-		this.sorterPrimary.repaint();
-	}
 
-	/**
-	 * @param data
-	 */
-	public void removeSortingMode(ISortingStrategyFactory data) {
-		if (sorterPrimary.getSelectedItem() == data)
-			sorterPrimary.setSelectedItem(DEFAULT_PRIMARY_SORTING_MODE);
-		if (this.sortingModelPrimary.remove(data))
-			this.sorterPrimary.repaint();
-	}
 
 	private static class HiddenClusters extends GLElementContainer implements IHasMinSize, GLButton.ISelectionCallback {
 		public HiddenClusters() {
@@ -561,5 +473,25 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	 */
 	public void setThreshold(EDimension dimension, float thresh) {
 		dimension.select(this.dimThresholdSlider, this.recThresholdSlider).setValue(thresh);
+	}
+
+	/**
+	 * @param factory
+	 */
+	public void addSortingMode(ISortingStrategyFactory factory, EDimension dim) {
+		if (dim == null || dim.isHorizontal())
+			this.dimSorter.addSortingMode(factory);
+		if (dim == null || dim.isVertical())
+			this.recSorter.addSortingMode(factory);
+	}
+
+	/**
+	 * @param data
+	 */
+	public void removeSortingMode(ISortingStrategyFactory factory, EDimension dim) {
+		if (dim == null || dim.isHorizontal())
+			this.dimSorter.removeSortingMode(factory);
+		if (dim == null || dim.isVertical())
+			this.recSorter.removeSortingMode(factory);
 	}
 }

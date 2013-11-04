@@ -490,7 +490,7 @@ public class GLRootElement extends GLElementContainer {
 			final CategoricalSortingStrategyFactory factory = new CategoricalSortingStrategyFactory(
 					EDimension.DIMENSION, oppositeID, table,
 					mapper);
-			toolbarParam.addSortingMode(factory);
+			toolbarParam.addSortingMode(factory, EDimension.DIMENSION);
 			for (NormalClusterElement cluster : allNormalClusters())
 				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.DIMENSION, factory));
 		} else if (source.getRecordIDCategory().isOfCategory(target)) {
@@ -500,7 +500,7 @@ public class GLRootElement extends GLElementContainer {
 			final CategoricalSortingStrategyFactory factory = new CategoricalSortingStrategyFactory(EDimension.RECORD,
 					oppositeID, table,
 					mapper);
-			toolbarParam.addSortingMode(factory);
+			toolbarParam.addSortingMode(factory, EDimension.RECORD);
 			for (NormalClusterElement cluster : allNormalClusters())
 				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.RECORD, factory));
 		}
@@ -522,7 +522,7 @@ public class GLRootElement extends GLElementContainer {
 						CategoricalLZHeatmapElement.class)) {
 					if (h.is(oppositeID, target)) {
 						cluster.removeAnnotation(h);
-						toolbarParam.removeSortingMode(h.getData());
+						toolbarParam.removeSortingMode(h.getData(), h.getDim());
 						break;
 					}
 				}
@@ -533,7 +533,7 @@ public class GLRootElement extends GLElementContainer {
 						CategoricalLZHeatmapElement.class)) {
 					if (h.is(oppositeID, target)) {
 						cluster.removeAnnotation(h);
-						toolbarParam.removeSortingMode(h.getData());
+						toolbarParam.removeSortingMode(h.getData(), h.getDim());
 						break;
 					}
 				}

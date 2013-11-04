@@ -235,8 +235,11 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	@ListenTo
 	private void listenTo(SortingChangeEvent e) {
-		this.dimSorter = e.getFactory().create(this, EDimension.DIMENSION);
-		this.recSorter = e.getFactory().create(this, EDimension.RECORD);
+		if (e.getDimension().isDimension()) {
+			this.dimSorter = e.getFactory().create(this, EDimension.DIMENSION);
+		} else {
+			this.recSorter = e.getFactory().create(this, EDimension.RECORD);
+		}
 		resort();
 	}
 
