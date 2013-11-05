@@ -67,8 +67,8 @@ public class GLRootElement extends GLElementContainer {
 	private static final Logger log = Logger.create(GLRootElement.class);
 
 	private final ParameterToolBarElement toolbarParam = new ParameterToolBarElement();
-	private final List<AToolBarElement> toolbars = Arrays.asList(toolbarParam,
-			new LayoutToolBarElement());
+	private final LayoutToolBarElement layoutParam = new LayoutToolBarElement();
+	private final List<AToolBarElement> toolbars = Arrays.asList(toolbarParam, layoutParam);
 
 	private boolean dimBands = MyPreferences.isShowDimBands();
 	private boolean recBands = MyPreferences.isShowRecBands();
@@ -102,6 +102,8 @@ public class GLRootElement extends GLElementContainer {
 			}
 		});
 		this.add(zoomLayer);
+
+		this.layoutParam.fill(clusters.getLayout());
 	}
 
 

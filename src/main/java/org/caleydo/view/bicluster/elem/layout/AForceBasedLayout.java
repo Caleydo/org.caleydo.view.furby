@@ -28,13 +28,19 @@ import org.caleydo.view.bicluster.event.UpdateBandsEvent;
 public abstract class AForceBasedLayout implements IGLLayout2 {
 	protected final AllClustersElement parent;
 
-	protected float repulsion = 100000f;
-	protected float attractionFactor = 100f;
-	protected float borderForceFactor = 200f;
-
 	public AForceBasedLayout(AllClustersElement parent) {
 		this.parent = parent;
 	}
+
+	public abstract void fillLayoutToolBar(ILayoutToolBar elem);
+
+	@ListenTo
+	private void listenTo(ForceChangeEvent e) {
+		setParameter(e.getName(), e.getValue());
+		parent.relayout();
+	}
+
+	protected abstract void setParameter(String name, float value);
 
 	@Override
 	public final boolean doLayout(List<? extends IGLLayoutElement> children, float w, float h, IGLLayoutElement parent,
@@ -84,14 +90,6 @@ public abstract class AForceBasedLayout implements IGLLayout2 {
 
 	protected abstract boolean forceBasedLayout(List<? extends IGLLayoutElement> children, float w, float h,
 			int deltaTimeMs);
-
-	@ListenTo
-	private void listenTo(ForceChangeEvent e) {
-		repulsion = e.getRepulsionForce();
-		attractionFactor = e.getAttractionForce();
-		borderForceFactor = e.getBoarderForce();
-		parent.relayout();
-	}
 
 	protected static int computeNumberOfIterations(int deltaTimeMs) {
 		final float iterationFactor = 1000;

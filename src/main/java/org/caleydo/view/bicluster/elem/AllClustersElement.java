@@ -20,7 +20,7 @@ import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.event.EventListenerManager.DeepScan;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
-import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
+import org.caleydo.view.bicluster.elem.layout.AForceBasedLayout;
 import org.caleydo.view.bicluster.elem.layout.ForceBasedLayoutTuned2;
 import org.caleydo.view.bicluster.elem.toolbar.AToolBarElement;
 
@@ -45,7 +45,7 @@ public class AllClustersElement extends GLElementContainer {
 	};
 
 	@DeepScan
-	private final IGLLayout2 layout = new ForceBasedLayoutTuned2(this);
+	private final AForceBasedLayout layout = new ForceBasedLayoutTuned2(this);
 
 
 	public AllClustersElement(GLRootElement glRootElement) {
@@ -234,5 +234,12 @@ public class AllClustersElement extends GLElementContainer {
 		if (this.hoveredElement != null) {
 			this.hoveredElement.mouseOut();
 		}
+	}
+
+	/**
+	 * @return the layout, see {@link #layout}
+	 */
+	public AForceBasedLayout getLayout() {
+		return layout;
 	}
 }
