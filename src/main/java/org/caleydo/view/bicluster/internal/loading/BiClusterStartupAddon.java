@@ -46,6 +46,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.kohsuke.args4j.Option;
@@ -91,7 +92,7 @@ public class BiClusterStartupAddon implements IStartupAddon {
 	}
 
 	@Override
-	public Composite create(Composite parent, final WizardPage page) {
+	public Composite create(Composite parent, final WizardPage page, final Listener changeListener) {
 		// create composite
 		parent = new Composite(parent, SWT.NONE);
 		parent.setLayout(new GridLayout(1, true));
@@ -113,7 +114,7 @@ public class BiClusterStartupAddon implements IStartupAddon {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
 					xFile = onOpenFile(xFileUI);
-					checkAllThere(page);
+					checkAllThere(page, changeListener);
 					// infer the other
 					if (isValid(xFile))
 						inferFromX();
@@ -127,7 +128,7 @@ public class BiClusterStartupAddon implements IStartupAddon {
 					}
 					if (isValid(thresholdsFile))
 						thresholdsFileUI.setText(thresholdsFile.getAbsolutePath());
-					checkAllThere(page);
+					checkAllThere(page, changeListener);
 				}
 			});
 		}
@@ -149,7 +150,7 @@ public class BiClusterStartupAddon implements IStartupAddon {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
 					lFile = onOpenFile(lFileUI);
-					checkAllThere(page);
+					checkAllThere(page, changeListener);
 				}
 			});
 		}
@@ -172,7 +173,7 @@ public class BiClusterStartupAddon implements IStartupAddon {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
 					zFile = onOpenFile(zFileUI);
-					checkAllThere(page);
+					checkAllThere(page, changeListener);
 				}
 			});
 		}
@@ -197,7 +198,7 @@ public class BiClusterStartupAddon implements IStartupAddon {
 					chemicalFile = onOpenFile(chemicalFileUI);
 					if (chemicalFile != null)
 						specifyCategoriesUI.setEnabled(true);
-					checkAllThere(page);
+					checkAllThere(page, changeListener);
 				}
 			});
 
@@ -233,7 +234,7 @@ public class BiClusterStartupAddon implements IStartupAddon {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
 					thresholdsFile = onOpenFile(thresholdsFileUI);
-					checkAllThere(page);
+					checkAllThere(page, changeListener);
 				}
 			});
 		}
@@ -277,11 +278,13 @@ public class BiClusterStartupAddon implements IStartupAddon {
 
 
 	/**
-	 *
+	 * @param changeListener
+	 * 
 	 */
-	protected void checkAllThere(WizardPage page) {
+	protected void checkAllThere(WizardPage page, Listener changeListener) {
 		boolean ok = validate();
 		page.setPageComplete(ok);
+		changeListener.handleEvent(null); // fake it
 	}
 
 	protected File onOpenFile(Text xFileUI) {
