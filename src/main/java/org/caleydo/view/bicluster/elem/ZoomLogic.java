@@ -157,7 +157,7 @@ public class ZoomLogic {
 				filled = 1;
 			float f = lookup(filled);
 			float factor = (old + delta * f) / new_;
-			System.out.println(old + " " + delta + "*" + f + " / " + new_ + " " + filled);
+			// System.out.println(old + " " + delta + "*" + f + " / " + new_ + " " + filled);
 			return factor;
 		} else if (delta < 0 && new_ * scale < total * 0.1) { // shrink and too small
 			float filled = new_ * scale / (total * 0.1f);
@@ -165,7 +165,7 @@ public class ZoomLogic {
 				filled = 1;
 			float f = lookup(1 - filled);
 			float factor = (old + delta * f) / new_;
-			System.out.println("" + old + " " + delta + "*" + f + " / " + new_ + " " + filled);
+			// System.out.println("" + old + " " + delta + "*" + f + " / " + new_ + " " + filled);
 			return factor;
 		}
 
