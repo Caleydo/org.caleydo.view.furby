@@ -29,9 +29,11 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.ELazyiness;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.IActiveChangedCallback;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
+import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.heatmap.v2.AHeatMapElement;
 import org.caleydo.view.heatmap.v2.BarPlotElement;
 import org.caleydo.view.heatmap.v2.CellSpace;
+import org.caleydo.view.heatmap.v2.EScalingMode;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.ISpacingStrategy;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
@@ -61,11 +63,11 @@ public class ClusterContentElement extends GLElementDecorator {
 	public ClusterContentElement(Builder builder, Predicate<? super String> filter) {
 		builder.set("histogram.showColorMapper", false); // don't show the color mapper
 		// show grouping hint lines if available
-		// builder.set("heatmap.renderGroupHints");
-		// builder.set("heatmap.bar.renderGroupHints");
+		builder.set("heatmap.renderGroupHints", MyPreferences.isShowGroupingHints());
+		builder.set("heatmap.bar.renderGroupHints", MyPreferences.isShowGroupingHints());
 
 		// bbuilder.set("heatmap.linearBar.scaleLocally"); // scale plot per table perspective
-		// builder.put(EScalingMode.class, EScalingMode.LOCAL_ROW);
+		builder.put(EScalingMode.class, MyPreferences.getBarPlotScalingMode());
 		GLElementFactoryContext context = builder.build();
 		this.data = context.getData();
 		ImmutableList<GLElementSupplier> extensions = GLElementFactories.getExtensions(context, "bicluster",

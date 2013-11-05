@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster.internal.prefs;
 
 import org.caleydo.view.bicluster.internal.Activator;
+import org.caleydo.view.heatmap.v2.EScalingMode;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -36,6 +37,9 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 		store.setDefault("view.bicluster.top.rec", UNBOUND_NUMBER);
 		store.setDefault("view.bicluster.showbands.dim", false);
 		store.setDefault("view.bicluster.showbands.rec", true);
+
+		store.setDefault("view.bicluster.bar.scaling", EScalingMode.LOCAL.name());
+		store.setDefault("view.bicluster.groupingHints", false);
 	}
 
 	public static float getDimThreshold() {
@@ -74,5 +78,19 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 	 */
 	public static double getAspectRatio() {
 		return prefs().getInt("view.bicluster.aspectratio") / 100.f;
+	}
+
+	/**
+	 * @return
+	 */
+	public static EScalingMode getBarPlotScalingMode() {
+		return EScalingMode.valueOf(prefs().getString("view.bicluster.bar.scaling"));
+	}
+
+	/**
+	 * @return
+	 */
+	public static boolean isShowGroupingHints() {
+		return prefs().getBoolean("view.bicluster.groupingHints");
 	}
 }
