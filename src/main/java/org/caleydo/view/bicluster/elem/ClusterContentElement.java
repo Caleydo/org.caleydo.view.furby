@@ -61,8 +61,8 @@ public class ClusterContentElement extends GLElementDecorator {
 	public ClusterContentElement(Builder builder, Predicate<? super String> filter) {
 		builder.set("histogram.showColorMapper", false); // don't show the color mapper
 		// show grouping hint lines if available
-		builder.set("heatmap.renderGroupHints");
-		builder.set("heatmap.bar.renderGroupHints");
+		// builder.set("heatmap.renderGroupHints");
+		// builder.set("heatmap.bar.renderGroupHints");
 
 		// bbuilder.set("heatmap.linearBar.scaleLocally"); // scale plot per table perspective
 		// builder.put(EScalingMode.class, EScalingMode.LOCAL_ROW);
