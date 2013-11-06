@@ -68,8 +68,11 @@ public final class IntFloat {
 		@Override
 		public int compare(IntFloat o1, IntFloat o2) {
 			int val = Float.compare(o1.probability, o2.probability);
-			if (val == 0)
+			if (val == 0) {
+				if (o1.index == Integer.MIN_VALUE || o2.index == Integer.MIN_VALUE)
+					return 0;
 				val = o1.index - o2.index;
+			}
 			return val;
 		}
 	};

@@ -273,8 +273,11 @@ public class GLRootElement extends GLElementContainer {
 	/**
 	 * @param biClustering
 	 * @param size
+	 * @param maxDimThreshold
+	 * @param maxRecThreshold
 	 */
-	public void init(BiClustering biClustering, TablePerspective x, Vec2f size) {
+	public void init(BiClustering biClustering, TablePerspective x, Vec2f size, double maxDimThreshold,
+			double maxRecThreshold) {
 		this.x = x;
 		this.clustering = biClustering;
 
@@ -294,7 +297,8 @@ public class GLRootElement extends GLElementContainer {
 		log.info(count + " bi clusters loaded.");
 		List<Dimension> dimensions = new ArrayList<>();
 		for (int i = 0; i < count; ++i) {
-			final ClusterElement el = new NormalClusterElement(i, clustering.getData(i), clustering);
+			final ClusterElement el = new NormalClusterElement(i, clustering.getData(i), clustering, maxDimThreshold,
+					maxRecThreshold);
 			clusters.add(el);
 			dimensions.add(el.getSizes());
 		}

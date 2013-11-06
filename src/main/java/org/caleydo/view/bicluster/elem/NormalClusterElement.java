@@ -82,10 +82,14 @@ public class NormalClusterElement extends AMultiClusterElement {
 	protected ISortingStrategy dimSorter = ProbabilitySortingStrategy.FACTORY_INC.create(this, EDimension.DIMENSION);
 	protected ISortingStrategy recSorter = ProbabilitySortingStrategy.FACTORY_INC.create(this, EDimension.RECORD);
 
-	public NormalClusterElement(int bcNr, TablePerspective data, BiClustering clustering) {
+	public NormalClusterElement(int bcNr, TablePerspective data, BiClustering clustering, double maxDimThreshold,
+			double maxRecThreshold) {
 		super(bcNr, data, clustering, Predicates.alwaysTrue());
 		this.dimClustering = clustering.getDimClustering(bcNr);
 		this.recClustering = clustering.getRecClustering(bcNr);
+
+		this.recThreshold = Math.min(this.recThreshold, (float) maxRecThreshold);
+		this.dimThreshold = Math.min(this.dimThreshold, (float) maxDimThreshold);
 
 		this.add(createTopToolBar());
 		toolBar = new ToolBar(content.createButtonBarBuilder().layoutAs(EButtonBarLayout.SLIDE_LEFT).size(16).build()
