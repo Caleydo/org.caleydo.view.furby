@@ -38,12 +38,19 @@ public class ZoomLogic {
 	 * @return
 	 */
 	public static Map<EDimension, Float> initialOverviewScaleFactor(Collection<Dimension> sizes, float w, float h) {
-		DoubleStatistics.Builder stats = DoubleStatistics.builder();
+		DoubleStatistics.Builder aspectRatios = DoubleStatistics.builder();
+		DoubleStatistics.Builder dims = DoubleStatistics.builder();
+		DoubleStatistics.Builder recs = DoubleStatistics.builder();
+
 		for (Dimension size : sizes) {
-			stats.add(size.height == 0 ? 0 : size.getWidth() / size.height);
+			if (size.width == 0 || size.height == 0)
+				continue;
+			dims.add(size.width);
+			recs.add(size.height);
+			aspectRatios.add(size.getWidth() / size.height);
 		}
-		double mean = stats.build().getMean();
-		double target = MyPreferences.getAspectRatio();
+		final double target = MyPreferences.getAspectRatio();
+		final double mean = dims.build().getMax() / recs.build().getMax();
 
 		// force on average a specific aspect ratio
 		double rec = 1;

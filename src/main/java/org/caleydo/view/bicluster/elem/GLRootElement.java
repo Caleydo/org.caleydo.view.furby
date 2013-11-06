@@ -322,6 +322,27 @@ public class GLRootElement extends GLElementContainer {
 		bands.updateStructure();
 	}
 
+	public void initializeScaleFactor(Vec2f size) {
+		if (clusters.isAnyFocussed())
+			return;
+		List<Dimension> dimensions = new ArrayList<>();
+		final List<GLElement> l = clusters.asList();
+		for (int i = 0; i < l.size(); ++i) {
+			ClusterElement elem = (ClusterElement) l.get(i);
+			dimensions.add(elem.getSizes());
+		}
+
+		final Map<EDimension, Float> scales = initialOverviewScaleFactor(dimensions, size.x(), size.y());
+		final float dimScale = scales.get(EDimension.DIMENSION);
+		final float recScale = scales.get(EDimension.RECORD);
+
+		for (int i = 0; i < l.size(); ++i) {
+			ClusterElement start = (ClusterElement) l.get(i);
+			start.setZoom(dimScale, recScale);
+		}
+		bands.updateStructure();
+	}
+
 	/**
 	 * @param idType
 	 * @return

@@ -43,7 +43,6 @@ import org.caleydo.core.view.opengl.layout2.view.AMultiTablePerspectiveElementVi
 import org.caleydo.view.bicluster.elem.BiClustering;
 import org.caleydo.view.bicluster.elem.GLRootElement;
 import org.caleydo.view.bicluster.event.MaxThresholdChangeEvent;
-import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
 
 import com.google.common.base.Predicate;
@@ -70,8 +69,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 
 	private TablePerspective x, l, z;
 
-	private float dimThreshold = MyPreferences.getDimThreshold(); // 4.5f;
-	private float recThreshold = MyPreferences.getRecThreshold(); // 0.08f;
 	double maxDimThreshold = 0, maxRecThreshold = 0;
 	ASerializedView view;
 
@@ -351,6 +348,8 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 			}
 			rootElement.setThresholds(EDimension.get(isZ), thresholds);
 		}
+		if (!added.isEmpty())
+			rootElement.initializeScaleFactor(getSize());
 	}
 	/**
 	 * @param added

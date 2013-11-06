@@ -7,6 +7,7 @@ package org.caleydo.view.bicluster.elem;
 
 import static org.caleydo.view.bicluster.elem.ZoomLogic.initialFocusNeighborScaleFactor;
 import static org.caleydo.view.bicluster.elem.ZoomLogic.initialFocusScaleFactor;
+import static org.caleydo.view.bicluster.elem.ZoomLogic.initialOverviewScaleFactor;
 import gleem.linalg.Vec2f;
 
 import java.awt.Dimension;
@@ -191,6 +192,13 @@ public class AllClustersElement extends GLElementContainer {
 			for (ClusterElement c : allClusters()) {
 				if (c == this.focussedElement)
 					continue;
+				c.setZoom(s.get(EDimension.DIMENSION), s.get(EDimension.RECORD));
+			}
+		} else {
+			// reset scale factors
+			Vec2f size = getSize();
+			Map<EDimension, Float> s = initialOverviewScaleFactor(dims, size.x(), size.y());
+			for (ClusterElement c : allClusters()) {
 				c.setZoom(s.get(EDimension.DIMENSION), s.get(EDimension.RECORD));
 			}
 		}
