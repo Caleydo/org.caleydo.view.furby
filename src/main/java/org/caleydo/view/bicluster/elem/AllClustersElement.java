@@ -120,6 +120,8 @@ public class AllClustersElement extends GLElementContainer {
 	private void focusPrevious(final List<NormalClusterElement> sortedClusters) {
 		NormalClusterElement prev = null;
 		for (NormalClusterElement cluster : sortedClusters) {
+			if (cluster.getDimSize() <= 0 || cluster.getRecSize() <= 0)
+				continue;
 			if (cluster == focussedElement && prev != null) {
 				setFocus(prev);
 				return;
@@ -129,6 +131,8 @@ public class AllClustersElement extends GLElementContainer {
 
 		// else use the last focussable one, round trip
 		for (NormalClusterElement cluster : Lists.reverse(sortedClusters)) {
+			if (cluster.getDimSize() <= 0 || cluster.getRecSize() <= 0)
+				continue;
 			if (cluster == focussedElement)
 				break;
 			setFocus(cluster);

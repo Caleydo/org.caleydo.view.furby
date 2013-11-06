@@ -41,7 +41,7 @@ public class MyPreferencePage extends FieldEditorPreferencePage implements IWork
 		final Composite parent = getFieldEditorParent();
 		addField(new ScaleFieldEditor2("view.bicluster.aspectratio", "Initial Aspect Ratio W/H", parent, 25, 400, 5,
 				100, ScaleFieldEditor2.PERCENT_FORMATTER));
-		addField(new IntegerFieldEditor("view.bicluster.maxDistance", "Max Distance", parent));
+		addField(new IntegerFieldEditor("view.bicluster.maxdistance", "Max Distance", parent));
 		addFields(parent, "rec", "Record");
 		addFields(parent, "dim", "Dimension");
 

@@ -144,7 +144,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		this.add(visualizationSwitcher);
 
 		GLElementContainer c = new GLElementContainer(GLLayouts.flowHorizontal(2));
-		this.maxDistance = GLSpinner.createIntegerSpinner(1, 0, 4, 1);
+		this.maxDistance = GLSpinner.createIntegerSpinner(MyPreferences.getMaxDistance(), 0, 4, 1);
 		maxDistance.setCallback(new IChangeCallback<Integer>() {
 			@Override
 			public void onValueChanged(GLSpinner<? extends Integer> spinner, Integer value) {
