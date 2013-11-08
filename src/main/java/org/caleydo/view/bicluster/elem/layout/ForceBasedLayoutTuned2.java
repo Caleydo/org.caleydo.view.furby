@@ -49,9 +49,9 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 
 	@Override
 	public void fillLayoutToolBar(ILayoutToolBar elem) {
-		elem.addSlider("repulsion", "Repulsion between Clusters", (float) repulsionFactor, 1, 100);
-		elem.addSlider("attraction", "Attraction between Clusters", (float) attractionFactor, 0.01f, 0.4f);
-		elem.addSlider("frame", "Force from the Windowborder", (float) frameFactor, 0.5f, 4f);
+		elem.addSlider("repulsion", "Repulsion between clusters", (float) repulsionFactor, 1, 100);
+		elem.addSlider("attraction", "Attraction between clusters", (float) attractionFactor, 0.01f, 0.4f);
+		elem.addSlider("frame", "Force from the window border", (float) frameFactor, 0.5f, 4f);
 		elem.addSlider("center", "Force towards the center", (float) centerForce * 100, 0, 1f);
 	}
 
