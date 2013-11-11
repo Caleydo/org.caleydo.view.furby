@@ -327,8 +327,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.recNumberThreshold = recNumberThreshold;
 		this.recThresholdMode = recThresholdMode;
 
-		this.recThreshBar.setValue(recThreshold);
-		this.dimThreshBar.setValue(dimThreshold);
+		this.recThreshBar.setValue(recThreshold, recThresholdMode);
+		this.dimThreshBar.setValue(dimThreshold, dimThresholdMode);
 
 		resort();
 	}
@@ -506,9 +506,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 		/**
 		 * @param value
 		 */
-		public void setValue(float value) {
+		public void setValue(float value, EThresholdMode mode) {
 			slider.setCallback(null); // to avoid that we will be callbacked
 			slider.setValue(value);
+			slider.setMode(mode);
 			slider.setCallback(this);
 		}
 	}
