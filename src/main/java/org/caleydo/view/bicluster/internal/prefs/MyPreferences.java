@@ -6,6 +6,7 @@
 package org.caleydo.view.bicluster.internal.prefs;
 
 import org.caleydo.view.bicluster.internal.Activator;
+import org.caleydo.view.bicluster.sorting.EThresholdMode;
 import org.caleydo.view.heatmap.v2.EScalingMode;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -33,6 +34,8 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 
 		store.setDefault("view.bicluster.threshold.dim", (int) (4.5f * 100));
 		store.setDefault("view.bicluster.threshold.rec", (int) (0.08f * 100));
+		store.setDefault("view.bicluster.threshold.mode.dim", EThresholdMode.ABS.name());
+		store.setDefault("view.bicluster.threshold.mode.rec", EThresholdMode.ABS.name());
 		store.setDefault("view.bicluster.top.dim", UNBOUND_NUMBER);
 		store.setDefault("view.bicluster.top.rec", UNBOUND_NUMBER);
 		store.setDefault("view.bicluster.showbands.dim", false);
@@ -48,6 +51,14 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 
 	public static float getRecThreshold() {
 		return prefs().getInt("view.bicluster.threshold.rec") / 100.f;
+	}
+
+	public static EThresholdMode getDimThresholdMode() {
+		return EThresholdMode.valueOf(prefs().getString("view.bicluster.threshold.mode.dim"));
+	}
+
+	public static EThresholdMode getRecThresholdMode() {
+		return EThresholdMode.valueOf(prefs().getString("view.bicluster.threshold.mode.rec"));
 	}
 
 	public static int getDimTopNElements() {

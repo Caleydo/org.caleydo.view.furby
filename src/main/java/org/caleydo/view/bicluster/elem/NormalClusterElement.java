@@ -42,6 +42,7 @@ import org.caleydo.view.bicluster.elem.annotation.ProbabilityLZHeatmapElement;
 import org.caleydo.view.bicluster.elem.ui.ThresholdSlider;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.internal.BiClusterRenderStyle;
+import org.caleydo.view.bicluster.sorting.EThresholdMode;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
 import org.caleydo.view.bicluster.sorting.IGroupingStrategy;
 import org.caleydo.view.bicluster.sorting.ISortingStrategy;
@@ -67,8 +68,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 	private final FuzzyClustering dimClustering;
 	private final FuzzyClustering recClustering;
 
+	protected EThresholdMode recThresholdMode = EThresholdMode.ABS;
 	protected float recThreshold = getRecThreshold();
 	protected int recNumberThreshold = getRecTopNElements();
+	protected EThresholdMode dimThresholdMode = EThresholdMode.ABS;
 	protected float dimThreshold = getDimThreshold();
 	protected int dimNumberThreshold = getDimTopNElements();
 
@@ -307,15 +310,22 @@ public class NormalClusterElement extends AMultiClusterElement {
 			resort();
 	}
 
+	public EThresholdMode getThresholdMode(EDimension dim) {
+		return dim.select(dimThresholdMode, recThresholdMode);
+	}
 
-	public void setThresholds(float dimThreshold, int dimNumberThreshold, float recThreshold, int recNumberThreshold) {
+	public void setThresholds(float dimThreshold, int dimNumberThreshold, EThresholdMode dimThresholdMode,
+			float recThreshold, int recNumberThreshold, EThresholdMode recThresholdMode) {
 		if (this.dimThreshold == dimThreshold && this.dimNumberThreshold == dimNumberThreshold
-				&& this.recThreshold == recThreshold && this.recNumberThreshold == recNumberThreshold)
+				&& this.recThreshold == recThreshold && this.recNumberThreshold == recNumberThreshold
+				&& this.dimThresholdMode == dimThresholdMode && this.recThresholdMode == recThresholdMode)
 			return;
 		this.dimThreshold = dimThreshold;
 		this.dimNumberThreshold = dimNumberThreshold;
+		this.dimThresholdMode = dimThresholdMode;
 		this.recThreshold = recThreshold;
 		this.recNumberThreshold = recNumberThreshold;
+		this.recThresholdMode = recThresholdMode;
 
 		this.recThreshBar.setValue(recThreshold);
 		this.dimThreshBar.setValue(dimThreshold);
@@ -327,12 +337,13 @@ public class NormalClusterElement extends AMultiClusterElement {
 	 * @param dimension
 	 * @param t
 	 * @param numberThreshold
+	 * @param mode
 	 */
-	public void setThreshold(EDimension dim, float t, int numberThreshold) {
-		if (dim.isHorizontal())
-			setThresholds(t, numberThreshold, recThreshold, recNumberThreshold);
+	public void setThreshold(EDimension dim, float t, int numberThreshold, EThresholdMode mode) {
+		if (dim.isDimension())
+			setThresholds(t, numberThreshold, mode, recThreshold, recNumberThreshold, recThresholdMode);
 		else
-			setThresholds(dimThreshold, dimNumberThreshold, t, numberThreshold);
+			setThresholds(dimThreshold, dimNumberThreshold, dimThresholdMode, t, numberThreshold, mode);
 	}
 
 	/**
@@ -340,10 +351,11 @@ public class NormalClusterElement extends AMultiClusterElement {
 	 *
 	 * @param dimension
 	 * @param t
+	 * @param mode
 	 */
-	public void setLocalThreshold(EDimension dimension, float t) {
+	public void setLocalThreshold(EDimension dimension, float t, EThresholdMode mode) {
 		Dimension old = getSizes();
-		setThreshold(dimension, t, dimension.select(dimNumberThreshold, recNumberThreshold));
+		setThreshold(dimension, t, dimension.select(dimNumberThreshold, recNumberThreshold), mode);
 		updateMyEdges(dimension.isHorizontal(), dimension.isVertical());
 
 		// adaptScaleFactors(old);
@@ -372,8 +384,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 	 * @return
 	 */
 	private Pair<List<IntFloat>, List<IntFloat>> filterData() {
-		List<IntFloat> dims = dimClustering.filter(dimThreshold, dimNumberThreshold);
-		List<IntFloat> recs = recClustering.filter(recThreshold, recNumberThreshold);
+		List<IntFloat> dims = dimClustering.filter(dimThreshold, dimNumberThreshold, dimThresholdMode);
+		List<IntFloat> recs = recClustering.filter(recThreshold, recNumberThreshold, recThresholdMode);
 
 		Pair<List<IntFloat>, List<IntFloat>> p = Pair.make(dims, recs);
 		return p;
@@ -467,7 +479,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 			// create buttons
 			float max = 0;
-			this.slider = new ThresholdSlider(0, max, max / 2);
+			this.slider = new ThresholdSlider(0, max, max / 2, EThresholdMode.ABS);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
 			setContent(slider);
@@ -476,10 +488,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 
 		@Override
-		public void onSelectionChanged(ThresholdSlider slider, float value) {
+		public void onSelectionChanged(ThresholdSlider slider, float value, EThresholdMode mode) {
 			if (value >= localMaxSliderValue)
 				return;
-			setLocalThreshold(EDimension.get(isHorizontal), value);
+			setLocalThreshold(EDimension.get(isHorizontal), value, mode);
 		}
 
 		/**

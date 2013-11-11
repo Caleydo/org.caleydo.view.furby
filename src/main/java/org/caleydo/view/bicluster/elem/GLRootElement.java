@@ -55,6 +55,7 @@ import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.event.ZoomEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.CategoricalSortingStrategyFactory;
+import org.caleydo.view.bicluster.sorting.EThresholdMode;
 import org.caleydo.view.bicluster.util.SetUtils;
 
 import com.google.common.collect.Iterables;
@@ -373,6 +374,7 @@ public class GLRootElement extends GLElementContainer {
 		final EDimension dim = event.getDim();
 		final int numberThreshold = event.getNumberThreshold();
 		final float threshold = event.getThreshold();
+		final EThresholdMode mode = event.getMode();
 
 		// 1. update thresholds
 		Iterable<NormalClusterElement> allNormalClusters = allNormalClusters();
@@ -380,7 +382,7 @@ public class GLRootElement extends GLElementContainer {
 		final Vec2f total = getSize();
 		for (NormalClusterElement cluster : allNormalClusters) {
 			Dimension old = cluster.getSizes();
-			cluster.setThreshold(dim, threshold, numberThreshold);
+			cluster.setThreshold(dim, threshold, numberThreshold, mode);
 			Dimension new_ = cluster.getSizes();
 			float s = ZoomLogic.adaptScaleFactorToSize(dim, old, new_, cluster.getZoom(EDimension.DIMENSION),
 					cluster.getZoom(EDimension.RECORD), total.x(), total.y());
@@ -434,7 +436,7 @@ public class GLRootElement extends GLElementContainer {
 					thresh = t;
 				if (t != thresh)
 					thresh = Float.NaN;
-				elem.setThreshold(dimension, t, MyUnboundSpinner.UNBOUND);
+				elem.setThreshold(dimension, t, MyUnboundSpinner.UNBOUND, EThresholdMode.ABS);
 			}
 		}
 		if (!Float.isNaN(thresh) && !Float.isInfinite(thresh)) { // all the same set that in the parameter toolbar

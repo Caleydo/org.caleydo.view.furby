@@ -7,23 +7,30 @@ package org.caleydo.view.bicluster.event;
 
 import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.event.AEvent;
-import org.caleydo.core.util.logging.Logger;
+import org.caleydo.view.bicluster.sorting.EThresholdMode;
 
 /**
  * @author user
  *
  */
 public class LZThresholdChangeEvent extends AEvent {
-	private static final Logger log = Logger.create(LZThresholdChangeEvent.class);
-
 	private final EDimension dim;
 	private final float threshold;
 	private final int numberThreshold;
+	private final EThresholdMode mode;
 
-	public LZThresholdChangeEvent(EDimension dim, float threshold, int numberThreshold) {
+	public LZThresholdChangeEvent(EDimension dim, float threshold, int numberThreshold, EThresholdMode mode) {
 		this.threshold = threshold;
 		this.numberThreshold = numberThreshold;
 		this.dim = dim;
+		this.mode = mode;
+	}
+
+	/**
+	 * @return the mode, see {@link #mode}
+	 */
+	public EThresholdMode getMode() {
+		return mode;
 	}
 
 	/**

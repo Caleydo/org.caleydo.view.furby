@@ -36,7 +36,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 	}
 
 	private double repulsionFactor(double areaFilled) {
-		return clamp((1 - areaFilled) * repulsionFactor, 5, 80);
+		return clamp((1 - areaFilled) * repulsionFactor, 5, 200);
 	}
 
 	private double attractionFactor(double areaFilled) {

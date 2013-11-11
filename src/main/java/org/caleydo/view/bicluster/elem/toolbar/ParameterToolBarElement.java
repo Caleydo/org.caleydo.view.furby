@@ -6,8 +6,10 @@
 package org.caleydo.view.bicluster.elem.toolbar;
 
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimThreshold;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimThresholdMode;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getDimTopNElements;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThreshold;
+import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecThresholdMode;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.getRecTopNElements;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowDimBands;
 import static org.caleydo.view.bicluster.internal.prefs.MyPreferences.isShowRecBands;
@@ -62,6 +64,7 @@ import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.event.ZoomEvent;
 import org.caleydo.view.bicluster.internal.BiClusterRenderStyle;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
+import org.caleydo.view.bicluster.sorting.EThresholdMode;
 import org.caleydo.view.bicluster.sorting.ISortingStrategyFactory;
 
 import com.google.common.collect.Iterables;
@@ -243,11 +246,16 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		this.visualizationSwitcher.setSelected(0);
 
 		this.dimNumberThresholdSpinner.setValue(getDimTopNElements());
-		this.dimThresholdSlider.setCallback(null).setValue(getDimThreshold()).setCallback(this);
+		this.dimThresholdSlider.setCallback(null).setValue(getDimThreshold()).setMode(getDimThresholdMode())
+				.setCallback(this);
 		this.recNumberThresholdSpinner.setValue(getRecTopNElements());
-		this.recThresholdSlider.setValue(getRecThreshold());
+		this.recThresholdSlider.setCallback(null).setMode(getRecThresholdMode()).setValue(getRecThreshold())
+				.setCallback(this);
 
 		this.hidden.showAll();
+
+		updateGeneSampleThresholds(EDimension.DIMENSION);
+		updateGeneSampleThresholds(EDimension.RECORD);
 	}
 
 	/**
@@ -291,7 +299,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	}
 
 	@Override
-	public void onSelectionChanged(ThresholdSlider slider, float value) {
+	public void onSelectionChanged(ThresholdSlider slider, float value, EThresholdMode mode) {
 		updateGeneSampleThresholds(EDimension.get(slider == dimThresholdSlider));
 	}
 
@@ -307,10 +315,10 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	private void updateGeneSampleThresholds(EDimension dim) {
 		if (dim.isDimension())
 			EventPublisher.trigger(new LZThresholdChangeEvent(dim, dimThresholdSlider.getValue(),
-					dimNumberThresholdSpinner.getValue()));
+					dimNumberThresholdSpinner.getValue(), dimThresholdSlider.getMode()));
 		else
 			EventPublisher.trigger(new LZThresholdChangeEvent(dim, recThresholdSlider.getValue(),
-					recNumberThresholdSpinner.getValue()));
+					recNumberThresholdSpinner.getValue(), recThresholdSlider.getMode()));
 	}
 
 	@Override
@@ -344,7 +352,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		this.dimNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.dimNumberThresholdSpinner));
 
-		this.dimThresholdSlider = new ThresholdSlider(0, 5f, getDimThreshold());
+		this.dimThresholdSlider = new ThresholdSlider(0, 5f, getDimThreshold(), getDimThresholdMode());
 		dimThresholdSlider.setCallback(this);
 		dimThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(dimThresholdSlider);
@@ -359,7 +367,7 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 		this.recNumberThresholdSpinner.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(wrapSpinner(this.recNumberThresholdSpinner));
 
-		this.recThresholdSlider = new ThresholdSlider(0.02f, 0.2f, getRecThreshold());
+		this.recThresholdSlider = new ThresholdSlider(0.02f, 0.2f, getRecThreshold(), getRecThresholdMode());
 		recThresholdSlider.setCallback(this);
 		recThresholdSlider.setSize(Float.NaN, SLIDER_WIDH);
 		this.add(recThresholdSlider);
@@ -472,7 +480,8 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	 * @param thresh
 	 */
 	public void setThreshold(EDimension dimension, float thresh) {
-		dimension.select(this.dimThresholdSlider, this.recThresholdSlider).setValue(thresh);
+		ThresholdSlider r = dimension.select(this.dimThresholdSlider, this.recThresholdSlider);
+		r.setCallback(null).setValue(thresh).setCallback(this);
 	}
 
 	/**

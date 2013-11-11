@@ -76,13 +76,21 @@ public final class FuzzyClustering implements IDoubleSizedIterable {
 		return l.subList(l.size() - maxElements, l.size());
 	}
 
-	public List<IntFloat> filter(float threshold, int maxElements) {
+	public List<IntFloat> filter(float threshold, int maxElements, EThresholdMode mode) {
 		if (threshold == 0 && maxElements == UNBOUND_NUMBER)
 			return probabilities.asList();
-		ImmutableList<IntFloat> negatives = negatives(threshold, maxElements);
-		ImmutableList<IntFloat> positives = positives(threshold, maxElements);
+		ImmutableList<IntFloat> negatives = mode.includeNegatives() ? negatives(threshold, maxElements) : ImmutableList
+				.<IntFloat> of();
+		ImmutableList<IntFloat> positives = mode.includePositives() ? positives(threshold, maxElements) : ImmutableList
+				.<IntFloat> of();
 		if (maxElements == UNBOUND_NUMBER || (negatives.size() + positives.size()) <= maxElements) //just add negatives and positives
 			return ConcatedList.concat(negatives, positives);
+
+		if (negatives.isEmpty()) {
+			return positives.subList(Math.max(0, positives.size() - maxElements), positives.size());
+		}
+		if (positives.isEmpty())
+			return negatives.subList(0, Math.min(negatives.size(), maxElements));
 
 		// take the abs top X elements
 		Iterator<IntFloat> negIt = negatives.iterator();

@@ -12,6 +12,7 @@ import org.caleydo.core.gui.util.FontUtil;
 import org.caleydo.core.gui.util.ScaleFieldEditor2;
 import org.caleydo.core.gui.util.SpinnerFieldEditor;
 import org.caleydo.view.bicluster.internal.Activator;
+import org.caleydo.view.bicluster.sorting.EThresholdMode;
 import org.caleydo.view.heatmap.v2.EScalingMode;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
@@ -94,10 +95,24 @@ public class MyPreferencePage extends FieldEditorPreferencePage implements IWork
 
 		addField(new ScaleFieldEditor2("view.bicluster.threshold." + suffix, "Threshold", parent, 0, 5000, 10, 100,
 				ScaleFieldEditor2.PERCENT_FORMATTER));
+		addField(new ComboFieldEditor("view.bicluster.threshold.mode." + suffix, "Threshold Mode",
+				thresholdModeValues(), parent));
 		addField(new SpinnerFieldEditor("view.bicluster.top." + suffix, "Max # elements", parent, 0, Integer.MAX_VALUE,
 				1, 10));
 		addField(new BooleanFieldEditor("view.bicluster.showbands." + suffix, "Show Bands", parent));
 
+	}
+
+	/**
+	 * @return
+	 */
+	private static String[][] thresholdModeValues() {
+		EThresholdMode[] in = EThresholdMode.values();
+		String[][] r = new String[in.length][2];
+		for (int i = 0; i < in.length; ++i) {
+			r[i] = new String[] { in[i].getLabel(), in[i].name() };
+		}
+		return r;
 	}
 
 	private void addGroup(final Composite parent, String label) {

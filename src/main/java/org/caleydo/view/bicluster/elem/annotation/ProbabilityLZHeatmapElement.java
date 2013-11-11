@@ -48,7 +48,7 @@ public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
 			NormalClusterElement p = (NormalClusterElement) getParent();
 			float probability = p.getProbability(dim, index);
 			if (!Float.isNaN(probability))
-				p.setLocalThreshold(dim, Math.abs(probability));
+				p.setLocalThreshold(dim, Math.abs(probability), p.getThresholdMode(dim));
 		}
 	}
 
