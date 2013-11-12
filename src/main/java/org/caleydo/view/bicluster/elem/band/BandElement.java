@@ -317,17 +317,18 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (getVisibility() == EVisibility.PICKABLE && !isAnyThingHovered && isVisible()) {
 			g.color(BiClusterRenderStyle.getBandColor(dimension));
-			if (isMouseOver) {
-				for (Band b : getSplittedBands().values())
-					g.fillPolygon(b);
-				g.incZ();
-				for (Integer elementIndex : getSplines().keySet()) {
-					g.pushName(pickingPool.get(elementIndex + 1));
-					g.fillPolygon(getSplines().get(elementIndex));
-					g.popName();
-				}
-				g.decZ();
-			} else {
+			// if (isMouseOver) {
+			// for (Band b : getSplittedBands().values())
+			// g.fillPolygon(b);
+			// g.incZ();
+			// for (Integer elementIndex : getSplines().keySet()) {
+			// g.pushName(pickingPool.get(elementIndex + 1));
+			// g.fillPolygon(getSplines().get(elementIndex));
+			// g.popName();
+			// }
+			// g.decZ();
+			// } else {
+			{
 				if (band != null)
 					g.fillPolygon(band);
 			}

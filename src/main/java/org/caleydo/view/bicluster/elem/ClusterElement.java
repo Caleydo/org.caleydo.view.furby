@@ -888,7 +888,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		}
 		if (from < indices.size())
 			sequences.add(indices.subList(from, indices.size()));
-		assert !sequences.isEmpty();
+		// assert !sequences.isEmpty();
 		return ImmutableList.copyOf(sequences);
 	}
 

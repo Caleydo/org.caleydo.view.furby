@@ -77,8 +77,16 @@ public final class FuzzyClustering implements IDoubleSizedIterable {
 	}
 
 	public List<IntFloat> filter(float threshold, int maxElements, EThresholdMode mode) {
-		if (threshold == 0 && maxElements == UNBOUND_NUMBER)
-			return probabilities.asList();
+		if (threshold == 0 && maxElements == UNBOUND_NUMBER) {
+			switch (mode) {
+			case ABS:
+				return probabilities.asList();
+			case NEGATIVE_ONLY:
+				return negatives(0, UNBOUND_NUMBER);
+			case POSITVE_ONLY:
+				return positives(0, UNBOUND_NUMBER);
+			}
+		}
 		ImmutableList<IntFloat> negatives = mode.includeNegatives() ? negatives(threshold, maxElements) : ImmutableList
 				.<IntFloat> of();
 		ImmutableList<IntFloat> positives = mode.includePositives() ? positives(threshold, maxElements) : ImmutableList

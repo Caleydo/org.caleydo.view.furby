@@ -27,7 +27,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 	private final static double minimumDistanceFactor = 0.25;
 
 	private double centerForce = 0.002;
-	private double repulsionFactor = 50;
+	private double repulsionFactor = 70;
 	private double attractionFactor = 0.20;
 	private double frameFactor = 2;
 

@@ -32,7 +32,7 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 		store.setDefault("view.bicluster.aspectratio", 100);
 		store.setDefault("view.bicluster.maxdistance", 1);
 
-		store.setDefault("view.bicluster.threshold.dim", (int) (4.5f * 100));
+		store.setDefault("view.bicluster.threshold.dim", (int) (0.7f * 100));
 		store.setDefault("view.bicluster.threshold.rec", (int) (0.08f * 100));
 		store.setDefault("view.bicluster.threshold.mode.dim", EThresholdMode.ABS.name());
 		store.setDefault("view.bicluster.threshold.mode.rec", EThresholdMode.ABS.name());
