@@ -22,10 +22,10 @@ import org.caleydo.view.bicluster.sorting.IntFloat;
  * @author Samuel Gratzl
  *
  */
-public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
+public class MembershipLZHeatmapElement extends ALZHeatmapElement {
 	private final IDoubleFunction transform;
 
-	public ProbabilityLZHeatmapElement(EDimension dim, double max) {
+	public MembershipLZHeatmapElement(EDimension dim, double max) {
 		super(dim);
 		this.transform = DoubleFunctions.normalize(0, max);
 	}
@@ -33,8 +33,8 @@ public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
 	@Override
 	protected String getLabel(int pos) {
 		NormalClusterElement p = (NormalClusterElement) getParent();
-		float probability = p.getProbability(dim, pos);
-		return Float.isNaN(probability) ? null : String.valueOf(probability);
+		float m = p.getMembership(dim, pos);
+		return Float.isNaN(m) ? null : String.valueOf(m);
 	}
 
 	@Override
@@ -46,9 +46,9 @@ public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
 				return;
 
 			NormalClusterElement p = (NormalClusterElement) getParent();
-			float probability = p.getProbability(dim, index);
-			if (!Float.isNaN(probability))
-				p.setLocalThreshold(dim, Math.abs(probability), p.getThresholdMode(dim));
+			float m = p.getMembership(dim, index);
+			if (!Float.isNaN(m))
+				p.setLocalThreshold(dim, Math.abs(m), p.getThresholdMode(dim));
 		}
 	}
 
@@ -59,13 +59,13 @@ public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
 		float max;
 		float min;
 		float last;
-		last = values.get(0).getProbability();
+		last = values.get(0).getMembership();
 		min = max = Math.abs(last);
 
 		int center = -1;
 		boolean multiCenter = false;
 		for (int i = 1; i < width; ++i) {
-			float v = values.get(i).getProbability();
+			float v = values.get(i).getMembership();
 			float v_a = Math.abs(v);
 			if (v_a > max)
 				max = v_a;
@@ -91,7 +91,7 @@ public class ProbabilityLZHeatmapElement extends ALZHeatmapElement {
 		// DoubleFunctions.normalize(min, max));
 
 		for (IntFloat f : values) {
-			float v = Math.abs(f.getProbability());
+			float v = Math.abs(f.getMembership());
 			v = (float) transform.apply(v);
 			// System.out.print(v + " ");
 			v = 1 - v; // invert color mapping

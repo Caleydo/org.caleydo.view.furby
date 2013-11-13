@@ -11,11 +11,11 @@ import com.google.common.base.Function;
 
 public final class IntFloat {
 	private final int index;
-	private final float probability;
+	private final float membership;
 
-	public IntFloat(int index, float probability) {
+	public IntFloat(int index, float membership) {
 		this.index = index;
-		this.probability = probability;
+		this.membership = membership;
 	}
 
 	/**
@@ -26,16 +26,16 @@ public final class IntFloat {
 	}
 
 	/**
-	 * @return the probability, see {@link #probability}
+	 * @return the probability, see {@link #membership}
 	 */
-	public float getProbability() {
-		return probability;
+	public float getMembership() {
+		return membership;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("IntFloat(").append(index).append('=').append(probability).append(')');
+		builder.append("IntFloat(").append(index).append('=').append(membership).append(')');
 		return builder.toString();
 	}
 
@@ -44,7 +44,7 @@ public final class IntFloat {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + index;
-		result = prime * result + Float.floatToIntBits(probability);
+		result = prime * result + Float.floatToIntBits(membership);
 		return result;
 	}
 
@@ -59,15 +59,15 @@ public final class IntFloat {
 		IntFloat other = (IntFloat) obj;
 		if (index != other.index)
 			return false;
-		if (Float.floatToIntBits(probability) != Float.floatToIntBits(other.probability))
+		if (Float.floatToIntBits(membership) != Float.floatToIntBits(other.membership))
 			return false;
 		return true;
 	}
 
-	public final static Comparator<IntFloat> BY_PROBABILITY = new Comparator<IntFloat>() {
+	public final static Comparator<IntFloat> BY_MEMBERSHIP = new Comparator<IntFloat>() {
 		@Override
 		public int compare(IntFloat o1, IntFloat o2) {
-			int val = Float.compare(o1.probability, o2.probability);
+			int val = Float.compare(o1.membership, o2.membership);
 			if (val == 0) {
 				if (o1.index == Integer.MIN_VALUE || o2.index == Integer.MIN_VALUE)
 					return 0;
@@ -83,10 +83,10 @@ public final class IntFloat {
 			return input == null ? null : input.getIndex();
 		}
 	};
-	public static final Function<IntFloat, Float> TO_PROBABILITY = new Function<IntFloat, Float>() {
+	public static final Function<IntFloat, Float> TO_MEMBERSHIP = new Function<IntFloat, Float>() {
 		@Override
 		public Float apply(IntFloat input) {
-			return input == null ? null : input.getProbability();
+			return input == null ? null : input.getMembership();
 		}
 	};
 }

@@ -38,7 +38,7 @@ import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder.EButtonBarLa
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.elem.annotation.ALZHeatmapElement;
-import org.caleydo.view.bicluster.elem.annotation.ProbabilityLZHeatmapElement;
+import org.caleydo.view.bicluster.elem.annotation.MembershipLZHeatmapElement;
 import org.caleydo.view.bicluster.elem.ui.ThresholdSlider;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.internal.BiClusterRenderStyle;
@@ -47,7 +47,7 @@ import org.caleydo.view.bicluster.sorting.FuzzyClustering;
 import org.caleydo.view.bicluster.sorting.IGroupingStrategy;
 import org.caleydo.view.bicluster.sorting.ISortingStrategy;
 import org.caleydo.view.bicluster.sorting.IntFloat;
-import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
+import org.caleydo.view.bicluster.sorting.MembershipSortingStrategy;
 import org.caleydo.view.bicluster.sorting.SortingStrategies;
 
 import com.google.common.base.Predicates;
@@ -82,8 +82,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	protected boolean showThreshold;
 
-	protected ISortingStrategy dimSorter = ProbabilitySortingStrategy.FACTORY_INC.create(this, EDimension.DIMENSION);
-	protected ISortingStrategy recSorter = ProbabilitySortingStrategy.FACTORY_INC.create(this, EDimension.RECORD);
+	protected ISortingStrategy dimSorter = MembershipSortingStrategy.FACTORY_INC.create(this, EDimension.DIMENSION);
+	protected ISortingStrategy recSorter = MembershipSortingStrategy.FACTORY_INC.create(this, EDimension.RECORD);
 
 	public NormalClusterElement(int bcNr, TablePerspective data, BiClustering clustering, double maxDimThreshold,
 			double maxRecThreshold) {
@@ -103,27 +103,27 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
 
-		dimThreshBar.updateSliders(clustering.getMaxAbsProbability(EDimension.DIMENSION),
+		dimThreshBar.updateSliders(clustering.getMaxAbsMembership(EDimension.DIMENSION),
 				clustering.getClustering(EDimension.DIMENSION, bcNr));
-		recThreshBar.updateSliders(clustering.getMaxAbsProbability(EDimension.RECORD),
+		recThreshBar.updateSliders(clustering.getMaxAbsMembership(EDimension.RECORD),
 				clustering.getClustering(EDimension.DIMENSION, bcNr));
 
 		this.add(new HeatMapLabelElement(true, data.getDimensionPerspective(), content));
 		this.add(new HeatMapLabelElement(false, data.getRecordPerspective(), content));
 
-		ProbabilityLZHeatmapElement p = new ProbabilityLZHeatmapElement(EDimension.DIMENSION,
-				clustering.getMaxAbsProbability(EDimension.DIMENSION));
+		MembershipLZHeatmapElement p = new MembershipLZHeatmapElement(EDimension.DIMENSION,
+				clustering.getMaxAbsMembership(EDimension.DIMENSION));
 		this.annotations.add(p);
 		this.add(p);
-		p = new ProbabilityLZHeatmapElement(EDimension.RECORD, clustering.getMaxAbsProbability(EDimension.RECORD));
+		p = new MembershipLZHeatmapElement(EDimension.RECORD, clustering.getMaxAbsMembership(EDimension.RECORD));
 		this.annotations.add(p);
 		this.add(p);
 
 		resort();
 	}
 
-	public float getProbability(EDimension dim, int index) {
-		return clustering.getProbability(dim, bcNr, getVirtualArray(dim).get(index));
+	public float getMembership(EDimension dim, int index) {
+		return clustering.getMembership(dim, bcNr, getVirtualArray(dim).get(index));
 	}
 
 	@Override

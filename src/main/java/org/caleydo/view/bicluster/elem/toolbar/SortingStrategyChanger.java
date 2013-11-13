@@ -20,18 +20,18 @@ import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy;
 import org.caleydo.view.bicluster.sorting.AComposeAbleSortingStrategy.IComposeAbleSortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.BandSortingStrategy;
-import org.caleydo.view.bicluster.sorting.CenterProbabilitySortingStrategy;
+import org.caleydo.view.bicluster.sorting.CenterMembershipSortingStrategy;
 import org.caleydo.view.bicluster.sorting.ComposedSortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.DefaultSortingStrategy;
 import org.caleydo.view.bicluster.sorting.ISortingStrategyFactory;
-import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
+import org.caleydo.view.bicluster.sorting.MembershipSortingStrategy;
 
 /**
  * @author Samuel Gratzl
  *
  */
 public class SortingStrategyChanger implements GLComboBox.ISelectionCallback<ISortingStrategyFactory> {
-	private static final ISortingStrategyFactory DEFAULT_PRIMARY_SORTING_MODE = ProbabilitySortingStrategy.FACTORY_INC;
+	private static final ISortingStrategyFactory DEFAULT_PRIMARY_SORTING_MODE = MembershipSortingStrategy.FACTORY_INC;
 	private static final ISortingStrategyFactory DEFAULT_SECONDARY_SORTING_MODE = DefaultSortingStrategy.FACTORY;
 
 	private final GLComboBox<ISortingStrategyFactory> sorterPrimary;
@@ -70,13 +70,13 @@ public class SortingStrategyChanger implements GLComboBox.ISelectionCallback<ISo
 	 */
 	private List<ISortingStrategyFactory> createSortingModel(boolean all) {
 		List<ISortingStrategyFactory> r = new ArrayList<>();
-		r.add(ProbabilitySortingStrategy.FACTORY_INC);
-		r.add(ProbabilitySortingStrategy.FACTORY_INC_ABS);
-		r.add(ProbabilitySortingStrategy.FACTORY_DEC);
-		r.add(ProbabilitySortingStrategy.FACTORY_DEC_ABS);
+		r.add(MembershipSortingStrategy.FACTORY_INC);
+		r.add(MembershipSortingStrategy.FACTORY_INC_ABS);
+		r.add(MembershipSortingStrategy.FACTORY_DEC);
+		r.add(MembershipSortingStrategy.FACTORY_DEC_ABS);
 		r.add(DefaultSortingStrategy.FACTORY);
 		r.add(BandSortingStrategy.FACTORY);
-		r.add(CenterProbabilitySortingStrategy.FACTORY);
+		r.add(CenterMembershipSortingStrategy.FACTORY);
 		if (!all)
 			for (Iterator<ISortingStrategyFactory> it = r.iterator(); it.hasNext();)
 				if (!(it.next() instanceof AComposeAbleSortingStrategy))

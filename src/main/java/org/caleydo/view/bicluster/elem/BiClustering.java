@@ -104,7 +104,7 @@ public class BiClustering {
 		return dim.isHorizontal() ? getDimClustering(bcNr) : getRecClustering(bcNr);
 	}
 
-	public float getProbability(EDimension dim, int bcNr, int index) {
+	public float getMembership(EDimension dim, int bcNr, int index) {
 		return dim.selectZL(z, l).getRaw(bcNr, index);
 	}
 
@@ -112,7 +112,7 @@ public class BiClustering {
 	 * @param dimension
 	 * @return
 	 */
-	public double getMaxAbsProbability(EDimension dimension) {
+	public double getMaxAbsMembership(EDimension dimension) {
 		DoubleStatistics stats = getStats(dimension);
 		return Math.max(Math.abs(stats.getMin()), Math.abs(stats.getMax()));
 	}

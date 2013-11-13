@@ -31,30 +31,30 @@ public final class FuzzyClustering implements IDoubleSizedIterable {
 	/**
 	 * index,probability sorted by probability
 	 */
-	private final ImmutableSortedSet<IntFloat> probabilities;
+	private final ImmutableSortedSet<IntFloat> memberships;
 
-	public FuzzyClustering(ImmutableSortedSet<IntFloat> probabilities) {
-		this.probabilities = probabilities;
+	public FuzzyClustering(ImmutableSortedSet<IntFloat> memberships) {
+		this.memberships = memberships;
 	}
 
 	public float getAbsMinValue() {
-		IntFloat a = probabilities.ceiling(ZERO); // >= 0
-		IntFloat b = probabilities.floor(ZERO); // <= 0
-		float a_f = a == null ? Float.POSITIVE_INFINITY : a.getProbability();
-		float b_f = b == null ? Float.POSITIVE_INFINITY : -b.getProbability();
+		IntFloat a = memberships.ceiling(ZERO); // >= 0
+		IntFloat b = memberships.floor(ZERO); // <= 0
+		float a_f = a == null ? Float.POSITIVE_INFINITY : a.getMembership();
+		float b_f = b == null ? Float.POSITIVE_INFINITY : -b.getMembership();
 		return Math.min(a_f, b_f);
 	}
 
 	public float getAbsMaxValue() {
-		IntFloat a = probabilities.last(); // largest positive
-		IntFloat b = probabilities.first(); // largest negative
-		float a_f = a == null ? Float.NEGATIVE_INFINITY : a.getProbability();
-		float b_f = b == null ? Float.NEGATIVE_INFINITY : -b.getProbability();
+		IntFloat a = memberships.last(); // largest positive
+		IntFloat b = memberships.first(); // largest negative
+		float a_f = a == null ? Float.NEGATIVE_INFINITY : a.getMembership();
+		float b_f = b == null ? Float.NEGATIVE_INFINITY : -b.getMembership();
 		return Math.max(a_f, b_f);
 	}
 
 	public ImmutableList<IntFloat> negatives(float threshold, int maxElements) {
-		ImmutableSortedSet<IntFloat> r = probabilities.headSet(new IntFloat(Integer.MAX_VALUE, -Math.abs(threshold)),
+		ImmutableSortedSet<IntFloat> r = memberships.headSet(new IntFloat(Integer.MAX_VALUE, -Math.abs(threshold)),
 				true);
 		ImmutableList<IntFloat> l = r.asList();
 
@@ -66,7 +66,7 @@ public final class FuzzyClustering implements IDoubleSizedIterable {
 	}
 
 	public ImmutableList<IntFloat> positives(float threshold, int maxElements) {
-		ImmutableSortedSet<IntFloat> r = probabilities.tailSet(new IntFloat(Integer.MIN_VALUE, Math.abs(threshold)),
+		ImmutableSortedSet<IntFloat> r = memberships.tailSet(new IntFloat(Integer.MIN_VALUE, Math.abs(threshold)),
 				true);
 		ImmutableList<IntFloat> l = r.asList();
 
@@ -80,7 +80,7 @@ public final class FuzzyClustering implements IDoubleSizedIterable {
 		if (threshold == 0 && maxElements == UNBOUND_NUMBER) {
 			switch (mode) {
 			case ABS:
-				return probabilities.asList();
+				return memberships.asList();
 			case NEGATIVE_ONLY:
 				return negatives(0, UNBOUND_NUMBER);
 			case POSITVE_ONLY:
@@ -109,7 +109,7 @@ public final class FuzzyClustering implements IDoubleSizedIterable {
 		IntFloat posAct = posIt.next();
 
 		for(int i = 0; i < maxElements; ++i) {
-			if (negAct == null || (posAct != null && posAct.getProbability() > -negAct.getProbability())) {
+			if (negAct == null || (posAct != null && posAct.getMembership() > -negAct.getMembership())) {
 				posStart = posAct;
 				posAct = posIt.hasNext() ? posIt.next() : null;
 			} else {
@@ -118,9 +118,9 @@ public final class FuzzyClustering implements IDoubleSizedIterable {
 			}
 		}
 
-		ImmutableSortedSet<IntFloat> headSet = negEnd == null ? ImmutableSortedSet.<IntFloat> of() : probabilities
+		ImmutableSortedSet<IntFloat> headSet = negEnd == null ? ImmutableSortedSet.<IntFloat> of() : memberships
 				.headSet(negEnd, true);
-		ImmutableSortedSet<IntFloat> tailSet = posStart == null ? ImmutableSortedSet.<IntFloat> of() : probabilities
+		ImmutableSortedSet<IntFloat> tailSet = posStart == null ? ImmutableSortedSet.<IntFloat> of() : memberships
 				.tailSet(posStart, true);
 		return ConcatedList.concat(headSet.asList(), tailSet.asList());
 	}
@@ -133,8 +133,8 @@ public final class FuzzyClustering implements IDoubleSizedIterable {
 	@Override
 	public IDoubleSizedIterator iterator() {
 		return new IDoubleSizedIterator() {
-			private final Iterator<IntFloat> it = probabilities.iterator();
-			private final int size = probabilities.size();
+			private final Iterator<IntFloat> it = memberships.iterator();
+			private final int size = memberships.size();
 
 			@Override
 			public void remove() {
@@ -153,7 +153,7 @@ public final class FuzzyClustering implements IDoubleSizedIterable {
 
 			@Override
 			public double nextPrimitive() {
-				return it.next().getProbability();
+				return it.next().getMembership();
 			}
 
 			@Override
