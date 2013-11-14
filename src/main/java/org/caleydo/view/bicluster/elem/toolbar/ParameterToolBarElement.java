@@ -101,15 +101,14 @@ public class ParameterToolBarElement extends AToolBarElement implements MyUnboun
 	public ParameterToolBarElement() {
 		this.add(createGroupLabelLine("Sorting Criteria"));
 
-		this.recSortingLabel = new GLElement();
-		setText(recSortingLabel, "Record", ETextStyle.BOLD);
-		this.add(recSortingLabel.setSize(Float.NaN, LABEL_WIDTH));
-		this.recSorter = new SortingStrategyChanger(this, EDimension.RECORD);
 		this.dimSortingLabel = new GLElement();
 		setText(dimSortingLabel, "Dimension", ETextStyle.BOLD);
 		this.add(dimSortingLabel.setSize(Float.NaN, LABEL_WIDTH));
 		this.dimSorter = new SortingStrategyChanger(this, EDimension.DIMENSION);
-
+		this.recSortingLabel = new GLElement();
+		setText(recSortingLabel, "Record", ETextStyle.BOLD);
+		this.add(recSortingLabel.setSize(Float.NaN, LABEL_WIDTH));
+		this.recSorter = new SortingStrategyChanger(this, EDimension.RECORD);
 
 		this.add(createGroupLabelLine("Visual Settings"));
 		this.dimBandVisibilityButton = new GLButton(EButtonMode.CHECKBOX);
