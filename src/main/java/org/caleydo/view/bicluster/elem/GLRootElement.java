@@ -55,6 +55,7 @@ import org.caleydo.view.bicluster.event.ShowToolBarEvent;
 import org.caleydo.view.bicluster.event.ZoomEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.CategoricalSortingStrategyFactory;
+import org.caleydo.view.bicluster.sorting.EThresholdMode;
 import org.caleydo.view.bicluster.util.SetUtils;
 
 import com.google.common.collect.Iterables;
@@ -67,8 +68,8 @@ public class GLRootElement extends GLElementContainer {
 	private static final Logger log = Logger.create(GLRootElement.class);
 
 	private final ParameterToolBarElement toolbarParam = new ParameterToolBarElement();
-	private final List<AToolBarElement> toolbars = Arrays.asList(toolbarParam,
-			new LayoutToolBarElement());
+	private final LayoutToolBarElement layoutParam = new LayoutToolBarElement();
+	private final List<AToolBarElement> toolbars = Arrays.asList(toolbarParam, layoutParam);
 
 	private boolean dimBands = MyPreferences.isShowDimBands();
 	private boolean recBands = MyPreferences.isShowRecBands();
@@ -102,6 +103,8 @@ public class GLRootElement extends GLElementContainer {
 			}
 		});
 		this.add(zoomLayer);
+
+		this.layoutParam.fill(clusters.getLayout());
 	}
 
 
@@ -271,8 +274,11 @@ public class GLRootElement extends GLElementContainer {
 	/**
 	 * @param biClustering
 	 * @param size
+	 * @param maxDimThreshold
+	 * @param maxRecThreshold
 	 */
-	public void init(BiClustering biClustering, TablePerspective x, Vec2f size) {
+	public void init(BiClustering biClustering, TablePerspective x, Vec2f size, double maxDimThreshold,
+			double maxRecThreshold) {
 		this.x = x;
 		this.clustering = biClustering;
 
@@ -292,7 +298,8 @@ public class GLRootElement extends GLElementContainer {
 		log.info(count + " bi clusters loaded.");
 		List<Dimension> dimensions = new ArrayList<>();
 		for (int i = 0; i < count; ++i) {
-			final ClusterElement el = new NormalClusterElement(i, clustering.getData(i), clustering);
+			final ClusterElement el = new NormalClusterElement(i, clustering.getData(i), clustering, maxDimThreshold,
+					maxRecThreshold);
 			clusters.add(el);
 			dimensions.add(el.getSizes());
 		}
@@ -317,6 +324,27 @@ public class GLRootElement extends GLElementContainer {
 			}
 		}
 		bands.updateSelection();
+		bands.updateStructure();
+	}
+
+	public void initializeScaleFactor(Vec2f size) {
+		if (clusters.isAnyFocussed())
+			return;
+		List<Dimension> dimensions = new ArrayList<>();
+		final List<GLElement> l = clusters.asList();
+		for (int i = 0; i < l.size(); ++i) {
+			ClusterElement elem = (ClusterElement) l.get(i);
+			dimensions.add(elem.getSizes());
+		}
+
+		final Map<EDimension, Float> scales = initialOverviewScaleFactor(dimensions, size.x(), size.y());
+		final float dimScale = scales.get(EDimension.DIMENSION);
+		final float recScale = scales.get(EDimension.RECORD);
+
+		for (int i = 0; i < l.size(); ++i) {
+			ClusterElement start = (ClusterElement) l.get(i);
+			start.setZoom(dimScale, recScale);
+		}
 		bands.updateStructure();
 	}
 
@@ -346,6 +374,7 @@ public class GLRootElement extends GLElementContainer {
 		final EDimension dim = event.getDim();
 		final int numberThreshold = event.getNumberThreshold();
 		final float threshold = event.getThreshold();
+		final EThresholdMode mode = event.getMode();
 
 		// 1. update thresholds
 		Iterable<NormalClusterElement> allNormalClusters = allNormalClusters();
@@ -353,7 +382,7 @@ public class GLRootElement extends GLElementContainer {
 		final Vec2f total = getSize();
 		for (NormalClusterElement cluster : allNormalClusters) {
 			Dimension old = cluster.getSizes();
-			cluster.setThreshold(dim, threshold, numberThreshold);
+			cluster.setThreshold(dim, threshold, numberThreshold, mode);
 			Dimension new_ = cluster.getSizes();
 			float s = ZoomLogic.adaptScaleFactorToSize(dim, old, new_, cluster.getZoom(EDimension.DIMENSION),
 					cluster.getZoom(EDimension.RECORD), total.x(), total.y());
@@ -407,7 +436,7 @@ public class GLRootElement extends GLElementContainer {
 					thresh = t;
 				if (t != thresh)
 					thresh = Float.NaN;
-				elem.setThreshold(dimension, t, MyUnboundSpinner.UNBOUND);
+				elem.setThreshold(dimension, t, MyUnboundSpinner.UNBOUND, EThresholdMode.ABS);
 			}
 		}
 		if (!Float.isNaN(thresh) && !Float.isInfinite(thresh)) { // all the same set that in the parameter toolbar
@@ -490,7 +519,7 @@ public class GLRootElement extends GLElementContainer {
 			final CategoricalSortingStrategyFactory factory = new CategoricalSortingStrategyFactory(
 					EDimension.DIMENSION, oppositeID, table,
 					mapper);
-			toolbarParam.addSortingMode(factory);
+			toolbarParam.addSortingMode(factory, EDimension.DIMENSION);
 			for (NormalClusterElement cluster : allNormalClusters())
 				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.DIMENSION, factory));
 		} else if (source.getRecordIDCategory().isOfCategory(target)) {
@@ -500,7 +529,7 @@ public class GLRootElement extends GLElementContainer {
 			final CategoricalSortingStrategyFactory factory = new CategoricalSortingStrategyFactory(EDimension.RECORD,
 					oppositeID, table,
 					mapper);
-			toolbarParam.addSortingMode(factory);
+			toolbarParam.addSortingMode(factory, EDimension.RECORD);
 			for (NormalClusterElement cluster : allNormalClusters())
 				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.RECORD, factory));
 		}
@@ -522,7 +551,7 @@ public class GLRootElement extends GLElementContainer {
 						CategoricalLZHeatmapElement.class)) {
 					if (h.is(oppositeID, target)) {
 						cluster.removeAnnotation(h);
-						toolbarParam.removeSortingMode(h.getData());
+						toolbarParam.removeSortingMode(h.getData(), h.getDim());
 						break;
 					}
 				}
@@ -533,7 +562,7 @@ public class GLRootElement extends GLElementContainer {
 						CategoricalLZHeatmapElement.class)) {
 					if (h.is(oppositeID, target)) {
 						cluster.removeAnnotation(h);
-						toolbarParam.removeSortingMode(h.getData());
+						toolbarParam.removeSortingMode(h.getData(), h.getDim());
 						break;
 					}
 				}

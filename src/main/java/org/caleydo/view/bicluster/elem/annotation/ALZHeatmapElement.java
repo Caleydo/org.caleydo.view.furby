@@ -146,7 +146,7 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 		gl.glBegin(GL2GL3.GL_QUADS);
 		if (spaceProvider == null) {
 			rect(0, 1, 0, size, op_size, gl);
-			centerPos = center > 0 ? center * size * s_factor : 0;
+			centerPos = center > 0 ? (center + 1) * size * s_factor : 0;
 		} else {
 			final Rect clippingArea = spaceProvider.getClippingArea();
 			final float clippingStart = dim.isHorizontal() ? clippingArea.x() : clippingArea.y();

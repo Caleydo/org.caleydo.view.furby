@@ -36,7 +36,7 @@ public class ScanLZTable implements Callable<List<FuzzyClustering>> {
 
 		List<FuzzyClustering> l = new ArrayList<>(clusters);
 		for (int i = 0; i < clusters; ++i) {
-			ImmutableSortedSet.Builder<IntFloat> b = ImmutableSortedSet.orderedBy(IntFloat.BY_PROBABILITY);
+			ImmutableSortedSet.Builder<IntFloat> b = ImmutableSortedSet.orderedBy(IntFloat.BY_MEMBERSHIP);
 			for (int j = 0; j < rows; ++j) {
 				float p = lOrZ.getRaw(i, j);
 				b.add(new IntFloat(j, p));
