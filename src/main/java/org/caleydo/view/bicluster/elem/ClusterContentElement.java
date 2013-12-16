@@ -29,10 +29,10 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Build
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.ELazyiness;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.IActiveChangedCallback;
+import org.caleydo.core.view.opengl.layout2.manage.GLLocation;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.heatmap.v2.BarPlotElement;
-import org.caleydo.view.heatmap.v2.CellSpace;
 import org.caleydo.view.heatmap.v2.EScalingMode;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
 import org.caleydo.view.heatmap.v2.HeatMapElementBase;
@@ -185,8 +185,8 @@ public class ClusterContentElement extends GLElementDecorator {
 	public float getDimensionPos(int index) {
 		HeatMapElementBase heatmap = getHeatMap();
 		if (heatmap != null)
-			return heatmap.getCellSpace(EDimension.DIMENSION, index).getPosition();
-		return getDimensionCell(index).getPosition();
+			return (float) heatmap.getLocation(EDimension.DIMENSION, index).getOffset();
+		return (float) getDimensionCell(index).getOffset();
 	}
 
 	public int getDimensionIndex(float position) {
@@ -196,13 +196,13 @@ public class ClusterContentElement extends GLElementDecorator {
 		return Math.round(position / getSize().x());
 	}
 
-	public CellSpace getDimensionCell(int index) {
+	public GLLocation getDimensionCell(int index) {
 		HeatMapElementBase heatmap = getHeatMap();
 		if (heatmap != null)
-			return heatmap.getCellSpace(EDimension.DIMENSION, index);
+			return heatmap.getLocation(EDimension.DIMENSION, index);
 		float w = getSize().x();
 		float wi = w / data.getDimensionPerspective().getVirtualArray().size();
-		return new CellSpace(index * wi, wi);
+		return new GLLocation(index * wi, wi);
 	}
 
 	/**
@@ -212,8 +212,8 @@ public class ClusterContentElement extends GLElementDecorator {
 	public float getRecordPos(int index) {
 		HeatMapElementBase heatmap = getHeatMap();
 		if (heatmap != null)
-			return heatmap.getCellSpace(EDimension.RECORD, index).getPosition();
-		return getRecordCell(index).getPosition();
+			return (float) heatmap.getLocation(EDimension.RECORD, index).getOffset();
+		return (float) getRecordCell(index).getOffset();
 	}
 
 	public int getRecordIndex(float position) {
@@ -223,13 +223,13 @@ public class ClusterContentElement extends GLElementDecorator {
 		return Math.round(position / getSize().y());
 	}
 
-	public CellSpace getRecordCell(int index) {
+	public GLLocation getRecordCell(int index) {
 		HeatMapElementBase heatmap = getHeatMap();
 		if (heatmap != null)
-			return heatmap.getCellSpace(EDimension.RECORD, index);
+			return heatmap.getLocation(EDimension.RECORD, index);
 		float h = getSize().y();
 		float hi = h / data.getRecordPerspective().getVirtualArray().size();
-		return new CellSpace(index * hi, hi);
+		return new GLLocation(index * hi, hi);
 	}
 
 	/**

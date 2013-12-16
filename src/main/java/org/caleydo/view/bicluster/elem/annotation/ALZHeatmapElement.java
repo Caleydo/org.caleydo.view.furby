@@ -22,13 +22,13 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
+import org.caleydo.core.view.opengl.layout2.manage.GLLocation;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingLabelProvider;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.view.bicluster.elem.ClusterContentElement;
 import org.caleydo.view.bicluster.sorting.IntFloat;
-import org.caleydo.view.heatmap.v2.CellSpace;
 
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
@@ -158,19 +158,19 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 			float p_x = 0;
 			float p_acc = 0;
 			for (int i = 0; i < texture.getWidth(); ++i) {
-				final CellSpace cell = dim.isHorizontal() ? spaceProvider.getDimensionCell(i) : spaceProvider
+				final GLLocation cell = dim.isHorizontal() ? spaceProvider.getDimensionCell(i) : spaceProvider
 						.getRecordCell(i);
-				float p_i = cell.getSize();
-				if (cell.getPosition() + p_i < clippingStart) {
+				float p_i = (float) cell.getSize();
+				if (cell.getOffset() + p_i < clippingStart) {
 					s++; // move texel
 					continue;
 				}
-				if (cell.getPosition() > clippingEnd)
+				if (cell.getOffset() > clippingEnd)
 					break;
-				if (cell.getPosition() < clippingStart) // reduce size on corner cases
-					p_i -= clippingStart - cell.getPosition();
-				if (cell.getPosition() + p_i > clippingEnd)
-					p_i = clippingEnd - cell.getPosition();
+				if (cell.getOffset() < clippingStart) // reduce size on corner cases
+					p_i -= clippingStart - cell.getOffset();
+				if (cell.getOffset() + p_i > clippingEnd)
+					p_i = (float) (clippingEnd - cell.getOffset());
 
 				if (Float.isNaN(p_last) || Math.abs(p_i - p_last) < 0.3) {
 					// uniform continue
