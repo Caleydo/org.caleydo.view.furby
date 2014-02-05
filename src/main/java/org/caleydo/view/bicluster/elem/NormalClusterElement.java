@@ -126,6 +126,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 		return clustering.getMembership(dim, bcNr, getVirtualArray(dim).get(index));
 	}
 
+	public String getLabel(EDimension dim, int index) {
+		return clustering.getLabel(dim, getVirtualArray(dim).get(index));
+	}
+
 	@Override
 	protected void init(IGLElementContext context) {
 		super.init(context);
