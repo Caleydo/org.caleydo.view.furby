@@ -22,6 +22,7 @@ import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.IGLElementContext;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
+import org.caleydo.core.view.opengl.layout2.layout.GLLayoutDatas;
 import org.caleydo.core.view.opengl.layout2.manage.GLLocation;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingLabelProvider;
@@ -51,10 +52,14 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 
 	protected float mouseOver = Float.NaN;
 
-	public ALZHeatmapElement(EDimension dim) {
+	protected ALZHeatmapElement(EDimension dim) {
+		this(dim, false);
+	}
+
+	protected ALZHeatmapElement(EDimension dim, boolean mini) {
 		this.dim = dim;
 		setSize(dim.isHorizontal() ? Float.NaN : 4, dim.isHorizontal() ? 4 : Float.NaN);
-		setLayoutData(dim);
+		setLayoutData(GLLayoutDatas.combine(dim, mini));
 		setVisibility(EVisibility.PICKABLE);
 		setPicker(GLRenderers.fillRect(Color.DARK_GREEN));
 	}
@@ -107,9 +112,11 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 		if (spaceProvider == null) {
 			pos = Math.round(coord / (dim.isHorizontal() ? getSize().x() : getSize().y()));
 		} else if (this.dim.isHorizontal()) {
-			pos = spaceProvider.getDimensionIndex(coord);
+			Rect rect = spaceProvider.getClippingArea();
+			pos = spaceProvider.getDimensionIndex(coord + rect.x());
 		} else {
-			pos = spaceProvider.getRecordIndex(coord);
+			Rect rect = spaceProvider.getClippingArea();
+			pos = spaceProvider.getRecordIndex(coord + rect.y());
 		}
 		if (pos < 0 || pos >= texture.getWidth())
 			return -1;
@@ -208,7 +215,7 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 
 		renderMouseHint(g, w, h);
 
-		g.color(Color.GRAY).drawRect(1, 1, w - 2, h - 2);
+		g.color(Color.GRAY).drawRect(0, 0, w, h);
 	}
 
 	/**

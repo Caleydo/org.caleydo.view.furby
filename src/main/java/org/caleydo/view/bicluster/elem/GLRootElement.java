@@ -15,11 +15,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
@@ -28,6 +28,7 @@ import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
 import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.id.IDMappingManager;
 import org.caleydo.core.id.IDMappingManagerRegistry;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
@@ -542,7 +543,7 @@ public class GLRootElement extends GLElementContainer {
 		}
 	}
 
-	public void addMultiAnnotation(EDimension dim, TablePerspective t, ATableBasedDataDomain go2gene) {
+	public void addMultiAnnotation(EDimension dim, TablePerspective t) {
 		final IDType annotateTo = clustering.getIDType(dim);
 		final IDMappingManagerRegistry registry = IDMappingManagerRegistry.get();
 		// record of annotation to gene/samples
@@ -550,59 +551,35 @@ public class GLRootElement extends GLElementContainer {
 		final ATableBasedDataDomain d = t.getDataDomain();
 		final Table table = d.getTable();
 
-		if (go2gene != null) {
-			final IDType go = t.getRecordPerspective().getIdType();
-			IIDTypeMapper<Integer, Integer> rec2go = registry.getIDMappingManager(go).getIDTypeMapper(go,
-					go2gene.getRecordIDType());
-			IIDTypeMapper<Integer, Integer> dim2annotateTo = registry.getIDMappingManager(annotateTo).getIDTypeMapper(
-					go2gene.getDimensionIDType(), annotateTo);
+		final IDType go = t.getRecordPerspective().getIdType();
+		final IDMappingManager m = registry.getIDMappingManager(annotateTo);
+		IIDTypeMapper<Integer, Integer> rec2annotateTo = m.getIDTypeMapper(go,
+				annotateTo);
 
-			for (NormalClusterElement cluster : allNormalClusters()) {
-				Integer col = cluster.getBiClusterNumber();
-				List<Integer> records = findBestColumns(col, t);
-				if (records.isEmpty())
+		IDType goLabel = rec2annotateTo.getPath().get(0).getToIDType();
+		IIDTypeMapper<Integer, String> rec2label = m.getIDTypeMapper(go, goLabel);
+
+		for (NormalClusterElement cluster : allNormalClusters()) {
+			Integer col = cluster.getBiClusterNumber();
+			List<Integer> records = findBestColumns(col, t);
+			if (records.isEmpty())
+				continue;
+			for (Integer record : records) {
+				float pValue = ((Number) table.getRaw(col, record)).floatValue();
+				Set<Integer> containedGenes = containedGenes(record, rec2annotateTo);
+				if (containedGenes == null || containedGenes.isEmpty())
 					continue;
-				for (Integer record : records) {
-					float pValue = ((Number) table.getRaw(col, record)).floatValue();
-					Set<Integer> containedGenes = containedGenes(record, rec2go, go2gene, dim2annotateTo);
-					if (containedGenes == null || containedGenes.isEmpty())
-						continue;
-					String label = d.getRecordLabel(record);
-					cluster.addAnnotation(new GoLZHeatmapElement(dim, label, pValue, Predicates.in(containedGenes), d));
-				}
-			}
-		} else {
-			for (NormalClusterElement cluster : allNormalClusters()) {
-				Integer col = cluster.getBiClusterNumber();
-				List<Integer> records = findBestColumns(col, t);
-				if (records.isEmpty())
-					continue;
-				for (Integer record : records) {
-					float pValue = ((Number) table.getRaw(col, record)).floatValue();
-					String label = d.getRecordLabel(record);
-					cluster.addAnnotation(new GoLZHeatmapElement(dim, label, pValue, Predicates.<Integer> alwaysTrue(),
-							d));
-				}
+				final Set<String> labels = rec2label.apply(record);
+				String label = labels == null ? record.toString() : (labels.size() == 1 ? labels.iterator().next()
+						.toString() : StringUtils.join(labels, ", "));
+				cluster.addAnnotation(new GoLZHeatmapElement(dim, label, pValue, Predicates.in(containedGenes), d));
 			}
 		}
 	}
 
 
-	private Set<Integer> containedGenes(Integer record, IIDTypeMapper<Integer, Integer> rec2go,
-			ATableBasedDataDomain go2gene, IIDTypeMapper<Integer, Integer> dim2annotateTo) {
-		Set<Integer> goes = rec2go.apply(record);
-		if (goes == null || goes.isEmpty())
-			return null;
-		VirtualArray dims = go2gene.getDefaultTablePerspective().getDimensionPerspective().getVirtualArray();
-		Set<Integer> good = new HashSet<>();
-		for (Integer go : goes) {
-			for (Integer dim : dims) {
-				float n = go2gene.getTable().getNormalizedValue(dim, go);
-				if (n > 0.5f)
-					good.add(dim);
-			}
-		}
-		return dim2annotateTo.apply(good);
+	private Set<Integer> containedGenes(Integer record, IIDTypeMapper<Integer, Integer> rec2annotateTo) {
+		return rec2annotateTo.apply(record);
 	}
 
 	public void removeMultiAnnotation(EDimension dimension, TablePerspective t) {
@@ -629,9 +606,9 @@ public class GLRootElement extends GLElementContainer {
 				continue;
 			tmp.add(new IntFloat(rec, p));
 		}
-		Collections.sort(tmp, Collections.reverseOrder(IntFloat.BY_MEMBERSHIP));
+		Collections.sort(tmp, IntFloat.BY_MEMBERSHIP);
 		List<Integer> top = Lists.transform(tmp, IntFloat.TO_INDEX);
-		if (max > tmp.size())
+		if (max < tmp.size())
 			return top.subList(0, max);
 		return top;
 	}

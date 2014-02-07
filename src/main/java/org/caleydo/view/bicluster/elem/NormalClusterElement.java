@@ -177,12 +177,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 		// shift for probability heat maps
 		final int firstAnnotation = 8;
-		final int dimAnnotations = count(children.subList(firstAnnotation, children.size()), EDimension.DIMENSION);
-		final int recAnnotations = count(children.subList(firstAnnotation, children.size()), EDimension.RECORD);
+		final List<? extends IGLLayoutElement> annotations = children.subList(firstAnnotation, children.size());
 
-		final int annotationWidth = isFocused() ? 20 : 6;
-		final float shift_x = annotationWidth * recAnnotations;
-		final float shift_y = annotationWidth * dimAnnotations;
+		final float shift_x = totalAnnotationWidth(annotations, EDimension.RECORD);
+		final float shift_y = totalAnnotationWidth(annotations, EDimension.DIMENSION);
 
 		if (isHovered || isShowAlwaysToolBar()) { // depending whether we are hovered or not, show hide the toolbar's
 			corner.setBounds(-18 - shift_x, -18 - shift_y, 18, 18 * 2);
@@ -217,34 +215,44 @@ public class NormalClusterElement extends AMultiClusterElement {
 			recLabel.setBounds(w, 0, 0, h);
 		}
 
-		int actDimAnnotation = 1;
-		int actRecAnnotation = 1;
-		for (IGLLayoutElement elem : children.subList(firstAnnotation, children.size())) {
+		float shiftDimAnnotation = 0;
+		float shiftRecAnnotation = 0;
+		float annotationBase = isFocused() ? 20 : 6;
+		for (IGLLayoutElement elem : annotations) {
 			EDimension dim = elem.getLayoutDataAs(EDimension.class, null);
 			if (dim == null)
 				continue;
+			boolean mini = elem.getLayoutDataAs(Boolean.class, Boolean.FALSE).booleanValue();
+			float wa = mini ? annotationBase * 0.5f : annotationBase;
 			if (dim.isHorizontal()) {
-				elem.setBounds(-1, -annotationWidth * actDimAnnotation, w + 2, annotationWidth);
-				actDimAnnotation++;
+				shiftDimAnnotation += wa;
+				elem.setBounds(-1, -shiftDimAnnotation, w + 2, wa);
 			} else {
-				elem.setBounds(-annotationWidth * actRecAnnotation, -1, annotationWidth, h + 2);
-				actRecAnnotation++;
+				shiftRecAnnotation += wa;
+				elem.setBounds(-shiftRecAnnotation, -1, wa, h + 2);
 			}
 		}
 
 	}
 
 	/**
-	 * @param subList
+	 * @param annotations2
 	 * @param dimension
 	 * @return
 	 */
-	private static int count(List<? extends IGLLayoutElement> l, EDimension dimension) {
-		int c = 0;
-		for (IGLLayoutElement elem : l)
-			if (dimension == elem.getLayoutDataAs(EDimension.class, null))
-				c++;
-		return c;
+	private float totalAnnotationWidth(List<? extends IGLLayoutElement> l, EDimension dimension) {
+		float w = isFocused() ? 20 : 6;
+		float r = 0;
+		for (IGLLayoutElement elem : l) {
+			if (dimension != elem.getLayoutDataAs(EDimension.class, null))
+				continue;
+			boolean mini = elem.getLayoutDataAs(Boolean.class, Boolean.FALSE).booleanValue();
+			if (mini)
+				r += w * 0.5f;
+			else
+				r += w;
+		}
+		return r;
 	}
 
 	@ListenTo

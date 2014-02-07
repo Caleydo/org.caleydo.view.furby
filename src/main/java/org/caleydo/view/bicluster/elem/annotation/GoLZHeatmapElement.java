@@ -11,6 +11,7 @@ import java.util.List;
 import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.datadomain.IDataDomain;
 import org.caleydo.core.util.color.Color;
+import org.caleydo.core.util.format.Formatter;
 import org.caleydo.view.bicluster.elem.NormalClusterElement;
 import org.caleydo.view.bicluster.sorting.IntFloat;
 
@@ -30,7 +31,7 @@ public class GoLZHeatmapElement extends ALZHeatmapElement {
 
 	public GoLZHeatmapElement(EDimension dim, String label, float pValue, Predicate<Integer> partOf,
 			IDataDomain origin) {
-		super(dim);
+		super(dim, true);
 		this.label = label;
 		this.pValue = pValue;
 		this.partOf = partOf;
@@ -50,7 +51,8 @@ public class GoLZHeatmapElement extends ALZHeatmapElement {
 		String label = elem.getLabel(dim, pos);
 		Integer id = elem.getVirtualArray(dim).get(pos);
 		boolean partOf = this.partOf.apply(id);
-		return String.format("%s (p-value: %.2f)\n%s (%s)", this.label, pValue, label, partOf ? "part of"
+		return String.format("%s (p-value: %s)\n%s (%s)", this.label, Formatter.formatNumber(pValue), label,
+				partOf ? "part of"
 				: "not part of");
 	}
 

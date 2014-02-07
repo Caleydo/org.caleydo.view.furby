@@ -452,9 +452,6 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 			}
 		};
 
-		List<TablePerspective> partOf = Lists.newArrayList(Iterables.filter(all,
-				DataSupportDefinitions.categoricalTables.asTablePerspectivePredicate()));
-
 		added = Lists.newArrayList(Iterables.filter(added, predicate));
 		removed = Lists.newArrayList(Iterables.filter(removed, predicate));
 
@@ -463,15 +460,10 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 
 		for (TablePerspective t : added) {
 			IDType type = t.getRecordPerspective().getIdType();
-			TablePerspective mapped = mapsTo(type, partOf);
-			if (mapped == null)
-				continue;
-			IDType toType = mapped.getDimensionPerspective().getIdType();
-			if (dims.resolvesTo(toType))
-				// FIXME
-				rootElement.addMultiAnnotation(EDimension.DIMENSION, t, mapped.getDataDomain());
-			else if (recs.resolvesTo(toType))
-				rootElement.addMultiAnnotation(EDimension.RECORD, t, mapped.getDataDomain());
+			if (type.resolvesTo(dims))
+				rootElement.addMultiAnnotation(EDimension.DIMENSION, t);
+			else if (type.resolvesTo(recs))
+				rootElement.addMultiAnnotation(EDimension.RECORD, t);
 		}
 		for (TablePerspective t : removed) {
 			IDType type = t.getRecordPerspective().getIdType();
@@ -480,20 +472,5 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 			else if (type.resolvesTo(recs))
 				rootElement.removeMultiAnnotation(EDimension.RECORD, t);
 		}
-	}
-
-	/**
-	 * @param type
-	 * @param partOf
-	 * @return
-	 */
-	private static TablePerspective mapsTo(IDType type, List<TablePerspective> partOf) {
-		if (partOf.isEmpty())
-			return null;
-		for (TablePerspective t : partOf) {
-			if (type.resolvesTo(t.getRecordPerspective().getIdType()))
-				return t;
-		}
-		return null;
 	}
 }
