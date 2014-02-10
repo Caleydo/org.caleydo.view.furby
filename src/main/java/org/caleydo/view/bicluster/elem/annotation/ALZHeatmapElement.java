@@ -146,7 +146,7 @@ public abstract class ALZHeatmapElement extends GLElement implements IPickingLab
 
 		final float s_factor = 1.f / texture.getWidth();
 		final float size = dim.select(w, h);
-		final float op_size = -2 + (dim.select(h, w));
+		final float op_size = -1 + (dim.select(h, w));
 
 		g.checkError();
 		float centerPos = 0;

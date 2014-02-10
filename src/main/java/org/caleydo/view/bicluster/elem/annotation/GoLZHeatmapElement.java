@@ -60,9 +60,11 @@ public class GoLZHeatmapElement extends ALZHeatmapElement {
 	protected void updateImpl(FloatBuffer buffer, List<IntFloat> values) {
 		center = NO_CENTER;
 		final float b = pValue2brightness(pValue);
-		Color notPartOf = new Color(1.f, 1.f, 1.f, 1.f); // .getColorWithSpecificBrighness(1 - b);
+
+		Color base = new Color(1 - b); // .getColorWithSpecificBrighness(1 - b);
+		Color notPartOf = base; // new Color(1.f, 1.f, 1.f, 1.f); // .getColorWithSpecificBrighness(1 - b);
 		// FIXME some better color
-		Color partOf = new Color(0.f, 0, 1.f, 1.f).getColorWithSpecificBrighness(1 - b);
+		Color partOf = Color.RED; // new Color(0.f, 0, 1.f, 1.f).getColorWithSpecificBrighness(1 - b);
 
 		for(IntFloat v : values) {
 			Color c;
@@ -80,6 +82,9 @@ public class GoLZHeatmapElement extends ALZHeatmapElement {
 	 */
 	private static float pValue2brightness(float pValue) {
 		// FIXME some meaningful thing
-		return Math.max(0, Math.min(1, 1 - pValue));
+		float mi = 0.f;
+		float ma = 0.01f;
+		float s = (pValue - mi) / (ma - mi);
+		return Math.max(0, Math.min(1, 1 - s));
 	}
 }
