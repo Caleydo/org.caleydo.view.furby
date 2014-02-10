@@ -599,9 +599,12 @@ public class GLRootElement extends GLElementContainer {
 		List<IntFloat> tmp = new ArrayList<>(va.size());
 		final int max = MyPreferences.getMaxNumberofGOs();
 		final float pMax = MyPreferences.getMaximalGOPValue();
+		final Table table = t.getDataDomain().getTable();
 		for (Integer rec : va) {
-			final Table table = t.getDataDomain().getTable();
-			float p = ((Number) table.getRaw(col, rec)).floatValue();
+			final Number n = (Number) table.getRaw(col, rec);
+			if (n == null)
+				continue;
+			float p = n.floatValue();
 			if (p > pMax)
 				continue;
 			tmp.add(new IntFloat(rec, p));
