@@ -605,7 +605,7 @@ public class GLRootElement extends GLElementContainer {
 			if (n == null)
 				continue;
 			float p = n.floatValue();
-			if (p > pMax)
+			if (p > pMax || Float.isNaN(p))
 				continue;
 			tmp.add(new IntFloat(rec, p));
 		}
