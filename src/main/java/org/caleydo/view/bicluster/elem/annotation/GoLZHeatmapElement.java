@@ -64,7 +64,7 @@ public class GoLZHeatmapElement extends ALZHeatmapElement {
 		Color base = new Color(1 - b); // .getColorWithSpecificBrighness(1 - b);
 		Color notPartOf = base; // new Color(1.f, 1.f, 1.f, 1.f); // .getColorWithSpecificBrighness(1 - b);
 		// FIXME some better color
-		Color partOf = Color.RED; // new Color(0.f, 0, 1.f, 1.f).getColorWithSpecificBrighness(1 - b);
+		Color partOf = Color.GREEN.getColorWithSpecificBrighness(0.5f);
 
 		for(IntFloat v : values) {
 			Color c;
