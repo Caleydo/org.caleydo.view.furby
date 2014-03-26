@@ -7,6 +7,7 @@ package org.caleydo.view.bicluster.elem;
 
 import static org.caleydo.view.bicluster.elem.ZoomLogic.initialFocusNeighborScaleFactor;
 import static org.caleydo.view.bicluster.elem.ZoomLogic.initialFocusScaleFactor;
+import static org.caleydo.view.bicluster.elem.ZoomLogic.initialOverviewScaleFactor;
 import gleem.linalg.Vec2f;
 
 import java.awt.Dimension;
@@ -20,7 +21,7 @@ import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.event.EventListenerManager.DeepScan;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLElementContainer;
-import org.caleydo.core.view.opengl.layout2.layout.IGLLayout2;
+import org.caleydo.view.bicluster.elem.layout.AForceBasedLayout;
 import org.caleydo.view.bicluster.elem.layout.ForceBasedLayoutTuned2;
 import org.caleydo.view.bicluster.elem.toolbar.AToolBarElement;
 
@@ -45,7 +46,7 @@ public class AllClustersElement extends GLElementContainer {
 	};
 
 	@DeepScan
-	private final IGLLayout2 layout = new ForceBasedLayoutTuned2(this);
+	private final AForceBasedLayout layout = new ForceBasedLayoutTuned2(this);
 
 
 	public AllClustersElement(GLRootElement glRootElement) {
@@ -120,6 +121,8 @@ public class AllClustersElement extends GLElementContainer {
 	private void focusPrevious(final List<NormalClusterElement> sortedClusters) {
 		NormalClusterElement prev = null;
 		for (NormalClusterElement cluster : sortedClusters) {
+			if (cluster.getDimSize() <= 0 || cluster.getRecSize() <= 0)
+				continue;
 			if (cluster == focussedElement && prev != null) {
 				setFocus(prev);
 				return;
@@ -129,6 +132,8 @@ public class AllClustersElement extends GLElementContainer {
 
 		// else use the last focussable one, round trip
 		for (NormalClusterElement cluster : Lists.reverse(sortedClusters)) {
+			if (cluster.getDimSize() <= 0 || cluster.getRecSize() <= 0)
+				continue;
 			if (cluster == focussedElement)
 				break;
 			setFocus(cluster);
@@ -189,6 +194,13 @@ public class AllClustersElement extends GLElementContainer {
 					continue;
 				c.setZoom(s.get(EDimension.DIMENSION), s.get(EDimension.RECORD));
 			}
+		} else {
+			// reset scale factors
+			Vec2f size = getSize();
+			Map<EDimension, Float> s = initialOverviewScaleFactor(dims, size.x(), size.y());
+			for (ClusterElement c : allClusters()) {
+				c.setZoom(s.get(EDimension.DIMENSION), s.get(EDimension.RECORD));
+			}
 		}
 	}
 
@@ -234,5 +246,12 @@ public class AllClustersElement extends GLElementContainer {
 		if (this.hoveredElement != null) {
 			this.hoveredElement.mouseOut();
 		}
+	}
+
+	/**
+	 * @return the layout, see {@link #layout}
+	 */
+	public AForceBasedLayout getLayout() {
+		return layout;
 	}
 }

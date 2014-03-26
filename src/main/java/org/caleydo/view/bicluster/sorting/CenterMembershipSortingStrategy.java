@@ -12,14 +12,14 @@ package org.caleydo.view.bicluster.sorting;
  * @author Samuel Gratzl
  *
  */
-public class CenterProbabilitySortingStrategy extends AComposeAbleSortingStrategy {
+public class CenterMembershipSortingStrategy extends AComposeAbleSortingStrategy {
 	public static final ISortingStrategyFactory FACTORY = new ConstantSortingStrategyFactory(
-			new CenterProbabilitySortingStrategy(), "Probability (Centered Spread)");
+			new CenterMembershipSortingStrategy(), "Membership (Centered Spread)");
 
 	@Override
 	public int compare(IntFloat o1, IntFloat o2) {
-		final float a = o1.getProbability();
-		final float b = o2.getProbability();
+		final float a = o1.getMembership();
+		final float b = o2.getMembership();
 		if (Float.compare(a, b) == 0)
 			return 0;
 		if (a < 0 && b < 0)

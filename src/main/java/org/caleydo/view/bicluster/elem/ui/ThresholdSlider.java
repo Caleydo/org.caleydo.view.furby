@@ -5,19 +5,29 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.elem.ui;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
+import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.util.function.IDoubleSizedIterable;
+import org.caleydo.core.view.contextmenu.AContextMenuItem;
+import org.caleydo.core.view.contextmenu.AContextMenuItem.EContextMenuType;
+import org.caleydo.core.view.contextmenu.GenericContextMenuItem;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.ISWTLayer.ISWTLayerRunnable;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.layout2.basic.AInputBoxDialog;
+import org.caleydo.core.view.opengl.layout2.basic.AInputBoxDialog.SetValueEvent;
 import org.caleydo.core.view.opengl.picking.Pick;
 import org.caleydo.core.view.opengl.util.gleem.ColoredVec2f;
 import org.caleydo.core.view.opengl.util.text.ETextStyle;
+import org.caleydo.view.bicluster.event.SelectThresholdModeEvent;
+import org.caleydo.view.bicluster.sorting.EThresholdMode;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 
@@ -68,10 +78,13 @@ public class ThresholdSlider extends PickableGLElement {
 
 	private SimpleHistogram hist;
 
-	public ThresholdSlider(float min, float max, float value) {
+	private EThresholdMode mode = EThresholdMode.ABS;
+
+	public ThresholdSlider(float min, float max, float value, EThresholdMode mode) {
 		this.min = min;
 		this.max = max;
 		this.value = clamp(value);
+		this.mode = mode;
 	}
 
 	/**
@@ -116,6 +129,18 @@ public class ThresholdSlider extends PickableGLElement {
 	}
 
 	/**
+	 * @param mode
+	 *            setter, see {@link mode}
+	 */
+	public ThresholdSlider setMode(EThresholdMode mode) {
+		this.mode = mode;if (this.mode == mode)
+			return this;
+		this.mode = mode;
+		repaint();
+		return this;
+	}
+
+	/**
 	 * @param value
 	 *            setter, see {@link value}
 	 */
@@ -125,7 +150,7 @@ public class ThresholdSlider extends PickableGLElement {
 			return this;
 		this.value = value;
 		repaintAll();
-		fireCallback(value);
+		fireCallback(value, mode);
 		return this;
 	}
 
@@ -153,9 +178,16 @@ public class ThresholdSlider extends PickableGLElement {
 		return max;
 	}
 
+	/**
+	 * @return the mode, see {@link #mode}
+	 */
+	public EThresholdMode getMode() {
+		return mode;
+	}
 
-	protected final void fireCallback(float value) {
-		callback.onSelectionChanged(this, value);
+
+	protected final void fireCallback(float value, EThresholdMode mode) {
+		callback.onSelectionChanged(this, value, mode);
 	}
 
 	/**
@@ -196,7 +228,8 @@ public class ThresholdSlider extends PickableGLElement {
 				g.drawText(format(min), 2, 3, w - 3, h - 6, VAlign.RIGHT);
 			}
 			if (showText)
-				g.textColor(Color.BLUE).drawText(format(value), 2, 2, w - 3, h - 6, VAlign.CENTER, ETextStyle.BOLD);
+				g.textColor(Color.BLUE).drawText(formatMode() + format(value), 2, 2, w - 3, h - 6, VAlign.CENTER,
+						ETextStyle.BOLD);
 		} else {
 			float y = mapValue(h) + 1;
 			g.fillRect(0, y, w, Math.min(BAR_WIDTH, h - y));
@@ -209,13 +242,27 @@ public class ThresholdSlider extends PickableGLElement {
 				g.drawText(format(min), 2, 3 - w, h - 3, w - 6, VAlign.RIGHT);
 			}
 			if (showText)
-				g.textColor(Color.BLUE)
-						.drawText(format(value), 2, 2 - w, h - 3, w - 6, VAlign.CENTER, ETextStyle.BOLD);
+				g.textColor(Color.BLUE).drawText(formatMode() + format(value), 2, 2 - w, h - 3, w - 6, VAlign.CENTER,
+						ETextStyle.BOLD);
 			if (showText)
 				g.restore();
 		}
 		g.textColor(Color.BLACK);
 		g.color(Color.BLACK).drawRect(0, 0, w, h);
+	}
+
+	/**
+	 * @return
+	 */
+	private String formatMode() {
+		switch (mode) {
+		case NEGATIVE_ONLY:
+			return "-";
+		case POSITVE_ONLY:
+			return "+";
+		default:
+			return "";
+		}
 	}
 
 	/**
@@ -313,7 +360,7 @@ public class ThresholdSlider extends PickableGLElement {
 	}
 
 	@Override
-	protected void onClicked(Pick pick) {
+	protected void onDragDetected(Pick pick) {
 		if (pick.isAnyDragging())
 			return;
 		pick.setDoDragging(true);
@@ -333,6 +380,25 @@ public class ThresholdSlider extends PickableGLElement {
 		}
 		setValue(unmapValue(v));
 		repaintAll();
+	}
+
+	@Override
+	protected void onRightClicked(Pick pick) {
+		List<AContextMenuItem> items = new ArrayList<>();
+		for (EThresholdMode m : EThresholdMode.values()) {
+			items.add(new GenericContextMenuItem(m.getLabel(), EContextMenuType.RADIO, new SelectThresholdModeEvent(m)
+					.to(this)).setState(m == mode));
+		}
+		context.getSWTLayer().showContextMenu(items);
+	}
+
+	@ListenTo(sendToMe = true)
+	private void onSelectThresholdModeEvent(SelectThresholdModeEvent event) {
+		if (this.mode == event.getMode())
+			return;
+		this.mode = event.getMode();
+		repaint();
+		fireCallback(value, mode);
 	}
 
 	@Override
@@ -356,12 +422,12 @@ public class ThresholdSlider extends PickableGLElement {
 	 *
 	 */
 	public interface ISelectionCallback {
-		void onSelectionChanged(ThresholdSlider slider, float value);
+		void onSelectionChanged(ThresholdSlider slider, float value, EThresholdMode mode);
 	}
 
 	private static final ISelectionCallback DUMMY_CALLBACK = new ISelectionCallback() {
 		@Override
-		public void onSelectionChanged(ThresholdSlider slider, float value) {
+		public void onSelectionChanged(ThresholdSlider slider, float value, EThresholdMode mode) {
 
 		}
 	};
@@ -376,6 +442,11 @@ public class ThresholdSlider extends PickableGLElement {
 		});
 	}
 
+	@ListenTo(sendToMe = true)
+	private void onSetValueEvent(SetValueEvent event) {
+		setValue(Float.parseFloat(event.getValue()));
+	}
+
 	private class InputBox extends AInputBoxDialog {
 		public InputBox(Composite canvas) {
 			super(null, "Set Value", ThresholdSlider.this, canvas);
@@ -383,7 +454,7 @@ public class ThresholdSlider extends PickableGLElement {
 
 		@Override
 		protected void set(String value) {
-			setValue(Float.parseFloat(value));
+			EventPublisher.trigger(new SetValueEvent(value).to(ThresholdSlider.this));
 		}
 
 		@Override

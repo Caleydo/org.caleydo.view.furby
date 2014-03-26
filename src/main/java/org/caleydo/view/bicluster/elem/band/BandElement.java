@@ -242,29 +242,31 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 				bandColor = hoveredColor;
 			else
 				bandColor = BiClusterRenderStyle.getBandColor(dimension);
-			if (isMouseOver) {
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * actOpacityFactor);
-				for (Band b : getSplittedBands().values()) {
-					g.drawPath(b);
-				}
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.5f * actOpacityFactor);
-				for (Band b : getSplittedBands().values()) {
-					g.fillPolygon(b);
-				}
-
-				g.color(bandColor.r, bandColor.g, bandColor.b, 0.25f * actOpacityFactor);
-				List<Vec2f> currSelectedSpline = getSplines().get(actSelectedSplineID - 1);
-				for (List<Vec2f> b : getSplines().values()) {
-					if (b == currSelectedSpline)
-						continue;
-					g.drawPath(b, false);
-				}
-				if (currSelectedSpline != null) {
-					g.color(0, 0, 0, 0.85f * actOpacityFactor).lineWidth(2);
-					g.drawPath(currSelectedSpline, false);
-					g.lineWidth(1);
-				}
-			} else {
+			// if (isMouseOver) {
+			// g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * actOpacityFactor);
+			// for (Band b : getSplittedBands().values()) {
+			// g.drawPath(b);
+			// }
+			// g.color(bandColor.r, bandColor.g, bandColor.b, 0.5f * actOpacityFactor);
+			// for (Band b : getSplittedBands().values()) {
+			// g.fillPolygon(b);
+			// }
+			//
+			// g.color(bandColor.r, bandColor.g, bandColor.b, 0.25f * actOpacityFactor);
+			// List<Vec2f> currSelectedSpline = getSplines().get(actSelectedSplineID - 1);
+			// for (List<Vec2f> b : getSplines().values()) {
+			// if (b == currSelectedSpline)
+			// continue;
+			// g.drawPath(b, false);
+			// }
+			// if (currSelectedSpline != null) {
+			// g.color(0, 0, 0, 0.85f * actOpacityFactor).lineWidth(2);
+			// g.drawPath(currSelectedSpline, false);
+			// g.lineWidth(1);
+			// }
+			// } else {
+			//
+			// }
 				Color col = bandColor.clone();
 				col.a = 0.8f;
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.8f * actOpacityFactor);
@@ -281,7 +283,7 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 				g.color(bandColor.r, bandColor.g, bandColor.b, 0.5f * actOpacityFactor);
 				for (Band b : stubBands) {
 					g.fillPolygon(b);
-				}
+				// }
 			}
 		}
 	}
@@ -315,17 +317,18 @@ public class BandElement extends PickableGLElement implements IPickingLabelProvi
 	protected void renderPickImpl(GLGraphics g, float w, float h) {
 		if (getVisibility() == EVisibility.PICKABLE && !isAnyThingHovered && isVisible()) {
 			g.color(BiClusterRenderStyle.getBandColor(dimension));
-			if (isMouseOver) {
-				for (Band b : getSplittedBands().values())
-					g.fillPolygon(b);
-				g.incZ();
-				for (Integer elementIndex : getSplines().keySet()) {
-					g.pushName(pickingPool.get(elementIndex + 1));
-					g.fillPolygon(getSplines().get(elementIndex));
-					g.popName();
-				}
-				g.decZ();
-			} else {
+			// if (isMouseOver) {
+			// for (Band b : getSplittedBands().values())
+			// g.fillPolygon(b);
+			// g.incZ();
+			// for (Integer elementIndex : getSplines().keySet()) {
+			// g.pushName(pickingPool.get(elementIndex + 1));
+			// g.fillPolygon(getSplines().get(elementIndex));
+			// g.popName();
+			// }
+			// g.decZ();
+			// } else {
+			{
 				if (band != null)
 					g.fillPolygon(band);
 			}

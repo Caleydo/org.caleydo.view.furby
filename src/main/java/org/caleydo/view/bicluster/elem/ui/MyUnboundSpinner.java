@@ -7,12 +7,15 @@ package org.caleydo.view.bicluster.elem.ui;
 
 import gleem.linalg.Vec2f;
 
+import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.event.EventPublisher;
 import org.caleydo.core.util.color.Color;
 import org.caleydo.core.view.opengl.canvas.IGLMouseListener.IMouseEvent;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.ISWTLayer.ISWTLayerRunnable;
 import org.caleydo.core.view.opengl.layout2.PickableGLElement;
 import org.caleydo.core.view.opengl.layout2.basic.AInputBoxDialog;
+import org.caleydo.core.view.opengl.layout2.basic.AInputBoxDialog.SetValueEvent;
 import org.caleydo.core.view.opengl.layout2.basic.EButtonIcon;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.Pick;
@@ -249,6 +252,11 @@ public class MyUnboundSpinner extends PickableGLElement {
 		});
 	}
 
+	@ListenTo(sendToMe = true)
+	private void onSetValueEvent(SetValueEvent event) {
+		setValue(Integer.parseInt(event.getValue()));
+	}
+
 	private class InputBox extends AInputBoxDialog {
 		public InputBox(Composite canvas) {
 			super(null, "Set Value", MyUnboundSpinner.this, canvas);
@@ -256,7 +264,7 @@ public class MyUnboundSpinner extends PickableGLElement {
 
 		@Override
 		protected void set(String value) {
-			setValue(Integer.parseInt(value));
+			EventPublisher.trigger(new SetValueEvent(value).to(MyUnboundSpinner.this));
 		}
 
 		@Override

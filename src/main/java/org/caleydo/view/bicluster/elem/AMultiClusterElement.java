@@ -16,6 +16,8 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Build
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * e.g. a class for representing a cluster
@@ -25,6 +27,13 @@ import com.google.common.base.Predicate;
  */
 public abstract class AMultiClusterElement extends ClusterElement {
 	protected final ClusterContentElement content;
+
+	private static final Predicate<String> notSingle = new Predicate<String>() {
+		@Override
+		public boolean apply(String input) {
+			return !ImmutableSet.of("sbar", "sheatmap").contains(input);
+		}
+	};
 
 
 	public AMultiClusterElement(int bcNr, TablePerspective data, BiClustering clustering,
@@ -53,7 +62,7 @@ public abstract class AMultiClusterElement extends ClusterElement {
 		Builder builder = GLElementFactoryContext.builder();
 		builder.withData(data);
 		builder.put(EDetailLevel.class, EDetailLevel.MEDIUM);
-		ClusterContentElement c = new ClusterContentElement(builder, filter);
+		ClusterContentElement c = new ClusterContentElement(builder, Predicates.and(filter, notSingle));
 
 		// trigger a scale event on vis change
 		c.onActiveChanged(new GLElementFactorySwitcher.IActiveChangedCallback() {

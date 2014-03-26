@@ -35,7 +35,7 @@ public class ComposedSortingStrategyFactory implements ISortingStrategyFactory {
 		return new Composed(comparators);
 	}
 
-	private static final class Composed extends AComposeAbleSortingStrategy {
+	static final class Composed extends AComposeAbleSortingStrategy {
 		private final AComposeAbleSortingStrategy[] comparators;
 
 		public Composed(AComposeAbleSortingStrategy... comparators) {
@@ -50,6 +50,13 @@ public class ComposedSortingStrategyFactory implements ISortingStrategyFactory {
 					return r;
 			}
 			return 0;
+		}
+
+		/**
+		 * @return
+		 */
+		public ISortingStrategy getFirst() {
+			return comparators[0];
 		}
 	}
 }

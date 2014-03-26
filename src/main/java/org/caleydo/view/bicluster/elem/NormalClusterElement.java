@@ -19,6 +19,7 @@ import java.util.List;
 import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.virtualarray.VirtualArray;
+import org.caleydo.core.data.virtualarray.group.GroupList;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.util.collection.Pair;
 import org.caleydo.core.util.color.Color;
@@ -37,14 +38,17 @@ import org.caleydo.core.view.opengl.layout2.manage.ButtonBarBuilder.EButtonBarLa
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.layout2.renderer.IGLRenderer;
 import org.caleydo.view.bicluster.elem.annotation.ALZHeatmapElement;
-import org.caleydo.view.bicluster.elem.annotation.ProbabilityLZHeatmapElement;
+import org.caleydo.view.bicluster.elem.annotation.MembershipLZHeatmapElement;
 import org.caleydo.view.bicluster.elem.ui.ThresholdSlider;
 import org.caleydo.view.bicluster.event.SortingChangeEvent;
 import org.caleydo.view.bicluster.internal.BiClusterRenderStyle;
+import org.caleydo.view.bicluster.sorting.EThresholdMode;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
+import org.caleydo.view.bicluster.sorting.IGroupingStrategy;
 import org.caleydo.view.bicluster.sorting.ISortingStrategy;
 import org.caleydo.view.bicluster.sorting.IntFloat;
-import org.caleydo.view.bicluster.sorting.ProbabilitySortingStrategy;
+import org.caleydo.view.bicluster.sorting.MembershipSortingStrategy;
+import org.caleydo.view.bicluster.sorting.SortingStrategies;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
@@ -64,8 +68,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 	private final FuzzyClustering dimClustering;
 	private final FuzzyClustering recClustering;
 
+	protected EThresholdMode recThresholdMode = EThresholdMode.ABS;
 	protected float recThreshold = getRecThreshold();
 	protected int recNumberThreshold = getRecTopNElements();
+	protected EThresholdMode dimThresholdMode = EThresholdMode.ABS;
 	protected float dimThreshold = getDimThreshold();
 	protected int dimNumberThreshold = getDimTopNElements();
 
@@ -76,13 +82,17 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 	protected boolean showThreshold;
 
-	protected ISortingStrategy dimSorter = ProbabilitySortingStrategy.FACTORY_INC.create(this, EDimension.DIMENSION);
-	protected ISortingStrategy recSorter = ProbabilitySortingStrategy.FACTORY_INC.create(this, EDimension.RECORD);
+	protected ISortingStrategy dimSorter = MembershipSortingStrategy.FACTORY_INC.create(this, EDimension.DIMENSION);
+	protected ISortingStrategy recSorter = MembershipSortingStrategy.FACTORY_INC.create(this, EDimension.RECORD);
 
-	public NormalClusterElement(int bcNr, TablePerspective data, BiClustering clustering) {
+	public NormalClusterElement(int bcNr, TablePerspective data, BiClustering clustering, double maxDimThreshold,
+			double maxRecThreshold) {
 		super(bcNr, data, clustering, Predicates.alwaysTrue());
 		this.dimClustering = clustering.getDimClustering(bcNr);
 		this.recClustering = clustering.getRecClustering(bcNr);
+
+		this.recThreshold = Math.min(this.recThreshold, (float) maxRecThreshold);
+		this.dimThreshold = Math.min(this.dimThreshold, (float) maxDimThreshold);
 
 		this.add(createTopToolBar());
 		toolBar = new ToolBar(content.createButtonBarBuilder().layoutAs(EButtonBarLayout.SLIDE_LEFT).size(16).build()
@@ -93,27 +103,31 @@ public class NormalClusterElement extends AMultiClusterElement {
 		this.add(dimThreshBar);
 		this.add(recThreshBar);
 
-		dimThreshBar.updateSliders(clustering.getMaxAbsProbability(EDimension.DIMENSION),
+		dimThreshBar.updateSliders(clustering.getMaxAbsMembership(EDimension.DIMENSION),
 				clustering.getClustering(EDimension.DIMENSION, bcNr));
-		recThreshBar.updateSliders(clustering.getMaxAbsProbability(EDimension.RECORD),
+		recThreshBar.updateSliders(clustering.getMaxAbsMembership(EDimension.RECORD),
 				clustering.getClustering(EDimension.DIMENSION, bcNr));
 
 		this.add(new HeatMapLabelElement(true, data.getDimensionPerspective(), content));
 		this.add(new HeatMapLabelElement(false, data.getRecordPerspective(), content));
 
-		ProbabilityLZHeatmapElement p = new ProbabilityLZHeatmapElement(EDimension.DIMENSION,
-				clustering.getMaxAbsProbability(EDimension.DIMENSION));
+		MembershipLZHeatmapElement p = new MembershipLZHeatmapElement(EDimension.DIMENSION,
+				clustering.getMaxAbsMembership(EDimension.DIMENSION));
 		this.annotations.add(p);
 		this.add(p);
-		p = new ProbabilityLZHeatmapElement(EDimension.RECORD, clustering.getMaxAbsProbability(EDimension.RECORD));
+		p = new MembershipLZHeatmapElement(EDimension.RECORD, clustering.getMaxAbsMembership(EDimension.RECORD));
 		this.annotations.add(p);
 		this.add(p);
 
 		resort();
 	}
 
-	public float getProbability(EDimension dim, int index) {
-		return clustering.getProbability(dim, bcNr, getVirtualArray(dim).get(index));
+	public float getMembership(EDimension dim, int index) {
+		return clustering.getMembership(dim, bcNr, getVirtualArray(dim).get(index));
+	}
+
+	public String getLabel(EDimension dim, int index) {
+		return clustering.getLabel(dim, getVirtualArray(dim).get(index));
 	}
 
 	@Override
@@ -163,12 +177,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 		// shift for probability heat maps
 		final int firstAnnotation = 8;
-		final int dimAnnotations = count(children.subList(firstAnnotation, children.size()), EDimension.DIMENSION);
-		final int recAnnotations = count(children.subList(firstAnnotation, children.size()), EDimension.RECORD);
+		final List<? extends IGLLayoutElement> annotations = children.subList(firstAnnotation, children.size());
 
-		final int annotationWidth = isFocused() ? 20 : 6;
-		final float shift_x = annotationWidth * recAnnotations;
-		final float shift_y = annotationWidth * dimAnnotations;
+		final float shift_x = totalAnnotationWidth(annotations, EDimension.RECORD);
+		final float shift_y = totalAnnotationWidth(annotations, EDimension.DIMENSION);
 
 		if (isHovered || isShowAlwaysToolBar()) { // depending whether we are hovered or not, show hide the toolbar's
 			corner.setBounds(-18 - shift_x, -18 - shift_y, 18, 18 * 2);
@@ -203,40 +215,53 @@ public class NormalClusterElement extends AMultiClusterElement {
 			recLabel.setBounds(w, 0, 0, h);
 		}
 
-		int actDimAnnotation = 1;
-		int actRecAnnotation = 1;
-		for (IGLLayoutElement elem : children.subList(firstAnnotation, children.size())) {
+		float shiftDimAnnotation = 0;
+		float shiftRecAnnotation = 0;
+		float annotationBase = isFocused() ? 20 : 6;
+		for (IGLLayoutElement elem : annotations) {
 			EDimension dim = elem.getLayoutDataAs(EDimension.class, null);
 			if (dim == null)
 				continue;
+			boolean mini = elem.getLayoutDataAs(Boolean.class, Boolean.FALSE).booleanValue();
+			float wa = mini ? annotationBase * 0.5f : annotationBase;
 			if (dim.isHorizontal()) {
-				elem.setBounds(-1, -annotationWidth * actDimAnnotation, w + 2, annotationWidth);
-				actDimAnnotation++;
+				shiftDimAnnotation += wa;
+				elem.setBounds(-1, -shiftDimAnnotation, w + 2, wa);
 			} else {
-				elem.setBounds(-annotationWidth * actRecAnnotation, -1, annotationWidth, h + 2);
-				actRecAnnotation++;
+				shiftRecAnnotation += wa;
+				elem.setBounds(-shiftRecAnnotation, -1, wa, h + 2);
 			}
 		}
 
 	}
 
 	/**
-	 * @param subList
+	 * @param annotations2
 	 * @param dimension
 	 * @return
 	 */
-	private static int count(List<? extends IGLLayoutElement> l, EDimension dimension) {
-		int c = 0;
-		for (IGLLayoutElement elem : l)
-			if (dimension == elem.getLayoutDataAs(EDimension.class, null))
-				c++;
-		return c;
+	private float totalAnnotationWidth(List<? extends IGLLayoutElement> l, EDimension dimension) {
+		float w = isFocused() ? 20 : 6;
+		float r = 0;
+		for (IGLLayoutElement elem : l) {
+			if (dimension != elem.getLayoutDataAs(EDimension.class, null))
+				continue;
+			boolean mini = elem.getLayoutDataAs(Boolean.class, Boolean.FALSE).booleanValue();
+			if (mini)
+				r += w * 0.5f;
+			else
+				r += w;
+		}
+		return r;
 	}
 
 	@ListenTo
 	private void listenTo(SortingChangeEvent e) {
-		this.dimSorter = e.getFactory().create(this, EDimension.DIMENSION);
-		this.recSorter = e.getFactory().create(this, EDimension.RECORD);
+		if (e.getDimension().isDimension()) {
+			this.dimSorter = e.getFactory().create(this, EDimension.DIMENSION);
+		} else {
+			this.recSorter = e.getFactory().create(this, EDimension.RECORD);
+		}
 		resort();
 	}
 
@@ -297,18 +322,25 @@ public class NormalClusterElement extends AMultiClusterElement {
 			resort();
 	}
 
+	public EThresholdMode getThresholdMode(EDimension dim) {
+		return dim.select(dimThresholdMode, recThresholdMode);
+	}
 
-	public void setThresholds(float dimThreshold, int dimNumberThreshold, float recThreshold, int recNumberThreshold) {
+	public void setThresholds(float dimThreshold, int dimNumberThreshold, EThresholdMode dimThresholdMode,
+			float recThreshold, int recNumberThreshold, EThresholdMode recThresholdMode) {
 		if (this.dimThreshold == dimThreshold && this.dimNumberThreshold == dimNumberThreshold
-				&& this.recThreshold == recThreshold && this.recNumberThreshold == recNumberThreshold)
+				&& this.recThreshold == recThreshold && this.recNumberThreshold == recNumberThreshold
+				&& this.dimThresholdMode == dimThresholdMode && this.recThresholdMode == recThresholdMode)
 			return;
 		this.dimThreshold = dimThreshold;
 		this.dimNumberThreshold = dimNumberThreshold;
+		this.dimThresholdMode = dimThresholdMode;
 		this.recThreshold = recThreshold;
 		this.recNumberThreshold = recNumberThreshold;
+		this.recThresholdMode = recThresholdMode;
 
-		this.recThreshBar.setValue(recThreshold);
-		this.dimThreshBar.setValue(dimThreshold);
+		this.recThreshBar.setValue(recThreshold, recThresholdMode);
+		this.dimThreshBar.setValue(dimThreshold, dimThresholdMode);
 
 		resort();
 	}
@@ -317,12 +349,13 @@ public class NormalClusterElement extends AMultiClusterElement {
 	 * @param dimension
 	 * @param t
 	 * @param numberThreshold
+	 * @param mode
 	 */
-	public void setThreshold(EDimension dim, float t, int numberThreshold) {
-		if (dim.isHorizontal())
-			setThresholds(t, numberThreshold, recThreshold, recNumberThreshold);
+	public void setThreshold(EDimension dim, float t, int numberThreshold, EThresholdMode mode) {
+		if (dim.isDimension())
+			setThresholds(t, numberThreshold, mode, recThreshold, recNumberThreshold, recThresholdMode);
 		else
-			setThresholds(dimThreshold, dimNumberThreshold, t, numberThreshold);
+			setThresholds(dimThreshold, dimNumberThreshold, dimThresholdMode, t, numberThreshold, mode);
 	}
 
 	/**
@@ -330,10 +363,11 @@ public class NormalClusterElement extends AMultiClusterElement {
 	 *
 	 * @param dimension
 	 * @param t
+	 * @param mode
 	 */
-	public void setLocalThreshold(EDimension dimension, float t) {
+	public void setLocalThreshold(EDimension dimension, float t, EThresholdMode mode) {
 		Dimension old = getSizes();
-		setThreshold(dimension, t, dimension.select(dimNumberThreshold, recNumberThreshold));
+		setThreshold(dimension, t, dimension.select(dimNumberThreshold, recNumberThreshold), mode);
 		updateMyEdges(dimension.isHorizontal(), dimension.isVertical());
 
 		// adaptScaleFactors(old);
@@ -362,8 +396,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 	 * @return
 	 */
 	private Pair<List<IntFloat>, List<IntFloat>> filterData() {
-		List<IntFloat> dims = dimClustering.filter(dimThreshold, dimNumberThreshold);
-		List<IntFloat> recs = recClustering.filter(recThreshold, recNumberThreshold);
+		List<IntFloat> dims = dimClustering.filter(dimThreshold, dimNumberThreshold, dimThresholdMode);
+		List<IntFloat> recs = recClustering.filter(recThreshold, recNumberThreshold, recThresholdMode);
 
 		Pair<List<IntFloat>, List<IntFloat>> p = Pair.make(dims, recs);
 		return p;
@@ -376,8 +410,8 @@ public class NormalClusterElement extends AMultiClusterElement {
 	 * @param recs
 	 */
 	private void updateTablePerspective(List<IntFloat> dims, List<IntFloat> recs) {
-		fill(getDimVirtualArray(), dims);
-		fill(getRecVirtualArray(), recs);
+		fill(getDimVirtualArray(), dims, SortingStrategies.findGrouping(dimSorter));
+		fill(getRecVirtualArray(), recs, SortingStrategies.findGrouping(recSorter));
 
 		this.data.invalidateContainerStatistics();
 
@@ -388,9 +422,14 @@ public class NormalClusterElement extends AMultiClusterElement {
 				annotation.update(recs);
 	}
 
-	private static void fill(VirtualArray va, List<IntFloat> values) {
+	private static void fill(VirtualArray va, List<IntFloat> values, IGroupingStrategy grouper) {
 		va.clear();
 		va.addAll(Lists.transform(values, IntFloat.TO_INDEX));
+		if (grouper != null)
+			va.setGroupList(grouper.getGrouping(values));
+		else
+			va.setGroupList(new GroupList());
+
 	}
 
 	public void addAnnotation(ALZHeatmapElement annotation) {
@@ -452,7 +491,7 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 			// create buttons
 			float max = 0;
-			this.slider = new ThresholdSlider(0, max, max / 2);
+			this.slider = new ThresholdSlider(0, max, max / 2, EThresholdMode.ABS);
 			slider.setCallback(this);
 			slider.setHorizontal(isHorizontal);
 			setContent(slider);
@@ -461,10 +500,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 
 
 		@Override
-		public void onSelectionChanged(ThresholdSlider slider, float value) {
+		public void onSelectionChanged(ThresholdSlider slider, float value, EThresholdMode mode) {
 			if (value >= localMaxSliderValue)
 				return;
-			setLocalThreshold(EDimension.get(isHorizontal), value);
+			setLocalThreshold(EDimension.get(isHorizontal), value, mode);
 		}
 
 		/**
@@ -479,9 +518,10 @@ public class NormalClusterElement extends AMultiClusterElement {
 		/**
 		 * @param value
 		 */
-		public void setValue(float value) {
+		public void setValue(float value, EThresholdMode mode) {
 			slider.setCallback(null); // to avoid that we will be callbacked
 			slider.setValue(value);
+			slider.setMode(mode);
 			slider.setCallback(this);
 		}
 	}

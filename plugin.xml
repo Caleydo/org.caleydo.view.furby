@@ -71,7 +71,7 @@
          point="org.caleydo.core.StartupAddon">
       <addon
             class="org.caleydo.view.bicluster.internal.loading.BiClusterStartupAddon"
-            name="Load BiCluster Result">
+            name="Load Bicluster Result">
       </addon>
    </extension>
 </plugin>

@@ -15,12 +15,12 @@ import org.eclipse.jface.window.Window;
 public final class SearchAction extends SimpleAction implements IGLKeyListener {
 
 	public SearchAction() {
-		super("&Find BiCluster", BiClusterRenderStyle.ICON_FIND, Activator.getResourceLoader());
+		super("&Find Cluster", BiClusterRenderStyle.ICON_FIND, Activator.getResourceLoader());
 	}
 
 	@Override
 	public void run() {
-		InputDialog d = new InputDialog(null, "Find BiCluster", "Find BiCluster (at least 2 characters)", "",
+		InputDialog d = new InputDialog(null, "Find Cluster", "Find Cluster (at least 2 characters)", "",
 				new IInputValidator() {
 
 					@Override

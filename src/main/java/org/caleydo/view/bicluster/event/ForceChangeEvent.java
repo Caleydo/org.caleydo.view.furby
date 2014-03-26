@@ -13,26 +13,27 @@ import org.caleydo.core.event.AEvent;
  */
 public class ForceChangeEvent extends AEvent {
 
-	private final float att, rep, board;
+	private final String name;
+	private final float value;
 
-	public ForceChangeEvent(float att, float rep, float board) {
-		this.att = att;
-		this.board = board;
-		this.rep = rep;
+	public ForceChangeEvent(String name, float value) {
+		this.name = name;
+		this.value = value;
 	}
 
-	public float getAttractionForce() {
-		return att;
+	/**
+	 * @return the name, see {@link #name}
+	 */
+	public String getName() {
+		return name;
 	}
 
-	public float getRepulsionForce() {
-		return rep;
+	/**
+	 * @return the value, see {@link #value}
+	 */
+	public float getValue() {
+		return value;
 	}
-
-	public float getBoarderForce() {
-		return board;
-	}
-
 
 	@Override
 	public boolean checkIntegrity() {

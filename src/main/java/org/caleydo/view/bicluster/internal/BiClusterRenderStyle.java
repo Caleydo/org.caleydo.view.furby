@@ -41,7 +41,7 @@ public class BiClusterRenderStyle {
 	public static Color getBandColor(EDimension dim) {
 		switch (dim) {
 		case DIMENSION:
-			return Color.NEUTRAL_GREY;
+			return new Color(200, 231, 194);
 		case RECORD:
 			return Color.LIGHT_GRAY;
 		}

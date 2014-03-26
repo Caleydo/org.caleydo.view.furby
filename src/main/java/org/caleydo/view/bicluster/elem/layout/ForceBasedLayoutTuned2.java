@@ -22,11 +22,58 @@ import org.caleydo.view.bicluster.util.Vec2d;
 public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 	private final Random r = new Random();
 
+	private final static double connectorOffset = 20; // [px]
+	private final static double initialDistanceFactor = 1.2;
+	private final static double minimumDistanceFactor = 0.25;
+
+	private double centerForce = 0.002;
+	private double repulsionFactor = 70;
+	private double attractionFactor = 0.20;
+	private double frameFactor = 2;
+
 	public ForceBasedLayoutTuned2(AllClustersElement parent) {
 		super(parent);
-		repulsion = 1000f;
-		attractionFactor = 100f;
-		borderForceFactor = 200f;
+	}
+
+	private double repulsionFactor(double areaFilled) {
+		return clamp((1 - areaFilled) * repulsionFactor, 5, 200);
+	}
+
+	private double attractionFactor(double areaFilled) {
+		return clamp((1 - areaFilled) * attractionFactor, 0.01, 0.1);
+	}
+
+	private double frameFactor(double areaFilled) {
+		return clamp((1 - areaFilled) * frameFactor, 0.2, 1);
+	}
+
+	@Override
+	public void fillLayoutToolBar(ILayoutToolBar elem) {
+		elem.addSlider("repulsion", "Repulsion between clusters", (float) repulsionFactor, 1, 100);
+		elem.addSlider("attraction", "Attraction between clusters", (float) attractionFactor, 0.01f, 0.4f);
+		elem.addSlider("frame", "Force from the window border", (float) frameFactor, 0.5f, 4f);
+		elem.addSlider("center", "Force towards the center", (float) centerForce * 100, 0, 1f);
+	}
+
+	@Override
+	protected void setParameter(String name, float value) {
+		switch (name) {
+		case "repulsion":
+			repulsionFactor = value;
+			break;
+		case "attraction":
+			attractionFactor = value;
+			break;
+		case "frame":
+			frameFactor = value;
+			break;
+		case "center":
+			centerForce = value * 0.01f;
+			break;
+		default:
+			break;
+		}
+
 	}
 
 	@Override
@@ -101,9 +148,9 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		// use the area filled as an indicator how repulsive the elements should be
 		// the less filled the more repulsion
 		// the less filled the less attraction
-		final double attraction = clamp(0.20 * (1 - areaFilled), 0.01, 0.1);
-		final double repulsion = clamp((1 - areaFilled) * 50, 5, 80);
-		final double frame = clamp((1 - areaFilled) * 2, 0.2, 1);
+		final double attraction = attractionFactor(areaFilled);
+		final double repulsion = repulsionFactor(areaFilled);
+		final double frame = frameFactor(areaFilled);
 		// System.out.println(attraction + " " + repulsion + " " + frame);
 
 		// count forces together + apply + reset
@@ -132,6 +179,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 			body.resetForce();
 		}
 	}
+
 
 	private double clamp(double v, double min, double max) {
 		if (v < min)
@@ -165,15 +213,19 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		double xForce = 0;
 		double yForce = 0;
 
-		final double border = 1. / (Math.min(w, h) * 0.15);
+		final double dropOff = frameDropOff(w, h);
 
-		xForce += borderForce(left, border);
-		xForce -= borderForce(right, border);
+		xForce += borderForce(left, dropOff);
+		xForce -= borderForce(right, dropOff);
 
-		yForce += borderForce(top, border);
-		yForce -= borderForce(bottom, border);
+		yForce += borderForce(top, dropOff);
+		yForce -= borderForce(bottom, dropOff);
 
 		body.addFrameForce(xForce, yForce);
+	}
+
+	private double frameDropOff(float w, float h) {
+		return 1. / (Math.min(w, h) * 0.15);
 	}
 
 	/**
@@ -191,8 +243,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		final double cy = body.getCenterY() - h * 0.5;
 
 		// if focussed away from the center else towards the center
-		final double centerForce = -0.002;
-		body.addFrameForce(cx * centerForce, cy * centerForce);
+		body.addFrameForce(cx * -centerForce, cy * -centerForce);
 	}
 
 	/**
@@ -259,7 +310,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 		double repX;
 		double repY;
 		// min distance for two elements
-		final double min_distance = (distVec.getR1() + distVec.getR2()) * 0.25;
+		final double min_distance = (distVec.getR1() + distVec.getR2()) * minimumDistanceFactor;
 
 		Vec2d v;
 		if (distVec.isIntersection())
@@ -296,7 +347,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 
 		// central force
 		{
-			double factor = 0.5 * (recPercent + dimPercent);
+			double factor = 0.5 * (recPercent + dimPercent); // mean
 			double accX = distVec.x() * factor;
 			double accY = distVec.y() * factor;
 			// as distance symmetrical
@@ -304,23 +355,22 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 			other.addAttForce(accX, accY);
 		}
 
-		final double offset = 20; // [px]
 		// overlap specific force
 		if (recOverlap > 0) { // rec overlap connector in x dimension
-			double b_l = body.x0() - offset;
-			double b_r = body.x1() + offset;
-			double o_l = other.x0() - offset;
-			double o_r = other.x1() + offset;
+			double b_l = body.x0() - connectorOffset;
+			double b_r = body.x1() + connectorOffset;
+			double o_l = other.x0() - connectorOffset;
+			double o_r = other.x1() + connectorOffset;
 
 			double y = body.getCenterY() - body.getCenterY();
 			addAttractionConnector(body, other, recPercent, b_l - o_r, y, b_r - o_l, y);
 		}
 
 		if (dimOverlap > 0) {
-			double b_l = body.y0() - offset;
-			double b_r = body.y1() + offset;
-			double o_l = other.y0() - offset;
-			double o_r = other.y1() + offset;
+			double b_l = body.y0() - connectorOffset;
+			double b_r = body.y1() + connectorOffset;
+			double o_l = other.y0() - connectorOffset;
+			double o_r = other.y1() + connectorOffset;
 
 			double x = body.getCenterX() - body.getCenterX();
 			addAttractionConnector(body, other, recPercent, x, b_l - o_r, x, b_r - o_l);
@@ -360,7 +410,7 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 	protected void initialLayout(List<ForcedBody> bodies, float w, float h) {
 		for(ForcedBody body : bodies) {
 			initialPosition(body, w, h, bodies);
-			System.out.println(body);
+			// System.out.println(body);
 		}
 	}
 
@@ -370,8 +420,8 @@ public class ForceBasedLayoutTuned2 extends AForceBasedLayoutTuned {
 			if (!neighbor.isInvalid()) { //near the first valid neighbor
 				int rec = body.getRecOverlap(neighbor);
 				int dim = body.getDimOverlap(neighbor);
-				double offsetX = (body.radiusX + neighbor.radiusX) * 1.2;
-				double offsetY = (body.radiusX + neighbor.radiusX) * 1.2;
+				double offsetX = (body.radiusX + neighbor.radiusX) * initialDistanceFactor;
+				double offsetY = (body.radiusX + neighbor.radiusX) * initialDistanceFactor;
 				if (rec <= 0)
 					offsetX = 0;
 				if (dim <= 0)

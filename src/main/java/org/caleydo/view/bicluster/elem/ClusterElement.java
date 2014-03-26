@@ -563,14 +563,17 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 					return;
 				drag(pick);
 				break;
-			case CLICKED:
+			case DRAG_DETECTED:
 				if (!pick.isAnyDragging()) {
 					pick.setDoDragging(true);
 					clicked = true;
 				}
 				break;
 			case DOUBLE_CLICKED:
-				renameCluster();
+				findAllClustersElement().setFocus(isFocused() ? null : ClusterElement.this);
+				break;
+			case RIGHT_CLICKED:
+				EventPublisher.trigger(new ClusterRenameEvent(null).to(ClusterElement.this));
 				break;
 			case MOUSE_RELEASED:
 				pick.setDoDragging(false);
@@ -609,21 +612,21 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		return false;
 	}
 
-	public final void renameCluster() {
-		Display.getDefault().asyncExec(new Runnable() {
-			@Override
-			public void run() {
-				String label = getLabel();
-				String newlabel = RenameNameDialog.show(null, "Rename Cluster: " + label, label);
-				if (newlabel != null && !label.equals(newlabel))
-					EventPublisher.trigger(new ClusterRenameEvent(newlabel).to(ClusterElement.this));
-			}
-		});
-	}
 
 	@ListenTo(sendToMe = true)
 	private void listenTo(ClusterRenameEvent e) {
-		setLabel(e.getNewName());
+		if (e.isTriggering()) {
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					String label = getLabel();
+					String newlabel = RenameNameDialog.show(null, "Rename Cluster: " + label, label);
+					if (newlabel != null && !label.equals(newlabel))
+						EventPublisher.trigger(new ClusterRenameEvent(newlabel).to(ClusterElement.this));
+				}
+			});
+		} else
+			setLabel(e.getNewName());
 	}
 
 	/**
@@ -885,7 +888,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 		}
 		if (from < indices.size())
 			sequences.add(indices.subList(from, indices.size()));
-		assert !sequences.isEmpty();
+		// assert !sequences.isEmpty();
 		return ImmutableList.copyOf(sequences);
 	}
 

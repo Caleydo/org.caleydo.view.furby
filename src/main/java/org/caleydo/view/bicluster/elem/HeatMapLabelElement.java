@@ -12,7 +12,7 @@ import org.caleydo.core.view.opengl.layout.Column.VAlign;
 import org.caleydo.core.view.opengl.layout2.GLElement;
 import org.caleydo.core.view.opengl.layout2.GLGraphics;
 import org.caleydo.core.view.opengl.layout2.geom.Rect;
-import org.caleydo.view.heatmap.v2.CellSpace;
+import org.caleydo.core.view.opengl.layout2.manage.GLLocation;
 
 /**
  * element for rendering the label of a heatmap or linear plot
@@ -48,9 +48,9 @@ public class HeatMapLabelElement extends GLElement {
 			for (int i = 0; i < va.size(); ++i) {
 				Integer id = va.get(i);
 				String text = dataDomain.getDimensionLabel(id);
-				CellSpace cell = spaceProvider.getDimensionCell(i);
-				float x = cell.getPosition();
-				float fieldWidth = cell.getSize();
+				GLLocation cell = spaceProvider.getDimensionCell(i);
+				float x = (float) cell.getOffset();
+				float fieldWidth = (float) cell.getSize();
 				if (fieldWidth < 5)
 					continue;
 				if (x < clipingArea.x() || (x + fieldWidth) > clipingArea.x2())
@@ -66,9 +66,9 @@ public class HeatMapLabelElement extends GLElement {
 			for (int i = 0; i < va.size(); ++i) {
 				Integer id = va.get(i);
 				String text = dataDomain.getRecordLabel(id);
-				CellSpace cell = spaceProvider.getRecordCell(i);
-				float y = cell.getPosition();
-				float fieldHeight = cell.getSize();
+				GLLocation cell = spaceProvider.getRecordCell(i);
+				float y = (float) cell.getOffset();
+				float fieldHeight = (float) cell.getSize();
 				if (fieldHeight < 5)
 					continue;
 				if (y < clipingArea.y() || (y + fieldHeight) > clipingArea.y2())

@@ -5,6 +5,7 @@
  ******************************************************************************/
 package org.caleydo.view.bicluster.event;
 
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.event.AEvent;
 import org.caleydo.view.bicluster.sorting.ISortingStrategyFactory;
 
@@ -15,9 +16,18 @@ import org.caleydo.view.bicluster.sorting.ISortingStrategyFactory;
 public class SortingChangeEvent extends AEvent {
 
 	private final ISortingStrategyFactory factory;
+	private final EDimension dimension;
 
-	public SortingChangeEvent(ISortingStrategyFactory factory) {
+	public SortingChangeEvent(ISortingStrategyFactory factory, EDimension dimension) {
 		this.factory = factory;
+		this.dimension = dimension;
+	}
+
+	/**
+	 * @return the dimension, see {@link #dimension}
+	 */
+	public EDimension getDimension() {
+		return dimension;
 	}
 
 	/**

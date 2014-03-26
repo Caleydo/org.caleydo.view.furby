@@ -24,4 +24,11 @@ public class ClusterRenameEvent extends ADirectedEvent {
 		return newName;
 	}
 
+	/**
+	 * @return
+	 */
+	public boolean isTriggering() {
+		return newName == null;
+	}
+
 }

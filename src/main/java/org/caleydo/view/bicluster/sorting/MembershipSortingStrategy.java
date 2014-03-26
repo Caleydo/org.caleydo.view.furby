@@ -10,28 +10,28 @@ package org.caleydo.view.bicluster.sorting;
  * @author Samuel Gratzl
  *
  */
-public class ProbabilitySortingStrategy extends AComposeAbleSortingStrategy {
+public class MembershipSortingStrategy extends AComposeAbleSortingStrategy {
 	public static final ISortingStrategyFactory FACTORY_INC = new ConstantSortingStrategyFactory(
-			new ProbabilitySortingStrategy(true, false), "Probability");
+			new MembershipSortingStrategy(true, false), "Membership");
 	public static final ISortingStrategyFactory FACTORY_DEC = new ConstantSortingStrategyFactory(
-			new ProbabilitySortingStrategy(false, false), "Probability (Decreasing)");
+			new MembershipSortingStrategy(false, false), "Membership (Decreasing)");
 	public static final ISortingStrategyFactory FACTORY_INC_ABS = new ConstantSortingStrategyFactory(
-			new ProbabilitySortingStrategy(true, true), "Abs. Probability");
+			new MembershipSortingStrategy(true, true), "Abs. Membership");
 	public static final ISortingStrategyFactory FACTORY_DEC_ABS = new ConstantSortingStrategyFactory(
-			new ProbabilitySortingStrategy(false, true), "Abs. Probability (Decreasing)");
+			new MembershipSortingStrategy(false, true), "Abs. Membership (Decreasing)");
 
 	private final boolean increasing;
 	private final boolean absolute;
 
-	private ProbabilitySortingStrategy(boolean increasing, boolean absolute) {
+	private MembershipSortingStrategy(boolean increasing, boolean absolute) {
 		this.increasing = increasing;
 		this.absolute = absolute;
 	}
 
 	@Override
 	public int compare(IntFloat o1, IntFloat o2) {
-		final float a = absolute ? Math.abs(o1.getProbability()) : o1.getProbability();
-		final float b = absolute ? Math.abs(o2.getProbability()) : o2.getProbability();
+		final float a = absolute ? Math.abs(o1.getMembership()) : o1.getMembership();
+		final float b = absolute ? Math.abs(o2.getMembership()) : o2.getMembership();
 		return increasing ? Float.compare(a, b) : Float.compare(b, a);
 	}
 

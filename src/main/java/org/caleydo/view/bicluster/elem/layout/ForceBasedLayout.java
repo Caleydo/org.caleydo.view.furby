@@ -30,9 +30,36 @@ public class ForceBasedLayout extends AForceBasedLayout {
 	float lastW, lastH;
 
 	protected double damping = 1f;
+	protected float repulsion = 100000f;
+	protected float attractionFactor = 100f;
+	protected float borderForceFactor = 200f;
 
 	public ForceBasedLayout(AllClustersElement parent) {
 		super(parent);
+	}
+
+	@Override
+	public void fillLayoutToolBar(ILayoutToolBar elem) {
+		elem.addSlider("repulsion", "Repulsion between Clusters", repulsion, 0, 150000f);
+		elem.addSlider("attraction", "Attraction between Clusters", attractionFactor, 0, 150f);
+		elem.addSlider("frame", "Force from the Windowborder", borderForceFactor, 0, 300f);
+	}
+
+	@Override
+	protected void setParameter(String name, float value) {
+		switch (name) {
+		case "repulsion":
+			repulsion = value;
+			break;
+		case "attraction":
+			attractionFactor = value;
+			break;
+		case "frame":
+			borderForceFactor = value;
+			break;
+		default:
+			break;
+		}
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.collection.table.NumericalTable;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
+import org.caleydo.core.id.IDType;
 import org.caleydo.core.util.function.DoubleStatistics;
 import org.caleydo.view.bicluster.sorting.FuzzyClustering;
 
@@ -43,6 +44,18 @@ public class BiClustering {
 		return clusterTablePerspectives.size();
 	}
 
+	public IDType getBiClusterIDType() {
+		return l.getDataDomain().getDimensionIDType();
+	}
+
+	public IDType getIDType(EDimension dim) {
+		if (dim.isHorizontal())
+			return l.getDataDomain().getDimensionIDType();
+		else
+			return l.getDataDomain().getRecordIDType();
+
+	}
+
 	/**
 	 * @return the x, see {@link #x}
 	 */
@@ -70,7 +83,7 @@ public class BiClustering {
 	 * @return
 	 */
 	public NumericalTable getLZ(EDimension dimension) {
-		return dimension.selectZL(z, l);
+		return dimension.select(z, l);
 	}
 
 	/**
@@ -78,7 +91,7 @@ public class BiClustering {
 	 * @return
 	 */
 	public DoubleStatistics getStats(EDimension dimension) {
-		return dimension.selectZL(z, l).getDatasetStatistics();
+		return dimension.select(z, l).getDatasetStatistics();
 	}
 
 	/**
@@ -104,15 +117,23 @@ public class BiClustering {
 		return dim.isHorizontal() ? getDimClustering(bcNr) : getRecClustering(bcNr);
 	}
 
-	public float getProbability(EDimension dim, int bcNr, int index) {
-		return dim.selectZL(z, l).getRaw(bcNr, index);
+	public float getMembership(EDimension dim, int bcNr, int index) {
+		return dim.select(z, l).getRaw(bcNr, index);
+	}
+
+	public String getLabel(EDimension dim, int index) {
+		ATableBasedDataDomain d = getXDataDomain();
+		if (dim.isHorizontal()) {
+			return d.getDimensionLabel(index);
+		} else
+			return d.getRecordLabel(index);
 	}
 
 	/**
 	 * @param dimension
 	 * @return
 	 */
-	public double getMaxAbsProbability(EDimension dimension) {
+	public double getMaxAbsMembership(EDimension dimension) {
 		DoubleStatistics stats = getStats(dimension);
 		return Math.max(Math.abs(stats.getMin()), Math.abs(stats.getMax()));
 	}
