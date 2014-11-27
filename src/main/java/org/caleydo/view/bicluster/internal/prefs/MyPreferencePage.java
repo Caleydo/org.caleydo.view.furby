@@ -50,6 +50,10 @@ public class MyPreferencePage extends FieldEditorPreferencePage implements IWork
 		addField(new BooleanFieldEditor("view.bicluster.groupingHints", "Show Chemical Cluster Grouping Hints?", parent));
 		addField(new ComboFieldEditor("view.bicluster.bar.scaling", "Bar Plot Scaling Mode", createScalingModes(),
 				parent));
+		addField(new SpinnerFieldEditor("view.bicluster.go.maxgos", "Show at most N GO Terms", parent, 0, Integer.MAX_VALUE,
+				1, 10));
+		addField(new ScaleFieldEditor2("view.bicluster.go.maxp", "Show GO Terms with a p-value of at least", parent, 0,
+				100, 1, 10, ScaleFieldEditor2.PERCENT_FORMATTER));
 	}
 
 	/**

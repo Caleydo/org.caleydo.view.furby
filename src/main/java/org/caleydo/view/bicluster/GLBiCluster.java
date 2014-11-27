@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.caleydo.core.data.collection.EDataClass;
 import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.collection.table.CategoricalTable;
 import org.caleydo.core.data.collection.table.NumericalTable;
@@ -299,6 +300,7 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 		}
 
 		handleSpecialClusters(added, removed);
+		handleClusterSpecificAnnotations(all, added, removed);
 		handleThresholds(added, removed);
 	}
 
@@ -379,10 +381,10 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 
 		for (TablePerspective t : added) {
 			if (findGroupings(t.getRecordPerspective())) {
-				rootElement.addAnnotation(EDimension.RECORD, t);
+				rootElement.addCategoricalAnnotation(EDimension.RECORD, t);
 			}
 			if (findGroupings(t.getDimensionPerspective())) {
-				rootElement.addAnnotation(EDimension.DIMENSION, t);
+				rootElement.addCategoricalAnnotation(EDimension.DIMENSION, t);
 			}
 		}
 		for (TablePerspective t : removed) {
@@ -401,11 +403,74 @@ public class GLBiCluster extends AMultiTablePerspectiveElementView implements IG
 	 * @return
 	 */
 	private boolean findGroupings(Perspective p) {
-		final IDType record = this.x.getRecordPerspective().getIdType();
-		final IDType dimension = this.x.getDimensionPerspective().getIdType();
+		final IDType record = getIDType(EDimension.RECORD);
+		final IDType dimension = getIDType(EDimension.DIMENSION);
 		final IDType idtype = p.getIdType();
 		if ((!idtype.resolvesTo(record) && !idtype.resolvesTo(dimension)))
 			return false;
 		return p.getVirtualArray().getGroupList().size() > 1;
+	}
+
+	private IDType getIDType(EDimension dim) {
+		if (dim.isVertical())
+			return this.x.getRecordPerspective().getIdType();
+		else
+			return this.x.getDimensionPerspective().getIdType();
+	}
+
+	private IDCategory getBiClusterIDCategory() {
+		return this.l.getRecordPerspective().getIdType().getIDCategory();
+	}
+
+	private void handleClusterSpecificAnnotations(List<TablePerspective> all, List<TablePerspective> added,
+			List<TablePerspective> removed) {
+		// search for a numerical table, which has records = biclusters
+		final IDCategory cluster = getBiClusterIDCategory();
+		Predicate<TablePerspective> predicate = new Predicate<TablePerspective>() {
+			@Override
+			public boolean apply(TablePerspective arg0) {
+				// an inhomegnous
+				if (DataSupportDefinitions.homogenousTables.apply(arg0))
+					return false;
+				// and numerical data
+
+				// set of numerical real_number inhomogenous things
+				int recordId = arg0.getRecordPerspective().getVirtualArray().get(0);
+				for (Integer dimensionId : arg0.getDimensionPerspective().getVirtualArray()) {
+					EDataClass dataClass = arg0.getDataDomain().getTable().getDataClass(dimensionId, recordId);
+					if (dataClass != EDataClass.REAL_NUMBER)
+						return false;
+				}
+
+				// with biclusters as columns
+				// if (!cluster.isOfCategory(arg0.getDimensionPerspective().getIdType()))
+				// return false;
+				// but still multiple columns
+				if (arg0.getDimensionPerspective().getVirtualArray().size() <= 1)
+					return false;
+				return true;
+			}
+		};
+
+		added = Lists.newArrayList(Iterables.filter(added, predicate));
+		removed = Lists.newArrayList(Iterables.filter(removed, predicate));
+
+		final IDType dims = getIDType(EDimension.DIMENSION);
+		final IDType recs = getIDType(EDimension.RECORD);
+
+		for (TablePerspective t : added) {
+			IDType type = t.getRecordPerspective().getIdType();
+			if (type.resolvesTo(dims))
+				rootElement.addMultiAnnotation(EDimension.DIMENSION, t);
+			else if (type.resolvesTo(recs))
+				rootElement.addMultiAnnotation(EDimension.RECORD, t);
+		}
+		for (TablePerspective t : removed) {
+			IDType type = t.getRecordPerspective().getIdType();
+			if (type.resolvesTo(dims))
+				rootElement.removeMultiAnnotation(EDimension.DIMENSION, t);
+			else if (type.resolvesTo(recs))
+				rootElement.removeMultiAnnotation(EDimension.RECORD, t);
+		}
 	}
 }

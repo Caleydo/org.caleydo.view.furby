@@ -563,7 +563,7 @@ public abstract class ClusterElement extends AnimatedGLElementContainer implemen
 					return;
 				drag(pick);
 				break;
-			case CLICKED:
+			case DRAG_DETECTED:
 				if (!pick.isAnyDragging()) {
 					pick.setDoDragging(true);
 					clicked = true;

@@ -43,6 +43,9 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 
 		store.setDefault("view.bicluster.bar.scaling", EScalingMode.LOCAL.name());
 		store.setDefault("view.bicluster.groupingHints", false);
+
+		store.setDefault("view.bicluster.go.maxgos", 5);
+		store.setDefault("view.bicluster.go.maxp", 100);
 	}
 
 	public static float getDimThreshold() {
@@ -103,5 +106,13 @@ public class MyPreferences extends AbstractPreferenceInitializer {
 	 */
 	public static boolean isShowGroupingHints() {
 		return prefs().getBoolean("view.bicluster.groupingHints");
+	}
+
+	public static float getMaximalGOPValue() {
+		return prefs().getInt("view.bicluster.go.maxp") / 100.f;
+	}
+
+	public static int getMaxNumberofGOs() {
+		return prefs().getInt("view.bicluster.go.maxgos");
 	}
 }

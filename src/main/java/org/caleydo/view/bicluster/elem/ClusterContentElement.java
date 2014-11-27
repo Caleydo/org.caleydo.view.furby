@@ -10,6 +10,7 @@ import gleem.linalg.Vec2f;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
 import org.caleydo.core.util.color.Color;
@@ -28,13 +29,13 @@ import org.caleydo.core.view.opengl.layout2.manage.GLElementFactoryContext.Build
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.ELazyiness;
 import org.caleydo.core.view.opengl.layout2.manage.GLElementFactorySwitcher.IActiveChangedCallback;
+import org.caleydo.core.view.opengl.layout2.manage.GLLocation;
 import org.caleydo.view.bicluster.event.SwitchVisualizationEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
-import org.caleydo.view.heatmap.v2.AHeatMapElement;
 import org.caleydo.view.heatmap.v2.BarPlotElement;
-import org.caleydo.view.heatmap.v2.CellSpace;
 import org.caleydo.view.heatmap.v2.EScalingMode;
 import org.caleydo.view.heatmap.v2.HeatMapElement;
+import org.caleydo.view.heatmap.v2.HeatMapElementBase;
 import org.caleydo.view.heatmap.v2.ISpacingStrategy;
 import org.caleydo.view.heatmap.v2.SpacingStrategies;
 
@@ -117,13 +118,13 @@ public class ClusterContentElement extends GLElementDecorator {
 	 */
 	public boolean changeFocus(boolean focus) {
 		boolean any = false;
-		for (AHeatMapElement heatmap : Iterables.filter(switcher.getInstances(), AHeatMapElement.class)) {
+		for (HeatMapElementBase heatmap : Iterables.filter(switcher.getInstances(), HeatMapElementBase.class)) {
 			if (focus) {
-				heatmap.setRecordSpacingStrategy(FISH_EYE);
-				heatmap.setDimensionSpacingStrategy(FISH_EYE);
+				heatmap.setSpacingStrategy(EDimension.DIMENSION, FISH_EYE);
+				heatmap.setSpacingStrategy(EDimension.RECORD, FISH_EYE);
 			} else {
-				heatmap.setRecordSpacingStrategy(SpacingStrategies.UNIFORM);
-				heatmap.setDimensionSpacingStrategy(SpacingStrategies.UNIFORM);
+				heatmap.setSpacingStrategy(EDimension.DIMENSION, SpacingStrategies.UNIFORM);
+				heatmap.setSpacingStrategy(EDimension.RECORD, SpacingStrategies.UNIFORM);
 			}
 			any = true;
 		}
@@ -170,10 +171,10 @@ public class ClusterContentElement extends GLElementDecorator {
 	/**
 	 * @return
 	 */
-	private AHeatMapElement getHeatMap() {
+	private HeatMapElementBase getHeatMap() {
 		GLElement activeElement = switcher.getActiveElement();
-		if (activeElement instanceof AHeatMapElement)
-			return (AHeatMapElement) activeElement;
+		if (activeElement instanceof HeatMapElementBase)
+			return (HeatMapElementBase) activeElement;
 		return null;
 	}
 
@@ -182,26 +183,26 @@ public class ClusterContentElement extends GLElementDecorator {
 	 * @return
 	 */
 	public float getDimensionPos(int index) {
-		AHeatMapElement heatmap = getHeatMap();
+		HeatMapElementBase heatmap = getHeatMap();
 		if (heatmap != null)
-			return heatmap.getDimensionCellSpace(index).getPosition();
-		return getDimensionCell(index).getPosition();
+			return (float) heatmap.getLocation(EDimension.DIMENSION, index).getOffset();
+		return (float) getDimensionCell(index).getOffset();
 	}
 
 	public int getDimensionIndex(float position) {
-		AHeatMapElement heatmap = getHeatMap();
+		HeatMapElementBase heatmap = getHeatMap();
 		if (heatmap != null)
-			return heatmap.getDimensionIndex(position);
+			return heatmap.getIndex(EDimension.DIMENSION, position);
 		return Math.round(position / getSize().x());
 	}
 
-	public CellSpace getDimensionCell(int index) {
-		AHeatMapElement heatmap = getHeatMap();
+	public GLLocation getDimensionCell(int index) {
+		HeatMapElementBase heatmap = getHeatMap();
 		if (heatmap != null)
-			return heatmap.getDimensionCellSpace(index);
+			return heatmap.getLocation(EDimension.DIMENSION, index);
 		float w = getSize().x();
 		float wi = w / data.getDimensionPerspective().getVirtualArray().size();
-		return new CellSpace(index * wi, wi);
+		return new GLLocation(index * wi, wi);
 	}
 
 	/**
@@ -209,26 +210,26 @@ public class ClusterContentElement extends GLElementDecorator {
 	 * @return
 	 */
 	public float getRecordPos(int index) {
-		AHeatMapElement heatmap = getHeatMap();
+		HeatMapElementBase heatmap = getHeatMap();
 		if (heatmap != null)
-			return heatmap.getRecordCellSpace(index).getPosition();
-		return getRecordCell(index).getPosition();
+			return (float) heatmap.getLocation(EDimension.RECORD, index).getOffset();
+		return (float) getRecordCell(index).getOffset();
 	}
 
 	public int getRecordIndex(float position) {
-		AHeatMapElement heatmap = getHeatMap();
+		HeatMapElementBase heatmap = getHeatMap();
 		if (heatmap != null)
-			return heatmap.getRecordIndex(position);
+			return heatmap.getIndex(EDimension.RECORD, position);
 		return Math.round(position / getSize().y());
 	}
 
-	public CellSpace getRecordCell(int index) {
-		AHeatMapElement heatmap = getHeatMap();
+	public GLLocation getRecordCell(int index) {
+		HeatMapElementBase heatmap = getHeatMap();
 		if (heatmap != null)
-			return heatmap.getRecordCellSpace(index);
+			return heatmap.getLocation(EDimension.RECORD, index);
 		float h = getSize().y();
 		float hi = h / data.getRecordPerspective().getVirtualArray().size();
-		return new CellSpace(index * hi, hi);
+		return new GLLocation(index * hi, hi);
 	}
 
 	/**

@@ -14,16 +14,21 @@ import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.caleydo.core.data.collection.EDimension;
 import org.caleydo.core.data.collection.table.Table;
 import org.caleydo.core.data.datadomain.ATableBasedDataDomain;
 import org.caleydo.core.data.perspective.table.TablePerspective;
 import org.caleydo.core.data.selection.SelectionManager;
 import org.caleydo.core.data.selection.SelectionType;
+import org.caleydo.core.data.virtualarray.VirtualArray;
 import org.caleydo.core.event.EventListenerManager.ListenTo;
+import org.caleydo.core.id.IDMappingManager;
 import org.caleydo.core.id.IDMappingManagerRegistry;
 import org.caleydo.core.id.IDType;
 import org.caleydo.core.id.IIDTypeMapper;
@@ -40,7 +45,9 @@ import org.caleydo.core.view.opengl.layout2.layout.GLLayouts;
 import org.caleydo.core.view.opengl.layout2.renderer.GLRenderers;
 import org.caleydo.core.view.opengl.picking.IPickingListener;
 import org.caleydo.core.view.opengl.picking.Pick;
+import org.caleydo.view.bicluster.elem.annotation.ALZHeatmapElement;
 import org.caleydo.view.bicluster.elem.annotation.CategoricalLZHeatmapElement;
+import org.caleydo.view.bicluster.elem.annotation.GoLZHeatmapElement;
 import org.caleydo.view.bicluster.elem.band.AllBandsElement;
 import org.caleydo.view.bicluster.elem.band.BandElement;
 import org.caleydo.view.bicluster.elem.toolbar.AToolBarElement;
@@ -56,9 +63,13 @@ import org.caleydo.view.bicluster.event.ZoomEvent;
 import org.caleydo.view.bicluster.internal.prefs.MyPreferences;
 import org.caleydo.view.bicluster.sorting.CategoricalSortingStrategyFactory;
 import org.caleydo.view.bicluster.sorting.EThresholdMode;
+import org.caleydo.view.bicluster.sorting.IntFloat;
 import org.caleydo.view.bicluster.util.SetUtils;
 
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 /**
  * @author user
@@ -505,10 +516,9 @@ public class GLRootElement extends GLElementContainer {
 	 * @param record
 	 * @param t
 	 */
-	public void addAnnotation(EDimension dimension, TablePerspective t) {
+	public void addCategoricalAnnotation(EDimension dimension, TablePerspective t) {
 		final Integer oppositeID = dimension.select(t.getRecordPerspective(), t.getDimensionPerspective())
-				.getVirtualArray()
-				.get(0);
+				.getVirtualArray().get(0);
 		final Table table = t.getDataDomain().getTable();
 		final IDType target = dimension.select(t.getDataDomain().getDimensionIDType(), t.getDataDomain()
 				.getRecordIDType());
@@ -517,8 +527,7 @@ public class GLRootElement extends GLElementContainer {
 			final IIDTypeMapper<Integer, Integer> mapper = source.getDimensionIDMappingManager().getIDTypeMapper(
 					source.getDimensionIDType(), target);
 			final CategoricalSortingStrategyFactory factory = new CategoricalSortingStrategyFactory(
-					EDimension.DIMENSION, oppositeID, table,
-					mapper);
+					EDimension.DIMENSION, oppositeID, table, mapper);
 			toolbarParam.addSortingMode(factory, EDimension.DIMENSION);
 			for (NormalClusterElement cluster : allNormalClusters())
 				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.DIMENSION, factory));
@@ -527,13 +536,86 @@ public class GLRootElement extends GLElementContainer {
 					source.getRecordIDType(), target);
 
 			final CategoricalSortingStrategyFactory factory = new CategoricalSortingStrategyFactory(EDimension.RECORD,
-					oppositeID, table,
-					mapper);
+					oppositeID, table, mapper);
 			toolbarParam.addSortingMode(factory, EDimension.RECORD);
 			for (NormalClusterElement cluster : allNormalClusters())
 				cluster.addAnnotation(new CategoricalLZHeatmapElement(EDimension.RECORD, factory));
 		}
 	}
+
+	public void addMultiAnnotation(EDimension dim, TablePerspective t) {
+		final IDType annotateTo = clustering.getIDType(dim);
+		final IDMappingManagerRegistry registry = IDMappingManagerRegistry.get();
+		// record of annotation to gene/samples
+
+		final ATableBasedDataDomain d = t.getDataDomain();
+		final Table table = d.getTable();
+
+		final IDType go = t.getRecordPerspective().getIdType();
+		final IDMappingManager m = registry.getIDMappingManager(annotateTo);
+		IIDTypeMapper<Integer, Integer> rec2annotateTo = m.getIDTypeMapper(go,
+				annotateTo);
+
+		IDType goLabel = rec2annotateTo.getPath().get(0).getToIDType();
+		IIDTypeMapper<Integer, String> rec2label = m.getIDTypeMapper(go, goLabel);
+
+		for (NormalClusterElement cluster : allNormalClusters()) {
+			Integer col = cluster.getBiClusterNumber();
+			List<Integer> records = findBestColumns(col, t);
+			if (records.isEmpty())
+				continue;
+			for (Integer record : records) {
+				float pValue = ((Number) table.getRaw(col, record)).floatValue();
+				Set<Integer> containedGenes = containedGenes(record, rec2annotateTo);
+				if (containedGenes == null || containedGenes.isEmpty())
+					continue;
+				final Set<String> labels = rec2label.apply(record);
+				String label = labels == null ? record.toString() : (labels.size() == 1 ? labels.iterator().next()
+						.toString() : StringUtils.join(labels, ", "));
+				cluster.addAnnotation(new GoLZHeatmapElement(dim, label, pValue, Predicates.in(containedGenes), d));
+			}
+		}
+	}
+
+
+	private Set<Integer> containedGenes(Integer record, IIDTypeMapper<Integer, Integer> rec2annotateTo) {
+		return rec2annotateTo.apply(record);
+	}
+
+	public void removeMultiAnnotation(EDimension dimension, TablePerspective t) {
+		ATableBasedDataDomain d = t.getDataDomain();
+
+		for (NormalClusterElement cluster : allNormalClusters()) {
+			for (ALZHeatmapElement a : ImmutableList.copyOf(cluster.getAnnotations())) {
+				if (a instanceof GoLZHeatmapElement && ((GoLZHeatmapElement) a).getOrigin() == d)
+					cluster.removeAnnotation(a);
+			}
+		}
+	}
+
+
+	private static List<Integer> findBestColumns(Integer col, TablePerspective t) {
+		final VirtualArray va = t.getRecordPerspective().getVirtualArray();
+		List<IntFloat> tmp = new ArrayList<>(va.size());
+		final int max = MyPreferences.getMaxNumberofGOs();
+		final float pMax = MyPreferences.getMaximalGOPValue();
+		final Table table = t.getDataDomain().getTable();
+		for (Integer rec : va) {
+			final Number n = (Number) table.getRaw(col, rec);
+			if (n == null)
+				continue;
+			float p = n.floatValue();
+			if (p > pMax || Float.isNaN(p))
+				continue;
+			tmp.add(new IntFloat(rec, p));
+		}
+		Collections.sort(tmp, IntFloat.BY_MEMBERSHIP);
+		List<Integer> top = Lists.transform(tmp, IntFloat.TO_INDEX);
+		if (max < tmp.size())
+			return top.subList(0, max);
+		return top;
+	}
+
 
 	/**
 	 * @param record
@@ -569,5 +651,4 @@ public class GLRootElement extends GLElementContainer {
 			}
 		}
 	}
-
 }
